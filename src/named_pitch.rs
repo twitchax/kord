@@ -15,66 +15,61 @@ pub trait HasLetter {
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
 #[repr(u8)]
 pub enum NamedPitch {
-    ATripleSharp
-    BSharp,
-    C,
-    DDoubleFlat,
-    
-    BDoubleSharp
-    CSharp,
-    DFlat,
-    ETripleFlat
+    FTripleFlat,
+    CTripleFlat,
+    GTripleFlat,
+    DTripleFlat,
+    ATripleFlat,
+    ETripleFlat,
+    BTripleFlat,
 
-    //BTripleSharp
-    CDoubleSharp,
-    D,
-    EDoubleFlat,
-    FTripleFlat
-
-    CTripleSharp
-    DSharp,
-    EFlat,
-    FDoubleFlat
-
-    DDoubleSharp,
-    E,
-    FFlat,
-    GTripleFlat
-
-    DTripleSharp
-    ESharp,
-    F,
+    FDoubleFlat,
+    CDoubleFlat,
     GDoubleFlat,
-
-    EDoubleSharp
-    FSharp,
-    GFlat,
-    ATripleFlat
-
-    ETripleSharp
-    FDoubleSharp,
-    G,
+    DDoubleFlat,
     ADoubleFlat,
+    EDoubleFlat,
+    BDoubleFlat,
+
+    FFlat,
+    CFlat,
+    GFlat,
+    DFlat,
+    AFlat,
+    EFlat,
+    BFlat,
+
+    F,
+    C,
+    G,
+    D,
+    A,
+    E,
+    B,
+
+    FSharp,
+    CSharp,
+    GSharp,
+    DSharp,
+    ASharp,
+    ESharp,
+    BSharp,
+
+    FDoubleSharp,
+    CDoubleSharp,
+    GDoubleSharp,
+    DDoubleSharp,
+    ADoubleSharp,
+    EDoubleSharp,
+    BDoubleSharp,
 
     FTripleSharp,
-    GSharp,
-    AFlat,
-    BTripleFlat
-
-    GDoubleSharp,
-    A,
-    BDoubleFlat,
-    CTripleFlat,
-
+    CTripleSharp,
     GTripleSharp,
-    ASharp,
-    BFlat,
-    CDoubleFlat,
-
-    ADoubleSharp,
-    B,
-    CFlat,
-    DTripleFlat,
+    DTripleSharp,
+    ATripleSharp,
+    ETripleSharp,
+    BTripleSharp,
 }
 
 // Impls.
@@ -88,48 +83,61 @@ impl HasNamedPitch for NamedPitch {
 impl HasLetter for NamedPitch {
     fn letter(&self) -> &'static str {
         match self {
-            NamedPitch::BSharp => "B",
-            NamedPitch::C => "C",
-            NamedPitch::DDoubleFlat => "D",
-            
-            NamedPitch::CSharp => "C",
-            NamedPitch::DFlat => "D",
+            NamedPitch::FTripleFlat => "F",
+            NamedPitch::CTripleFlat => "C",
+            NamedPitch::GTripleFlat => "G",
+            NamedPitch::DTripleFlat => "D",
+            NamedPitch::ATripleFlat => "A",
+            NamedPitch::ETripleFlat => "E",
+            NamedPitch::BTripleFlat => "B",
 
-            NamedPitch::CDoubleSharp => "C",
-            NamedPitch::D => "D",
-            NamedPitch::EDoubleFlat => "E",
-
-            NamedPitch::DSharp => "D",
-            NamedPitch::EFlat => "E",
-
-            NamedPitch::DDoubleSharp => "D",
-            NamedPitch::E => "E",
-            NamedPitch::FFlat => "F",
-
-            NamedPitch::ESharp => "E",
-            NamedPitch::F => "F",
+            NamedPitch::FDoubleFlat => "F",
+            NamedPitch::CDoubleFlat => "C",
             NamedPitch::GDoubleFlat => "G",
-
-            NamedPitch::FSharp => "F",
-            NamedPitch::GFlat => "G",
-
-            NamedPitch::FDoubleSharp => "F",
-            NamedPitch::G => "G",
+            NamedPitch::DDoubleFlat => "D",
             NamedPitch::ADoubleFlat => "A",
-
-            NamedPitch::GSharp => "G",
-            NamedPitch::AFlat => "A",
-
-            NamedPitch::GDoubleSharp => "G",
-            NamedPitch::A => "A",
+            NamedPitch::EDoubleFlat => "E",
             NamedPitch::BDoubleFlat => "B",
 
-            NamedPitch::ASharp => "A",
+            NamedPitch::FFlat => "F",
+            NamedPitch::CFlat => "C",
+            NamedPitch::GFlat => "G",
+            NamedPitch::DFlat => "D",
+            NamedPitch::AFlat => "A",
+            NamedPitch::EFlat => "E",
             NamedPitch::BFlat => "B",
 
-            NamedPitch::ADoubleSharp => "A",
+            NamedPitch::F => "F",
+            NamedPitch::C => "C",
+            NamedPitch::G => "G",
+            NamedPitch::D => "D",
+            NamedPitch::A => "A",
+            NamedPitch::E => "E",
             NamedPitch::B => "B",
-            NamedPitch::CFlat => "C",
+
+            NamedPitch::FSharp => "F",
+            NamedPitch::CSharp => "C",
+            NamedPitch::GSharp => "G",
+            NamedPitch::DSharp => "D",
+            NamedPitch::ASharp => "A",
+            NamedPitch::ESharp => "E",
+            NamedPitch::BSharp => "B",
+
+            NamedPitch::FDoubleSharp => "F",
+            NamedPitch::CDoubleSharp => "C",
+            NamedPitch::GDoubleSharp => "G",
+            NamedPitch::DDoubleSharp => "D",
+            NamedPitch::ADoubleSharp => "A",
+            NamedPitch::EDoubleSharp => "E",
+            NamedPitch::BDoubleSharp => "B",
+
+            NamedPitch::FTripleSharp => "F",
+            NamedPitch::CTripleSharp => "C",
+            NamedPitch::GTripleSharp => "G",
+            NamedPitch::DTripleSharp => "D",
+            NamedPitch::ATripleSharp => "A",
+            NamedPitch::ETripleSharp => "E",
+            NamedPitch::BTripleSharp => "B",
         }
     }
 }
@@ -137,48 +145,61 @@ impl HasLetter for NamedPitch {
 impl HasStaticName for NamedPitch {
     fn static_name(&self) -> &'static str {
         match self {
-            NamedPitch::BSharp => "B♯",
-            NamedPitch::C => "C",
-            NamedPitch::DDoubleFlat => "D𝄫",
-            
-            NamedPitch::CSharp => "C♯",
-            NamedPitch::DFlat => "D♭",
+            NamedPitch::FTripleFlat => "F♭𝄫",
+            NamedPitch::CTripleFlat => "C♭𝄫",
+            NamedPitch::GTripleFlat => "G♭𝄫",
+            NamedPitch::DTripleFlat => "D♭𝄫",
+            NamedPitch::ATripleFlat => "A♭𝄫",
+            NamedPitch::ETripleFlat => "E♭𝄫",
+            NamedPitch::BTripleFlat => "B♭𝄫",
 
-            NamedPitch::CDoubleSharp => "C𝄪",
-            NamedPitch::D => "D",
-            NamedPitch::EDoubleFlat => "E𝄫",
-
-            NamedPitch::DSharp => "D♯",
-            NamedPitch::EFlat => "E♭",
-
-            NamedPitch::DDoubleSharp => "D𝄪",
-            NamedPitch::E => "E",
-            NamedPitch::FFlat => "F♭",
-
-            NamedPitch::ESharp => "E♯",
-            NamedPitch::F => "F",
+            NamedPitch::FDoubleFlat => "F𝄫",
+            NamedPitch::CDoubleFlat => "C𝄫",
             NamedPitch::GDoubleFlat => "G𝄫",
-
-            NamedPitch::FSharp => "F♯",
-            NamedPitch::GFlat => "G♭",
-
-            NamedPitch::FDoubleSharp => "F𝄪",
-            NamedPitch::G => "G",
+            NamedPitch::DDoubleFlat => "D𝄫",
             NamedPitch::ADoubleFlat => "A𝄫",
-
-            NamedPitch::GSharp => "G♯",
-            NamedPitch::AFlat => "A♭",
-
-            NamedPitch::GDoubleSharp => "G𝄪",
-            NamedPitch::A => "A",
+            NamedPitch::EDoubleFlat => "E𝄫",
             NamedPitch::BDoubleFlat => "B𝄫",
 
-            NamedPitch::ASharp => "A♯",
+            NamedPitch::FFlat => "F♭",
+            NamedPitch::CFlat => "C♭",
+            NamedPitch::GFlat => "G♭",
+            NamedPitch::DFlat => "D♭",
+            NamedPitch::AFlat => "A♭",
+            NamedPitch::EFlat => "E♭",
             NamedPitch::BFlat => "B♭",
 
-            NamedPitch::ADoubleSharp => "A𝄪",
+            NamedPitch::F => "F",
+            NamedPitch::C => "C",
+            NamedPitch::G => "G",
+            NamedPitch::D => "D",
+            NamedPitch::A => "A",
+            NamedPitch::E => "E",
             NamedPitch::B => "B",
-            NamedPitch::CFlat => "C♭",
+
+            NamedPitch::FSharp => "F♯",
+            NamedPitch::CSharp => "C♯",
+            NamedPitch::GSharp => "G♯",
+            NamedPitch::DSharp => "D♯",
+            NamedPitch::ASharp => "A♯",
+            NamedPitch::ESharp => "E♯",
+            NamedPitch::BSharp => "B♯",
+
+            NamedPitch::FDoubleSharp => "F𝄪",
+            NamedPitch::CDoubleSharp => "C𝄪",
+            NamedPitch::GDoubleSharp => "G𝄪",
+            NamedPitch::DDoubleSharp => "D𝄪",
+            NamedPitch::ADoubleSharp => "A𝄪",
+            NamedPitch::EDoubleSharp => "E𝄪",
+            NamedPitch::BDoubleSharp => "B𝄪",
+
+            NamedPitch::FTripleSharp => "F♯𝄪",
+            NamedPitch::CTripleSharp => "C♯𝄪",
+            NamedPitch::GTripleSharp => "G♯𝄪",
+            NamedPitch::DTripleSharp => "D♯𝄪",
+            NamedPitch::ATripleSharp => "A♯𝄪",
+            NamedPitch::ETripleSharp => "E♯𝄪",
+            NamedPitch::BTripleSharp => "B♯𝄪",
         }
     }
 }
@@ -186,48 +207,61 @@ impl HasStaticName for NamedPitch {
 impl HasPitch for NamedPitch {
     fn pitch(&self) -> Pitch {
         match self {
-            NamedPitch::BSharp => Pitch::C,
-            NamedPitch::C => Pitch::C,
-            NamedPitch::DDoubleFlat => Pitch::C,
+            NamedPitch::FTripleFlat => Pitch::D,
+            NamedPitch::CTripleFlat => Pitch::A,
+            NamedPitch::GTripleFlat => Pitch::E,
+            NamedPitch::DTripleFlat => Pitch::B,
+            NamedPitch::ATripleFlat => Pitch::FSharp,
+            NamedPitch::ETripleFlat => Pitch::CSharp,
+            NamedPitch::BTripleFlat => Pitch::GSharp,
 
-            NamedPitch::CSharp => Pitch::CSharp,
-            NamedPitch::DFlat => Pitch::CSharp,
-
-            NamedPitch::CDoubleSharp => Pitch::D,
-            NamedPitch::D => Pitch::D,
-            NamedPitch::EDoubleFlat => Pitch::D,
-
-            NamedPitch::DSharp => Pitch::DSharp,
-            NamedPitch::EFlat => Pitch::DSharp,
-
-            NamedPitch::DDoubleSharp => Pitch::E,
-            NamedPitch::E => Pitch::E,
-            NamedPitch::FFlat => Pitch::E,
-
-            NamedPitch::ESharp => Pitch::F,
-            NamedPitch::F => Pitch::F,
+            NamedPitch::FDoubleFlat => Pitch::DSharp,
+            NamedPitch::CDoubleFlat => Pitch::ASharp,
             NamedPitch::GDoubleFlat => Pitch::F,
-
-            NamedPitch::FSharp => Pitch::FSharp,
-            NamedPitch::GFlat => Pitch::FSharp,
-
-            NamedPitch::FDoubleSharp => Pitch::G,
-            NamedPitch::G => Pitch::G,
+            NamedPitch::DDoubleFlat => Pitch::C,
             NamedPitch::ADoubleFlat => Pitch::G,
-
-            NamedPitch::GSharp => Pitch::GSharp,
-            NamedPitch::AFlat => Pitch::GSharp,
-
-            NamedPitch::GDoubleSharp => Pitch::A,
-            NamedPitch::A => Pitch::A,
+            NamedPitch::EDoubleFlat => Pitch::D,
             NamedPitch::BDoubleFlat => Pitch::A,
 
-            NamedPitch::ASharp => Pitch::ASharp,
+            NamedPitch::FFlat => Pitch::E,
+            NamedPitch::CFlat => Pitch::B,
+            NamedPitch::GFlat => Pitch::FSharp,
+            NamedPitch::DFlat => Pitch::CSharp,
+            NamedPitch::AFlat => Pitch::GSharp,
+            NamedPitch::EFlat => Pitch::DSharp,
             NamedPitch::BFlat => Pitch::ASharp,
 
-            NamedPitch::ADoubleSharp => Pitch::B,
+            NamedPitch::F => Pitch::F,
+            NamedPitch::C => Pitch::C,
+            NamedPitch::G => Pitch::G,
+            NamedPitch::D => Pitch::D,
+            NamedPitch::A => Pitch::A,
+            NamedPitch::E => Pitch::E,
             NamedPitch::B => Pitch::B,
-            NamedPitch::CFlat => Pitch::B,
+            
+            NamedPitch::FSharp => Pitch::FSharp,
+            NamedPitch::CSharp => Pitch::CSharp,
+            NamedPitch::GSharp => Pitch::GSharp,
+            NamedPitch::DSharp => Pitch::DSharp,
+            NamedPitch::ASharp => Pitch::ASharp,
+            NamedPitch::ESharp => Pitch::F,
+            NamedPitch::BSharp => Pitch::C,
+
+            NamedPitch::FDoubleSharp => Pitch::G,
+            NamedPitch::CDoubleSharp => Pitch::D,
+            NamedPitch::GDoubleSharp => Pitch::A,
+            NamedPitch::DDoubleSharp => Pitch::E,
+            NamedPitch::ADoubleSharp => Pitch::B,
+            NamedPitch::EDoubleSharp => Pitch::FSharp,
+            NamedPitch::BDoubleSharp => Pitch::CSharp,
+
+            NamedPitch::FTripleSharp => Pitch::GSharp,
+            NamedPitch::CTripleSharp => Pitch::DSharp,
+            NamedPitch::GTripleSharp => Pitch::ASharp,
+            NamedPitch::DTripleSharp => Pitch::F,
+            NamedPitch::ATripleSharp => Pitch::C,
+            NamedPitch::ETripleSharp => Pitch::G,
+            NamedPitch::BTripleSharp => Pitch::D,
         }
     }
 }
@@ -249,6 +283,7 @@ pub struct NamedPitchIter {
     pub octaves: i8,
 }
 
+// TODO: Fix this next.
 impl Iterator for NamedPitchIter {
     type Item = Self;
 
@@ -269,36 +304,60 @@ impl Iterator for NamedPitchIter {
 
 // Statics.
 
-static ALL_PITCHES: [NamedPitch; 31] = [
-    NamedPitch::BSharp,
-    NamedPitch::C,
-    NamedPitch::DDoubleFlat,
-    NamedPitch::CSharp,
-    NamedPitch::DFlat,
-    NamedPitch::CDoubleSharp,
-    NamedPitch::D,
-    NamedPitch::EDoubleFlat,
-    NamedPitch::DSharp,
-    NamedPitch::EFlat,
-    NamedPitch::DDoubleSharp,
-    NamedPitch::E,
-    NamedPitch::FFlat,
-    NamedPitch::ESharp,
-    NamedPitch::F,
+static ALL_PITCHES: [NamedPitch; 49] = [
+    NamedPitch::FTripleFlat,
+    NamedPitch::CTripleFlat,
+    NamedPitch::GTripleFlat,
+    NamedPitch::DTripleFlat,
+    NamedPitch::ATripleFlat,
+    NamedPitch::ETripleFlat,
+    NamedPitch::BTripleFlat,
+
+    NamedPitch::FDoubleFlat,
+    NamedPitch::CDoubleFlat,
     NamedPitch::GDoubleFlat,
-    NamedPitch::FSharp,
-    NamedPitch::GFlat,
-    NamedPitch::FDoubleSharp,
-    NamedPitch::G,
+    NamedPitch::DDoubleFlat,
     NamedPitch::ADoubleFlat,
-    NamedPitch::GSharp,
-    NamedPitch::AFlat,
-    NamedPitch::GDoubleSharp,
-    NamedPitch::A,
+    NamedPitch::EDoubleFlat,
     NamedPitch::BDoubleFlat,
-    NamedPitch::ASharp,
-    NamedPitch::BFlat,
-    NamedPitch::ADoubleSharp,
-    NamedPitch::B,
+
+    NamedPitch::FFlat,
     NamedPitch::CFlat,
+    NamedPitch::GFlat,
+    NamedPitch::DFlat,
+    NamedPitch::AFlat,
+    NamedPitch::EFlat,
+    NamedPitch::BFlat,
+
+    NamedPitch::F,
+    NamedPitch::C,
+    NamedPitch::G,
+    NamedPitch::D,
+    NamedPitch::A,
+    NamedPitch::E,
+    NamedPitch::B,
+
+    NamedPitch::FSharp,
+    NamedPitch::CSharp,
+    NamedPitch::GSharp,
+    NamedPitch::DSharp,
+    NamedPitch::ASharp,
+    NamedPitch::ESharp,
+    NamedPitch::BSharp,
+
+    NamedPitch::FDoubleSharp,
+    NamedPitch::CDoubleSharp,
+    NamedPitch::GDoubleSharp,
+    NamedPitch::DDoubleSharp,
+    NamedPitch::ADoubleSharp,
+    NamedPitch::EDoubleSharp,
+    NamedPitch::BDoubleSharp,
+
+    NamedPitch::FTripleSharp,
+    NamedPitch::CTripleSharp,
+    NamedPitch::GTripleSharp,
+    NamedPitch::DTripleSharp,
+    NamedPitch::ATripleSharp,
+    NamedPitch::ETripleSharp,
+    NamedPitch::BTripleSharp,
 ];

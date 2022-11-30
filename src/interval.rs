@@ -69,54 +69,54 @@ impl HasDistance for Interval {
             Interval::PerfectUnison => 0,
             Interval::DiminishedSecond => 1,
 
-            Interval::AugmentedUnison => 2,
-            Interval::MinorSecond => 3,
+            Interval::AugmentedUnison => 4,
+            Interval::MinorSecond => 5,
 
-            Interval::MajorSecond => 5,
-            Interval::DiminishedThird => 6,
+            Interval::MajorSecond => 8,
+            Interval::DiminishedThird => 9,
 
-            Interval::AugmentedSecond => 7,
-            Interval::MinorThird => 8,
+            Interval::AugmentedSecond => 12,
+            Interval::MinorThird => 13,
 
-            Interval::MajorThird => 10,
-            Interval::DiminishedFourth => 11,
+            Interval::MajorThird => 16,
+            Interval::DiminishedFourth => 17,
 
-            Interval::AugmentedThird => 12,
-            Interval::PerfectFourth => 13,
+            Interval::AugmentedThird => 19,
+            Interval::PerfectFourth => 20,
 
-            Interval::AugmentedFourth => 15,
-            Interval::DiminishedFifth => 16,
+            Interval::AugmentedFourth => 24,
+            Interval::DiminishedFifth => 25,
 
-            Interval::PerfectFifth => 18,
-            Interval::DiminishedSixth => 19,
+            Interval::PerfectFifth => 28,
+            Interval::DiminishedSixth => 29,
 
-            Interval::AugmentedFifth => 20,
-            Interval::MinorSixth => 21,
+            Interval::AugmentedFifth => 32,
+            Interval::MinorSixth => 33,
             
-            Interval::MajorSixth => 23,
-            Interval::DiminishedSeventh => 24,
+            Interval::MajorSixth => 36,
+            Interval::DiminishedSeventh => 37,
 
-            Interval::AugmentedSixth => 25,
-            Interval::MinorSeventh => 26,
+            Interval::AugmentedSixth => 40,
+            Interval::MinorSeventh => 41,
 
-            Interval::MajorSeventh => 28,
-            Interval::DiminishedOctave => 29,
+            Interval::MajorSeventh => 44,
+            Interval::DiminishedOctave => 45,
 
-            Interval::AugmentedSeventh => 30,
-            Interval::PerfectOctave => 31,
+            Interval::AugmentedSeventh => 47,
+            Interval::PerfectOctave => 48,
 
             
-            Interval::MinorNinth => 34,
-            Interval::MajorNinth => 36,
-            Interval::AugmentedNinth => 38,
+            Interval::MinorNinth => 53,
+            Interval::MajorNinth => 56,
+            Interval::AugmentedNinth => 60,
 
-            Interval::DiminishedEleventh => 42,
-            Interval::PerfectEleventh => 44,
-            Interval::AugmentedEleventh => 46,
+            Interval::DiminishedEleventh => 65,
+            Interval::PerfectEleventh => 69,
+            Interval::AugmentedEleventh => 72,
 
-            Interval::MinorThirteenth => 52,
-            Interval::MajorThirteenth => 54,
-            Interval::AugmentedThirteenth => 56,
+            Interval::MinorThirteenth => 81,
+            Interval::MajorThirteenth => 84,
+            Interval::AugmentedThirteenth => 88,
         }
     }
 }
