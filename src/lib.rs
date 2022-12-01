@@ -3,6 +3,7 @@
 #![feature(generic_const_exprs)]
 #![feature(specialization)]
 #![feature(concat_idents)]
+#![feature(iter_advance_by)]
 
 pub mod base;
 pub mod octave;

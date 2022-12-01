@@ -1,7 +1,5 @@
 // Traits.
 
-use crate::octave::{HasOctave};
-
 pub trait HasPitch {
     fn pitch(&self) -> Pitch;
 }
@@ -10,7 +8,7 @@ pub trait HasBaseFrequency {
     fn base_frequency(&self) -> f32;
 }
 
-pub trait HasFrequency: HasBaseFrequency + HasOctave {
+pub trait HasFrequency {
     fn frequency(&self) -> f32;
 }
 
@@ -68,17 +66,5 @@ where
 {
     fn base_frequency(&self) -> f32 {
         self.pitch().base_frequency()
-    }
-}
-
-default impl<T> HasFrequency for T
-where
-    T: HasBaseFrequency + HasOctave
-{
-    fn frequency(&self) -> f32 {
-        let octave = self.octave();
-        let base_frequency = self.base_frequency();
-
-        base_frequency * 2.0_f32.powf(octave as u8 as f32)
     }
 }

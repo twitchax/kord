@@ -1,5 +1,7 @@
 // Traits.
 
+use std::ops::Add;
+
 use crate::{pitch::{HasPitch, Pitch}, base::HasStaticName};
 
 pub trait HasNamedPitch {
@@ -266,39 +268,21 @@ impl HasPitch for NamedPitch {
     }
 }
 
-impl NamedPitch {
-    pub fn iter(&self) -> NamedPitchIter {
-        NamedPitchIter {
-            current: *self,
-            octaves: 0,
-        }
-    }
-}
-
 // Iterators.
 
-#[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
-pub struct NamedPitchIter {
-    pub current: NamedPitch,
-    pub octaves: i8,
-}
+impl Add<i8> for NamedPitch {
+    type Output = Self;
 
-// TODO: Fix this next.
-impl Iterator for NamedPitchIter {
-    type Item = Self;
+    fn add(self, rhs: i8) -> Self {
+        let index = ALL_PITCHES.iter().position(|&p| p == self).unwrap();
 
-    fn next(&mut self) -> Option<Self::Item> {
-        // SAFETY: This is safe because every value of `NamedPitch` is present in `ALL_PITCHES`.
-        let current = ALL_PITCHES.iter().position(|&p| p == self.current).unwrap();
-        
-        if current == ALL_PITCHES.len() - 1 {
-            self.octaves += 1;
-            self.current = ALL_PITCHES[0];
-        } else {
-            self.current = ALL_PITCHES[current + 1];
+        let new_index = index as i8 + rhs;
+
+        if !(0..=49).contains(&new_index) {
+            panic!("NamedPitch out of range.");
         }
 
-        Some(*self)
+        ALL_PITCHES[new_index as usize]
     }
 }
 

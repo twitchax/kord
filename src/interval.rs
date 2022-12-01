@@ -1,7 +1,9 @@
 // Traits.
 
-pub trait HasDistance {
-    fn distance(&self) -> u8;
+use crate::octave::{HasOctave, Octave};
+
+pub trait HasEnharmonicDistance {
+    fn enharmonic_distance(&self) -> i8;
 }
 
 // Enum.
@@ -63,60 +65,117 @@ pub enum Interval {
 
 // Impls.
 
-impl HasDistance for Interval {
-    fn distance(&self) -> u8 {
+impl HasEnharmonicDistance for Interval {
+    fn enharmonic_distance(&self) -> i8 {
         match self {
             Interval::PerfectUnison => 0,
-            Interval::DiminishedSecond => 1,
+            Interval::DiminishedSecond => -12,
 
-            Interval::AugmentedUnison => 4,
-            Interval::MinorSecond => 5,
+            Interval::AugmentedUnison => 7,
+            Interval::MinorSecond => -5,
 
-            Interval::MajorSecond => 8,
-            Interval::DiminishedThird => 9,
+            Interval::MajorSecond => 2,
+            Interval::DiminishedThird => -10,
 
-            Interval::AugmentedSecond => 12,
-            Interval::MinorThird => 13,
+            Interval::AugmentedSecond => 9,
+            Interval::MinorThird => -3,
 
-            Interval::MajorThird => 16,
-            Interval::DiminishedFourth => 17,
+            Interval::MajorThird => 4,
+            Interval::DiminishedFourth => -8,
 
-            Interval::AugmentedThird => 19,
-            Interval::PerfectFourth => 20,
+            Interval::AugmentedThird => 11,
+            Interval::PerfectFourth => -1,
 
-            Interval::AugmentedFourth => 24,
-            Interval::DiminishedFifth => 25,
+            Interval::AugmentedFourth => 6,
+            Interval::DiminishedFifth => -6,
 
-            Interval::PerfectFifth => 28,
-            Interval::DiminishedSixth => 29,
+            Interval::PerfectFifth => 1,
+            Interval::DiminishedSixth => -11,
 
-            Interval::AugmentedFifth => 32,
-            Interval::MinorSixth => 33,
+            Interval::AugmentedFifth => 8,
+            Interval::MinorSixth => -4,
             
-            Interval::MajorSixth => 36,
-            Interval::DiminishedSeventh => 37,
+            Interval::MajorSixth => 3,
+            Interval::DiminishedSeventh => -9,
 
-            Interval::AugmentedSixth => 40,
-            Interval::MinorSeventh => 41,
+            Interval::AugmentedSixth => 10,
+            Interval::MinorSeventh => -2,
 
-            Interval::MajorSeventh => 44,
-            Interval::DiminishedOctave => 45,
+            Interval::MajorSeventh => 5,
+            Interval::DiminishedOctave => -7,
 
-            Interval::AugmentedSeventh => 47,
-            Interval::PerfectOctave => 48,
+            Interval::AugmentedSeventh => 12,
+            Interval::PerfectOctave => 0,
 
             
-            Interval::MinorNinth => 53,
-            Interval::MajorNinth => 56,
-            Interval::AugmentedNinth => 60,
+            Interval::MinorNinth => -5,
+            Interval::MajorNinth => 2,
+            Interval::AugmentedNinth => 9,
 
-            Interval::DiminishedEleventh => 65,
-            Interval::PerfectEleventh => 69,
-            Interval::AugmentedEleventh => 72,
+            Interval::DiminishedEleventh => -8,
+            Interval::PerfectEleventh => -1,
+            Interval::AugmentedEleventh => 6,
 
-            Interval::MinorThirteenth => 81,
-            Interval::MajorThirteenth => 84,
-            Interval::AugmentedThirteenth => 88,
+            Interval::MinorThirteenth => -4,
+            Interval::MajorThirteenth => 3,
+            Interval::AugmentedThirteenth => 10,
+        }
+    }
+}
+
+impl HasOctave for Interval {
+    fn octave(&self) -> Octave {
+        match self {
+            Interval::PerfectUnison => Octave::Zero,
+            Interval::DiminishedSecond => Octave::Zero,
+
+            Interval::AugmentedUnison => Octave::Zero,
+            Interval::MinorSecond => Octave::Zero,
+
+            Interval::MajorSecond => Octave::Zero,
+            Interval::DiminishedThird => Octave::Zero,
+
+            Interval::AugmentedSecond => Octave::Zero,
+            Interval::MinorThird => Octave::Zero,
+
+            Interval::MajorThird => Octave::Zero,
+            Interval::DiminishedFourth => Octave::Zero,
+
+            Interval::AugmentedThird => Octave::Zero,
+            Interval::PerfectFourth => Octave::Zero,
+
+            Interval::AugmentedFourth => Octave::Zero,
+            Interval::DiminishedFifth => Octave::Zero,
+
+            Interval::PerfectFifth => Octave::Zero,
+            Interval::DiminishedSixth => Octave::Zero,
+
+            Interval::AugmentedFifth => Octave::Zero,
+            Interval::MinorSixth => Octave::Zero,
+
+            Interval::MajorSixth => Octave::Zero,
+            Interval::DiminishedSeventh => Octave::Zero,
+
+            Interval::AugmentedSixth => Octave::Zero,
+            Interval::MinorSeventh => Octave::Zero,
+
+            Interval::MajorSeventh => Octave::Zero,
+            Interval::DiminishedOctave => Octave::Zero,
+
+            Interval::AugmentedSeventh => Octave::Zero,
+            Interval::PerfectOctave => Octave::One,
+
+            Interval::MinorNinth => Octave::One,
+            Interval::MajorNinth => Octave::One,
+            Interval::AugmentedNinth => Octave::One,
+
+            Interval::DiminishedEleventh => Octave::One,
+            Interval::PerfectEleventh => Octave::One,
+            Interval::AugmentedEleventh => Octave::One,
+
+            Interval::MinorThirteenth => Octave::One,
+            Interval::MajorThirteenth => Octave::One,
+            Interval::AugmentedThirteenth => Octave::One,
         }
     }
 }
