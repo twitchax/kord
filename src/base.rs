@@ -7,6 +7,12 @@
 // const DOUBLE_SHARP: char = '𝄪';
 // const DOUBLE_FLAT: char = '𝄫';
 
+// Helpers.
+
+pub type Res<T> = anyhow::Result<T>;
+pub type Err = anyhow::Error;
+pub type Void = Res<()>;
+
 // Traits.
 
 pub trait HasStaticName {

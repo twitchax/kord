@@ -1,4 +1,4 @@
-use crate::{interval::Interval, base::{HasStaticName, HasDescription}};
+use crate::{interval::Interval, base::{HasStaticName, HasDescription, HasName}, modifier::Degree};
 
 // Traits.
 
@@ -19,17 +19,17 @@ pub enum KnownChord {
     Major,
     Minor,
     Major7,
-    Dominant,
+    Dominant(Degree),
     MinorMajor7,
-    MinorDominant,
-    DominantSharp11,
+    MinorDominant(Degree),
+    DominantSharp11(Degree),
     Augmented,
     AugmentedMajor7,
-    AugmentedDominant,
-    HalfDiminished,
+    AugmentedDominant(Degree),
+    HalfDiminished(Degree),
     Diminished,
-    DominantFlat9,
-    DominantSharp9
+    DominantFlat9(Degree),
+    DominantSharp9(Degree)
 }
 
 // Impls.
@@ -41,17 +41,17 @@ impl HasDescription for KnownChord {
             KnownChord::Major => "major",
             KnownChord::Minor => "minor",
             KnownChord::Major7 => "major 7, ionian, first mode of major scale",
-            KnownChord::Dominant => "dominant 7, mixolydian, fifth mode of major scale, major with flat seven",
+            KnownChord::Dominant(_) => "dominant, mixolydian, fifth mode of major scale, major with flat seven",
             KnownChord::MinorMajor7 => "minor major 7, melodic minor, major with flat third",
-            KnownChord::MinorDominant => "minor 7, dorian, second mode of major scale, major with flat third and flat seven",
-            KnownChord::DominantSharp11 => "dominant sharp 11, lydian dominant, lyxian, major with sharp four and flat seven",
+            KnownChord::MinorDominant(_) => "minor 7, dorian, second mode of major scale, major with flat third and flat seven",
+            KnownChord::DominantSharp11(_) => "dominant sharp 11, lydian dominant, lyxian, major with sharp four and flat seven",
             KnownChord::Augmented => "augmented, major with sharp five",
             KnownChord::AugmentedMajor7 => "augmented major 7, lyxian, major with sharp four and five, third mode of melodic minor",
-            KnownChord::AugmentedDominant => "augmented 7, whole tone",
-            KnownChord::HalfDiminished => "half diminished, locrian, minor seven flat five, seventh mode of major scale, major scale starting one half step up",
+            KnownChord::AugmentedDominant(_) => "augmented dominant, whole tone",
+            KnownChord::HalfDiminished(_) => "half diminished, locrian, minor seven flat five, seventh mode of major scale, major scale starting one half step up",
             KnownChord::Diminished => "fully diminished (whole first), diminished seventh, whole/half/whole diminished",
-            KnownChord::DominantFlat9 => "dominant flat 9, fully diminished (half first), half/whole/half diminished",
-            KnownChord::DominantSharp9 => "dominant sharp 9, altered, altered dominant, super locrian, diminished whole tone, seventh mode of a melodic minor scale, melodic minor up a half step",
+            KnownChord::DominantFlat9(_) => "dominant flat 9, fully diminished (half first), half/whole/half diminished",
+            KnownChord::DominantSharp9(_) => "dominant sharp 9, altered, altered dominant, super locrian, diminished whole tone, seventh mode of a melodic minor scale, melodic minor up a half step",
         }
     }
 }
@@ -89,7 +89,7 @@ impl HasRelativeScale for KnownChord {
                 Interval::MajorSixth, 
                 Interval::MajorSeventh
             ],
-            KnownChord::Dominant => vec![
+            KnownChord::Dominant(_) => vec![
                 Interval::PerfectUnison, 
                 Interval::MajorSecond, 
                 Interval::MajorThird, 
@@ -107,7 +107,7 @@ impl HasRelativeScale for KnownChord {
                 Interval::MajorSixth, 
                 Interval::MajorSeventh
             ],
-            KnownChord::MinorDominant => vec![
+            KnownChord::MinorDominant(_) => vec![
                 Interval::PerfectUnison, 
                 Interval::MajorSecond, 
                 Interval::MinorThird, 
@@ -116,7 +116,7 @@ impl HasRelativeScale for KnownChord {
                 Interval::MajorSixth, 
                 Interval::MinorSeventh
             ],
-            KnownChord::DominantSharp11 => vec![
+            KnownChord::DominantSharp11(_) => vec![
                 Interval::PerfectUnison, 
                 Interval::MajorSecond, 
                 Interval::MajorThird, 
@@ -143,7 +143,7 @@ impl HasRelativeScale for KnownChord {
                 Interval::MajorSixth,
                 Interval::MajorSeventh
             ],
-            KnownChord::AugmentedDominant => vec![
+            KnownChord::AugmentedDominant(_) => vec![
                 Interval::PerfectUnison, 
                 Interval::MajorSecond, 
                 Interval::MajorThird, 
@@ -151,7 +151,7 @@ impl HasRelativeScale for KnownChord {
                 Interval::AugmentedFifth,
                 Interval::AugmentedSixth
             ],
-            KnownChord::HalfDiminished => vec![
+            KnownChord::HalfDiminished(_ ) => vec![
                 Interval::PerfectUnison, 
                 Interval::MajorSecond, 
                 Interval::MinorThird, 
@@ -170,7 +170,7 @@ impl HasRelativeScale for KnownChord {
                 Interval::DiminishedSeventh,
                 Interval::MajorSeventh
             ],
-            KnownChord::DominantFlat9 => vec![
+            KnownChord::DominantFlat9(_) => vec![
                 Interval::PerfectUnison, 
                 Interval::MinorSecond, 
                 Interval::MinorThird,
@@ -180,7 +180,7 @@ impl HasRelativeScale for KnownChord {
                 Interval::MajorSixth, 
                 Interval::MinorSeventh
             ],
-            KnownChord::DominantSharp9 => vec![
+            KnownChord::DominantSharp9(_) => vec![
                 Interval::PerfectUnison, 
                 Interval::MinorSecond,
                 Interval::MinorThird,
@@ -215,7 +215,7 @@ impl HasRelativeChord for KnownChord {
                 Interval::PerfectFifth, 
                 Interval::MajorSeventh
             ],
-            KnownChord::Dominant => vec![
+            KnownChord::Dominant(_) => vec![
                 Interval::PerfectUnison, 
                 Interval::MajorThird, 
                 Interval::PerfectFifth, 
@@ -227,13 +227,13 @@ impl HasRelativeChord for KnownChord {
                 Interval::PerfectFifth, 
                 Interval::MajorSeventh
             ],
-            KnownChord::MinorDominant => vec![
+            KnownChord::MinorDominant(_) => vec![
                 Interval::PerfectUnison, 
                 Interval::MinorThird, 
                 Interval::PerfectFifth, 
                 Interval::MinorSeventh
             ],
-            KnownChord::DominantSharp11 => vec![
+            KnownChord::DominantSharp11(_) => vec![
                 Interval::PerfectUnison, 
                 Interval::MajorThird, 
                 Interval::PerfectFifth, 
@@ -251,13 +251,13 @@ impl HasRelativeChord for KnownChord {
                 Interval::AugmentedFifth, 
                 Interval::MajorSeventh
             ],
-            KnownChord::AugmentedDominant => vec![
+            KnownChord::AugmentedDominant(_) => vec![
                 Interval::PerfectUnison, 
                 Interval::MajorThird, 
                 Interval::AugmentedFifth, 
                 Interval::MinorSeventh
             ],
-            KnownChord::HalfDiminished => vec![
+            KnownChord::HalfDiminished(_) => vec![
                 Interval::PerfectUnison, 
                 Interval::MinorThird, 
                 Interval::DiminishedFifth, 
@@ -269,14 +269,14 @@ impl HasRelativeChord for KnownChord {
                 Interval::DiminishedFifth, 
                 Interval::DiminishedSeventh
             ],
-            KnownChord::DominantFlat9 => vec![
+            KnownChord::DominantFlat9(_) => vec![
                 Interval::PerfectUnison, 
                 Interval::MajorThird, 
                 Interval::PerfectFifth, 
                 Interval::MinorSeventh,
                 Interval::MinorNinth
             ],
-            KnownChord::DominantSharp9 => vec![
+            KnownChord::DominantSharp9(_) => vec![
                 Interval::PerfectUnison, 
                 Interval::MajorThird, 
                 Interval::PerfectFifth, 
@@ -287,24 +287,24 @@ impl HasRelativeChord for KnownChord {
     }
 }
 
-impl HasStaticName for KnownChord {
-    fn static_name(&self) -> &'static str {
+impl HasName for KnownChord {
+    fn name(&self) -> String {
         match self {
-            KnownChord::Unknown => "",
-            KnownChord::Major => "",
-            KnownChord::Minor => "m",
-            KnownChord::Major7 => "maj7",
-            KnownChord::Dominant => "7",
-            KnownChord::MinorMajor7 => "m(maj7)",
-            KnownChord::MinorDominant => "m7",
-            KnownChord::DominantSharp11 => "7(♯11)",
-            KnownChord::Augmented => "+",
-            KnownChord::AugmentedMajor7 => "+(maj7)",
-            KnownChord::AugmentedDominant => "+7",
-            KnownChord::HalfDiminished => "m7(♭5)",
-            KnownChord::Diminished => "dim",
-            KnownChord::DominantFlat9 => "7(♭9)",
-            KnownChord::DominantSharp9 => "7(♯9)",
+            KnownChord::Unknown => "".to_owned(),
+            KnownChord::Major => "".to_owned(),
+            KnownChord::Minor => "m".to_owned(),
+            KnownChord::Major7 => "maj7".to_owned(),
+            KnownChord::Dominant(d) => d.static_name().to_owned(),
+            KnownChord::MinorMajor7 => "m(maj7)".to_owned(),
+            KnownChord::MinorDominant(d) => format!("m{}", d.static_name()),
+            KnownChord::DominantSharp11(d) => format!("{}(♯11)", d.static_name()),
+            KnownChord::Augmented => "+".to_owned(),
+            KnownChord::AugmentedMajor7 => "+(maj7)".to_owned(),
+            KnownChord::AugmentedDominant(d) => format!("+{}", d.static_name()),
+            KnownChord::HalfDiminished(d) => format!("m{}(♭5)", d.static_name()),
+            KnownChord::Diminished => "dim".to_owned(),
+            KnownChord::DominantFlat9(d) => format!("{}(♭9)", d.static_name()),
+            KnownChord::DominantSharp9(d) => format!("{}(♯9)", d.static_name()),
         }
     }
 }

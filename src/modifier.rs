@@ -1,4 +1,8 @@
+// Traits.
 
+pub trait HasIsDominant {
+    fn is_dominant(&self) -> bool;
+}
 
 // Enum.
 
@@ -6,7 +10,7 @@ use crate::base::HasStaticName;
 
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
 #[repr(u8)]
-pub enum Dominant {
+pub enum Degree {
     Seven,
     Nine,
     Eleven,
@@ -22,7 +26,7 @@ pub enum Modifier {
     Augmented5,
 
     Major7,
-    Dominant(Dominant),
+    Dominant(Degree),
 
     Flat9,
     Sharp9,
@@ -54,13 +58,19 @@ pub enum Extension {
 
 // Impls.
 
-impl HasStaticName for Dominant {
+impl HasIsDominant for Modifier {
+    fn is_dominant(&self) -> bool {
+        matches!(self, Modifier::Dominant(_))
+    }
+}
+
+impl HasStaticName for Degree {
     fn static_name(&self) -> &'static str {
         match self {
-            Dominant::Seven => "7",
-            Dominant::Nine => "9",
-            Dominant::Eleven => "11",
-            Dominant::Thirteen => "13",
+            Degree::Seven => "7",
+            Degree::Nine => "9",
+            Degree::Eleven => "11",
+            Degree::Thirteen => "13",
         }
     }
 }

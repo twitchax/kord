@@ -1,9 +1,9 @@
 
 // Traits.
 
-use std::collections::HashSet;
+use std::{collections::HashSet, fmt::Display};
 
-use crate::{note::{Note, CZero}, modifier::{Modifier, Extension, Dominant}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::Interval, base::{HasDescription, HasName, HasStaticName}};
+use crate::{note::{Note, CZero}, modifier::{Modifier, Extension, Degree, HasIsDominant}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::Interval, base::{HasDescription, HasName, HasStaticName}};
 
 pub trait HasRoot {
     fn root(&self) -> Note;
@@ -41,6 +41,7 @@ pub trait Chordable {
     fn with_modifier(self, modifier: Modifier) -> Chord;
     fn with_extension(self, extension: Extension) -> Chord;
     fn with_inversion(self, inversion: u8) -> Chord;
+    fn with_slash(self, slash: Note) -> Chord;
 
     // Modifiers.
 
@@ -48,11 +49,13 @@ pub trait Chordable {
     fn min(self) -> Chord;
 
     fn flat5(self) -> Chord;
+    fn flat_five(self) -> Chord;
 
     fn augmented(self) -> Chord;
     fn aug(self) -> Chord;
 
     fn major7(self) -> Chord;
+    fn major_seven(self) -> Chord;
     fn maj7(self) -> Chord;
 
     fn dominant7(self) -> Chord;
@@ -63,12 +66,16 @@ pub trait Chordable {
     fn eleven(self) -> Chord;
     fn dominant13(self) -> Chord;
     fn thirteen(self) -> Chord;
-    fn dominant(self, dominant: Dominant) -> Chord;
+    fn dominant(self, dominant: Degree) -> Chord;
 
     fn flat9(self) -> Chord;
+    fn flat_nine(self) -> Chord;
+
     fn sharp9(self) -> Chord;
+    fn sharp_nine(self) -> Chord;
 
     fn sharp11(self) -> Chord;
+    fn sharp_eleven(self) -> Chord;
 
     // Special.
 
@@ -81,22 +88,39 @@ pub trait Chordable {
     // Extensions.
 
     fn sus2(self) -> Chord;
+    fn sus_two(self) -> Chord;
+
     fn sus4(self) -> Chord;
+    fn sus_four(self) -> Chord;
     fn sustain(self) -> Chord;
     fn sus(self) -> Chord;
 
     fn flat11(self) -> Chord;
+    fn flat_eleven(self) -> Chord;
 
     fn flat13(self) -> Chord;
+    fn flat_thirteen(self) -> Chord;
+
     fn sharp13(self) -> Chord;
+    fn sharp_thirteen(self) -> Chord;
 
     fn add2(self) -> Chord;
+    fn add_two(self) -> Chord;
+
     fn add4(self) -> Chord;
+    fn add_four(self) -> Chord;
+
     fn add6(self) -> Chord;
+    fn add_six(self) -> Chord;
 
     fn add9(self) -> Chord;
+    fn add_nine(self) -> Chord;
+
     fn add11(self) -> Chord;
+    fn add_eleven(self) -> Chord;
+
     fn add13(self) -> Chord;
+    fn add_thirteen(self) -> Chord;
 }
 
 // Struct.
@@ -131,7 +155,7 @@ impl HasName for Chord {
 
         name.push_str(self.root.static_name());
 
-        name.push_str(self.known_chord().static_name());
+        name.push_str(&self.known_chord().name());
 
         if !self.extensions.is_empty() {
             for e in self.extensions.iter() {
@@ -177,6 +201,15 @@ impl HasInversion for Chord {
     }
 }
 
+impl Display for Chord {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let scale = self.scale().iter().map(|n| n.static_name()).collect::<Vec<_>>().join(", ");
+        let chord = self.chord().iter().map(|n| n.static_name()).collect::<Vec<_>>().join(", ");
+
+        write!(f, "{}\n   {}\n   {}\n   {}", self.name(), self.description(), scale, chord)
+    }
+}
+
 impl Chordable for Chord {
     fn with_modifier(mut self, modifier: Modifier) -> Chord {
         self.modifiers.insert(modifier);
@@ -196,6 +229,12 @@ impl Chordable for Chord {
         self
     }
 
+    fn with_slash(mut self, slash: Note) -> Chord {
+        self.slash = Some(slash);
+
+        self
+    }
+
     // Modifiers.
 
     fn minor(self) -> Chord {
@@ -210,6 +249,10 @@ impl Chordable for Chord {
         self.with_modifier(Modifier::Flat5)
     }
 
+    fn flat_five(self) -> Chord {
+        self.flat5()
+    }
+
     fn augmented(self) -> Chord {
         self.with_modifier(Modifier::Augmented5)
     }
@@ -222,12 +265,16 @@ impl Chordable for Chord {
         self.with_modifier(Modifier::Major7)
     }
 
+    fn major_seven(self) -> Chord {
+        self.major7()
+    }
+
     fn maj7(self) -> Chord {
         self.major7()
     }
 
     fn dominant7(self) -> Chord {
-        self.with_modifier(Modifier::Dominant(Dominant::Seven))
+        self.with_modifier(Modifier::Dominant(Degree::Seven))
     }
 
     fn seven(self) -> Chord {
@@ -235,7 +282,7 @@ impl Chordable for Chord {
     }
 
     fn dominant9(self) -> Chord {
-        self.with_modifier(Modifier::Dominant(Dominant::Nine))
+        self.with_modifier(Modifier::Dominant(Degree::Nine))
     }
 
     fn nine(self) -> Chord {
@@ -243,7 +290,7 @@ impl Chordable for Chord {
     }
 
     fn dominant11(self) -> Chord {
-        self.with_modifier(Modifier::Dominant(Dominant::Eleven))
+        self.with_modifier(Modifier::Dominant(Degree::Eleven))
     }
 
     fn eleven(self) -> Chord {
@@ -251,14 +298,14 @@ impl Chordable for Chord {
     }
 
     fn dominant13(self) -> Chord {
-        self.with_modifier(Modifier::Dominant(Dominant::Thirteen))
+        self.with_modifier(Modifier::Dominant(Degree::Thirteen))
     }
 
     fn thirteen(self) -> Chord {
         self.dominant13()
     }
 
-    fn dominant(self, dominant: Dominant) -> Chord {
+    fn dominant(self, dominant: Degree) -> Chord {
         self.with_modifier(Modifier::Dominant(dominant))
     }
 
@@ -266,12 +313,24 @@ impl Chordable for Chord {
         self.with_modifier(Modifier::Flat9)
     }
 
+    fn flat_nine(self) -> Chord {
+        self.flat9()
+    }
+
     fn sharp9(self) -> Chord {
         self.with_modifier(Modifier::Sharp9)
     }
 
+    fn sharp_nine(self) -> Chord {
+        self.sharp9()
+    }
+
     fn sharp11(self) -> Chord {
         self.with_modifier(Modifier::Sharp11)
+    }
+
+    fn sharp_eleven(self) -> Chord {
+        self.sharp11()
     }
 
     // Special.
@@ -298,8 +357,16 @@ impl Chordable for Chord {
         self.with_extension(Extension::Sus2)
     }
 
+    fn sus_two(self) -> Chord {
+        self.sus2()
+    }
+
     fn sus4(self) -> Chord {
         self.with_extension(Extension::Sus4)
+    }
+
+    fn sus_four(self) -> Chord {
+        self.sus4()
     }
 
     fn sustain(self) -> Chord {
@@ -314,43 +381,85 @@ impl Chordable for Chord {
         self.with_extension(Extension::Flat11)
     }
 
+    fn flat_eleven(self) -> Chord {
+        self.flat11()
+    }
+
     fn flat13(self) -> Chord {
         self.with_extension(Extension::Flat13)
+    }
+
+    fn flat_thirteen(self) -> Chord {
+        self.flat13()
     }
 
     fn sharp13(self) -> Chord {
         self.with_extension(Extension::Sharp13)
     }
 
+    fn sharp_thirteen(self) -> Chord {
+        self.sharp13()
+    }
+
     fn add2(self) -> Chord {
         self.with_extension(Extension::Add2)
+    }
+
+    fn add_two(self) -> Chord {
+        self.add2()
     }
 
     fn add4(self) -> Chord {
         self.with_extension(Extension::Add4)
     }
 
+    fn add_four(self) -> Chord {
+        self.add4()
+    }
+
     fn add6(self) -> Chord {
         self.with_extension(Extension::Add6)
+    }
+
+    fn add_six(self) -> Chord {
+        self.add6()
     }
 
     fn add9(self) -> Chord {
         self.with_extension(Extension::Add9)
     }
 
+    fn add_nine(self) -> Chord {
+        self.add9()
+    }
+
     fn add11(self) -> Chord {
         self.with_extension(Extension::Add11)
     }
 
+    fn add_eleven(self) -> Chord {
+        self.add11()
+    }
+
     fn add13(self) -> Chord {
         self.with_extension(Extension::Add13)
+    }
+
+    fn add_thirteen(self) -> Chord {
+        self.add13()
     }
 }
 
 impl HasKnownChord for Chord {
     fn known_chord(&self) -> KnownChord {
         let modifiers = &self.modifiers;
-        let contains_dominant = modifiers.contains(&Modifier::Dominant(Dominant::Seven)) || modifiers.contains(&Modifier::Dominant(Dominant::Nine)) || modifiers.contains(&Modifier::Dominant(Dominant::Eleven)) || modifiers.contains(&Modifier::Dominant(Dominant::Thirteen));
+        
+        let contains_dominant = modifiers.contains(&Modifier::Dominant(Degree::Seven)) || modifiers.contains(&Modifier::Dominant(Degree::Nine)) || modifiers.contains(&Modifier::Dominant(Degree::Eleven)) || modifiers.contains(&Modifier::Dominant(Degree::Thirteen));
+        
+        let degree = match modifiers.iter().find(|m| m.is_dominant()) {
+            Some(Modifier::Dominant(d)) => *d,
+            _ => Degree::Seven,
+        };
 
         
         if modifiers.contains(&Modifier::Diminished) {
@@ -362,10 +471,10 @@ impl HasKnownChord for Chord {
 
             if contains_dominant {
                 if modifiers.contains(&Modifier::Flat5) {
-                    return KnownChord::HalfDiminished;
+                    return KnownChord::HalfDiminished(degree);
                 }
 
-                return KnownChord::MinorDominant;
+                return KnownChord::MinorDominant(degree);
             }
 
             return KnownChord::Minor;
@@ -376,7 +485,7 @@ impl HasKnownChord for Chord {
                 }
 
                 if contains_dominant {
-                    return KnownChord::AugmentedDominant;
+                    return KnownChord::AugmentedDominant(degree);
                 }
 
                 return KnownChord::Augmented;
@@ -388,18 +497,18 @@ impl HasKnownChord for Chord {
 
             if contains_dominant {
                 if modifiers.contains(&Modifier::Sharp11) {
-                    return KnownChord::DominantSharp11;
+                    return KnownChord::DominantSharp11(degree);
                 }
                 
                 if modifiers.contains(&Modifier::Flat9) {
-                    return KnownChord::DominantFlat9;
+                    return KnownChord::DominantFlat9(degree);
                 }
     
                 if modifiers.contains(&Modifier::Sharp9) {
-                    return KnownChord::DominantSharp9;
+                    return KnownChord::DominantSharp9(degree);
                 }
                 
-                return KnownChord::Dominant;
+                return KnownChord::Dominant(degree);
             }
             
             return KnownChord::Major;
@@ -427,12 +536,12 @@ impl HasRelativeChord for Chord {
 
         // Dominant extensions.
 
-        if modifiers.contains(&Modifier::Dominant(Dominant::Nine)) {
+        if modifiers.contains(&Modifier::Dominant(Degree::Nine)) {
             result.push(Interval::MajorNinth);
-        } else if modifiers.contains(&Modifier::Dominant(Dominant::Eleven)) {
+        } else if modifiers.contains(&Modifier::Dominant(Degree::Eleven)) {
             result.push(Interval::MajorNinth);
             result.push(Interval::PerfectEleventh);
-        } else if modifiers.contains(&Modifier::Dominant(Dominant::Thirteen)) {
+        } else if modifiers.contains(&Modifier::Dominant(Degree::Thirteen)) {
             result.push(Interval::MajorNinth);
             result.push(Interval::PerfectEleventh);
             result.push(Interval::MajorThirteenth);
@@ -536,25 +645,25 @@ mod tests {
         assert_eq!(Chord::new(C).minor().known_chord(), KnownChord::Minor);
         assert_eq!(Chord::new(C).major7().known_chord(), KnownChord::Major7);
         assert_eq!(Chord::new(C).minor().major7().known_chord(), KnownChord::MinorMajor7);
-        assert_eq!(Chord::new(C).minor().seven().known_chord(), KnownChord::MinorDominant);
-        assert_eq!(Chord::new(C).minor().eleven().known_chord(), KnownChord::MinorDominant);
-        assert_eq!(Chord::new(C).seven().known_chord(), KnownChord::Dominant);
-        assert_eq!(Chord::new(C).eleven().known_chord(), KnownChord::Dominant);
-        assert_eq!(Chord::new(C).thirteen().known_chord(), KnownChord::Dominant);
+        assert_eq!(Chord::new(C).minor().seven().known_chord(), KnownChord::MinorDominant(Degree::Seven));
+        assert_eq!(Chord::new(C).minor().eleven().known_chord(), KnownChord::MinorDominant(Degree::Eleven));
+        assert_eq!(Chord::new(C).seven().known_chord(), KnownChord::Dominant(Degree::Seven));
+        assert_eq!(Chord::new(C).eleven().known_chord(), KnownChord::Dominant(Degree::Eleven));
+        assert_eq!(Chord::new(C).thirteen().known_chord(), KnownChord::Dominant(Degree::Thirteen));
         assert_eq!(Chord::new(C).diminished().known_chord(), KnownChord::Diminished);
         assert_eq!(Chord::new(C).dim().known_chord(), KnownChord::Diminished);
-        assert_eq!(Chord::new(C).minor().seven().flat5().known_chord(), KnownChord::HalfDiminished);
+        assert_eq!(Chord::new(C).minor().seven().flat5().known_chord(), KnownChord::HalfDiminished(Degree::Seven));
         assert_eq!(Chord::new(C).augmented().known_chord(), KnownChord::Augmented);
         assert_eq!(Chord::new(C).augmented().major7().known_chord(), KnownChord::AugmentedMajor7);
-        assert_eq!(Chord::new(C).augmented().seven().known_chord(), KnownChord::AugmentedDominant);
-        assert_eq!(Chord::new(C).seven().sharp11().known_chord(), KnownChord::DominantSharp11);
-        assert_eq!(Chord::new(C).seven().flat9().known_chord(), KnownChord::DominantFlat9);
-        assert_eq!(Chord::new(C).seven().sharp9().known_chord(), KnownChord::DominantSharp9);
+        assert_eq!(Chord::new(C).augmented().seven().known_chord(), KnownChord::AugmentedDominant(Degree::Seven));
+        assert_eq!(Chord::new(C).seven().sharp11().known_chord(), KnownChord::DominantSharp11(Degree::Seven));
+        assert_eq!(Chord::new(C).seven().flat9().known_chord(), KnownChord::DominantFlat9(Degree::Seven));
+        assert_eq!(Chord::new(C).seven().sharp9().known_chord(), KnownChord::DominantSharp9(Degree::Seven));
 
         assert_eq!(Chord::new(C).sus2().known_chord(), KnownChord::Major);
         assert_eq!(Chord::new(C).sus4().known_chord(), KnownChord::Major);
         assert_eq!(Chord::new(C).sustain().known_chord(), KnownChord::Major);
-        assert_eq!(Chord::new(C).seven().sus().known_chord(), KnownChord::Dominant);
+        assert_eq!(Chord::new(C).seven().sus().known_chord(), KnownChord::Dominant(Degree::Seven));
     }
 
     #[test]
