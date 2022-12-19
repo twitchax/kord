@@ -166,11 +166,18 @@ impl Add<Interval> for Note {
             Octave::Zero
         };
 
+        // There is a "special wrap" for `Cb`, and `Dbbb`, since they don't technically loop.
+        let special_octave = if new_pitch == NamedPitch::CFlat || new_pitch == NamedPitch::DTripleFlat {
+            Octave::One
+        } else {
+            Octave::Zero
+        };
+
         // Get whether or not the interval itself contains an octave.
         let interval_octave = rhs.octave();
 
         Note {
-            octave: self.octave + wrapping_octave + interval_octave,
+            octave: self.octave + wrapping_octave + special_octave + interval_octave,
             named_pitch: new_pitch,
         }
     }
@@ -297,7 +304,7 @@ mod tests {
         assert_eq!(C + Interval::MinorSeventh, BFlat);
 
         assert_eq!(C + Interval::MajorSeventh, B);
-        assert_eq!(C + Interval::DiminishedOctave, CFlat);
+        assert_eq!(C + Interval::DiminishedOctave, CFlatFive);
 
         assert_eq!(C + Interval::AugmentedSeventh, BSharp);
         assert_eq!(C + Interval::PerfectOctave, CFive);
@@ -315,11 +322,17 @@ mod tests {
         assert_eq!(C + Interval::MinorThirteenth, AFlatFive);
         assert_eq!(C + Interval::MajorThirteenth, AFive);
         assert_eq!(C + Interval::AugmentedThirteenth, ASharpFive);
+
+        // Special cases to check.
+        assert_eq!(C + Interval::DiminishedOctave, CFlatFive);
+        assert_eq!(BFlat + Interval::MinorNinth, CFlatSix);
+        assert_eq!(BFlatThree + Interval::MinorNinth, CFlatFive);
     }
 
     #[test]
     fn test_pitch() {
         assert_eq!(C.frequency(), (CThree + Interval::PerfectOctave).frequency());
+        assert_eq!(CFlatFour.frequency(), BThree.frequency());
         assert_eq!(BSharp.frequency(), CFive.frequency());
         assert_eq!(DTripleFlatFive.frequency(), B.frequency());
     }

@@ -88,5 +88,5 @@ fn play(chord: &Chord, delay: f32, length: f32) {
         sinks.push(sink);
     }
 
-    std::thread::sleep(Duration::from_secs_f32(5.0));
+    std::thread::sleep(Duration::from_secs_f32(length));
 }
