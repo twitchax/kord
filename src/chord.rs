@@ -3,14 +3,16 @@
 
 use std::{collections::HashSet, fmt::Display};
 
-use crate::{note::{Note, CZero}, modifier::{Modifier, Extension, Degree, HasIsDominant}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::Interval, base::{HasDescription, HasName, HasStaticName}};
+use pest::Parser;
+
+use crate::{note::{Note, CZero}, modifier::{Modifier, Extension, Degree, HasIsDominant}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::Interval, base::{HasDescription, HasName, HasStaticName, Res}, parser::{ChordParser, Rule, note_str_to_note}, octave::{Octave}, named_pitch::HasNamedPitch};
 
 pub trait HasRoot {
     fn root(&self) -> Note;
 }
 
-pub trait HasBase {
-    fn base(&self) -> Note;
+pub trait HasSlash {
+    fn slash(&self) -> Note;
 }
 
 pub trait HasShapeModifiers {
@@ -42,6 +44,7 @@ pub trait Chordable {
     fn with_extension(self, extension: Extension) -> Chord;
     fn with_inversion(self, inversion: u8) -> Chord;
     fn with_slash(self, slash: Note) -> Chord;
+    fn with_octave(self, octave: Octave) -> Chord;
 
     // Modifiers.
 
@@ -123,6 +126,10 @@ pub trait Chordable {
     fn add_thirteen(self) -> Chord;
 }
 
+pub trait Parsable {
+    fn parse(symbol: &str) -> Res<Self> where Self: Sized;
+}
+
 // Struct.
 
 #[derive(PartialEq, Eq, Clone, Debug)]
@@ -135,7 +142,6 @@ pub struct Chord {
 }
 
 // Impls.
-
 
 impl Chord {
     pub fn new(root: Note) -> Self {
@@ -177,8 +183,8 @@ impl HasRoot for Chord {
     }
 }
 
-impl HasBase for Chord {
-    fn base(&self) -> Note {
+impl HasSlash for Chord {
+    fn slash(&self) -> Note {
         self.slash.unwrap_or(self.root)
     }
 }
@@ -233,6 +239,15 @@ impl Chordable for Chord {
         self.slash = Some(slash);
 
         self
+    }
+
+    fn with_octave(self, octave: Octave) -> Self {
+        let root = Note::new(self.root.named_pitch(), octave);
+
+        Chord {
+            root,
+            ..self
+        }
     }
 
     // Modifiers.
@@ -628,6 +643,127 @@ impl HasChord for Chord {
         }
 
         result
+    }
+}
+
+impl Parsable for Chord {
+    fn parse(input: &str) -> Res<Self>
+    where
+        Self: Sized,
+    {
+        let root = ChordParser::parse(Rule::chord, input)?.next().unwrap();
+        
+        assert_eq!(Rule::chord, root.as_rule());
+        
+        let mut components = root.into_inner();
+
+        let note = components.next().unwrap();
+
+        assert_eq!(Rule::note, note.as_rule());
+        
+        let mut result = Chord::new(note_str_to_note(note.as_str())?);
+
+        while let Some(component) = components.next() {
+            match component.as_rule() {
+                Rule::maj7_modifier => {
+                    result = result.major7();
+                },
+                Rule::minor => {
+                    result = result.minor();
+                },
+                Rule::augmented => {
+                    result = result.augmented();
+                },
+                Rule::diminished => {
+                    result = result.diminished();
+                },
+                Rule::half_diminished => {
+                    result = result.half_diminished();
+                },
+                Rule::dominant_modifier => {
+                    match component.as_str() {
+                        "7" => {
+                            result = result.seven();
+                        },
+                        "9" => {
+                            result = result.nine();
+                        },
+                        "11" => {
+                            result = result.eleven();
+                        },
+                        "13" => {
+                            result = result.thirteen();
+                        },
+                        _ => {
+                            unreachable!();
+                        }
+                    }
+                },
+                Rule::modifier => {
+                    match component.as_str() {
+                        "sus2" => {
+                            result = result.sus2();
+                        },
+                        "sus4" => {
+                            result = result.sus4();
+                        },
+                        "add2" => {
+                            result = result.add2();
+                        },
+                        "add4" => {
+                            result = result.add4();
+                        },
+                        "add6" | "6" => {
+                            result = result.add6();
+                        },
+                        "b5" | "♭5" => {
+                            result = result.flat5();
+                        },
+                        "add9" => {
+                            result = result.add9();
+                        },
+                        "b9" | "♭9" => {
+                            result = result.flat9();
+                        },
+                        "#9" | "♯9" => {
+                            result = result.sharp9();
+                        },
+                        "add11" => {
+                            result = result.add11();
+                        },
+                        "b11" | "♭11" => {
+                            result = result.flat11();
+                        },
+                        "#11" | "♯11" => {
+                            result = result.sharp11();
+                        },
+                        "add13" => {
+                            result = result.add13();
+                        },
+                        "b13" | "♭13" => {
+                            result = result.flat13();
+                        },
+                        "#13" | "♯13" => {
+                            result = result.sharp13();
+                        },
+                        _ => {
+                            unreachable!();
+                        }
+                    }
+                },
+                Rule::slash => {
+                    let note = note_str_to_note(components.next().unwrap().as_str())?;
+
+                    result = result.with_slash(note);
+                },
+                Rule::EOI => {},
+                _ => {
+                    unreachable!();
+                }
+            }
+        }
+
+        Ok(result)
     }
 }
 

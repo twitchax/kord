@@ -1,0 +1,45 @@
+letter = { 'A' .. 'G' }
+
+accidental = { "#" | "♯" | "b" | "♭" }
+
+note = { letter ~ accidental? }
+
+minor = { "-" | "m" }
+
+augmented = { "+" }
+
+diminished = { "o" | "dim" }
+
+half_diminished = { "ø" }
+
+maj7_modifier = { "maj7" }
+
+dominant_modifier = { "7" | "9" | "11" | "13" }
+
+sus_modifier = { "sus2" | "sus4" }
+
+add_modifier = { "add2" | "add4" | "add6" | "6" }
+
+five_modifier = { "b5" | "♭5" }
+
+nine_modifier = { "add9" | "b9" | "♭9" | "#9" | "♯9" }
+
+eleven_modifier = { "add11" | "b11" | "♭11" | "#11" | "♯11" }
+
+thirteen_modifier = { "add13" | "b13" | "♭13" | "#13" | "♯13" }
+
+modifier = { sus_modifier | add_modifier | five_modifier | nine_modifier | eleven_modifier | thirteen_modifier }
+
+slash = { "/" }
+
+WHITESPACE = _{ " " | "(" | ")" }
+
+chord = {
+    SOI ~
+    note ~
+    (maj7_modifier | minor | augmented | diminished | half_diminished)? ~
+    (maj7_modifier | dominant_modifier)? ~
+    modifier* ~
+    (slash ~ note)? ~
+    EOI
+}

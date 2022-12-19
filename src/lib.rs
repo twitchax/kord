@@ -14,13 +14,7 @@ pub mod interval;
 pub mod modifier;
 pub mod known_chord;
 pub mod chord;
-
-
-// Notes
-
-
-
-// Intervals
+pub mod parser;
 
 
 pub fn add(left: usize, right: usize) -> usize {
