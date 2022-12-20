@@ -1,0 +1,5 @@
+# This instructs the `cross` compiler to install the `libasound2-dev` package
+# before building for the `aarch64-unknown-linux-gnu` and `x86_64-unknown-linux-gnu`
+
+[target.aarch64-unknown-linux-gnu]
+pre-build = ["apt-get install libasound2-dev"]
