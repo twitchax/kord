@@ -35,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install libasound2-dev
-        run: sudo apt-get install libasound2-dev
+        run: apt-get install libasound2-dev
       - name: Cache
         uses: actions/cache@v3
         with:
@@ -44,7 +44,7 @@ jobs:
             ~/.cargo/git
             ~/.cargo/bin
             target
-          key: test
+          key: codecov
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
