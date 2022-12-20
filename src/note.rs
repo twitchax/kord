@@ -338,7 +338,7 @@ mod tests {
         assert_eq!(BFlat + Interval::MinorNinth, CFlatSix);
         assert_eq!(BFlatThree + Interval::MinorNinth, CFlatFive);
         assert_eq!(A + Interval::AugmentedNinth, BSharpFive);
-        assert_eq!(CSharp + Interval::AugmentedSeventh, BSharpFive);
+        assert_eq!(CSharp + Interval::AugmentedSeventh, BDoubleSharp);
     }
 
     #[test]
