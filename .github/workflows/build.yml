@@ -47,9 +47,8 @@ jobs:
         with:
           toolchain: nightly
           override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: install cargo-tarpaulin
+      - name: Install tarpaulin
+        run: cargo install cargo-tarpaulin
       - uses: actions-rs/cargo@v1
         with:
           command: tarpaulin --out Xml
