@@ -50,7 +50,7 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
-          #use-cross: true
+          use-cross: true
           command: build
           args: --target x86_64-pc-windows-gnu --release
       - uses: actions/upload-artifact@v3
@@ -81,7 +81,7 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
-          #use-cross: true
+          use-cross: true
           command: build
           args: --target x86_64-unknown-linux-gnu --release
       - uses: actions/upload-artifact@v3
@@ -91,11 +91,12 @@ jobs:
   build_macos:
     needs: test
     name: Build MacOS
-    runs-on: ubuntu-latest
+    # TODO: Eventually, it would be better to cross-compile with `aarch64-apple-darwin`.
+    runs-on: macos-12
     steps:
       - uses: actions/checkout@v2
-      - name: Install libasound2-dev
-        run: sudo apt-get install libasound2-dev g++-aarch64-linux-gnu libc6-dev-arm64-cross
+      # - name: Install libasound2-dev
+      #   run: sudo apt-get install libasound2-dev g++-aarch64-linux-gnu libc6-dev-arm64-cross
       - name: Cache
         uses: actions/cache@v3
         with:
@@ -108,14 +109,14 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly-2022-12-20
-          target: aarch64-unknown-linux-gnu
+          target: aarch64-apple-darwin
           override: true
       - uses: actions-rs/cargo@v1
         with:
-          use-cross: true
+          #use-cross: true
           command: build
-          args: --target aarch64-unknown-linux-gnu --release
+          args: --target aarch64-apple-darwin --release
       - uses: actions/upload-artifact@v3
         with:
           name: kord_aarch64
-          path: target/x86_64-unknown-linux-gnu/release/kord
+          path: target/aarch64-apple-darwin/release/kord
