@@ -7,38 +7,11 @@
 
 # kord
 
-A music theory library and binary for Rust.
-
-## Library Usage
-
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-kord = "0.1"
-```
-
-### Examples
-
-```rust
-use klib::known_chord::KnownChord;
-use klib::modifier::Degree;
-use klib::note::*;
-use klib::chord::*;
-
-// Check to see what _kind_ of chord this is.
-assert_eq!(Chord::new(C).augmented().seven().known_chord(), KnownChord::AugmentedDominant(Degree::Seven));
-
-// Parse a chord from a string, and inspect the scale.
-assert_eq!(Chord::parse("Cm7b5").unwrap().scale(), vec![C, D, EFlat, F, GFlat, AFlat, BFlat]);
-
-// From a note, create a chord, and look at the chord tones.
-assert_eq!(C.into_chord().augmented().major7().chord(), vec![C, E, GSharp, B]);
-```
+A music theory binary and library for Rust.
 
 ## Binary Usage
 
-### Install
+### Install via Cargo
 
 ```bash
 $ cargo install kord
@@ -83,6 +56,33 @@ B♭7(♯9)(♯11)
    dominant sharp 9, altered, altered dominant, super locrian, diminished whole tone, seventh mode of a melodic minor scale, melodic minor up a half step
    B♭, C♭, D♭, E𝄫, F♭, G♭, A♭
    B♭, D, F, A♭, C♯, E
+```
+
+## Library Usage
+
+Add this to your `Cargo.toml`:
+
+```toml
+[dependencies]
+kord = "0.1"
+```
+
+### Examples
+
+```rust
+use klib::known_chord::KnownChord;
+use klib::modifier::Degree;
+use klib::note::*;
+use klib::chord::*;
+
+// Check to see what _kind_ of chord this is.
+assert_eq!(Chord::new(C).augmented().seven().known_chord(), KnownChord::AugmentedDominant(Degree::Seven));
+
+// Parse a chord from a string, and inspect the scale.
+assert_eq!(Chord::parse("Cm7b5").unwrap().scale(), vec![C, D, EFlat, F, GFlat, AFlat, BFlat]);
+
+// From a note, create a chord, and look at the chord tones.
+assert_eq!(C.into_chord().augmented().major7().chord(), vec![C, E, GSharp, B]);
 ```
 
 ## Test

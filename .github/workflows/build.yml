@@ -54,7 +54,7 @@ jobs:
           args: --target x86_64-pc-windows-gnu --release
       - uses: actions/upload-artifact@v3
         with:
-          name: kord_x86_64-pc-windows-gnu.exe
+          name: kord_x86_64-pc-windows-gnu
           path: target/x86_64-pc-windows-gnu/release/kord.exe
   build_linux:
     needs: test
