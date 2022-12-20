@@ -8,6 +8,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Install libasound2-dev
+        run: sudo apt-get install libasound2-dev
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            server/target
+          key: ${{ runner.os }}-rust-build-artifacts
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
@@ -15,7 +25,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-  build:
+  build_windows:
     name: Build Windows
     runs-on: ubuntu-latest
     steps:
@@ -30,3 +40,7 @@ jobs:
           use-cross: true
           command: build
           args: --target x86_64-pc-windows-gnu --release
+      - uses: actions/upload-artifact@v3
+        with:
+          name: kord.exe
+          path: target/release/kord.exe
