@@ -26,6 +26,33 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
+  codecov:
+    needs: test
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    container:
+      image: xd009642/tarpaulin:develop-nightly
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install libasound2-dev
+        run: sudo apt-get install libasound2-dev
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            target
+          key: test
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: tarpaulin --out Xml
+      - uses: codecov/codecov-action@v2
   build_windows:
     needs: test
     name: Build Windows
