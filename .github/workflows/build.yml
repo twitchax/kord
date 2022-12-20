@@ -30,8 +30,6 @@ jobs:
     needs: test
     name: Code Coverage
     runs-on: ubuntu-latest
-    container:
-      image: xd009642/tarpaulin:develop-nightly
     steps:
       - uses: actions/checkout@v2
       - name: Install libasound2-dev
@@ -49,6 +47,9 @@ jobs:
         with:
           toolchain: nightly
           override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: install cargo-tarpaulin
       - uses: actions-rs/cargo@v1
         with:
           command: tarpaulin --out Xml
