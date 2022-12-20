@@ -17,7 +17,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             ~/.cargo/bin
-            /var/lib/docker
+            /var/lib/docker/image
             target
           key: test
       - uses: actions-rs/toolchain@v1
@@ -39,7 +39,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             ~/.cargo/bin
-            /var/lib/docker
+            /var/lib/docker/image
             target
           key: ${{ runner.os }}-windows
       - uses: actions-rs/toolchain@v1
@@ -49,7 +49,7 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
-          use-cross: true
+          #use-cross: true
           command: build
           args: --target x86_64-pc-windows-gnu --release
       - uses: actions/upload-artifact@v3
@@ -70,7 +70,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             ~/.cargo/bin
-            /var/lib/docker
+            /var/lib/docker/image
             target
           key: linux
       - uses: actions-rs/toolchain@v1
@@ -101,7 +101,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             ~/.cargo/bin
-            /var/lib/docker
+            /var/lib/docker/image
             target
           key: mac
       - uses: actions-rs/toolchain@v1
@@ -111,7 +111,7 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
-          #use-cross: true
+          use-cross: true
           command: build
           args: --target aarch64-unknown-linux-gnu --release
       - uses: actions/upload-artifact@v3
