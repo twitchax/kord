@@ -8,7 +8,7 @@ description = "A tool to easily explore music theory principles."
 readme = "README.md"
 homepage = "https://github.com/twitchax/kord"
 repository = "https://github.com/twitchax/kord"
-keywords = ["cli", "music", "theory", "jazz", "chords", "scales"]
+keywords = ["cli", "music", "theory", "jazz", "chords"]
 categories = ["command-line-utilities"]
 
 [lib]
