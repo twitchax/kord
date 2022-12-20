@@ -49,9 +49,7 @@ jobs:
           override: true
       - name: Install tarpaulin
         run: cargo install cargo-tarpaulin
-      - uses: actions-rs/cargo@v1
-        with:
-          command: tarpaulin --out Xml
+      - run: cargo tarpaulin --out Xml
       - uses: codecov/codecov-action@v2
   build_windows:
     needs: test
