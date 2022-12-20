@@ -171,7 +171,7 @@ impl HasOctave for Interval {
             Interval::MajorSeventh => Octave::Zero,
             Interval::DiminishedOctave => Octave::Zero,
 
-            Interval::AugmentedSeventh => Octave::Zero,
+            Interval::AugmentedSeventh => Octave::One,
             Interval::PerfectOctave => Octave::One,
 
             Interval::MinorNinth => Octave::One,

@@ -727,10 +727,9 @@ impl HasRelativeChord for Chord {
         if extensions.contains(&Extension::Add13) {
             result.push(Interval::MajorThirteenth);
         }
-
-        // Remove duplicates (the lazy way), and sort.
-        result = result.into_iter().collect::<HashSet<_>>().into_iter().collect::<Vec<_>>();
+        
         result.sort();
+        result.dedup();
 
         result
     }

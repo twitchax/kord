@@ -174,11 +174,13 @@ impl Add<Interval> for Note {
             Octave::Zero
         };
 
-        // There is a "special wrap" for `Cb`, and `Dbbb`, since they don't technically loop.
+        // There is a "special wrap" for `Cb`, and `Dbbb`, since they don't technically loop; and, for B#, etc., on the other side.
         let special_octave = if new_pitch == NamedPitch::CFlat || new_pitch == NamedPitch::DTripleFlat {
-            Octave::One
+            1
+        } else if new_pitch == NamedPitch::BSharp || new_pitch == NamedPitch::BDoubleSharp || new_pitch == NamedPitch::BTripleSharp || new_pitch == NamedPitch::ATripleSharp {
+            -1
         } else {
-            Octave::Zero
+            0
         };
 
         // Get whether or not the interval itself contains an octave.
@@ -335,6 +337,8 @@ mod tests {
         assert_eq!(C + Interval::DiminishedOctave, CFlatFive);
         assert_eq!(BFlat + Interval::MinorNinth, CFlatSix);
         assert_eq!(BFlatThree + Interval::MinorNinth, CFlatFive);
+        assert_eq!(A + Interval::AugmentedNinth, BSharpFive);
+        assert_eq!(CSharp + Interval::AugmentedSeventh, BSharpFive);
     }
 
     #[test]
