@@ -42,7 +42,7 @@ jobs:
             ~/.cargo/git
             ~/.cargo/bin
             target
-          key: ${{ runner.os }}-windows
+          key: windows
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly-2022-12-20
@@ -95,7 +95,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install libasound2-dev
-        run: sudo apt-get install libasound2-dev
+        run: sudo apt-get install libasound2-dev g++-aarch64-linux-gnu libc6-dev-arm64-cross
       - name: Cache
         uses: actions/cache@v3
         with:
