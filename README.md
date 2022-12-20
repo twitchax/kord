@@ -11,7 +11,32 @@ A music theory binary and library for Rust.
 
 ## Binary Usage
 
-### Install via Cargo
+### Install
+
+Windows:
+
+```powershell
+iwr https://github.com/twitchax/kord/releases/download/v0.1.1/kord_x86_64-pc-windows-gnu.zip
+Expand-Archive kord_x86_64-pc-windows-gnu.zip -DestinationPath C:\Users\%USERNAME%\AppData\Local\Programs\kord
+```
+
+Mac OS (Apple Silicon):
+
+```bash
+curl -LO https://github.com/twitchax/kord/releases/download/v0.1.1/kord_aarch64-apple-darwin.zip
+unzip kord_aarch64-apple-darwin.zip -d /usr/local/bin
+chmod a+x /usr/local/bin/kord
+```
+
+Linux:
+
+```bash
+curl -LO https://github.com/twitchax/kord/releases/download/v0.1.1/kord_x86_64-unknown-linux-gnu.zip
+unzip kord_x86_64-unknown-linux-gnu.zip -d /usr/local/bin
+chmod a+x /usr/local/bin/kord
+```
+
+Cargo:
 
 ```bash
 $ cargo install kord
