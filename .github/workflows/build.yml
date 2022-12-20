@@ -1,6 +1,6 @@
 on: [push]
 
-name: ARMv7 build
+name: Build and Test
 
 jobs:
   test:
