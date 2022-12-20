@@ -54,7 +54,7 @@ jobs:
           args: --target x86_64-pc-windows-gnu --release
       - uses: actions/upload-artifact@v3
         with:
-          name: kord.exe
+          name: kord_x86_64-pc-windows-gnu.exe
           path: target/x86_64-pc-windows-gnu/release/kord.exe
   build_linux:
     needs: test
@@ -84,7 +84,7 @@ jobs:
           args: --target x86_64-unknown-linux-gnu --release
       - uses: actions/upload-artifact@v3
         with:
-          name: kord_linux_gnu
+          name: kord_x86_64-unknown-linux-gnu
           path: target/x86_64-unknown-linux-gnu/release/kord
   build_macos:
     needs: test
@@ -93,8 +93,6 @@ jobs:
     runs-on: macos-12
     steps:
       - uses: actions/checkout@v2
-      # - name: Install libasound2-dev
-      #   run: sudo apt-get install libasound2-dev g++-aarch64-linux-gnu libc6-dev-arm64-cross
       - name: Cache
         uses: actions/cache@v3
         with:
@@ -111,10 +109,9 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
-          #use-cross: true
           command: build
           args: --target aarch64-apple-darwin --release
       - uses: actions/upload-artifact@v3
         with:
-          name: kord_aarch64
+          name: kord_aarch64-apple-darwin
           path: target/aarch64-apple-darwin/release/kord

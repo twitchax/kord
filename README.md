@@ -1,3 +1,10 @@
+[![Build and Test](https://github.com/twitchax/kord/actions/workflows/build.yml/badge.svg)](https://github.com/twitchax/kord/actions/workflows/build.yml)
+[![crates.io](https://img.shields.io/crates/v/kord.svg)](https://crates.io/crates/kord)
+[![crates.io](https://img.shields.io/crates/d/kord.svg)](https://crates.io/crates/kord)
+[![Documentation](https://docs.rs/kord/badge.svg)](https://docs.rs/kord)
+[![Rust](https://img.shields.io/badge/rust-nightly-blue.svg?maxAge=3600)](https://github.com/twitchax/kord)
+[![License:MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 # kord
 
 A music theory library and binary for Rust.
