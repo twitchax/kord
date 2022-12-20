@@ -88,6 +88,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Install libasound2-dev
+        run: sudo apt-get install libasound2-dev
       - name: Cache
         uses: actions/cache@v3
         with:
