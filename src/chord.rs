@@ -126,6 +126,10 @@ pub trait Chordable {
     fn add_thirteen(self) -> Chord;
 }
 
+pub trait HasDomninantDegree {
+    fn dominant_degree(&self) -> Option<Degree>;
+}
+
 pub trait Parsable {
     fn parse(symbol: &str) -> Res<Self> where Self: Sized;
 }
@@ -163,12 +167,29 @@ impl HasName for Chord {
 
         name.push_str(&self.known_chord().name());
 
+        // Add special modifiers that are true modifiers when not part of their "special case".
+        if let Some(degree) = self.dominant_degree() {
+            if self.modifiers.contains(&Modifier::Flat9) && self.known_chord() != KnownChord::DominantFlat9(degree) {
+                name.push_str("(♭9)");
+            }
+
+            if self.modifiers.contains(&Modifier::Sharp9) && self.known_chord() != KnownChord::DominantSharp9(degree) {
+                name.push_str("(♯9)");
+            }
+
+            if self.modifiers.contains(&Modifier::Sharp11) && self.known_chord() != KnownChord::DominantSharp11(degree) {
+                name.push_str("(♯11)");
+            }
+        }
+
+        // Add extensions.
         if !self.extensions.is_empty() {
             for e in self.extensions.iter() {
                 name.push_str(&format!("({})", e.static_name()));
             }
         }
 
+        // Ad slash note.
         if let Some(slash) = self.slash {
             name.push_str(&format!("/{}", slash.static_name()));
         }
@@ -468,14 +489,10 @@ impl Chordable for Chord {
 impl HasKnownChord for Chord {
     fn known_chord(&self) -> KnownChord {
         let modifiers = &self.modifiers;
+        let degree = self.dominant_degree();
         
-        let contains_dominant = modifiers.contains(&Modifier::Dominant(Degree::Seven)) || modifiers.contains(&Modifier::Dominant(Degree::Nine)) || modifiers.contains(&Modifier::Dominant(Degree::Eleven)) || modifiers.contains(&Modifier::Dominant(Degree::Thirteen));
-        
-        let degree = match modifiers.iter().find(|m| m.is_dominant()) {
-            Some(Modifier::Dominant(d)) => *d,
-            _ => Degree::Seven,
-        };
-
+        let contains_dominant = degree.is_some();
+        let degree = degree.unwrap_or(Degree::Seven);
         
         if modifiers.contains(&Modifier::Diminished) {
             KnownChord::Diminished
@@ -511,16 +528,16 @@ impl HasKnownChord for Chord {
             }
 
             if contains_dominant {
-                if modifiers.contains(&Modifier::Sharp11) {
-                    return KnownChord::DominantSharp11(degree);
-                }
-                
                 if modifiers.contains(&Modifier::Flat9) {
                     return KnownChord::DominantFlat9(degree);
                 }
     
                 if modifiers.contains(&Modifier::Sharp9) {
                     return KnownChord::DominantSharp9(degree);
+                }
+                
+                if modifiers.contains(&Modifier::Sharp11) {
+                    return KnownChord::DominantSharp11(degree);
                 }
                 
                 return KnownChord::Dominant(degree);
@@ -560,6 +577,20 @@ impl HasRelativeChord for Chord {
             result.push(Interval::MajorNinth);
             result.push(Interval::PerfectEleventh);
             result.push(Interval::MajorThirteenth);
+        }
+
+        // Special modifiers that can also be extensions.
+
+        if modifiers.contains(&Modifier::Flat9) {
+            result.push(Interval::MinorNinth);
+        }
+
+        if modifiers.contains(&Modifier::Sharp9) {
+            result.push(Interval::AugmentedNinth);
+        }
+
+        if modifiers.contains(&Modifier::Sharp11) {
+            result.push(Interval::AugmentedEleventh);
         }
 
         // Extensions.
@@ -610,6 +641,8 @@ impl HasRelativeChord for Chord {
             result.push(Interval::MajorThirteenth);
         }
 
+        // Remove duplicates (the lazy way), and sort.
+        result = result.into_iter().collect::<HashSet<_>>().into_iter().collect::<Vec<_>>();
         result.sort();
 
         result
@@ -643,6 +676,20 @@ impl HasChord for Chord {
         }
 
         result
+    }
+}
+
+impl HasDomninantDegree for Chord {
+    fn dominant_degree(&self) -> Option<Degree> {
+        let modifiers = &self.modifiers;
+        if !modifiers.contains(&Modifier::Dominant(Degree::Seven)) && !modifiers.contains(&Modifier::Dominant(Degree::Nine)) && !modifiers.contains(&Modifier::Dominant(Degree::Eleven)) && !modifiers.contains(&Modifier::Dominant(Degree::Thirteen)) {
+            return None;
+        }
+        
+        Some(match modifiers.iter().find(|m| m.is_dominant()) {
+            Some(Modifier::Dominant(d)) => *d,
+            _ => Degree::Seven,
+        })
     }
 }
 
