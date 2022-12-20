@@ -16,6 +16,8 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
+            ~/.cargo/bin
+            /var/lib/docker
             target
           key: ${{ runner.os }}-test-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/toolchain@v1
@@ -37,6 +39,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             ~/.cargo/bin
+            /var/lib/docker
             target
           key: ${{ runner.os }}-windows-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/toolchain@v1
@@ -52,14 +55,12 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: kord.exe
-          path: target/release/kord.exe
+          path: target/x86_64-pc-windows-gnu/release/kord.exe
   build_linux:
     name: Build Linux
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install libasound2-dev
-        run: sudo apt-get install libasound2-dev
       - name: Cache
         uses: actions/cache@v3
         with:
@@ -67,6 +68,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             ~/.cargo/bin
+            /var/lib/docker
             target
           key: ${{ runner.os }}-linux-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/toolchain@v1
@@ -82,7 +84,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: kord_linux_gnu
-          path: target/release/kord
+          path: target/x86_64-unknown-linux-gnu/release/kord
   build_macos:
     name: Build MacOS
     runs-on: ubuntu-latest
@@ -97,6 +99,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             ~/.cargo/bin
+            /var/lib/docker
             target
           key: ${{ runner.os }}-mac-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/toolchain@v1
@@ -112,4 +115,4 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: kord_aarch64
-          path: target/release/kord
+          path: target/x86_64-unknown-linux-gnu/release/kord
