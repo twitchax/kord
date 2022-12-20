@@ -17,7 +17,6 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             ~/.cargo/bin
-            /var/lib/docker/image
             target
           key: test
       - uses: actions-rs/toolchain@v1
@@ -28,6 +27,7 @@ jobs:
         with:
           command: test
   build_windows:
+    needs: test
     name: Build Windows
     runs-on: ubuntu-latest
     steps:
@@ -41,7 +41,6 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             ~/.cargo/bin
-            /var/lib/docker/image
             target
           key: ${{ runner.os }}-windows
       - uses: actions-rs/toolchain@v1
@@ -59,6 +58,7 @@ jobs:
           name: kord.exe
           path: target/x86_64-pc-windows-gnu/release/kord.exe
   build_linux:
+    needs: test
     name: Build Linux
     runs-on: ubuntu-latest
     steps:
@@ -72,7 +72,6 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             ~/.cargo/bin
-            /var/lib/docker/image
             target
           key: linux
       - uses: actions-rs/toolchain@v1
@@ -90,6 +89,7 @@ jobs:
           name: kord_linux_gnu
           path: target/x86_64-unknown-linux-gnu/release/kord
   build_macos:
+    needs: test
     name: Build MacOS
     runs-on: ubuntu-latest
     steps:
@@ -103,7 +103,6 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             ~/.cargo/bin
-            /var/lib/docker/image
             target
           key: mac
       - uses: actions-rs/toolchain@v1
