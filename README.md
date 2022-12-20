@@ -49,7 +49,7 @@ $ kord -h
 
 A tool to easily explore music theory principles.
 
-Usage: kord.exe [COMMAND]
+Usage: kord [COMMAND]
 
 Commands:
   describe  Describes a chord
