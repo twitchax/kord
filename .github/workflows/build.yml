@@ -19,7 +19,7 @@ jobs:
             ~/.cargo/bin
             /var/lib/docker
             target
-          key: ${{ runner.os }}-test-${{ hashFiles('**/Cargo.lock') }}
+          key: test
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
@@ -41,7 +41,7 @@ jobs:
             ~/.cargo/bin
             /var/lib/docker
             target
-          key: ${{ runner.os }}-windows-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-windows
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly-2022-12-20
@@ -61,6 +61,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Install libasound2-dev
+        run: sudo apt-get install libasound2-dev
       - name: Cache
         uses: actions/cache@v3
         with:
@@ -70,7 +72,7 @@ jobs:
             ~/.cargo/bin
             /var/lib/docker
             target
-          key: ${{ runner.os }}-linux-${{ hashFiles('**/Cargo.lock') }}
+          key: linux
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly-2022-12-20
@@ -78,7 +80,7 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
-          use-cross: true
+          #use-cross: true
           command: build
           args: --target x86_64-unknown-linux-gnu --release
       - uses: actions/upload-artifact@v3
@@ -101,7 +103,7 @@ jobs:
             ~/.cargo/bin
             /var/lib/docker
             target
-          key: ${{ runner.os }}-mac-${{ hashFiles('**/Cargo.lock') }}
+          key: mac
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly-2022-12-20
@@ -109,7 +111,7 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
-          use-cross: true
+          #use-cross: true
           command: build
           args: --target aarch64-unknown-linux-gnu --release
       - uses: actions/upload-artifact@v3
