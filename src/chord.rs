@@ -1,153 +1,240 @@
-
-// Traits.
-
 use std::{collections::HashSet, fmt::Display};
 
 use pest::Parser;
 
 use crate::{note::{Note, CZero}, modifier::{Modifier, Extension, Degree, HasIsDominant}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::Interval, base::{HasDescription, HasName, HasStaticName, Res}, parser::{ChordParser, Rule, note_str_to_note}, octave::{Octave}, named_pitch::HasNamedPitch};
 
+// Traits.
+
+/// A trait that represents a type that has a root note.
 pub trait HasRoot {
+    /// Returns the root note of the implementor (most likely a [`Chord`]).
     fn root(&self) -> Note;
 }
 
+/// A trait that represents a type that has a slash note.
 pub trait HasSlash {
+    /// Returns the slash note of the implementor (most likely a [`Chord`]).
     fn slash(&self) -> Note;
 }
 
-pub trait HasShapeModifiers {
-    fn shape_modifiers(&self) -> &HashSet<Modifier>;
+/// A trait that represents a type that has modifiers.
+pub trait HasModifiers {
+    /// Returns the modifiers of the implementor (most likely a [`Chord`]).
+    fn modifiers(&self) -> &HashSet<Modifier>;
 }
 
+/// A trait that represents a type that has extensions.
 pub trait HasExtensions {
+    /// Returns the extensions of the implementor (most likely a [`Chord`]).
     fn extensions(&self) -> &HashSet<Extension>;
 }
 
+/// A trait that represents a type that has an inversion.
 pub trait HasInversion {
+    /// Returns the inversion of the implementor (most likely a [`Chord`]).
     fn inversion(&self) -> u8;
 }
 
+/// A trait that represents a type that has an octave.
 pub trait HasKnownChord {
+    /// Returns the known chord of the implementor (most likely a [`Chord`]).
     fn known_chord(&self) -> KnownChord;
 }
 
+/// A trait that represents a type that has a chord.
 pub trait HasScale {
+    /// Returns the scale of the implementor (most likely a [`Chord`]).
     fn scale(&self) -> Vec<Note>;
 }
 
+/// A trait that represents a type that has a chord.
 pub trait HasChord {
+    /// Returns the chord of the implementor (most likely a [`Chord`]).
     fn chord(&self) -> Vec<Note>;
 }
 
+/// A trait that represents a type that has a chord.
+/// 
+/// These methods all take ownership of the existing implementor (usually a [`Chord`]),
+/// and then return a new chord.  This can be circumvented by using an explicit `clone()`.
+/// E.g., `chord.clone().minor()`.
 pub trait Chordable {
+    /// Adds a modifier to the implementor (most likely a [`Chord`]), and returns a new chord.
     fn with_modifier(self, modifier: Modifier) -> Chord;
+    /// Adds an extension to the implementor (most likely a [`Chord`]), and returns a new chord.
     fn with_extension(self, extension: Extension) -> Chord;
+    /// Sets the inversion number of the implementor (most likely a [`Chord`]), and returns a new chord.
     fn with_inversion(self, inversion: u8) -> Chord;
+    /// Sets the slash note of the implementor (most likely a [`Chord`]), and returns a new chord.
     fn with_slash(self, slash: Note) -> Chord;
+    /// Sets the octave of the implementor (most likely the root note of a chord), and returns a new chord.
     fn with_octave(self, octave: Octave) -> Chord;
 
     // Modifiers.
 
+    /// Returns a new chord with a minor modifier on the implementor (most likely a [`Chord`]).
     fn minor(self) -> Chord;
+    /// Returns a new chord with a minor modifier on the implementor (most likely a [`Chord`]).
     fn min(self) -> Chord;
 
+    /// Returns a new chord with a flat 5 modifier on the implementor (most likely a [`Chord`]).
     fn flat5(self) -> Chord;
+    /// Returns a new chord with a flat 5 modifier on the implementor (most likely a [`Chord`]).
     fn flat_five(self) -> Chord;
 
+    /// Returns a new chord with a sharp 5 modifier on the implementor (most likely a [`Chord`]).
     fn augmented(self) -> Chord;
+    /// Returns a new chord with a sharp 5 modifier on the implementor (most likely a [`Chord`]).
     fn aug(self) -> Chord;
 
+    /// Returns a new chord with a major 7 modifier on the implementor (most likely a [`Chord`]).
     fn major7(self) -> Chord;
+    /// Returns a new chord with a major 7 modifier on the implementor (most likely a [`Chord`]).
     fn major_seven(self) -> Chord;
+    /// Returns a new chord with a major 7 modifier on the implementor (most likely a [`Chord`]).
     fn maj7(self) -> Chord;
 
+    /// Returns a new chord with a dominant 7 modifier on the implementor (most likely a [`Chord`]).
     fn dominant7(self) -> Chord;
+    /// Returns a new chord with a dominant 7 modifier on the implementor (most likely a [`Chord`]).
     fn seven(self) -> Chord;
+    /// Returns a new chord with a dominant 9 modifier on the implementor (most likely a [`Chord`]).
     fn dominant9(self) -> Chord;
+    /// Returns a new chord with a dominant 9 modifier on the implementor (most likely a [`Chord`]).
     fn nine(self) -> Chord;
+    /// Returns a new chord with a dominant 11 modifier on the implementor (most likely a [`Chord`]).
     fn dominant11(self) -> Chord;
+    /// Returns a new chord with a dominant 11 modifier on the implementor (most likely a [`Chord`]).
     fn eleven(self) -> Chord;
+    /// Returns a new chord with a dominant 13 modifier on the implementor (most likely a [`Chord`]).
     fn dominant13(self) -> Chord;
+    /// Returns a new chord with a dominant 13 modifier on the implementor (most likely a [`Chord`]).
     fn thirteen(self) -> Chord;
+    /// Returns a new chord with a dominant modifier on the implementor (most likely a [`Chord`]).
     fn dominant(self, dominant: Degree) -> Chord;
 
+    /// Returns a new chord with a flat 9 modifier on the implementor (most likely a [`Chord`]).
     fn flat9(self) -> Chord;
+    /// Returns a new chord with a flat 9 modifier on the implementor (most likely a [`Chord`]).
     fn flat_nine(self) -> Chord;
 
+    /// Returns a new chord with a sharp 9 modifier on the implementor (most likely a [`Chord`]).
     fn sharp9(self) -> Chord;
+    /// Returns a new chord with a sharp 9 modifier on the implementor (most likely a [`Chord`]).
     fn sharp_nine(self) -> Chord;
 
+    /// Returns a new chord with a sharp 11 modifier on the implementor (most likely a [`Chord`]).
     fn sharp11(self) -> Chord;
+    /// Returns a new chord with a sharp 11 modifier on the implementor (most likely a [`Chord`]).
     fn sharp_eleven(self) -> Chord;
 
     // Special.
 
+    /// Returns a new chord with a diminished modifier on the implementor (most likely a [`Chord`]).
     fn diminished(self) -> Chord;
+    /// Returns a new chord with a diminished modifier on the implementor (most likely a [`Chord`]).
     fn dim(self) -> Chord;
 
+    /// Returns a new chord with a half-diminished (m7♭5) modifier on the implementor (most likely a [`Chord`]).
     fn half_diminished(self) -> Chord;
+    /// Returns a new chord with a half-diminished (m7♭5) modifier on the implementor (most likely a [`Chord`]).
     fn half_dim(self) -> Chord;
 
     // Extensions.
 
+    /// Returns a new chord with a sus2 extension on the implementor (most likely a [`Chord`]).
     fn sus2(self) -> Chord;
+    /// Returns a new chord with a sus2 extension on the implementor (most likely a [`Chord`]).
     fn sus_two(self) -> Chord;
 
+    /// Returns a new chord with a sus4 extension on the implementor (most likely a [`Chord`]).
     fn sus4(self) -> Chord;
+    /// Returns a new chord with a sus4 extension on the implementor (most likely a [`Chord`]).
     fn sus_four(self) -> Chord;
+    /// Returns a new chord with a sus4 extension on the implementor (most likely a [`Chord`]).
     fn sustain(self) -> Chord;
+    /// Returns a new chord with a sus4 extension on the implementor (most likely a [`Chord`]).
     fn sus(self) -> Chord;
 
+    /// Returns a new chord with a flat 11 extension on the implementor (most likely a [`Chord`]).
     fn flat11(self) -> Chord;
+    /// Returns a new chord with a flat 11 extension on the implementor (most likely a [`Chord`]).
     fn flat_eleven(self) -> Chord;
 
+    /// Returns a new chord with a flat 13 extension on the implementor (most likely a [`Chord`]).
     fn flat13(self) -> Chord;
+    /// Returns a new chord with a flat 13 extension on the implementor (most likely a [`Chord`]).
     fn flat_thirteen(self) -> Chord;
 
+    /// Returns a new chord with a sharp 13 extension on the implementor (most likely a [`Chord`]).
     fn sharp13(self) -> Chord;
+    /// Returns a new chord with a sharp 13 extension on the implementor (most likely a [`Chord`]).
     fn sharp_thirteen(self) -> Chord;
 
+    /// Returns a new chord with an add2 extension on the implementor (most likely a [`Chord`]).
     fn add2(self) -> Chord;
+    /// Returns a new chord with an add2 extension on the implementor (most likely a [`Chord`]).
     fn add_two(self) -> Chord;
 
+    /// Returns a new chord with an add4 extension on the implementor (most likely a [`Chord`]).
     fn add4(self) -> Chord;
+    /// Returns a new chord with an add4 extension on the implementor (most likely a [`Chord`]).
     fn add_four(self) -> Chord;
 
+    /// Returns a new chord with an add6 extension on the implementor (most likely a [`Chord`]).
     fn add6(self) -> Chord;
+    /// Returns a new chord with an add6 extension on the implementor (most likely a [`Chord`]).
     fn add_six(self) -> Chord;
 
+    /// Returns a new chord with an add9 extension on the implementor (most likely a [`Chord`]).
     fn add9(self) -> Chord;
+    /// Returns a new chord with an add9 extension on the implementor (most likely a [`Chord`]).
     fn add_nine(self) -> Chord;
 
+    /// Returns a new chord with an add11 extension on the implementor (most likely a [`Chord`]).
     fn add11(self) -> Chord;
+    /// Returns a new chord with an add11 extension on the implementor (most likely a [`Chord`]).
     fn add_eleven(self) -> Chord;
 
+    /// Returns a new chord with an add13 extension on the implementor (most likely a [`Chord`]).
     fn add13(self) -> Chord;
+    /// Returns a new chord with an add13 extension on the implementor (most likely a [`Chord`]).
     fn add_thirteen(self) -> Chord;
 }
 
+/// A trait for types that have a dominant degree; i.e., 7, 9, 11, 13.
 pub trait HasDomninantDegree {
+    /// Returns the dominant degree of the implementor (most likely a [`Chord`]).
     fn dominant_degree(&self) -> Option<Degree>;
 }
 
+/// A trait for types that can be parsed from a string.
 pub trait Parsable {
     fn parse(symbol: &str) -> Res<Self> where Self: Sized;
 }
 
 // Struct.
 
+/// The primary chord struct.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Chord {
+    /// The root note of the chord.
     root: Note,
+    /// The slash note of the chord.
     slash: Option<Note>,
+    /// The modifiers of the chord.
     modifiers: HashSet<Modifier>,
+    /// The extensions of the chord.
     extensions: HashSet<Extension>,
+    /// The inversion of the chord.
     inversion: u8,
 }
 
 // Impls.
 
 impl Chord {
+    /// Returns a new chord with the given root.
     pub fn new(root: Note) -> Self {
         Self { 
             root, 
@@ -210,8 +297,8 @@ impl HasSlash for Chord {
     }
 }
 
-impl HasShapeModifiers for Chord {
-    fn shape_modifiers(&self) -> &HashSet<Modifier> {
+impl HasModifiers for Chord {
+    fn modifiers(&self) -> &HashSet<Modifier> {
         &self.modifiers
     }
 }

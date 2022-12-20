@@ -2,11 +2,14 @@ use pest_derive::Parser;
 
 use crate::{base::Res, note::{self, Note}};
 
-
+/// A parser for chord symbols.
+/// 
+/// This is built from a PEG grammar defined in `chord.pest`.
 #[derive(Parser)]
 #[grammar = "../chord.pest"]
 pub struct ChordParser;
 
+/// Parses a [`Note`] [`str`] into a [`Note`].
 pub fn note_str_to_note(note_str: &str) -> Res<Note> {
     let chord = match note_str {
         "A" => note::A,

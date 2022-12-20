@@ -1,13 +1,16 @@
-// Traits.
-
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
+// Traits.
+
+/// A trait for types that have an octave property.
 pub trait HasOctave {
+    /// Returns the octave of the type.
     fn octave(&self) -> Octave;
 }
 
 // Enum.
 
+/// An enum representing the octave of a note.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
 #[repr(u8)]
 pub enum Octave {
@@ -104,5 +107,3 @@ impl Default for Octave {
         Octave::Four
     }
 }
-
-// Blanket impls.

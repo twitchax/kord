@@ -1,19 +1,29 @@
-// Traits.
-
 use std::ops::Add;
 
 use crate::{pitch::{HasPitch, Pitch}, base::HasStaticName};
 
+// Traits.
+
+
+/// A trait for types that have a named pitch.
 pub trait HasNamedPitch {
+    /// Returns the named pitch of the type.
     fn named_pitch(&self) -> NamedPitch;
 }
 
+/// A trait for types that have a letter.
 pub trait HasLetter {
+    /// Returns the letter of the type.
     fn letter(&self) -> &'static str;
 }
 
 // Enum.
 
+/// An enum representing named pitch.
+/// 
+/// A [`NamedPitch`] is a pitch that has a name, such as `C` or `F♯`.
+/// While a [`Pitch`] is a pitch that has a frequency, a [`NamedPitch`] is a pitch that has an
+/// enharmonic name (could share the same pitch with another).
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
 #[repr(u8)]
 pub enum NamedPitch {

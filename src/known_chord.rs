@@ -2,33 +2,61 @@ use crate::{interval::Interval, base::{HasStaticName, HasDescription, HasName}, 
 
 // Traits.
 
+/// A trait for types that have a relative scale.
 pub trait HasRelativeScale {
+    /// Returns the relative scale of the type (usually a [`Chord`]).
+    /// 
+    /// The relative scale is the scale that the chord is built on, using 
+    /// only the intervals, without any need for notes; e.g., a major chord
+    /// is built with all the "major" and "perfect" intervals.
     fn relative_scale(&self) -> Vec<Interval>;
 }
 
+/// A trait for types that have a relative chord.
 pub trait HasRelativeChord {
+    /// Returns the relative chord of the type (usually a [`Chord`]).
+    /// 
+    /// The relative chord is the chord that the chord is built on, using
+    /// only the intervals, without any need for notes; e.g., a major chord
+    /// is built with the major third and perfect fifth intervals.
     fn relative_chord(&self) -> Vec<Interval>;
 }
 
 // Enum.
 
+/// An enum representing a known chord.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
 #[repr(u8)]
 pub enum KnownChord {
+    /// An unknown chord.
     Unknown,
+    /// A major chord.
     Major,
+    /// A minor chord.
     Minor,
+    /// A major 7 chord.
     Major7,
+    /// A dominant chord.
     Dominant(Degree),
+    /// A minor major 7 chord.
     MinorMajor7,
+    /// A minor dominant chord with degree.
     MinorDominant(Degree),
+    /// A dominant sharp 11 chord with degree.
     DominantSharp11(Degree),
+    /// An augmented chord.
     Augmented,
+    /// An augmented major 7 chord.
     AugmentedMajor7,
+    /// An augmented chord.
     AugmentedDominant(Degree),
+    /// A half diminished chord.
     HalfDiminished(Degree),
+    /// A diminished chord.
     Diminished,
+    /// A dominant flat 9 chord.
     DominantFlat9(Degree),
+    /// A dominant sharp 9 chord.
     DominantSharp9(Degree)
 }
 

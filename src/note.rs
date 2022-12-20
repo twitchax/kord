@@ -4,10 +4,11 @@
 use std::ops::{Add, AddAssign};
 
 use paste::paste;
-use crate::{named_pitch::{NamedPitch, HasNamedPitch}, interval::{Interval, HasEnharmonicDistance}, base::HasStaticName, chord::Chord, pitch::{HasFrequency, HasBaseFrequency}};
+use crate::{named_pitch::{NamedPitch, HasNamedPitch}, interval::{Interval, HasEnharmonicDistance}, base::HasStaticName, chord::Chord, pitch::{HasFrequency, HasBaseFrequency, Pitch, HasPitch}, octave::{Octave, HasOctave}};
 
 // Macros.
 
+/// Defines a note from a [`NamedPitch`].
 macro_rules! define_note {
     ( $name:ident, $named_pitch:expr, $octave_num:ident, $octave:expr) => {
         paste! {
@@ -19,6 +20,7 @@ macro_rules! define_note {
     };
 }
 
+/// Defines an octave of notes.
 macro_rules! define_octave {
     ($octave_num:ident, $octave:expr) => {
         define_note!(FTripleFlat, NamedPitch::FTripleFlat, $octave_num, $octave);
@@ -81,17 +83,23 @@ macro_rules! define_octave {
 
 // Traits.
 
+/// A trait for types that can be converted into a [`Chord`].
 pub trait IntoChord {
+    /// Converts this type into a [`Chord`] (usually a [`Note`]).
     fn into_chord(self) -> Chord;
 }
 
 // Struct.
 
-use crate::{pitch::{Pitch, HasPitch}, octave::{Octave, HasOctave}};
-
+/// A note type.
+/// 
+/// This is a named pitch with an octave.  This type allows for correctly attributing octave changes
+/// across an interval from one [`Note`] to another.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, PartialOrd, Ord)]
 pub struct Note {
+    /// The octave of the note.
     octave: Octave,
+    /// The named pitch of the note.
     named_pitch: NamedPitch,
 }
 

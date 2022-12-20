@@ -1,33 +1,55 @@
 // Traits.
 
+/// A trait for types that have a pitch property.
 pub trait HasPitch {
+    /// Returns the pitch of the type (usually a [`Note`]).
     fn pitch(&self) -> Pitch;
 }
 
+/// A trait for types that have a base frequency property.
 pub trait HasBaseFrequency {
+    /// Returns the base frequency of the type (usually a [`Pitch`]).
     fn base_frequency(&self) -> f32;
 }
 
+/// A trait for types that have a frequency property.
 pub trait HasFrequency {
+    /// Returns the frequency of the type (usually a [`Note`]).
     fn frequency(&self) -> f32;
 }
 
 // Enum.
 
+/// An enum representing the pitch of a note.
+/// 
+/// The frequencies of the pitches are based on the [A4 frequency](https://en.wikipedia.org/wiki/A4_(pitch_standard)).
+/// There is no enharmonic representation here, so all of the sharps are represented.
 #[derive(PartialEq, Eq, Clone, Copy, Hash, Debug, Ord, PartialOrd)]
 #[repr(u8)]
 pub enum Pitch {
+    /// The pitch C.
     C,
+    /// The pitch C♯.
     CSharp,
+    /// The pitch D.
     D,
+    /// The pitch D♯.
     DSharp,
+    /// The pitch E.
     E,
+    /// The pitch F.
     F,
+    /// The pitch F♯.
     FSharp,
+    /// The pitch G.
     G,
+    /// The pitch G♯.
     GSharp,
+    /// The pitch A.
     A,
+    /// The pitch A♯.
     ASharp,
+    /// The pitch B.
     B,
 }
 

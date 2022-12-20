@@ -1,13 +1,22 @@
-// Traits.
-
 use crate::octave::{HasOctave, Octave};
 
+// Traits.
+
+/// A trait for types that have an enharmonic distance.
 pub trait HasEnharmonicDistance {
+    /// Returns the enharmonic distance of the type (most likely an interval).
+    /// 
+    /// Due to the nature of enharmonic intervals, the distance is always an integer,
+    /// and it looks a bit funky.  Basically, using the circle of fifths, the distance
+    /// is the number of fifths between the two notes.  For example, a perfect fifth
+    /// is 1 fifth away, and a major second is always two fifths away
+    ///  (look at the implementation).  This preserves enharmonic correctness.
     fn enharmonic_distance(&self) -> i8;
 }
 
 // Enum.
 
+/// An enum representing the interval between two notes.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
 #[repr(u8)]
 pub enum Interval {
