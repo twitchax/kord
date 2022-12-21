@@ -112,16 +112,4 @@ mod tests {
             }),
         }).unwrap();
     }
-
-    #[test]
-    fn test_play() {
-        start(Args {
-            command: Some(Command::Play {
-                symbol: "Cmaj7".to_string(),
-                octave: 3,
-                delay: 0.01,
-                length: 0.1,
-            }),
-        }).unwrap();
-    }
 }
