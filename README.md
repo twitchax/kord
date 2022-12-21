@@ -2,7 +2,7 @@
 [![codecov](https://codecov.io/gh/twitchax/kord/branch/main/graph/badge.svg?token=35MZN0YFZF)](https://codecov.io/gh/twitchax/kord)
 [![Version](https://img.shields.io/crates/v/kord.svg)](https://crates.io/crates/kord)
 [![Downloads](https://img.shields.io/crates/d/kord.svg)](https://crates.io/crates/kord)
-[![GitHub Downloads](https://img.shields.io/github/downloads-pre/twitchax/kord/latest/total?label=binary)](https://github.com/twitchax/kord/releases)
+[![GitHub all releases](https://img.shields.io/github/downloads/twitchax/kord/total?label=binary)](https://github.com/twitchax/kord/releases)
 [![Documentation](https://docs.rs/kord/badge.svg)](https://docs.rs/kord)
 [![Rust](https://img.shields.io/badge/rust-nightly-blue.svg?maxAge=3600)](https://github.com/twitchax/kord)
 [![License:MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
