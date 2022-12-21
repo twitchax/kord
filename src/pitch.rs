@@ -81,17 +81,6 @@ impl HasPitch for Pitch {
     }
 }
 
-// Blanket impls.
-
-default impl<T> HasBaseFrequency for T
-where
-    T: HasPitch,
-{
-    fn base_frequency(&self) -> f32 {
-        self.pitch().base_frequency()
-    }
-}
-
 // Tests.
 
 #[cfg(test)]

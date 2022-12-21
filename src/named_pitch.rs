@@ -369,4 +369,9 @@ mod tests {
     fn test_improper_add() {
         let _ = C.named_pitch() + 50;
     }
+
+    #[test]
+    fn test_properties() {
+        assert_eq!(NamedPitch::A.named_pitch(), NamedPitch::A);
+    }
 }
