@@ -9,11 +9,11 @@ use rodio::{OutputStream, Sink, source::SineWave, Source};
 #[command(author, version, about, long_about = None)]
 struct Args {
     #[command(subcommand)]
-    command: Option<Commands>,
+    command: Option<Command>,
 }
 
 #[derive(Subcommand, Debug)]
-enum Commands {
+enum Command {
     /// Describes a chord
     Describe {
         /// Chord symbol to parse
@@ -46,13 +46,19 @@ enum Commands {
 fn main() -> Void {
     let args = Args::parse();
 
+    start(args)?;
+
+    Ok(())
+}
+
+fn start(args: Args) -> Void {
     match args.command {
-        Some(Commands::Describe { symbol, octave }) => {
+        Some(Command::Describe { symbol, octave }) => {
             let chord = Chord::parse(&symbol)?.with_octave(Octave::Zero + octave);
 
             describe(&chord);
         }
-        Some(Commands::Play { symbol, octave, delay, length }) => {
+        Some(Command::Play { symbol, octave, delay, length }) => {
             let chord = Chord::parse(&symbol)?.with_octave(Octave::Zero + octave);
 
             play(&chord, delay, length);
@@ -89,4 +95,33 @@ fn play(chord: &Chord, delay: f32, length: f32) {
     }
 
     std::thread::sleep(Duration::from_secs_f32(length));
+}
+
+// Tests.
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_describe() {
+        start(Args {
+            command: Some(Command::Describe {
+                symbol: "Cmaj7".to_string(),
+                octave: 4,
+            }),
+        }).unwrap();
+    }
+
+    #[test]
+    fn test_play() {
+        start(Args {
+            command: Some(Command::Play {
+                symbol: "Cmaj7".to_string(),
+                octave: 3,
+                delay: 0.01,
+                length: 0.1,
+            }),
+        }).unwrap();
+    }
 }

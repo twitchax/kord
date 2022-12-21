@@ -258,6 +258,10 @@ impl HasName for Chord {
 
         // Add special modifiers that are true modifiers when not part of their "special case".
 
+        if self.modifiers.contains(&Modifier::Flat5) && !known_name.contains("(♭5)") {
+            name.push_str("(♭5)");
+        }
+
         if self.modifiers.contains(&Modifier::Flat9) && !known_name.contains("(♭9)") {
             name.push_str("(♭9)");
         }
@@ -668,6 +672,11 @@ impl HasRelativeChord for Chord {
         }
 
         // Special modifiers that can also be extensions.
+
+        if modifiers.contains(&Modifier::Flat5) {
+            result.remove(2);
+            result.push(Interval::DiminishedFifth);
+        }
 
         if modifiers.contains(&Modifier::Flat9) {
             result.push(Interval::MinorNinth);
