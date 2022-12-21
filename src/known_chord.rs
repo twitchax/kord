@@ -65,7 +65,7 @@ pub enum KnownChord {
 impl HasDescription for KnownChord {
     fn description(&self) -> &'static str {
         match self {
-            KnownChord::Unknown => "Unknown",
+            KnownChord::Unknown => unreachable!(),
             KnownChord::Major => "major",
             KnownChord::Minor => "minor",
             KnownChord::Major7 => "major 7, ionian, first mode of major scale",
@@ -87,9 +87,7 @@ impl HasDescription for KnownChord {
 impl HasRelativeScale for KnownChord {
     fn relative_scale(&self) -> Vec<Interval> {
         match self {
-            KnownChord::Unknown => vec![
-
-            ],
+            KnownChord::Unknown => unreachable!(),
             KnownChord::Major => vec![
                 Interval::PerfectUnison, 
                 Interval::MajorSecond, 
@@ -224,9 +222,7 @@ impl HasRelativeScale for KnownChord {
 impl HasRelativeChord for KnownChord {
     fn relative_chord(&self) -> Vec<Interval> {
         match self {
-            KnownChord::Unknown => vec![
-
-            ],
+            KnownChord::Unknown => unreachable!(),
             KnownChord::Major => vec![
                 Interval::PerfectUnison, 
                 Interval::MajorThird, 
@@ -318,7 +314,7 @@ impl HasRelativeChord for KnownChord {
 impl HasName for KnownChord {
     fn name(&self) -> String {
         match self {
-            KnownChord::Unknown => "".to_owned(),
+            KnownChord::Unknown => unreachable!(),
             KnownChord::Major => "".to_owned(),
             KnownChord::Minor => "m".to_owned(),
             KnownChord::Major7 => "maj7".to_owned(),

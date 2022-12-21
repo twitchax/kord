@@ -279,6 +279,11 @@ mod tests {
     use pretty_assertions::{assert_eq};
 
     #[test]
+    fn test_name() {
+        assert_eq!(CFlat.static_name(), "C♭");
+    }
+
+    #[test]
     fn test_intervals() {
         assert_eq!(C + Interval::PerfectUnison, C);
         assert_eq!(C + Interval::DiminishedSecond, DDoubleFlat);
@@ -343,7 +348,7 @@ mod tests {
 
     #[test]
     fn test_pitch() {
-        assert_eq!(C.frequency(), (CThree + Interval::PerfectOctave).frequency());
+        assert_eq!(Note::new(NamedPitch::C, Octave::Four).frequency(), (CThree + Interval::PerfectOctave).frequency());
         assert_eq!(CFlatFour.frequency(), BThree.frequency());
         assert_eq!(BSharp.frequency(), CFive.frequency());
         assert_eq!(DTripleFlatFive.frequency(), B.frequency());

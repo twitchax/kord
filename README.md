@@ -1,4 +1,5 @@
 [![Build and Test](https://github.com/twitchax/kord/actions/workflows/build.yml/badge.svg)](https://github.com/twitchax/kord/actions/workflows/build.yml)
+[![codecov](https://codecov.io/gh/twitchax/kord/branch/main/graph/badge.svg?token=35MZN0YFZF)](https://codecov.io/gh/twitchax/kord)
 [![Version](https://img.shields.io/crates/v/kord.svg)](https://crates.io/crates/kord)
 [![Downloads](https://img.shields.io/crates/d/kord.svg)](https://crates.io/crates/kord)
 [![GitHub Downloads](https://img.shields.io/github/downloads-pre/twitchax/kord/latest/total?label=binary)](https://github.com/twitchax/kord/releases)

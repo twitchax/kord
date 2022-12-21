@@ -10,6 +10,7 @@ use crate::{base::Res, note::{self, Note}};
 pub struct ChordParser;
 
 /// Parses a [`Note`] [`str`] into a [`Note`].
+#[no_coverage]
 pub fn note_str_to_note(note_str: &str) -> Res<Note> {
     let chord = match note_str {
         "A" => note::A,

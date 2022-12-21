@@ -56,6 +56,7 @@ pub enum Pitch {
 // Pitch impls.
 
 impl HasBaseFrequency for Pitch {
+    #[no_coverage]
     fn base_frequency(&self) -> f32 {
         match self {
             Pitch::C => 16.35,
@@ -88,5 +89,19 @@ where
 {
     fn base_frequency(&self) -> f32 {
         self.pitch().base_frequency()
+    }
+}
+
+// Tests.
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::{assert_eq};
+
+    #[test]
+    fn test_properties() {
+        assert_eq!(Pitch::G.pitch(), Pitch::G);
+        assert_eq!(Pitch::G.base_frequency(), 24.50);
     }
 }

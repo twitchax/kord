@@ -107,3 +107,69 @@ impl Default for Octave {
         Octave::Four
     }
 }
+
+// Tests.
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::{assert_eq};
+    use crate::{octave::HasOctave};
+
+    #[test]
+    #[should_panic]
+    fn test_self_overflow() {
+        let _ = Octave::Ten + Octave::One;
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_i8_add_overflow() {
+        let _ = Octave::Ten + 1;
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_i8_add_underflow() {
+        let _ = Octave::Zero + -1;
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_i8_sub_overflow() {
+        let _ = Octave::Ten - -1;
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_i8_sub_underflow() {
+        let _ = Octave::Zero - 1;
+    }
+
+    #[test]
+    fn test_add_assign_self() {
+        let mut a = Octave::Four;
+        a += Octave::One;
+        assert_eq!(a, Octave::Five);
+    }
+
+    #[test]
+    fn test_add_assign_i8() {
+        let mut a = Octave::Four;
+        a += 1;
+        assert_eq!(a, Octave::Five);
+    }
+
+    #[test]
+    fn test_sub_assign_i8() {
+        let mut a = Octave::Four;
+        a -= 1;
+        assert_eq!(a, Octave::Three);
+    }
+
+    #[test]
+    fn test_properties() {
+        assert_eq!(Octave::Four.octave(), Octave::Four);
+        assert_eq!(Octave::default(), Octave::Four);
+    }
+}

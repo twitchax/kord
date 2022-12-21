@@ -24,6 +24,7 @@
 #![feature(specialization)]
 #![feature(concat_idents)]
 #![feature(iter_advance_by)]
+#![feature(no_coverage)]
 
 pub mod base;
 pub mod octave;

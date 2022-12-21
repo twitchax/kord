@@ -248,25 +248,26 @@ impl Chord {
 
 impl HasName for Chord {
     fn name(&self) -> String {
+        let known_name = self.known_chord().name();
+        let known_name = known_name.as_str();
         let mut name = String::new();
 
         name.push_str(self.root.static_name());
 
-        name.push_str(&self.known_chord().name());
+        name.push_str(known_name);
 
         // Add special modifiers that are true modifiers when not part of their "special case".
-        if let Some(degree) = self.dominant_degree() {
-            if self.modifiers.contains(&Modifier::Flat9) && self.known_chord() != KnownChord::DominantFlat9(degree) {
-                name.push_str("(♭9)");
-            }
 
-            if self.modifiers.contains(&Modifier::Sharp9) && self.known_chord() != KnownChord::DominantSharp9(degree) {
-                name.push_str("(♯9)");
-            }
+        if self.modifiers.contains(&Modifier::Flat9) && !known_name.contains("(♭9)") {
+            name.push_str("(♭9)");
+        }
 
-            if self.modifiers.contains(&Modifier::Sharp11) && self.known_chord() != KnownChord::DominantSharp11(degree) {
-                name.push_str("(♯11)");
-            }
+        if self.modifiers.contains(&Modifier::Sharp9) && !known_name.contains("(♯9)") {
+            name.push_str("(♯9)");
+        }
+
+        if self.modifiers.contains(&Modifier::Sharp11) && !known_name.contains("(♯11)") {
+            name.push_str("(♯11)");
         }
 
         // Add extensions.
@@ -906,7 +907,26 @@ impl Parsable for Chord {
 mod tests {
     use super::*;
     use pretty_assertions::{assert_eq};
-    use crate::note::*;
+    use crate::{note::*, octave::HasOctave};
+
+    #[test]
+    fn test_text() {
+        assert_eq!(Chord::new(C).flat9().sharp9().sharp11().add13().with_slash(E).name(), "C(♭9)(♯9)(♯11)(add13)/E");
+        assert_eq!(format!("{}", Chord::new(C).min().seven().flat_five()), "Cm7(♭5)\n   half diminished, locrian, minor seven flat five, seventh mode of major scale, major scale starting one half step up\n   C, D, E♭, F, G♭, A♭, B♭\n   C, E♭, G♭, B♭");
+    }
+
+    #[test]
+    fn test_properties() {
+        assert_eq!(Chord::new(C).seven().flat9().root(), C);
+        assert_eq!(Chord::new(C).with_slash(E).slash(), E);
+        assert_eq!(Chord::new(C).slash(), C);
+        assert_eq!(Chord::new(C).flat9().add13().with_slash(E).modifiers(), &vec![Modifier::Flat9].into_iter().collect::<HashSet<_>>());
+        assert_eq!(Chord::new(C).flat9().add13().with_slash(E).extensions(), &vec![Extension::Add13].into_iter().collect::<HashSet<_>>());
+        assert_eq!(Chord::new(C).flat9().add13().with_slash(E).seven().dominant_degree(), Some(Degree::Seven));
+        assert_eq!(Chord::new(C).flat9().add13().with_slash(E).nine().dominant_degree(), Some(Degree::Nine));
+        assert_eq!(Chord::new(C).flat9().with_inversion(1).inversion(), 1);
+        assert_eq!(Chord::new(C).flat9().with_octave(Octave::Three).root().octave(), Octave::Three);
+    }
 
     #[test]
     fn test_known_chords() {
@@ -914,7 +934,7 @@ mod tests {
         assert_eq!(Chord::new(C).minor().known_chord(), KnownChord::Minor);
         assert_eq!(Chord::new(C).major7().known_chord(), KnownChord::Major7);
         assert_eq!(Chord::new(C).minor().major7().known_chord(), KnownChord::MinorMajor7);
-        assert_eq!(Chord::new(C).minor().seven().known_chord(), KnownChord::MinorDominant(Degree::Seven));
+        assert_eq!(Chord::new(C).minor().dominant(Degree::Seven).known_chord(), KnownChord::MinorDominant(Degree::Seven));
         assert_eq!(Chord::new(C).minor().eleven().known_chord(), KnownChord::MinorDominant(Degree::Eleven));
         assert_eq!(Chord::new(C).seven().known_chord(), KnownChord::Dominant(Degree::Seven));
         assert_eq!(Chord::new(C).eleven().known_chord(), KnownChord::Dominant(Degree::Eleven));
@@ -923,7 +943,7 @@ mod tests {
         assert_eq!(Chord::new(C).dim().known_chord(), KnownChord::Diminished);
         assert_eq!(Chord::new(C).minor().seven().flat5().known_chord(), KnownChord::HalfDiminished(Degree::Seven));
         assert_eq!(Chord::new(C).augmented().known_chord(), KnownChord::Augmented);
-        assert_eq!(Chord::new(C).augmented().major7().known_chord(), KnownChord::AugmentedMajor7);
+        assert_eq!(Chord::new(C).aug().major7().known_chord(), KnownChord::AugmentedMajor7);
         assert_eq!(Chord::new(C).augmented().seven().known_chord(), KnownChord::AugmentedDominant(Degree::Seven));
         assert_eq!(Chord::new(C).seven().sharp11().known_chord(), KnownChord::DominantSharp11(Degree::Seven));
         assert_eq!(Chord::new(C).seven().flat9().known_chord(), KnownChord::DominantFlat9(Degree::Seven));
@@ -941,8 +961,8 @@ mod tests {
 
         assert_eq!(Chord::new(C).scale(), vec![C, D, E, F, G, A, B]);
         assert_eq!(Chord::new(C).minor().scale(), vec![C, D, EFlat, F, G, AFlat, BFlat]);
-        assert_eq!(Chord::new(C).major7().scale(), vec![C, D, E, F, G, A, B]);
-        assert_eq!(Chord::new(C).minor().major7().scale(), vec![C, D, EFlat, F, G, A, B]);
+        assert_eq!(Chord::new(C).major_seven().scale(), vec![C, D, E, F, G, A, B]);
+        assert_eq!(Chord::new(C).minor().maj7().scale(), vec![C, D, EFlat, F, G, A, B]);
         assert_eq!(Chord::new(C).minor().seven().scale(), vec![C, D, EFlat, F, G, A, BFlat]);
         assert_eq!(Chord::new(C).minor().eleven().scale(), vec![C, D, EFlat, F, G, A, BFlat]);
         assert_eq!(Chord::new(C).seven().scale(), vec![C, D, E, F, G, A, BFlat]);
@@ -954,7 +974,9 @@ mod tests {
         assert_eq!(Chord::new(C).augmented().scale(), vec![C, D, E, F, GSharp, A, B]);
         assert_eq!(Chord::new(C).augmented().major7().scale(), vec![C, D, E, FSharp, GSharp, A, B]);
         assert_eq!(Chord::new(C).augmented().seven().scale(), vec![C, D, E, FSharp, GSharp, ASharp]);
-        assert_eq!(Chord::new(C).seven().sharp11().scale(), vec![C, D, E, FSharp, G, A, BFlat]);
+        assert_eq!(Chord::new(C).seven().sharp_eleven().scale(), vec![C, D, E, FSharp, G, A, BFlat]);
+        assert_eq!(Chord::new(C).seven().flat_nine().scale(), vec![C, DFlat, EFlat, E, FSharp, G, A, BFlat]);
+        assert_eq!(Chord::new(C).seven().sharp_nine().scale(), vec![C, DFlat, EFlat, FFlat, GFlat, AFlat, BFlat]);
 
         // Others.
 
@@ -979,32 +1001,63 @@ mod tests {
         assert_eq!(Chord::new(C).diminished().chord(), vec![C, EFlat, GFlat, BDoubleFlat]);
         assert_eq!(Chord::new(C).dim().chord(), vec![C, EFlat, GFlat, BDoubleFlat]);
         assert_eq!(Chord::new(C).minor().seven().flat5().chord(), vec![C, EFlat, GFlat, BFlat]);
+        assert_eq!(Chord::new(C).half_diminished().chord(), vec![C, EFlat, GFlat, BFlat]);
+        assert_eq!(Chord::new(C).half_dim().chord(), vec![C, EFlat, GFlat, BFlat]);
         assert_eq!(Chord::new(C).augmented().chord(), vec![C, E, GSharp]);
         assert_eq!(Chord::new(C).augmented().major7().chord(), vec![C, E, GSharp, B]);
         assert_eq!(Chord::new(C).augmented().seven().chord(), vec![C, E, GSharp, BFlat]);
         assert_eq!(Chord::new(C).seven().sharp11().chord(), vec![C, E, G, BFlat, FSharpFive]);
+        assert_eq!(Chord::new(C).seven().flat_nine().chord(), vec![C, E, G, BFlat, DFlatFive]);
+        assert_eq!(Chord::new(C).seven().sharp_nine().chord(), vec![C, E, G, BFlat, DSharpFive]);
 
         // Extensions.
 
         assert_eq!(Chord::new(C).nine().sus2().chord(), vec![C, D, G, BFlat, DFive]);
+        assert_eq!(Chord::new(C).nine().sus_two().chord(), vec![C, D, G, BFlat, DFive]);
         assert_eq!(Chord::new(C).nine().sus4().chord(), vec![C, F, G, BFlat, DFive]);
+        assert_eq!(Chord::new(C).nine().sus_four().chord(), vec![C, F, G, BFlat, DFive]);
         assert_eq!(Chord::new(C).nine().sustain().chord(), vec![C, F, G, BFlat, DFive]);
         assert_eq!(Chord::new(C).seven().sus().chord(), vec![C, F, G, BFlat]);
         assert_eq!(Chord::new(C).seven().add2().chord(), vec![C, D, E, G, BFlat]);
+        assert_eq!(Chord::new(C).seven().add_two().chord(), vec![C, D, E, G, BFlat]);
         assert_eq!(Chord::new(C).seven().add4().chord(), vec![C, E, F, G, BFlat]);
+        assert_eq!(Chord::new(C).seven().add_four().chord(), vec![C, E, F, G, BFlat]);
         assert_eq!(Chord::new(C).add6().chord(), vec![C, E, G, A]);
         assert_eq!(Chord::new(C).seven().add9().chord(), vec![C, E, G, BFlat, DFive]);
+        assert_eq!(Chord::new(C).seven().add_nine().chord(), vec![C, E, G, BFlat, DFive]);
         assert_eq!(Chord::new(C).seven().add11().chord(), vec![C, E, G, BFlat, FFive]);
+        assert_eq!(Chord::new(C).seven().add_eleven().chord(), vec![C, E, G, BFlat, FFive]);
         assert_eq!(Chord::new(C).seven().add13().chord(), vec![C, E, G, BFlat, AFive]);
+        assert_eq!(Chord::new(C).seven().add_thirteen().chord(), vec![C, E, G, BFlat, AFive]);
         assert_eq!(Chord::new(C).seven().add2().add4().chord(), vec![C, D, E, F, G, BFlat]);
+        assert_eq!(Chord::new(C).seven().add6().chord(), vec![C, E, G, A, BFlat]);
+        assert_eq!(Chord::new(C).seven().add_six().chord(), vec![C, E, G, A, BFlat]);
         assert_eq!(Chord::new(C).seven().flat11().chord(), vec![C, E, G, BFlat, FFlatFive]);
+        assert_eq!(Chord::new(C).seven().flat_eleven().chord(), vec![C, E, G, BFlat, FFlatFive]);
         assert_eq!(Chord::new(C).seven().flat13().chord(), vec![C, E, G, BFlat, AFlatFive]);
+        assert_eq!(Chord::new(C).seven().flat_thirteen().chord(), vec![C, E, G, BFlat, AFlatFive]);
         assert_eq!(Chord::new(C).seven().sharp13().chord(), vec![C, E, G, BFlat, ASharpFive]);
+        assert_eq!(Chord::new(C).seven().sharp_thirteen().chord(), vec![C, E, G, BFlat, ASharpFive]);
+
+        // Slashes.
+
+        assert_eq!(Chord::new(C).with_slash(D).chord(), vec![D, C, E, G]);
 
         // Inversions.
 
-        assert_eq!(Chord::new(C).with_inversion(1).chord(), vec![E, G, CFive]);
-        assert_eq!(Chord::new(C).with_inversion(2).chord(), vec![G, CFive, EFive]);
+        assert_eq!(C.into_chord().with_inversion(1).chord(), vec![E, G, CFive]);
+        assert_eq!(C.into_chord().with_inversion(2).chord(), vec![G, CFive, EFive]);
 
+    }
+
+    #[test]
+    fn test_parse() {
+        assert_eq!(Chord::parse("C").unwrap().chord(), vec![C, E, G]);
+        assert_eq!(Chord::parse("Cm").unwrap().chord(), vec![C, EFlat, G]);
+        assert_eq!(Chord::parse("Cm7").unwrap().chord(), vec![C, EFlat, G, BFlat]);
+        assert_eq!(Chord::parse("Cm7b5").unwrap().chord(), vec![C, EFlat, GFlat, BFlat]);
+        assert_eq!(Chord::parse("C7").unwrap().chord(), vec![C, E, G, BFlat]);
+        assert_eq!(Chord::parse("C7b9").unwrap().chord(), vec![C, E, G, BFlat, DFlatFive]);
+        assert_eq!(Chord::parse("C7b9#11").unwrap().chord(), vec![C, E, G, BFlat, DFlatFive, FSharpFive]);
     }
 }
