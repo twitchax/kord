@@ -74,7 +74,7 @@ impl HasDescription for KnownChord {
             KnownChord::MinorDominant(_) => "minor 7, dorian, second mode of major scale, major with flat third and flat seven",
             KnownChord::DominantSharp11(_) => "dominant sharp 11, lydian dominant, lyxian, major with sharp four and flat seven",
             KnownChord::Augmented => "augmented, major with sharp five",
-            KnownChord::AugmentedMajor7 => "augmented major 7, lyxian, major with sharp four and five, third mode of melodic minor",
+            KnownChord::AugmentedMajor7 => "augmented major 7, major with sharp four and five, third mode of melodic minor",
             KnownChord::AugmentedDominant(_) => "augmented dominant, whole tone",
             KnownChord::HalfDiminished(_) => "half diminished, locrian, minor seven flat five, seventh mode of major scale, major scale starting one half step up",
             KnownChord::Diminished => "fully diminished (whole first), diminished seventh, whole/half/whole diminished",
