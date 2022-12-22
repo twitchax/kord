@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
 
-use std::ops::{Add, AddAssign};
+use std::{ops::{Add, AddAssign}, cmp::Ordering};
 
 use paste::paste;
 use crate::{named_pitch::{NamedPitch, HasNamedPitch}, interval::{Interval, HasEnharmonicDistance}, base::HasStaticName, chord::Chord, pitch::{HasFrequency, HasBaseFrequency, Pitch, HasPitch}, octave::{Octave, HasOctave}};
@@ -89,13 +89,21 @@ pub trait IntoChord {
     fn into_chord(self) -> Chord;
 }
 
+/// A trait which allows for a [`Note`] to be recreated with different properties.
+pub trait NoteRecreator {
+    /// Recreates this [`Note`] with the given [`NamedPitch`].
+    fn with_named_pitch(self, named_pitch: NamedPitch) -> Self;
+    /// Recreates this [`Note`] with the given [`Octave`].
+    fn with_octave(self, octave: Octave) -> Self;
+}
+
 // Struct.
 
 /// A note type.
 /// 
 /// This is a named pitch with an octave.  This type allows for correctly attributing octave changes
 /// across an interval from one [`Note`] to another.
-#[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, PartialOrd, Ord)]
+#[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
 pub struct Note {
     /// The octave of the note.
     octave: Octave,
@@ -161,6 +169,16 @@ impl IntoChord for Note {
     }
 }
 
+impl NoteRecreator for Note {
+    fn with_named_pitch(self, named_pitch: NamedPitch) -> Self {
+        Self::new(named_pitch, self.octave)
+    }
+
+    fn with_octave(self, octave: Octave) -> Self {
+        Self::new(self.named_pitch, octave)
+    }
+}
+
 impl Add<Interval> for Note {
     type Output = Self;
 
@@ -196,6 +214,12 @@ impl Add<Interval> for Note {
 impl AddAssign<Interval> for Note {
     fn add_assign(&mut self, rhs: Interval) {
         *self = *self + rhs;
+    }
+}
+
+impl PartialOrd for Note {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.octave.cmp(&other.octave).then(self.pitch().cmp(&other.pitch())))
     }
 }
 

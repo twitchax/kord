@@ -33,6 +33,10 @@ enum Command {
         #[arg(short, long, default_value_t = 4i8)]
         octave: i8,
 
+        /// Sets the inversion of the chord
+        #[arg(short, long, default_value_t = 0u8)]
+        inversion: u8,
+
         /// Sets the delay between notes (in seconds)
         #[arg(short, long, default_value_t = 0.2f32)]
         delay: f32,
@@ -40,6 +44,10 @@ enum Command {
         /// Sets the duration of play (in seconds)
         #[arg(short, long, default_value_t = 3.0f32)]
         length: f32,
+
+        /// Fade in duration (in seconds)
+        #[arg(short, long, default_value_t = 0.1f32)]
+        fade_in: f32,
     },
 }
 
@@ -58,10 +66,10 @@ fn start(args: Args) -> Void {
 
             describe(&chord);
         }
-        Some(Command::Play { symbol, octave, delay, length }) => {
-            let chord = Chord::parse(&symbol)?.with_octave(Octave::Zero + octave);
+        Some(Command::Play { symbol, octave, inversion, delay, length, fade_in }) => {
+            let chord = Chord::parse(&symbol)?.with_octave(Octave::Zero + octave).with_inversion(inversion);
 
-            play(&chord, delay, length);
+            play(&chord, delay, length, fade_in);
         }
         None => {
             println!("No command given.");
@@ -74,7 +82,7 @@ fn describe(chord: &Chord) {
     println!("{}", chord);
 }
 
-fn play(chord: &Chord, delay: f32, length: f32) {
+fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) {
     describe(chord);
 
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
@@ -87,6 +95,7 @@ fn play(chord: &Chord, delay: f32, length: f32) {
         let source = SineWave::new(n.frequency())
             .take_duration(Duration::from_secs_f32(length - k as f32 * delay))
             .delay(Duration::from_secs_f32(k as f32 * delay))
+            .fade_in(Duration::from_secs_f32(fade_in))
             .amplify(0.20);
 
         sink.append(source);

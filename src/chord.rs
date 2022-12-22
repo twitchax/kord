@@ -2,7 +2,7 @@ use std::{collections::HashSet, fmt::Display};
 
 use pest::Parser;
 
-use crate::{note::{Note, CZero}, modifier::{Modifier, Extension, Degree, HasIsDominant}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::Interval, base::{HasDescription, HasName, HasStaticName, Res}, parser::{ChordParser, Rule, note_str_to_note}, octave::{Octave}, named_pitch::HasNamedPitch};
+use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::Interval, base::{HasDescription, HasName, HasStaticName, Res}, parser::{ChordParser, Rule, note_str_to_note}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch};
 
 // Traits.
 
@@ -767,7 +767,16 @@ impl HasChord for Chord {
         }
 
         // Add slash note.
-        if let Some(slash) = self.slash {
+        if let Some(mut slash) = self.slash {
+            // Fix slash note (it should be less than, or equal to, one octave away from the bottom tone).
+            let bottom = *result.first().unwrap_or(&CZero);
+            let floor = Note::new(bottom.named_pitch(), bottom.octave() - 1);
+
+            slash = slash.with_octave(Octave::Zero);
+            while slash < floor {
+                slash += Interval::PerfectOctave;
+            }
+
             result.insert(0, slash);
         }
 
@@ -1050,12 +1059,14 @@ mod tests {
 
         // Slashes.
 
-        assert_eq!(Chord::new(C).with_slash(D).chord(), vec![D, C, E, G]);
+        assert_eq!(Chord::new(C).with_slash(D).chord(), vec![DThree, C, E, G]);
+        assert_eq!(Chord::new(CFive).with_slash(D).chord(), vec![DFour, CFive, EFive, GFive]);
 
         // Inversions.
 
         assert_eq!(C.into_chord().with_inversion(1).chord(), vec![E, G, CFive]);
         assert_eq!(C.into_chord().with_inversion(2).chord(), vec![G, CFive, EFive]);
+        assert_eq!(C.into_chord().maj7().with_inversion(3).chord(), vec![B, CFive, EFive, GFive]);
 
     }
 
