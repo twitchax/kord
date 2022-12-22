@@ -1067,7 +1067,6 @@ mod tests {
         assert_eq!(C.into_chord().with_inversion(1).chord(), vec![E, G, CFive]);
         assert_eq!(C.into_chord().with_inversion(2).chord(), vec![G, CFive, EFive]);
         assert_eq!(C.into_chord().maj7().with_inversion(3).chord(), vec![B, CFive, EFive, GFive]);
-
     }
 
     #[test]

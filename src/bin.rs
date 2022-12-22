@@ -69,7 +69,7 @@ fn start(args: Args) -> Void {
         Some(Command::Play { symbol, octave, inversion, delay, length, fade_in }) => {
             let chord = Chord::parse(&symbol)?.with_octave(Octave::Zero + octave).with_inversion(inversion);
 
-            play(&chord, delay, length, fade_in);
+            play(&chord, delay, length, fade_in)?;
         }
         None => {
             println!("No command given.");
@@ -82,19 +82,28 @@ fn describe(chord: &Chord) {
     println!("{}", chord);
 }
 
-fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) {
+fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
     describe(chord);
 
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
 
     let mut sinks = vec![];
 
-    for (k, n) in chord.chord().into_iter().enumerate() {
+    let chord_tones = chord.chord();
+
+    if length <= chord_tones.len() as f32 * delay {
+        return Err(anyhow::Error::msg("The delay is too long for the length of play (i.e., the number of chord tones times the delay is longer than the length)."));
+    }
+
+    for (k, n) in chord_tones.into_iter().enumerate() {
         let sink = Sink::try_new(&stream_handle).unwrap();
 
+        let d = k as f32 * delay;
+
         let source = SineWave::new(n.frequency())
-            .take_duration(Duration::from_secs_f32(length - k as f32 * delay))
-            .delay(Duration::from_secs_f32(k as f32 * delay))
+            .take_duration(Duration::from_secs_f32(length - d))
+            .buffered()
+            .delay(Duration::from_secs_f32(d))
             .fade_in(Duration::from_secs_f32(fade_in))
             .amplify(0.20);
 
@@ -104,6 +113,8 @@ fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) {
     }
 
     std::thread::sleep(Duration::from_secs_f32(length));
+
+    Ok(())
 }
 
 // Tests.
