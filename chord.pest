@@ -2,7 +2,11 @@ letter = { 'A' .. 'G' }
 
 accidental = { "#" | "♯" | "b" | "♭" }
 
-note = { letter ~ accidental? }
+note = { letter ~ accidental? ~ accidental? }
+
+octave = { ASCII_DIGIT }
+
+note_with_octave = { note ~ octave? }
 
 minor = { "-" | "m" }
 

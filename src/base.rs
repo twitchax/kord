@@ -28,3 +28,8 @@ pub trait HasDescription {
     /// Returns the description of the type.
     fn description(&self) -> &'static str;
 }
+
+/// A trait for types that can be parsed from a string.
+pub trait Parsable {
+    fn parse(symbol: &str) -> Res<Self> where Self: Sized;
+}

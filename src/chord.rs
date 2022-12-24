@@ -2,7 +2,7 @@ use std::{collections::HashSet, fmt::Display};
 
 use pest::Parser;
 
-use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::Interval, base::{HasDescription, HasName, HasStaticName, Res}, parser::{ChordParser, Rule, note_str_to_note}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch};
+use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::Interval, base::{HasDescription, HasName, HasStaticName, Res, Parsable}, parser::{ChordParser, Rule, note_str_to_note}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::HasPitch};
 
 // Traits.
 
@@ -62,8 +62,12 @@ pub trait HasChord {
 pub trait Chordable {
     /// Adds a modifier to the implementor (most likely a [`Chord`]), and returns a new chord.
     fn with_modifier(self, modifier: Modifier) -> Chord;
+    /// Adds modifiers to the implementor (most likely a [`Chord`]), and returns a new chord.
+    fn with_modifiers(self, modifiers: &[Modifier]) -> Chord;
     /// Adds an extension to the implementor (most likely a [`Chord`]), and returns a new chord.
     fn with_extension(self, extension: Extension) -> Chord;
+    /// Adds extensions to the implementor (most likely a [`Chord`]), and returns a new chord.
+    fn with_extensions(self, extensions: &[Extension]) -> Chord;
     /// Sets the inversion number of the implementor (most likely a [`Chord`]), and returns a new chord.
     fn with_inversion(self, inversion: u8) -> Chord;
     /// Sets the slash note of the implementor (most likely a [`Chord`]), and returns a new chord.
@@ -209,11 +213,6 @@ pub trait HasDomninantDegree {
     fn dominant_degree(&self) -> Option<Degree>;
 }
 
-/// A trait for types that can be parsed from a string.
-pub trait Parsable {
-    fn parse(symbol: &str) -> Res<Self> where Self: Sized;
-}
-
 // Struct.
 
 /// The primary chord struct.
@@ -243,6 +242,89 @@ impl Chord {
             extensions: HashSet::new(), 
             inversion: 0 
         }
+    }
+
+    /// Attempts to guess the chord from the notes.
+    pub fn from_notes(notes: &[Note]) -> Res<Vec<Self>> {
+        if notes.len() < 3 {
+            return Err(anyhow::Error::msg("Must have at least three notes to guess a chord."));
+        }
+
+        let mut notes = notes.to_vec();
+        notes.sort();
+
+        let mut result = Vec::new();
+
+        // Iterate through all known chords (and some likely extensions) and find the longest match.
+        for mod_set in known_modifier_sets() {
+            for mod_set2 in one_off_modifier_sets() {
+                for ext_set in likely_extension_sets() {
+                    // Check using the first note as the root.
+                    let candidate_chord_root = Chord::new(notes[0]).with_modifiers(mod_set).with_modifiers(mod_set2).with_extensions(ext_set);
+                    let candidate_chord_root_notes = candidate_chord_root.chord();
+    
+                    if notes.len() == candidate_chord_root_notes.len() && notes.iter().zip(&candidate_chord_root.chord()).all(|(a, b)| a.pitch() == b.pitch() && a.octave() == b.octave()) {
+                        result.push(candidate_chord_root);
+                    }
+    
+                    // Check using the first note as a slash.
+                    let candidate_chord_slash = Chord::new(notes[1]).with_slash(notes[0]).with_modifiers(mod_set).with_extensions(ext_set);
+                    let candidate_chord_slash_notes = candidate_chord_slash.chord();
+    
+                    if notes.len() == candidate_chord_slash_notes.len() && notes.iter().zip(&candidate_chord_slash.chord()).all(|(a, b)| a.pitch() == b.pitch() && a.octave() == b.octave()) {
+                        result.push(candidate_chord_slash);
+                    }
+                }
+            }
+        }
+
+        // Remove extensions and modifiers that are expressed elsewhere in the chord.
+        result.iter_mut().for_each(|c| {
+            let dominant_degree = c.dominant_degree();
+
+            if let Some(degree) = dominant_degree {
+                match degree {
+                    Degree::Nine => {
+                        c.extensions.remove(&Extension::Add9);
+                    },
+                    Degree::Eleven => {
+                        c.extensions.remove(&Extension::Add9);
+                        c.extensions.remove(&Extension::Add11);
+                    },
+                    Degree::Thirteen => {
+                        c.extensions.remove(&Extension::Add9);
+                        c.extensions.remove(&Extension::Add11);
+                        c.extensions.remove(&Extension::Add13);
+                    },
+                    _ => {}
+                }
+            }
+
+            if c.modifiers.contains(&Modifier::Diminished) {
+                c.modifiers.remove(&Modifier::Minor);
+                c.modifiers.remove(&Modifier::Flat5);
+                c.modifiers.remove(&Modifier::Augmented5);
+            }
+        });
+
+        // Order the candidates by "simplicity" (i.e., least slashes, least extensions, and least modifiers).
+        result.sort_by(|a, b| {
+            let a_slashes = a.slash.is_some() as u8;
+            let b_slashes = b.slash.is_some() as u8;
+
+            let a_extensions = a.extensions.len() as u8;
+            let b_extensions = b.extensions.len() as u8;
+
+            let a_modifiers = a.modifiers.len() as u8;
+            let b_modifiers = b.modifiers.len() as u8;
+
+            a_slashes.cmp(&b_slashes).then(a_extensions.cmp(&b_extensions)).then(a_modifiers.cmp(&b_modifiers))
+        });
+
+        // Remove duplicates.
+        result.dedup_by(|a, b| a.modifiers == b.modifiers && a.extensions == b.extensions);
+
+        Ok(result)
     }
 }
 
@@ -336,10 +418,30 @@ impl Chordable for Chord {
         self
     }
 
+    fn with_modifiers(self, modifiers: &[Modifier]) -> Chord {
+        let mut chord = self;
+
+        for m in modifiers {
+            chord = chord.with_modifier(*m);
+        }
+
+        chord
+    }
+
     fn with_extension(mut self, extension: Extension) -> Chord {
         self.extensions.insert(extension);
 
         self
+    }
+
+    fn with_extensions(self, extensions: &[Extension]) -> Chord {
+        let mut chord = self;
+
+        for e in extensions {
+            chord = chord.with_extension(*e);
+        }
+
+        chord
     }
 
     fn with_inversion(mut self, inversion: u8) -> Chord {
@@ -1078,5 +1180,10 @@ mod tests {
         assert_eq!(Chord::parse("C7").unwrap().chord(), vec![C, E, G, BFlat]);
         assert_eq!(Chord::parse("C7b9").unwrap().chord(), vec![C, E, G, BFlat, DFlatFive]);
         assert_eq!(Chord::parse("C7b9#11").unwrap().chord(), vec![C, E, G, BFlat, DFlatFive, FSharpFive]);
+    }
+
+    #[test]
+    fn test_guess() {
+        assert_eq!(Chord::from_notes(&[EThree, C, EFlat, FSharp, ASharp, DFive]).unwrap().first().unwrap().chord(), Chord::parse("Cm9b5/E").unwrap().chord());
     }
 }

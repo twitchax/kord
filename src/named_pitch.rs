@@ -281,8 +281,6 @@ impl HasPitch for NamedPitch {
     }
 }
 
-// Iterators.
-
 impl Add<i8> for NamedPitch {
     type Output = Self;
 
@@ -358,6 +356,8 @@ static ALL_PITCHES: [NamedPitch; 49] = [
     NamedPitch::ETripleSharp,
     NamedPitch::BTripleSharp,
 ];
+
+// Tests.
 
 #[cfg(test)]
 mod tests {

@@ -18,14 +18,14 @@ A music theory binary and library for Rust.
 Windows:
 
 ```powershell
-iwr https://github.com/twitchax/kord/releases/download/v0.1.1/kord_x86_64-pc-windows-gnu.zip
+iwr https://github.com/twitchax/kord/releases/latest/download//kord_x86_64-pc-windows-gnu.zip
 Expand-Archive kord_x86_64-pc-windows-gnu.zip -DestinationPath C:\Users\%USERNAME%\AppData\Local\Programs\kord
 ```
 
 Mac OS (Apple Silicon):
 
 ```bash
-curl -LO https://github.com/twitchax/kord/releases/download/v0.1.1/kord_aarch64-apple-darwin.zip
+curl -LO https://github.com/twitchax/kord/releases/latest/download/kord_aarch64-apple-darwin.zip
 unzip kord_aarch64-apple-darwin.zip -d /usr/local/bin
 chmod a+x /usr/local/bin/kord
 ```
@@ -33,7 +33,7 @@ chmod a+x /usr/local/bin/kord
 Linux:
 
 ```bash
-curl -LO https://github.com/twitchax/kord/releases/download/v0.1.1/kord_x86_64-unknown-linux-gnu.zip
+curl -LO https://github.com/twitchax/kord/releases/latest/download/kord_x86_64-unknown-linux-gnu.zip
 unzip kord_x86_64-unknown-linux-gnu.zip -d /usr/local/bin
 chmod a+x /usr/local/bin/kord
 ```
@@ -85,6 +85,40 @@ B♭7(♯9)(♯11)
    B♭, D, F, A♭, C♯, E
 ```
 
+### Guess A Chord
+
+```bash
+$ kord guess C F# D# A
+Cdim
+   fully diminished (whole first), diminished seventh, whole/half/whole diminished
+   C, D, E♭, F, G♭, A♭, B𝄫, B
+   C, E♭, G♭, B𝄫
+Cm(♭5)(add6)
+   minor
+   C, D, E♭, F, G, A♭, B♭
+   C, E♭, G♭, A
+```
+
+```bash
+$ kord guess C G Bb F#5 F
+C7(♯11)(sus4)
+   dominant sharp 11, lydian dominant, lyxian, major with sharp four and flat seven
+   C, D, E, F♯, G, A, B♭
+   C, F, G, B♭, F♯
+Cm7(♯11)(sus4)
+   minor 7, dorian, second mode of major scale, major with flat third and flat seven
+   C, D, E♭, F, G, A, B♭
+   C, F, G, B♭, F♯
+```
+
+```bash
+$ kord guess E3 C4 Eb4 F#4 A#4 D5 D4
+Cm9(♭5)(add2)/E
+   half diminished, locrian, minor seven flat five, seventh mode of major scale, major scale starting one half step up
+   C, D, E♭, F, G♭, A♭, B♭
+   E, C, D, E♭, G♭, B♭, D
+```
+
 ## Library Usage
 
 Add this to your `Cargo.toml`:
@@ -104,9 +138,20 @@ use klib::chord::*;
 
 // Check to see what _kind_ of chord this is.
 assert_eq!(Chord::new(C).augmented().seven().known_chord(), KnownChord::AugmentedDominant(Degree::Seven));
+```
+
+```rust
+use crate::klib::base::Parsable;
+use klib::note::*;
+use klib::chord::*;
 
 // Parse a chord from a string, and inspect the scale.
 assert_eq!(Chord::parse("Cm7b5").unwrap().scale(), vec![C, D, EFlat, F, GFlat, AFlat, BFlat]);
+```
+
+```rust
+use klib::note::*;
+use klib::chord::*;
 
 // From a note, create a chord, and look at the chord tones.
 assert_eq!(C.into_chord().augmented().major7().chord(), vec![C, E, GSharp, B]);

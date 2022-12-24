@@ -1,5 +1,7 @@
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
+use crate::base::HasStaticName;
+
 // Traits.
 
 /// A trait for types that have an octave property.
@@ -28,6 +30,24 @@ pub enum Octave {
 }
 
 // Octave impls.
+
+impl HasStaticName for Octave {
+    fn static_name(&self) -> &'static str {
+        match self {
+            Octave::Zero => "0",
+            Octave::One => "1",
+            Octave::Two => "2",
+            Octave::Three => "3",
+            Octave::Four => "4",
+            Octave::Five => "5",
+            Octave::Six => "6",
+            Octave::Seven => "7",
+            Octave::Eight => "8",
+            Octave::Nine => "9",
+            Octave::Ten => "10",
+        }
+    }
+}
 
 impl Add for Octave {
     type Output = Self;

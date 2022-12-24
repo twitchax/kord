@@ -1,7 +1,7 @@
 use std::{time::Duration};
 
 use clap::{Parser, Subcommand};
-use klib::{base::Void, chord::{Chordable, HasChord, Chord, Parsable}, pitch::HasFrequency, octave::Octave};
+use klib::{base::{Void, Parsable}, chord::{Chordable, HasChord, Chord}, pitch::HasFrequency, octave::Octave, note::Note};
 use rodio::{OutputStream, Sink, source::SineWave, Source};
 
 /// Simple program to greet a person
@@ -49,6 +49,12 @@ enum Command {
         #[arg(short, long, default_value_t = 0.1f32)]
         fade_in: f32,
     },
+
+    /// Attempt to guess the chord from a set of notes (ordered by simplicity)
+    Guess {
+        /// A set of notes from which the guesser will attempt to build a chord
+        notes: Vec<String>,
+    },
 }
 
 fn main() -> Void {
@@ -65,12 +71,23 @@ fn start(args: Args) -> Void {
             let chord = Chord::parse(&symbol)?.with_octave(Octave::Zero + octave);
 
             describe(&chord);
-        }
+        },
         Some(Command::Play { symbol, octave, inversion, delay, length, fade_in }) => {
             let chord = Chord::parse(&symbol)?.with_octave(Octave::Zero + octave).with_inversion(inversion);
 
             play(&chord, delay, length, fade_in)?;
-        }
+        },
+        Some(Command::Guess { notes }) => {
+            // Parse the notes.
+            let notes = notes.into_iter().map(|n| Note::parse(&n)).collect::<Result<Vec<_>, _>>()?;
+
+            // Get the chord from the notes.
+            let candidates = Chord::from_notes(&notes)?;
+
+            for candidate in candidates {
+                describe(&candidate);
+            }
+        },
         None => {
             println!("No command given.");
         }
@@ -129,6 +146,15 @@ mod tests {
             command: Some(Command::Describe {
                 symbol: "Cmaj7".to_string(),
                 octave: 4,
+            }),
+        }).unwrap();
+    }
+
+    #[test]
+    fn test_guess() {
+        start(Args {
+            command: Some(Command::Guess {
+                notes: vec!["C".to_owned(), "E".to_owned(), "G".to_owned()],
             }),
         }).unwrap();
     }

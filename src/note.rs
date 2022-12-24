@@ -4,7 +4,8 @@
 use std::{ops::{Add, AddAssign}, cmp::Ordering};
 
 use paste::paste;
-use crate::{named_pitch::{NamedPitch, HasNamedPitch}, interval::{Interval, HasEnharmonicDistance}, base::HasStaticName, chord::Chord, pitch::{HasFrequency, HasBaseFrequency, Pitch, HasPitch}, octave::{Octave, HasOctave}};
+use pest::Parser;
+use crate::{named_pitch::{NamedPitch, HasNamedPitch}, interval::{Interval, HasEnharmonicDistance}, base::{HasStaticName, HasName, Parsable, Res}, chord::Chord, pitch::{HasFrequency, HasBaseFrequency, Pitch, HasPitch}, octave::{Octave, HasOctave}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}};
 
 // Macros.
 
@@ -143,6 +144,12 @@ impl HasStaticName for Note {
     }
 }
 
+impl HasName for Note {
+    fn name(&self) -> String {
+        format!("{}{}", self.named_pitch.static_name(), self.octave.static_name())
+    }
+}
+
 impl HasFrequency for Note
 {
     fn frequency(&self) -> f32 {
@@ -166,6 +173,32 @@ impl HasFrequency for Note
 impl IntoChord for Note {
     fn into_chord(self) -> Chord {
         Chord::new(self)
+    }
+}
+
+impl Parsable for Note {
+    fn parse(input: &str) -> Res<Self> where Self: Sized {
+        let root = ChordParser::parse(Rule::note_with_octave, input)?.next().unwrap();
+
+        assert_eq!(Rule::note_with_octave, root.as_rule());
+
+        let mut components = root.into_inner();
+
+        let note = components.next().unwrap();
+
+        assert_eq!(Rule::note, note.as_rule());
+
+        let mut result = note_str_to_note(note.as_str())?;
+
+        if let Some(octave) = components.next() {
+            assert_eq!(Rule::octave, octave.as_rule());
+
+            let octave = octave_str_to_octave(octave.as_str())?;
+
+            result = result.with_octave(octave);
+        }
+
+        Ok(result)
     }
 }
 
@@ -220,6 +253,12 @@ impl AddAssign<Interval> for Note {
 impl PartialOrd for Note {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.octave.cmp(&other.octave).then(self.pitch().cmp(&other.pitch())))
+    }
+}
+
+impl Ord for Note {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.octave.cmp(&other.octave).then(self.pitch().cmp(&other.pitch()))
     }
 }
 
@@ -368,6 +407,20 @@ mod tests {
         assert_eq!(BFlatThree + Interval::MinorNinth, CFlatFive);
         assert_eq!(A + Interval::AugmentedNinth, BSharpFive);
         assert_eq!(CSharp + Interval::AugmentedSeventh, BDoubleSharp);
+    }
+
+    #[test]
+    fn test_parse() {
+        assert_eq!(Note::parse("C").unwrap(), C);
+        assert_eq!(Note::parse("C#").unwrap(), CSharp);
+        assert_eq!(Note::parse("Bb3").unwrap(), BFlatThree);
+        assert_eq!(Note::parse("D#7").unwrap(), DSharpSeven);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_parse_panic() {
+        assert_eq!(Note::parse("C11").unwrap(), C);
     }
 
     #[test]
