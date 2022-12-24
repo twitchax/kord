@@ -2,7 +2,7 @@ use std::{collections::HashSet, fmt::Display};
 
 use pest::Parser;
 
-use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::Interval, base::{HasDescription, HasName, HasStaticName, Res, Parsable}, parser::{ChordParser, Rule, note_str_to_note}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::HasPitch};
+use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::Interval, base::{HasDescription, HasName, HasStaticName, Res, Parsable}, parser::{ChordParser, Rule, note_str_to_note}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::{HasFrequency}};
 
 // Traits.
 
@@ -263,7 +263,7 @@ impl Chord {
                     let candidate_chord_root = Chord::new(notes[0]).with_modifiers(mod_set).with_modifiers(mod_set2).with_extensions(ext_set);
                     let candidate_chord_root_notes = candidate_chord_root.chord();
     
-                    if notes.len() == candidate_chord_root_notes.len() && notes.iter().zip(&candidate_chord_root.chord()).all(|(a, b)| a.pitch() == b.pitch() && a.octave() == b.octave()) {
+                    if notes.len() == candidate_chord_root_notes.len() && notes.iter().zip(&candidate_chord_root.chord()).all(|(a, b)| a.frequency() == b.frequency()) {
                         result.push(candidate_chord_root);
                     }
     
@@ -271,7 +271,7 @@ impl Chord {
                     let candidate_chord_slash = Chord::new(notes[1]).with_slash(notes[0]).with_modifiers(mod_set).with_extensions(ext_set);
                     let candidate_chord_slash_notes = candidate_chord_slash.chord();
     
-                    if notes.len() == candidate_chord_slash_notes.len() && notes.iter().zip(&candidate_chord_slash.chord()).all(|(a, b)| a.pitch() == b.pitch() && a.octave() == b.octave()) {
+                    if notes.len() == candidate_chord_slash_notes.len() && notes.iter().zip(&candidate_chord_slash.chord()).all(|(a, b)| a.frequency() == b.frequency()) {
                         result.push(candidate_chord_slash);
                     }
                 }
