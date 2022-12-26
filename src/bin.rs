@@ -49,7 +49,7 @@ enum Command {
         #[arg(short, long, default_value_t = 0.1f32)]
         fade_in: f32,
         
-        /// Sets whether or not the chord should be played "crunchy"
+        /// Sets whether or not the chord should be played "crunchy" (i.e., all within one octave of the root)
         #[arg(short, long, default_value_t = false)]
         crunchy: bool,
     },
@@ -83,10 +83,10 @@ fn start(args: Args) -> Void {
         },
         Some(Command::Guess { notes }) => {
             // Parse the notes.
-            let notes = notes.into_iter().map(|n| Note::parse(&n)).collect::<Result<Vec<_>, _>>()?;
+            let notes = dbg!(notes.into_iter().map(|n| Note::parse(&n)).collect::<Result<Vec<_>, _>>()?);
 
             // Get the chord from the notes.
-            let candidates = Chord::from_notes(&notes)?;
+            let candidates = dbg!(Chord::from_notes(&notes)?);
 
             for candidate in candidates {
                 describe(&candidate);

@@ -207,7 +207,8 @@ static KNOWN_MODIFIER_SETS: Lazy<[Vec<Modifier>; 35]> = Lazy::new(|| [
     vec![Modifier::Sharp9, Modifier::Dominant(Degree::Thirteen)],
 ]);
 
-static ONE_OFF_MODIFIER_SETS: Lazy<[Vec<Modifier>; 5]> = Lazy::new(|| [
+static ONE_OFF_MODIFIER_SETS: Lazy<[Vec<Modifier>; 6]> = Lazy::new(|| [
+    vec![],
     vec![Modifier::Sharp11],
     vec![Modifier::Augmented5],
     vec![Modifier::Flat5],

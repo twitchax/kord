@@ -126,7 +126,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-kord = "0.1"
+kord = "*" #choose a version
 ```
 
 ### Examples

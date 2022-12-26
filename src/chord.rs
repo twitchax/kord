@@ -1210,5 +1210,6 @@ mod tests {
     #[test]
     fn test_guess() {
         assert_eq!(Chord::from_notes(&[EThree, C, EFlat, FSharp, ASharp, DFive]).unwrap().first().unwrap().chord(), Chord::parse("Cm9b5/E").unwrap().chord());
+        assert_eq!(Chord::from_notes(&[C, E, G]).unwrap().first().unwrap().chord(), Chord::parse("C").unwrap().chord());
     }
 }
