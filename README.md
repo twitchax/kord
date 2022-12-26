@@ -18,7 +18,7 @@ A music theory binary and library for Rust.
 Windows:
 
 ```powershell
-iwr https://github.com/twitchax/kord/releases/latest/download//kord_x86_64-pc-windows-gnu.zip
+iwr https://github.com/twitchax/kord/releases/latest/download/kord_x86_64-pc-windows-gnu.zip
 Expand-Archive kord_x86_64-pc-windows-gnu.zip -DestinationPath C:\Users\%USERNAME%\AppData\Local\Programs\kord
 ```
 
@@ -51,11 +51,12 @@ $ kord -h
 
 A tool to easily explore music theory principles.
 
-Usage: kord [COMMAND]
+Usage: kord.exe [COMMAND]
 
 Commands:
   describe  Describes a chord
   play      Describes and plays a chord
+  guess     Attempt to guess the chord from a set of notes (ordered by simplicity)
   help      Print this message or the help of the given subcommand(s)
 
 Options:
