@@ -2,7 +2,7 @@ use std::{collections::HashSet, fmt::Display};
 
 use pest::Parser;
 
-use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::Interval, base::{HasDescription, HasName, HasStaticName, Res, Parsable}, parser::{ChordParser, Rule, note_str_to_note}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::{HasFrequency}};
+use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::{Interval, CanReduceFrame}, base::{HasDescription, HasName, HasStaticName, Res, Parsable}, parser::{ChordParser, Rule, note_str_to_note}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::{HasFrequency}};
 
 // Traits.
 
@@ -74,6 +74,8 @@ pub trait Chordable {
     fn with_slash(self, slash: Note) -> Chord;
     /// Sets the octave of the implementor (most likely the root note of a chord), and returns a new chord.
     fn with_octave(self, octave: Octave) -> Chord;
+    /// Sets whether or not the implementor (most likely a [`Chord`]) is crunchy.
+    fn with_crunchy(self, is_crunchy: bool) -> Chord;
 
     // Modifiers.
 
@@ -228,6 +230,10 @@ pub struct Chord {
     extensions: HashSet<Extension>,
     /// The inversion of the chord.
     inversion: u8,
+    /// Whether or not this chord is "crunchy".
+    /// 
+    /// Crunchy chords take extensions down an octave, which gives the chord some "crunch".
+    is_crunchy: bool,
 }
 
 // Impls.
@@ -240,7 +246,8 @@ impl Chord {
             slash: None, 
             modifiers: HashSet::new(), 
             extensions: HashSet::new(), 
-            inversion: 0 
+            inversion: 0,
+            is_crunchy: false,
         }
     }
 
@@ -461,6 +468,13 @@ impl Chordable for Chord {
 
         Chord {
             root,
+            ..self
+        }
+    }
+
+    fn with_crunchy(self, is_crunchy: bool) -> Chord {
+        Chord {
+            is_crunchy,
             ..self
         }
     }
@@ -839,6 +853,13 @@ impl HasRelativeChord for Chord {
         if extensions.contains(&Extension::Add13) {
             result.push(Interval::MajorThirteenth);
         }
+
+        // If this chord is crunchy, bring all "octave" intervals down to the first octave frame.
+        if self.is_crunchy {
+            for interval in &mut result {
+                *interval = interval.reduce_frame();
+            }
+        }
         
         result.sort();
         result.dedup();
@@ -1158,6 +1179,10 @@ mod tests {
         assert_eq!(Chord::new(C).seven().flat_thirteen().chord(), vec![C, E, G, BFlat, AFlatFive]);
         assert_eq!(Chord::new(C).seven().sharp13().chord(), vec![C, E, G, BFlat, ASharpFive]);
         assert_eq!(Chord::new(C).seven().sharp_thirteen().chord(), vec![C, E, G, BFlat, ASharpFive]);
+
+        // Crunchy.
+
+        assert_eq!(Chord::new(C).seven().sharp9().with_crunchy(true).chord(), vec![C, DSharp, E, G, BFlat]);
 
         // Slashes.
 

@@ -48,6 +48,10 @@ enum Command {
         /// Fade in duration (in seconds)
         #[arg(short, long, default_value_t = 0.1f32)]
         fade_in: f32,
+        
+        /// Sets whether or not the chord should be played "crunchy"
+        #[arg(short, long, default_value_t = false)]
+        crunchy: bool,
     },
 
     /// Attempt to guess the chord from a set of notes (ordered by simplicity)
@@ -72,8 +76,8 @@ fn start(args: Args) -> Void {
 
             describe(&chord);
         },
-        Some(Command::Play { symbol, octave, inversion, delay, length, fade_in }) => {
-            let chord = Chord::parse(&symbol)?.with_octave(Octave::Zero + octave).with_inversion(inversion);
+        Some(Command::Play { symbol, octave, inversion, delay, length, fade_in, crunchy }) => {
+            let chord = Chord::parse(&symbol)?.with_octave(Octave::Zero + octave).with_inversion(inversion).with_crunchy(crunchy);
 
             play(&chord, delay, length, fade_in)?;
         },

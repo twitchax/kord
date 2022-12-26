@@ -14,6 +14,12 @@ pub trait HasEnharmonicDistance {
     fn enharmonic_distance(&self) -> i8;
 }
 
+/// A trait for types that can be "reduced" to a single "frame" (usually an interval, and usually within an octave).
+pub trait CanReduceFrame {
+    /// Returns the reduced frame of the type.
+    fn reduce_frame(self) -> Self;
+}
+
 // Enum.
 
 /// An enum representing the interval between two notes.
@@ -185,6 +191,63 @@ impl HasOctave for Interval {
             Interval::MinorThirteenth => Octave::One,
             Interval::MajorThirteenth => Octave::One,
             Interval::AugmentedThirteenth => Octave::One,
+        }
+    }
+}
+
+impl CanReduceFrame for Interval {
+    fn reduce_frame(self) -> Self {
+        match self {
+            Interval::PerfectUnison => Interval::PerfectUnison,
+            Interval::DiminishedSecond => Interval::DiminishedSecond,
+
+            Interval::AugmentedUnison => Interval::AugmentedUnison,
+            Interval::MinorSecond => Interval::MinorSecond,
+
+            Interval::MajorSecond => Interval::MajorSecond,
+            Interval::DiminishedThird => Interval::DiminishedThird,
+
+            Interval::AugmentedSecond => Interval::AugmentedSecond,
+            Interval::MinorThird => Interval::MinorThird,
+
+            Interval::MajorThird => Interval::MajorThird,
+            Interval::DiminishedFourth => Interval::DiminishedFourth,
+
+            Interval::AugmentedThird => Interval::AugmentedThird,
+            Interval::PerfectFourth => Interval::PerfectFourth,
+
+            Interval::AugmentedFourth => Interval::AugmentedFourth,
+            Interval::DiminishedFifth => Interval::DiminishedFifth,
+
+            Interval::PerfectFifth => Interval::PerfectFifth,
+            Interval::DiminishedSixth => Interval::DiminishedSixth,
+
+            Interval::AugmentedFifth => Interval::AugmentedFifth,
+            Interval::MinorSixth => Interval::MinorSixth,
+
+            Interval::MajorSixth => Interval::MajorSixth,
+            Interval::DiminishedSeventh => Interval::DiminishedSeventh,
+
+            Interval::AugmentedSixth => Interval::AugmentedSixth,
+            Interval::MinorSeventh => Interval::MinorSeventh,
+
+            Interval::MajorSeventh => Interval::MajorSeventh,
+            Interval::DiminishedOctave => Interval::DiminishedOctave,
+
+            Interval::AugmentedSeventh => Interval::AugmentedSeventh,
+            Interval::PerfectOctave => Interval::PerfectOctave,
+
+            Interval::MinorNinth => Interval::MinorSecond,
+            Interval::MajorNinth => Interval::MajorSecond,
+            Interval::AugmentedNinth => Interval::AugmentedSecond,
+
+            Interval::DiminishedEleventh => Interval::DiminishedFourth,
+            Interval::PerfectEleventh => Interval::PerfectFourth,
+            Interval::AugmentedEleventh => Interval::AugmentedFourth,
+
+            Interval::MinorThirteenth => Interval::MinorSixth,
+            Interval::MajorThirteenth => Interval::MajorSixth,
+            Interval::AugmentedThirteenth => Interval::AugmentedSixth,
         }
     }
 }
