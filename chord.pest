@@ -40,7 +40,7 @@ at = { "@" }
 
 hat = { "^" }
 
-hash = { "#" }
+bang = { "!" }
 
 WHITESPACE = _{ " " | "(" | ")" }
 
@@ -53,6 +53,6 @@ chord = {
     (slash ~ note)? ~
     (at ~ digit)? ~
     (hat ~ digit)? ~
-    (hash)? ~
+    (bang)? ~
     EOI
 }

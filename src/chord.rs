@@ -1,8 +1,9 @@
-use std::{collections::HashSet, fmt::Display};
+use std::{collections::HashSet, fmt::Display, time::Duration};
 
 use pest::Parser;
+use rodio::{Sink, OutputStream, source::SineWave, Source};
 
-use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::{Interval, CanReduceFrame}, base::{HasDescription, HasName, HasStaticName, Res, Parsable}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::{HasFrequency}};
+use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::{Interval, CanReduceFrame}, base::{HasDescription, HasName, HasStaticName, Res, Parsable, Playable, Void}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::{HasFrequency}};
 
 // Traits.
 
@@ -1043,7 +1044,7 @@ impl Parsable for Chord {
 
                     result = result.with_inversion(inversion);
                 },
-                Rule::hash => {
+                Rule::bang => {
                     result = result.with_crunchy(true);
                 }
                 Rule::EOI => {},
@@ -1054,6 +1055,41 @@ impl Parsable for Chord {
         }
 
         Ok(result)
+    }
+}
+
+impl Playable for Chord {
+    fn play(&self, delay: f32, length: f32, fade_in: f32) -> Void {
+        let chord_tones = self.chord();
+
+        if length <= chord_tones.len() as f32 * delay {
+            return Err(anyhow::Error::msg("The delay is too long for the length of play (i.e., the number of chord tones times the delay is longer than the length)."));
+        }
+
+        let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+
+        let mut sinks = vec![];
+
+        for (k, n) in chord_tones.into_iter().enumerate() {
+            let sink = Sink::try_new(&stream_handle)?;
+    
+            let d = k as f32 * delay;
+    
+            let source = SineWave::new(n.frequency())
+                .take_duration(Duration::from_secs_f32(length - d))
+                .buffered()
+                .delay(Duration::from_secs_f32(d))
+                .fade_in(Duration::from_secs_f32(fade_in))
+                .amplify(0.20);
+    
+            sink.append(source);
+    
+            sinks.push(sink);
+        }
+    
+        std::thread::sleep(Duration::from_secs_f32(length));
+
+        Ok(())
     }
 }
 

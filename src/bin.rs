@@ -1,8 +1,5 @@
-use std::{time::Duration};
-
 use clap::{Parser, Subcommand};
-use klib::{base::{Void, Parsable}, chord::{Chordable, HasChord, Chord}, pitch::HasFrequency, octave::Octave, note::Note};
-use rodio::{OutputStream, Sink, source::SineWave, Source};
+use klib::{base::{Void, Parsable, Playable}, chord::{Chordable, Chord}, octave::Octave, note::Note};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -29,7 +26,7 @@ enum Command {
     /// 
     /// * Zero or one inversions (e.g., `^1`, `^2`, `^3`, etc.).
     /// 
-    /// * Zero or one "crunchy" modifiers, which moves "higher notes" into the same octave frame as the root (e.g., `#`, etc.).
+    /// * Zero or one "crunchy" modifiers, which moves "higher notes" into the same octave frame as the root (i.e., `!`).
     Describe {
         /// Chord symbol to parse.
         symbol: String,
@@ -140,35 +137,8 @@ fn describe(chord: &Chord) {
 
 fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
     describe(chord);
-
-    let (_stream, stream_handle) = OutputStream::try_default().unwrap();
-
-    let mut sinks = vec![];
-
-    let chord_tones = chord.chord();
-
-    if length <= chord_tones.len() as f32 * delay {
-        return Err(anyhow::Error::msg("The delay is too long for the length of play (i.e., the number of chord tones times the delay is longer than the length)."));
-    }
-
-    for (k, n) in chord_tones.into_iter().enumerate() {
-        let sink = Sink::try_new(&stream_handle).unwrap();
-
-        let d = k as f32 * delay;
-
-        let source = SineWave::new(n.frequency())
-            .take_duration(Duration::from_secs_f32(length - d))
-            .buffered()
-            .delay(Duration::from_secs_f32(d))
-            .fade_in(Duration::from_secs_f32(fade_in))
-            .amplify(0.20);
-
-        sink.append(source);
-
-        sinks.push(sink);
-    }
-
-    std::thread::sleep(Duration::from_secs_f32(length));
+    
+    chord.play(delay, length, fade_in)?;
 
     Ok(())
 }

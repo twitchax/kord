@@ -7,8 +7,8 @@ pub type Res<T> = anyhow::Result<T>;
 pub type Err = anyhow::Error;
 
 /// Global void type.
-pub type Void = Res<()>;
 
+pub type Void = Res<()>;
 // Traits.
 
 /// A trait for types that have a static name.
@@ -32,4 +32,9 @@ pub trait HasDescription {
 /// A trait for types that can be parsed from a string.
 pub trait Parsable {
     fn parse(symbol: &str) -> Res<Self> where Self: Sized;
+}
+
+/// A trait for types that can be "played" via the system's audio output.
+pub trait Playable {
+    fn play(&self, delay: f32, length: f32, fade_in: f32) -> Void;
 }
