@@ -56,6 +56,7 @@ Usage: kord.exe [COMMAND]
 Commands:
   describe  Describes a chord
   play      Describes and plays a chord
+  loop      Loops on a set of chord changes, while simultaneously outputting the descriptions
   guess     Attempt to guess the chord from a set of notes (ordered by simplicity)
   help      Print this message or the help of the given subcommand(s)
 
@@ -84,6 +85,12 @@ B♭7(♯9)(♯11)
    dominant sharp 9, altered, altered dominant, super locrian, diminished whole tone, seventh mode of a melodic minor scale, melodic minor up a half step
    B♭, C♭, D♭, E𝄫, F♭, G♭, A♭
    B♭, D, F, A♭, C♯, E
+```
+
+### Loop Through Chord Changes
+
+```bash
+$ kord loop -b 120 "Em7b5@3^2" "A7b13@3#" "D-maj7@3^2" "G7@3" "Cmaj7@3^2"
 ```
 
 ### Guess A Chord
