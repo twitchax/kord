@@ -48,3 +48,5 @@ pub mod modifier;
 pub mod known_chord;
 pub mod chord;
 pub mod parser;
+
+pub use rodio;
