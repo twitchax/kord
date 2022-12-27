@@ -153,7 +153,7 @@ mod tests {
     fn test_describe() {
         start(Args {
             command: Some(Command::Describe {
-                symbol: "Cmaj7b9@3^2#".to_string(),
+                symbol: "Cmaj7b9@3^2!".to_string(),
                 octave: 4,
             }),
         }).unwrap();

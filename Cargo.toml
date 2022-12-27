@@ -15,6 +15,7 @@ categories = ["command-line-utilities"]
 default = ["cli", "playback"]
 cli = ["clap"]
 playback = ["rodio"]
+wasm = ["rodio/wasm-bindgen"]
 
 [lib]
 name = "klib"
