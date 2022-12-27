@@ -12,8 +12,9 @@ keywords = ["cli", "music", "theory", "jazz", "chords"]
 categories = ["command-line-utilities"]
 
 [features]
-default = ["cli"]
+default = ["cli", "playback"]
 cli = ["clap"]
+playback = ["rodio"]
 
 [lib]
 name = "klib"
@@ -29,7 +30,7 @@ once_cell = "1.16.0"
 paste = "1.0.9"
 clap = { version = "4.0.29", features = ["derive"], optional = true }
 anyhow = "1.0.66"
-rodio = { version = "0.16.0", features = [] }
+rodio = { version = "0.16.0", features = [], optional = true }
 pest = "2.5.1"
 pest_derive = "2.5.1"
 
