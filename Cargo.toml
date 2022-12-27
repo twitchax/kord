@@ -1,6 +1,6 @@
 [package]
 name = "kord"
-version = "0.2.2"
+version = "0.3.0"
 edition = "2021"
 authors = ["Aaron Roney <twitchax@gmail.com>"]
 license = "MIT"
@@ -11,6 +11,10 @@ repository = "https://github.com/twitchax/kord"
 keywords = ["cli", "music", "theory", "jazz", "chords"]
 categories = ["command-line-utilities"]
 
+[features]
+default = ["cli"]
+cli = ["clap"]
+
 [lib]
 name = "klib"
 path = "src/lib.rs"
@@ -18,11 +22,12 @@ path = "src/lib.rs"
 [[bin]]
 name = "kord"
 path = "src/bin.rs"
+required-features = ["cli"]
 
 [dependencies]
 once_cell = "1.16.0"
 paste = "1.0.9"
-clap = { version = "4.0.29", features = ["derive"] }
+clap = { version = "4.0.29", features = ["derive"], optional = true }
 anyhow = "1.0.66"
 rodio = "0.16.0"
 pest = "2.5.1"

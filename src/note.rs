@@ -191,7 +191,7 @@ impl Parsable for Note {
         let mut result = note_str_to_note(note.as_str())?;
 
         if let Some(octave) = components.next() {
-            assert_eq!(Rule::octave, octave.as_rule());
+            assert_eq!(Rule::digit, octave.as_rule());
 
             let octave = octave_str_to_octave(octave.as_str())?;
 

@@ -2,7 +2,7 @@ use std::{collections::HashSet, fmt::Display};
 
 use pest::Parser;
 
-use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::{Interval, CanReduceFrame}, base::{HasDescription, HasName, HasStaticName, Res, Parsable}, parser::{ChordParser, Rule, note_str_to_note}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::{HasFrequency}};
+use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::{Interval, CanReduceFrame}, base::{HasDescription, HasName, HasStaticName, Res, Parsable}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::{HasFrequency}};
 
 // Traits.
 
@@ -370,10 +370,12 @@ impl HasName for Chord {
             }
         }
 
-        // Ad slash note.
+        // Add slash note.
         if let Some(slash) = self.slash {
             name.push_str(&format!("/{}", slash.static_name()));
         }
+
+        // Add special information about the chord.
 
         name
     }
@@ -1031,6 +1033,19 @@ impl Parsable for Chord {
 
                     result = result.with_slash(note);
                 },
+                Rule::at => {
+                    let octave = octave_str_to_octave(components.next().unwrap().as_str())?;
+                    
+                    result = result.with_octave(octave);
+                },
+                Rule::hat => {
+                    let inversion = components.next().unwrap().as_str().parse::<u8>()?;
+
+                    result = result.with_inversion(inversion);
+                },
+                Rule::hash => {
+                    result = result.with_crunchy(true);
+                }
                 Rule::EOI => {},
                 _ => {
                     unreachable!();

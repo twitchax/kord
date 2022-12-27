@@ -4,9 +4,9 @@ accidental = { "#" | "♯" | "b" | "♭" }
 
 note = { letter ~ accidental? ~ accidental? }
 
-octave = { ASCII_DIGIT }
+digit = { ASCII_DIGIT }
 
-note_with_octave = { note ~ octave? }
+note_with_octave = { note ~ digit? }
 
 minor = { "-" | "m" }
 
@@ -36,6 +36,12 @@ modifier = { sus_modifier | add_modifier | five_modifier | nine_modifier | eleve
 
 slash = { "/" }
 
+at = { "@" }
+
+hat = { "^" }
+
+hash = { "#" }
+
 WHITESPACE = _{ " " | "(" | ")" }
 
 chord = {
@@ -45,5 +51,8 @@ chord = {
     (maj7_modifier | dominant_modifier)? ~
     modifier* ~
     (slash ~ note)? ~
+    (at ~ digit)? ~
+    (hat ~ digit)? ~
+    (hash)? ~
     EOI
 }
