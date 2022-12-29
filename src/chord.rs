@@ -2,7 +2,7 @@ use std::{collections::HashSet, fmt::Display};
 
 use pest::Parser;
 
-use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::{Interval}, base::{HasDescription, HasName, HasStaticName, Res, Parsable, PlayableResult}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::{HasFrequency}};
+use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::{Interval}, base::{HasDescription, HasName, HasStaticName, Res, Parsable, PlaybackHandle}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::{HasFrequency}};
 
 #[cfg(feature = "playback")]
 use rodio::{Sink, OutputStream, source::SineWave, Source};
@@ -1076,7 +1076,7 @@ impl Parsable for Chord {
 
 #[cfg(feature = "playback")]
 impl Playable for Chord {
-    fn play(&self, delay: f32, length: f32, fade_in: f32) -> Res<PlayableResult> {
+    fn play(&self, delay: f32, length: f32, fade_in: f32) -> Res<PlaybackHandle> {
         let chord_tones = self.chord();
 
         if length <= chord_tones.len() as f32 * delay {
@@ -1104,7 +1104,7 @@ impl Playable for Chord {
             sinks.push(sink);
         }
 
-        Ok(PlayableResult::new(
+        Ok(PlaybackHandle::new(
             stream,
             stream_handle,
             sinks,

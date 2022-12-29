@@ -37,13 +37,13 @@ pub trait Parsable {
 }
 
 /// A struct for holding the types for a [`Playable`].
-pub struct PlayableResult {
+pub struct PlaybackHandle {
     _stream: OutputStream,
     _stream_handle: OutputStreamHandle,
     _sinks: Vec<Sink>
 }
 
-impl PlayableResult {
+impl PlaybackHandle {
     /// Creates a new [`PlayableResult`].
     pub fn new(stream: OutputStream, stream_handle: OutputStreamHandle, sinks: Vec<Sink>) -> Self {
         Self { _stream: stream, _stream_handle: stream_handle, _sinks: sinks }
@@ -55,5 +55,5 @@ pub trait Playable {
     /// Plays the [`Playable`].
     /// 
     /// Dropping the returned [`PlayableResult`] will stop the playback.
-    fn play(&self, delay: f32, length: f32, fade_in: f32) -> Res<PlayableResult>;
+    fn play(&self, delay: f32, length: f32, fade_in: f32) -> Res<PlaybackHandle>;
 }
