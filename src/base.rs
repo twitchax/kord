@@ -1,5 +1,7 @@
 // Helpers.
 
+use rodio::{OutputStream, OutputStreamHandle, Sink};
+
 /// Global result type.
 pub type Res<T> = anyhow::Result<T>;
 
@@ -34,7 +36,24 @@ pub trait Parsable {
     fn parse(symbol: &str) -> Res<Self> where Self: Sized;
 }
 
+/// A struct for holding the types for a [`Playable`].
+pub struct PlayableResult {
+    _stream: OutputStream,
+    _stream_handle: OutputStreamHandle,
+    _sinks: Vec<Sink>
+}
+
+impl PlayableResult {
+    /// Creates a new [`PlayableResult`].
+    pub fn new(stream: OutputStream, stream_handle: OutputStreamHandle, sinks: Vec<Sink>) -> Self {
+        Self { _stream: stream, _stream_handle: stream_handle, _sinks: sinks }
+    }
+}
+
 /// A trait for types that can be "played" via the system's audio output.
 pub trait Playable {
-    fn play(&self, delay: f32, length: f32, fade_in: f32) -> Void;
+    /// Plays the [`Playable`].
+    /// 
+    /// Dropping the returned [`PlayableResult`] will stop the playback.
+    fn play(&self, delay: f32, length: f32, fade_in: f32) -> Res<PlayableResult>;
 }

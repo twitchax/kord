@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use clap::{Parser, Subcommand};
 use klib::{base::{Void, Parsable, Playable}, chord::{Chordable, Chord}, octave::Octave, note::Note};
 
@@ -138,7 +140,8 @@ fn describe(chord: &Chord) {
 fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
     describe(chord);
     
-    chord.play(delay, length, fade_in)?;
+    let _playable = chord.play(delay, length, fade_in)?;
+    std::thread::sleep(Duration::from_secs_f32(length));
 
     Ok(())
 }

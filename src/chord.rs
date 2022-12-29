@@ -2,14 +2,14 @@ use std::{collections::HashSet, fmt::Display};
 
 use pest::Parser;
 
-use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::{Interval, CanReduceFrame}, base::{HasDescription, HasName, HasStaticName, Res, Parsable}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::{HasFrequency}};
+use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::{Interval}, base::{HasDescription, HasName, HasStaticName, Res, Parsable, PlayableResult}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::{HasFrequency}};
 
 #[cfg(feature = "playback")]
 use rodio::{Sink, OutputStream, source::SineWave, Source};
 #[cfg(feature = "playback")]
 use std::time::Duration;
 #[cfg(feature = "playback")]
-use crate::base::{Void, Playable};
+use crate::base::{Playable};
 
 // Traits.
 
@@ -1076,14 +1076,14 @@ impl Parsable for Chord {
 
 #[cfg(feature = "playback")]
 impl Playable for Chord {
-    fn play(&self, delay: f32, length: f32, fade_in: f32) -> Void {
+    fn play(&self, delay: f32, length: f32, fade_in: f32) -> Res<PlayableResult> {
         let chord_tones = self.chord();
 
         if length <= chord_tones.len() as f32 * delay {
             return Err(anyhow::Error::msg("The delay is too long for the length of play (i.e., the number of chord tones times the delay is longer than the length)."));
         }
 
-        let (_stream, stream_handle) = OutputStream::try_default()?;
+        let (stream, stream_handle) = OutputStream::try_default()?;
 
         let mut sinks = vec![];
 
@@ -1103,10 +1103,12 @@ impl Playable for Chord {
     
             sinks.push(sink);
         }
-    
-        std::thread::sleep(Duration::from_secs_f32(length));
 
-        Ok(())
+        Ok(PlayableResult::new(
+            stream,
+            stream_handle,
+            sinks,
+        ))
     }
 }
 
