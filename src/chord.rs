@@ -1093,6 +1093,8 @@ impl Playable for Chord {
     
             sinks.push(sink);
         }
+    
+        std::thread::sleep(Duration::from_secs_f32(length));
 
         Ok(())
     }

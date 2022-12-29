@@ -141,7 +141,6 @@ fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
     describe(chord);
     
     chord.play(delay, length, fade_in)?;
-    std::thread::sleep(Duration::from_secs_f32(length));
 
     Ok(())
 }
