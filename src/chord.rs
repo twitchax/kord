@@ -1,12 +1,11 @@
 use std::{collections::HashSet, fmt::Display};
 
-use anyhow::Context;
 use pest::Parser;
 
 use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::{Interval, CanReduceFrame}, base::{HasDescription, HasName, HasStaticName, Res, Parsable}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::{HasFrequency}};
 
 #[cfg(feature = "playback")]
-use rodio::{Sink, OutputStream, source::SineWave, Source, cpal::traits::HostTrait};
+use rodio::{Sink, OutputStream, source::SineWave, Source};
 #[cfg(feature = "playback")]
 use std::time::Duration;
 #[cfg(feature = "playback")]
@@ -1074,10 +1073,7 @@ impl Playable for Chord {
             return Err(anyhow::Error::msg("The delay is too long for the length of play (i.e., the number of chord tones times the delay is longer than the length)."));
         }
 
-        let host = rodio::cpal::default_host();
-        let device = host.default_output_device().context("Failed to find default output device.")?;
-
-        let (_stream, stream_handle) = OutputStream::try_from_device(&device).unwrap();
+        let (_stream, stream_handle) = OutputStream::try_default()?;
 
         let mut sinks = vec![];
 
@@ -1256,6 +1252,7 @@ mod tests {
         assert_eq!(C.into_chord().with_inversion(1).chord(), vec![E, G, CFive]);
         assert_eq!(C.into_chord().with_inversion(2).chord(), vec![G, CFive, EFive]);
         assert_eq!(C.into_chord().maj7().with_inversion(3).chord(), vec![B, CFive, EFive, GFive]);
+        assert_eq!(BFlatThree.into_chord().seven().flat9().with_inversion(1).chord(), vec![D, F, AFlat, CFlatFive, BFlatFive]);
     }
 
     #[test]

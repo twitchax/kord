@@ -252,13 +252,13 @@ impl AddAssign<Interval> for Note {
 
 impl PartialOrd for Note {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.octave.cmp(&other.octave).then(self.pitch().cmp(&other.pitch())))
+        self.frequency().partial_cmp(&other.frequency())
     }
 }
 
 impl Ord for Note {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.octave.cmp(&other.octave).then(self.pitch().cmp(&other.pitch()))
+        self.partial_cmp(other).unwrap_or(Ordering::Equal)
     }
 }
 
