@@ -862,14 +862,8 @@ impl HasRelativeChord for Chord {
         if extensions.contains(&Extension::Add13) {
             result.push(Interval::MajorThirteenth);
         }
-
-        // If this chord is crunchy, bring all "octave" intervals down to the first octave frame.
-        if self.is_crunchy {
-            for interval in &mut result {
-                *interval = interval.reduce_frame();
-            }
-        }
         
+        // Keep everything in order.
         result.sort();
         result.dedup();
 
@@ -898,6 +892,18 @@ impl HasChord for Chord {
             result.push(note);
         }
 
+        // If this chord is crunchy, bring all "octave" intervals down to the first octave frame.
+        if self.is_crunchy {
+            let bottom = *result.first().unwrap_or(&CZero);
+            let top = bottom.with_octave(bottom.octave() + 1);
+
+            for note in &mut result {
+                while *note > top {
+                    *note = note.with_octave(note.octave() - 1);
+                }
+            }
+        }
+
         // Add slash note.
         if let Some(mut slash) = self.slash {
             // Fix slash note (it should be less than, or equal to, one octave away from the bottom tone).
@@ -911,6 +917,10 @@ impl HasChord for Chord {
 
             result.insert(0, slash);
         }
+
+        // Crunchiness, etc. can introduce changes, so resort, and dedupe.
+        result.sort();
+        result.dedup();
 
         result
     }
