@@ -1064,7 +1064,7 @@ impl Parsable for Chord {
 
         assert_eq!(Rule::note, note.as_rule());
         
-        let mut result = Chord::new(note_str_to_note(note.as_str())?);
+        let mut result = Chord::new(note_str_to_note(note.into_inner().as_str())?);
 
         while let Some(component) = components.next() {
             match component.as_rule() {
@@ -1394,6 +1394,7 @@ mod tests {
         assert_eq!(Chord::parse("C7").unwrap().chord(), vec![C, E, G, BFlat]);
         assert_eq!(Chord::parse("C7b9").unwrap().chord(), vec![C, E, G, BFlat, DFlatFive]);
         assert_eq!(Chord::parse("C7b9#11").unwrap().chord(), vec![C, E, G, BFlat, DFlatFive, FSharpFive]);
+        assert_eq!(Chord::parse("C(add6)").unwrap().chord(), vec![C, E, G, A]);
     }
 
     #[test]
