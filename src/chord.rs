@@ -2,7 +2,7 @@ use std::{collections::HashSet, fmt::Display};
 
 use pest::Parser;
 
-use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::{Interval}, base::{HasDescription, HasName, HasStaticName, Res, Parsable, PlaybackHandle}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::{HasFrequency}};
+use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::{Interval}, base::{HasDescription, HasName, HasStaticName, Res, Parsable, PlaybackHandle, HasPreciseName}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::{HasFrequency}};
 
 #[cfg(feature = "playback")]
 use rodio::{Sink, OutputStream, source::SineWave, Source};
@@ -383,6 +383,31 @@ impl HasName for Chord {
         }
 
         // Add special information about the chord.
+
+        name
+    }
+}
+
+impl HasPreciseName for Chord {
+    fn precise_name(&self) -> String {
+        let mut name = String::new();
+        
+        name.push_str(&self.name());
+
+        // Add octave modifier.
+        if self.root.octave() != Octave::Four {
+            name.push_str(&format!("@{}", self.root.octave().static_name()));
+        }
+
+        // Add inversion modifier.
+        if self.inversion != 0 {
+            name.push_str(&format!("^{}", self.inversion));
+        }
+
+        // Add crunchy modifier.
+        if self.is_crunchy {
+            name.push('!');
+        }
 
         name
     }

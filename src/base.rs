@@ -25,6 +25,12 @@ pub trait HasName {
     fn name(&self) -> String;
 }
 
+/// A trait for types that have a computed name.
+pub trait HasPreciseName {
+    /// Returns the computed name of the type.
+    fn precise_name(&self) -> String;
+}
+
 /// A trait for types that have a description.
 pub trait HasDescription {
     /// Returns the description of the type.
