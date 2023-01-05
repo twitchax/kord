@@ -24,7 +24,7 @@ sus_modifier = { "sus2" | "sus4" }
 
 add_modifier = { "add2" | "add4" | "add6" | "6" }
 
-five_modifier = { "b5" | "♭5" }
+five_modifier = { "b5" | "♭5" | "#5" | "♯5" }
 
 nine_modifier = { "add9" | "b9" | "♭9" | "#9" | "♯9" }
 

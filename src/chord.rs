@@ -1122,6 +1122,9 @@ impl Parsable for Chord {
                         "b5" | "♭5" => {
                             result = result.flat5();
                         },
+                        "#5" | "♯5" => {
+                            result = result.augmented();
+                        },
                         "add9" => {
                             result = result.add9();
                         },
@@ -1395,6 +1398,7 @@ mod tests {
         assert_eq!(Chord::parse("C7b9").unwrap().chord(), vec![C, E, G, BFlat, DFlatFive]);
         assert_eq!(Chord::parse("C7b9#11").unwrap().chord(), vec![C, E, G, BFlat, DFlatFive, FSharpFive]);
         assert_eq!(Chord::parse("C(add6)").unwrap().chord(), vec![C, E, G, A]);
+        assert_eq!(Chord::parse("Em(#5)").unwrap().chord(), vec![E, G, BSharp]);
     }
 
     #[test]
