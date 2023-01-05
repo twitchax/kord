@@ -1112,6 +1112,12 @@ impl Playable for Chord {
     }
 }
 
+impl Default for Chord {
+    fn default() -> Self {
+        Chord::new(crate::note::C)
+    }
+}
+
 // Tests.
 
 #[cfg(test)]
