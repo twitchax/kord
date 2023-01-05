@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fmt::Display};
+use std::{collections::HashSet, fmt::Display, cmp::Ordering};
 
 use pest::Parser;
 
@@ -88,8 +88,6 @@ pub trait Chordable {
 
     /// Returns a new chord with a minor modifier on the implementor (most likely a [`Chord`]).
     fn minor(self) -> Chord;
-    /// Returns a new chord with a minor modifier on the implementor (most likely a [`Chord`]).
-    fn min(self) -> Chord;
 
     /// Returns a new chord with a flat 5 modifier on the implementor (most likely a [`Chord`]).
     fn flat5(self) -> Chord;
@@ -245,6 +243,68 @@ pub struct Chord {
 
 // Impls.
 
+impl Ord for Chord {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let a_inversion = self.inversion;
+        let b_inversion = other.inversion;
+        let cmp_inversion = a_inversion.cmp(&b_inversion);
+
+        let a_slashes = self.slash.is_some() as u8;
+        let b_slashes = other.slash.is_some() as u8;
+        let cmp_slashes = a_slashes.cmp(&b_slashes);
+
+        let a_crunchy = self.is_crunchy as u8;
+        let b_crunchy = other.is_crunchy as u8;
+        let cmp_crunchy = a_crunchy.cmp(&b_crunchy);
+
+        let a_extensions_len = self.extensions.len() as u8;
+        let b_extensions_len = other.extensions.len() as u8;
+        let cmp_extensions = {
+            let result = a_extensions_len.cmp(&b_extensions_len);
+
+            if result.is_eq() {
+                let a_extensions = Vec::from_iter(&self.extensions);
+                let b_extensions = Vec::from_iter(&other.extensions);
+
+                a_extensions.cmp(&b_extensions)
+            } else {
+                result
+            }
+        };
+
+        let a_modifiers_len = self.modifiers.len() as u8;
+        let b_modifiers_len = other.modifiers.len() as u8;
+        let cmp_modifiers = {
+            let result = a_modifiers_len.cmp(&b_modifiers_len);
+
+            if result.is_eq() {
+                let a_modifiers = Vec::from_iter(&self.modifiers);
+                let b_modifiers = Vec::from_iter(&other.modifiers);
+
+                a_modifiers.cmp(&b_modifiers)
+            } else {
+                result
+            }
+        };
+
+        let a_all_changes_len = a_extensions_len + a_modifiers_len;
+        let b_all_changes_len = b_extensions_len + b_modifiers_len;
+        let cmp_all_changes = a_all_changes_len.cmp(&b_all_changes_len);
+
+        let a_root = self.root;
+        let b_root = other.root;
+        let cmp_root = a_root.cmp(&b_root);
+
+        cmp_all_changes.then(cmp_extensions).then(cmp_modifiers).then(cmp_root).then(cmp_slashes).then(cmp_inversion).then(cmp_crunchy)
+    }
+}
+
+impl PartialOrd for Chord {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
 impl Chord {
     /// Returns a new chord with the given root.
     pub fn new(root: Note) -> Self {
@@ -270,23 +330,43 @@ impl Chord {
         let mut result = Vec::new();
 
         // Iterate through all known chords (and some likely extensions) and find the longest match.
-        for mod_set in known_modifier_sets() {
-            for mod_set2 in one_off_modifier_sets() {
-                for ext_set in likely_extension_sets() {
-                    // Check using the first note as the root.
-                    let candidate_chord_root = Chord::new(notes[0]).with_modifiers(mod_set).with_modifiers(mod_set2).with_extensions(ext_set);
-                    let candidate_chord_root_notes = candidate_chord_root.chord();
-    
-                    if notes.len() == candidate_chord_root_notes.len() && notes.iter().zip(&candidate_chord_root.chord()).all(|(a, b)| a.frequency() == b.frequency()) {
-                        result.push(candidate_chord_root);
-                    }
-    
-                    // Check using the first note as a slash.
-                    let candidate_chord_slash = Chord::new(notes[1]).with_slash(notes[0]).with_modifiers(mod_set).with_extensions(ext_set);
-                    let candidate_chord_slash_notes = candidate_chord_slash.chord();
-    
-                    if notes.len() == candidate_chord_slash_notes.len() && notes.iter().zip(&candidate_chord_slash.chord()).all(|(a, b)| a.frequency() == b.frequency()) {
-                        result.push(candidate_chord_slash);
+        for inversion in 0..2 {
+            let proper_root = if inversion == 0 {
+                notes[0]
+            } else {
+                let note = notes[notes.len() - inversion];
+
+                note.with_octave(note.octave() - 1)
+            };
+
+            let proper_root_slash = if inversion == 0 {
+                notes[1]
+            } else {
+                let note = notes[notes.len() - inversion];
+
+                note.with_octave(note.octave() - 1)
+            };
+
+            for mod_set in known_modifier_sets() {
+                for mod_set2 in one_off_modifier_sets() {
+                    for ext_set in likely_extension_sets() {
+                        for is_crunchy in [false, true] {
+                            // Check using the first note as the root.
+                            let candidate_chord_root = Chord::new(proper_root).with_modifiers(mod_set).with_modifiers(mod_set2).with_extensions(ext_set).with_inversion(inversion as u8).with_crunchy(is_crunchy);
+                            let candidate_chord_root_notes = candidate_chord_root.chord();
+            
+                            if notes.len() == candidate_chord_root_notes.len() && notes.iter().zip(&candidate_chord_root.chord()).all(|(a, b)| a.frequency() == b.frequency()) {
+                                result.push(candidate_chord_root);
+                            }
+            
+                            // Check using the first note as a slash.
+                            let candidate_chord_slash = Chord::new(proper_root_slash).with_slash(notes[0]).with_modifiers(mod_set).with_extensions(ext_set).with_inversion(inversion as u8).with_crunchy(is_crunchy);
+                            let candidate_chord_slash_notes = candidate_chord_slash.chord();
+            
+                            if notes.len() == candidate_chord_slash_notes.len() && notes.iter().zip(&candidate_chord_slash.chord()).all(|(a, b)| a.frequency() == b.frequency()) {
+                                result.push(candidate_chord_slash);
+                            }
+                        }
                     }
                 }
             }
@@ -321,22 +401,11 @@ impl Chord {
             }
         });
 
-        // Order the candidates by "simplicity" (i.e., least slashes, least extensions, and least modifiers).
-        result.sort_by(|a, b| {
-            let a_slashes = a.slash.is_some() as u8;
-            let b_slashes = b.slash.is_some() as u8;
+        // Order the candidates by "simplicity" (i.e., least slashes, least extensions, least modifiers, and least inversion).
+        result.sort();
 
-            let a_extensions = a.extensions.len() as u8;
-            let b_extensions = b.extensions.len() as u8;
-
-            let a_modifiers = a.modifiers.len() as u8;
-            let b_modifiers = b.modifiers.len() as u8;
-
-            a_slashes.cmp(&b_slashes).then(a_extensions.cmp(&b_extensions)).then(a_modifiers.cmp(&b_modifiers))
-        });
-
-        // Remove duplicates.
-        result.dedup_by(|a, b| a.modifiers == b.modifiers && a.extensions == b.extensions);
+        // Remove duplicates (and ignore crunchy; i.e., `C7` and `C7!` should be treated as "the same").
+        result.dedup_by(|a, b| a.modifiers == b.modifiers && a.extensions == b.extensions && a.slash == b.slash && a.inversion == b.inversion);
 
         Ok(result)
     }
@@ -356,6 +425,10 @@ impl HasName for Chord {
 
         if self.modifiers.contains(&Modifier::Flat5) && !known_name.contains("(♭5)") {
             name.push_str("(♭5)");
+        }
+
+        if self.modifiers.contains(&Modifier::Augmented5) && !known_name.contains('+') {
+            name.push_str("(♯5)");
         }
 
         if self.modifiers.contains(&Modifier::Flat9) && !known_name.contains("(♭9)") {
@@ -448,12 +521,22 @@ impl Display for Chord {
         let scale = self.scale().iter().map(|n| n.static_name()).collect::<Vec<_>>().join(", ");
         let chord = self.chord().iter().map(|n| n.static_name()).collect::<Vec<_>>().join(", ");
 
-        write!(f, "{}\n   {}\n   {}\n   {}", self.name(), self.description(), scale, chord)
+        write!(f, "{}\n   {}\n   {}\n   {}", self.precise_name(), self.description(), scale, chord)
     }
 }
 
 impl Chordable for Chord {
     fn with_modifier(mut self, modifier: Modifier) -> Chord {
+        // Augmented modifiers trump b5 and dim modifiers.
+        if modifier == Modifier::Augmented5 {
+            self.modifiers.remove(&Modifier::Flat5);
+            self.modifiers.remove(&Modifier::Diminished);
+        }
+
+        if (modifier == Modifier::Diminished || modifier == Modifier::Flat5) && self.modifiers.contains(&Modifier::Augmented5) {
+            return self;
+        }
+
         self.modifiers.insert(modifier);
 
         self
@@ -517,10 +600,6 @@ impl Chordable for Chord {
 
     fn minor(self) -> Chord {
         self.with_modifier(Modifier::Minor)
-    }
-
-    fn min(self) -> Chord {
-        self.minor()
     }
 
     fn flat5(self) -> Chord {
@@ -828,6 +907,11 @@ impl HasRelativeChord for Chord {
             result.push(Interval::DiminishedFifth);
         }
 
+        if modifiers.contains(&Modifier::Augmented5) {
+            result.remove(2);
+            result.push(Interval::AugmentedFifth);
+        }
+
         if modifiers.contains(&Modifier::Flat9) {
             result.push(Interval::MinorNinth);
         }
@@ -943,7 +1027,7 @@ impl HasChord for Chord {
             result.insert(0, slash);
         }
 
-        // Crunchiness, etc. can introduce changes, so resort, and dedupe.
+        // Crunchiness, etc. can introduce changes, so resort, and dedup.
         result.sort();
         result.dedup();
 
@@ -1154,7 +1238,7 @@ mod tests {
     #[test]
     fn test_text() {
         assert_eq!(Chord::new(C).flat9().sharp9().sharp11().add13().with_slash(E).name(), "C(♭9)(♯9)(♯11)(add13)/E");
-        assert_eq!(format!("{}", Chord::new(C).min().seven().flat_five()), "Cm7(♭5)\n   half diminished, locrian, minor seven flat five, seventh mode of major scale, major scale starting one half step up\n   C, D, E♭, F, G♭, A♭, B♭\n   C, E♭, G♭, B♭");
+        assert_eq!(format!("{}", Chord::new(C).minor().seven().flat_five()), "Cm7(♭5)\n   half diminished, locrian, minor seven flat five, seventh mode of major scale, major scale starting one half step up\n   C, D, E♭, F, G♭, A♭, B♭\n   C, E♭, G♭, B♭");
     }
 
     #[test]
@@ -1296,6 +1380,9 @@ mod tests {
         assert_eq!(C.into_chord().with_inversion(2).chord(), vec![G, CFive, EFive]);
         assert_eq!(C.into_chord().maj7().with_inversion(3).chord(), vec![B, CFive, EFive, GFive]);
         assert_eq!(BFlatThree.into_chord().seven().flat9().with_inversion(1).chord(), vec![D, F, AFlat, CFlatFive, BFlatFive]);
+
+        // Weird.
+        assert_eq!(C.into_chord().flat5().aug().chord(), vec![C, E, GSharp]);
     }
 
     #[test]
