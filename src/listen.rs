@@ -295,7 +295,7 @@ where
 }
 
 /// Plot the frequency space of the microphone input using plotters.
-#[allow(dead_code)]
+#[cfg(feature = "plot")]
 fn plot_frequency_space(frequency_space: &[(f32, f32)], name: &'static str, x_min: f32, x_max: f32) {
     use plotters::prelude::*;
 
