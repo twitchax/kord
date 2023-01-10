@@ -49,5 +49,8 @@ pub mod known_chord;
 pub mod chord;
 pub mod parser;
 
-#[cfg(feature = "playback")]
+#[cfg(feature = "audio")]
 pub use rodio;
+
+#[cfg(feature = "audio")]
+pub mod listen;

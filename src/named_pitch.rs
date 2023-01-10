@@ -297,6 +297,44 @@ impl Add<i8> for NamedPitch {
     }
 }
 
+impl From<Pitch> for NamedPitch {
+    fn from(pitch: Pitch) -> Self {
+        match pitch {
+            Pitch::C => NamedPitch::C,
+            Pitch::CSharp => NamedPitch::CSharp,
+            Pitch::D => NamedPitch::D,
+            Pitch::DSharp => NamedPitch::DSharp,
+            Pitch::E => NamedPitch::E,
+            Pitch::F => NamedPitch::F,
+            Pitch::FSharp => NamedPitch::FSharp,
+            Pitch::G => NamedPitch::G,
+            Pitch::GSharp => NamedPitch::GSharp,
+            Pitch::A => NamedPitch::A,
+            Pitch::ASharp => NamedPitch::ASharp,
+            Pitch::B => NamedPitch::B,
+        }
+    }
+}
+
+impl From<&Pitch> for NamedPitch {
+    fn from(pitch: &Pitch) -> Self {
+        match pitch {
+            Pitch::C => NamedPitch::C,
+            Pitch::CSharp => NamedPitch::CSharp,
+            Pitch::D => NamedPitch::D,
+            Pitch::DSharp => NamedPitch::DSharp,
+            Pitch::E => NamedPitch::E,
+            Pitch::F => NamedPitch::F,
+            Pitch::FSharp => NamedPitch::FSharp,
+            Pitch::G => NamedPitch::G,
+            Pitch::GSharp => NamedPitch::GSharp,
+            Pitch::A => NamedPitch::A,
+            Pitch::ASharp => NamedPitch::ASharp,
+            Pitch::B => NamedPitch::B,
+        }
+    }
+}
+
 // Statics.
 
 static ALL_PITCHES: [NamedPitch; 49] = [

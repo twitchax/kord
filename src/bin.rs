@@ -75,6 +75,14 @@ enum Command {
         /// A set of notes from which the guesser will attempt to build a chord.
         notes: Vec<String>,
     },
+
+    /// Records audio from the microphone, and guesses pitches / chords.
+    #[cfg(feature = "audio")]
+    Listen {
+        /// Sets the duration of listening time (in seconds).
+        #[arg(short, long, default_value_t = 5)]
+        length: u8,
+    }
 }
 
 fn main() -> Void {
@@ -124,6 +132,18 @@ fn start(args: Args) -> Void {
                     let length = (*length as f32) * 60f32 / bpm / 8f32;
                     play(chord, 0.0, length, 0.1)?;
                 }
+            }
+        },
+        #[cfg(feature = "audio")]
+        Some(Command::Listen { length }) => {
+            let notes = futures::executor::block_on(Note::from_listen(length))?;
+
+            println!("Notes: {}", notes.iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" "));
+
+            let candidates = Chord::from_notes(&notes)?;
+
+            for candidate in candidates {
+                describe(&candidate);
             }
         },
         None => {

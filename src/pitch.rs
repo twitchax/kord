@@ -1,5 +1,7 @@
 // Traits.
 
+use once_cell::sync::Lazy;
+
 /// A trait for types that have a pitch property.
 pub trait HasPitch {
     /// Returns the pitch of the type (usually a [`Note`]).
@@ -80,6 +82,23 @@ impl HasPitch for Pitch {
         *self
     }
 }
+
+// Statics.
+
+pub(crate) static ALL_PITCHES: Lazy<[Pitch; 12]> = Lazy::new(|| [
+    Pitch::C,
+    Pitch::CSharp,
+    Pitch::D,
+    Pitch::DSharp,
+    Pitch::E,
+    Pitch::F,
+    Pitch::FSharp,
+    Pitch::G,
+    Pitch::GSharp,
+    Pitch::A,
+    Pitch::ASharp,
+    Pitch::B,    
+]);
 
 // Tests.
 

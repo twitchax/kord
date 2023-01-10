@@ -1,3 +1,5 @@
+use once_cell::sync::Lazy;
+
 use crate::octave::{HasOctave, Octave};
 
 // Traits.
@@ -76,6 +78,12 @@ pub enum Interval {
     MinorThirteenth,
     MajorThirteenth,
     AugmentedThirteenth,
+
+    PerfectOctaveAndPerfectFifth,
+    TwoPerfectOctaves,
+    TwoPerfectOctavesAndMajorThird,
+    TwoPerfectOctavesAndPerfectFifth,
+    TwoPerfectOctavesAndMinorSeventh,
 }
 
 // Impls.
@@ -134,6 +142,12 @@ impl HasEnharmonicDistance for Interval {
             Interval::MinorThirteenth => -4,
             Interval::MajorThirteenth => 3,
             Interval::AugmentedThirteenth => 10,
+
+            Interval::PerfectOctaveAndPerfectFifth => 1,
+            Interval::TwoPerfectOctaves => 0,
+            Interval::TwoPerfectOctavesAndMajorThird => 4,
+            Interval::TwoPerfectOctavesAndPerfectFifth => 1,
+            Interval::TwoPerfectOctavesAndMinorSeventh => -2,
         }
     }
 }
@@ -191,6 +205,12 @@ impl HasOctave for Interval {
             Interval::MinorThirteenth => Octave::One,
             Interval::MajorThirteenth => Octave::One,
             Interval::AugmentedThirteenth => Octave::One,
+
+            Interval::PerfectOctaveAndPerfectFifth => Octave::One,
+            Interval::TwoPerfectOctaves => Octave::Two,
+            Interval::TwoPerfectOctavesAndMajorThird => Octave::Two,
+            Interval::TwoPerfectOctavesAndPerfectFifth => Octave::Two,
+            Interval::TwoPerfectOctavesAndMinorSeventh => Octave::Two,
         }
     }
 }
@@ -248,6 +268,23 @@ impl CanReduceFrame for Interval {
             Interval::MinorThirteenth => Interval::MinorSixth,
             Interval::MajorThirteenth => Interval::MajorSixth,
             Interval::AugmentedThirteenth => Interval::AugmentedSixth,
+
+            Interval::PerfectOctaveAndPerfectFifth => Interval::PerfectFifth,
+            Interval::TwoPerfectOctaves => Interval::PerfectOctave,
+            Interval::TwoPerfectOctavesAndMajorThird => Interval::MajorThird,
+            Interval::TwoPerfectOctavesAndPerfectFifth => Interval::PerfectFifth,
+            Interval::TwoPerfectOctavesAndMinorSeventh => Interval::MinorSeventh,
         }
     }
 }
+
+// Statics.
+
+pub(crate) static PRIMARY_HARMONIC_SERIES: Lazy<[Interval; 6]> = Lazy::new(|| [
+    Interval::PerfectOctave,
+    Interval::PerfectOctaveAndPerfectFifth,
+    Interval::TwoPerfectOctaves,
+    Interval::TwoPerfectOctavesAndMajorThird,
+    Interval::TwoPerfectOctavesAndPerfectFifth,
+    Interval::TwoPerfectOctavesAndMinorSeventh,
+]);

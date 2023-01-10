@@ -1,15 +1,8 @@
-use std::{collections::HashSet, fmt::Display, cmp::Ordering};
+use std::{collections::HashSet, fmt::Display, cmp::Ordering, time::Duration};
 
 use pest::Parser;
 
-use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::{Interval}, base::{HasDescription, HasName, HasStaticName, Res, Parsable, PlaybackHandle, HasPreciseName}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::{HasFrequency}};
-
-#[cfg(feature = "playback")]
-use rodio::{Sink, OutputStream, source::SineWave, Source};
-#[cfg(feature = "playback")]
-use std::time::Duration;
-#[cfg(feature = "playback")]
-use crate::base::{Playable};
+use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::{Interval}, base::{HasDescription, HasName, HasStaticName, Res, Parsable, PlaybackHandle, HasPreciseName, Playable}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::{HasFrequency}};
 
 // Traits.
 
@@ -287,15 +280,16 @@ impl Ord for Chord {
             }
         };
 
-        let a_all_changes_len = a_extensions_len + a_modifiers_len;
-        let b_all_changes_len = b_extensions_len + b_modifiers_len;
+        // Give a slight preference to chords without slashes and inversions.
+        let a_all_changes_len = a_extensions_len + a_modifiers_len + 2 * a_slashes + 3 * a_inversion;
+        let b_all_changes_len = b_extensions_len + b_modifiers_len + 2 * b_slashes + 3 * b_inversion;
         let cmp_all_changes = a_all_changes_len.cmp(&b_all_changes_len);
 
         let a_root = self.root;
         let b_root = other.root;
         let cmp_root = a_root.cmp(&b_root);
 
-        cmp_all_changes.then(cmp_extensions).then(cmp_modifiers).then(cmp_root).then(cmp_slashes).then(cmp_inversion).then(cmp_crunchy)
+        cmp_all_changes.then(cmp_inversion).then(cmp_slashes).then(cmp_extensions).then(cmp_modifiers).then(cmp_root).then(cmp_crunchy)
     }
 }
 
@@ -405,7 +399,7 @@ impl Chord {
         result.sort();
 
         // Remove duplicates (and ignore crunchy; i.e., `C7` and `C7!` should be treated as "the same").
-        result.dedup_by(|a, b| a.modifiers == b.modifiers && a.extensions == b.extensions && a.slash == b.slash && a.inversion == b.inversion);
+        dbg!(result.dedup_by(|a, b| a.modifiers == b.modifiers && a.extensions == b.extensions && a.slash == b.slash && a.inversion == b.inversion));
 
         Ok(result)
     }
@@ -1186,9 +1180,11 @@ impl Parsable for Chord {
     }
 }
 
-#[cfg(feature = "playback")]
+#[cfg(feature = "audio")]
 impl Playable for Chord {
     fn play(&self, delay: f32, length: f32, fade_in: f32) -> Res<PlaybackHandle> {
+        use rodio::{Sink, OutputStream, source::SineWave, Source};
+
         let chord_tones = self.chord();
 
         if length <= chord_tones.len() as f32 * delay {

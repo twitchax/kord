@@ -1,11 +1,12 @@
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
 
-use std::{ops::{Add, AddAssign}, cmp::Ordering};
+use std::{ops::{Add, AddAssign}, cmp::Ordering, fmt::{Display, Formatter, self}};
 
+use once_cell::sync::Lazy;
 use paste::paste;
 use pest::Parser;
-use crate::{named_pitch::{NamedPitch, HasNamedPitch}, interval::{Interval, HasEnharmonicDistance}, base::{HasStaticName, HasName, Parsable, Res}, chord::Chord, pitch::{HasFrequency, HasBaseFrequency, Pitch, HasPitch}, octave::{Octave, HasOctave}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}};
+use crate::{named_pitch::{NamedPitch, HasNamedPitch}, interval::{Interval, HasEnharmonicDistance}, base::{HasStaticName, HasName, Parsable, Res}, chord::Chord, pitch::{HasFrequency, HasBaseFrequency, Pitch, HasPitch, ALL_PITCHES}, octave::{Octave, HasOctave, ALL_OCTAVES}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, listen::notes_from_microphone};
 
 // Macros.
 
@@ -112,11 +113,21 @@ pub struct Note {
     named_pitch: NamedPitch,
 }
 
+impl Display for Note {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.name())
+    }
+}
+
 // Impls.
 
 impl Note {
     pub fn new(pitch: NamedPitch, octave: Octave) -> Self {
         Self { named_pitch: pitch, octave }
+    }
+
+    pub async fn from_listen(length_in_seconds: u8) -> Res<Vec<Self>> {
+        notes_from_microphone(length_in_seconds).await
     }
 }
 
@@ -333,6 +344,33 @@ pub const DTripleSharp: Note = DTripleSharpFour;
 pub const ATripleSharp: Note = ATripleSharpFour;
 pub const ETripleSharp: Note = ETripleSharpFour;
 pub const BTripleSharp: Note = BTripleSharpFour;
+
+// Statics.
+
+pub(crate) static ALL_PITCH_NOTES: Lazy<[Note; 132]> = Lazy::new(|| {
+    let mut all_notes = Vec::with_capacity(132);
+    
+    for octave in ALL_OCTAVES.iter() {
+        for pitch in ALL_PITCHES.iter() {
+            all_notes.push(Note {
+                octave: *octave,
+                named_pitch: pitch.into(),
+            });
+        }
+    }
+
+    all_notes.try_into().unwrap()
+});
+
+pub(crate) static ALL_PITCH_NOTES_WITH_FREQUENCY : Lazy<[(Note, f32); 132]> = Lazy::new(|| {
+    let mut all_notes = Vec::with_capacity(132);
+
+    for note in ALL_PITCH_NOTES.iter() {
+        all_notes.push((*note, note.frequency()));
+    }
+
+    all_notes.try_into().unwrap()
+});
 
 // Tests.
 

@@ -1,5 +1,7 @@
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
+use once_cell::sync::Lazy;
+
 use crate::base::HasStaticName;
 
 // Traits.
@@ -127,6 +129,22 @@ impl Default for Octave {
         Octave::Four
     }
 }
+
+// Statics.
+
+pub(crate) static ALL_OCTAVES: Lazy<[Octave; 11]> = Lazy::new(|| [
+    Octave::Zero,
+    Octave::One,
+    Octave::Two,
+    Octave::Three,
+    Octave::Four,
+    Octave::Five,
+    Octave::Six,
+    Octave::Seven,
+    Octave::Eight,
+    Octave::Nine,
+    Octave::Ten  
+]);
 
 // Tests.
 
