@@ -6,7 +6,7 @@ use std::{ops::{Add, AddAssign}, cmp::Ordering, fmt::{Display, Formatter, self}}
 use once_cell::sync::Lazy;
 use paste::paste;
 use pest::Parser;
-use crate::{named_pitch::{NamedPitch, HasNamedPitch}, interval::{Interval, HasEnharmonicDistance}, base::{HasStaticName, HasName, Parsable, Res}, chord::Chord, pitch::{HasFrequency, HasBaseFrequency, Pitch, HasPitch, ALL_PITCHES}, octave::{Octave, HasOctave, ALL_OCTAVES}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, listen::notes_from_microphone};
+use crate::{named_pitch::{NamedPitch, HasNamedPitch}, interval::{Interval, HasEnharmonicDistance}, base::{HasStaticName, HasName, Parsable, Res}, chord::Chord, pitch::{HasFrequency, HasBaseFrequency, Pitch, HasPitch, ALL_PITCHES}, octave::{Octave, HasOctave, ALL_OCTAVES}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, listen::{get_notes_from_microphone, get_notes_from_audio_data}};
 
 // Macros.
 
@@ -126,8 +126,17 @@ impl Note {
         Self { named_pitch: pitch, octave }
     }
 
+    /// Attempts to use the default microphone to listen to audio for the specified time
+    /// to identify the notes in the recorded audio.
+    /// 
+    /// Currently, this does not work with WASM.
     pub async fn from_listen(length_in_seconds: u8) -> Res<Vec<Self>> {
-        notes_from_microphone(length_in_seconds).await
+        get_notes_from_microphone(length_in_seconds).await
+    }
+
+    /// Attempts to use the provided to identify the notes in the audio data.
+    pub fn from_audio(data: &[f32], length_in_seconds: u8) -> Res<Vec<Self>> {
+        get_notes_from_audio_data(data, length_in_seconds)
     }
 }
 

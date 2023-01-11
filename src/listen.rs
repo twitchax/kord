@@ -12,8 +12,7 @@ use crate::{note::{ALL_PITCH_NOTES_WITH_FREQUENCY}};
 
 use crate::{base::Res, note::Note, interval::PRIMARY_HARMONIC_SERIES, pitch::HasFrequency};
 
-#[cfg(feature = "audio")]
-pub async fn notes_from_microphone(length_in_seconds: u8) -> Res<Vec<Note>> {
+pub async fn get_notes_from_microphone(length_in_seconds: u8) -> Res<Vec<Note>> {
     if length_in_seconds < 1 {
         return Err(anyhow::Error::msg("Listening length in seconds must be greater than 1."));
     }
@@ -25,14 +24,28 @@ pub async fn notes_from_microphone(length_in_seconds: u8) -> Res<Vec<Note>> {
     // Record audio from the microphone.
 
     let data_from_microphone = record_from_device(device, config, length_in_seconds).await?;
-    let num_samples = data_from_microphone.len();
+    
+    // Get notes.
+
+    let result = get_notes_from_audio_data(&data_from_microphone, length_in_seconds)?;
+
+    Ok(result)
+}
+
+
+pub fn get_notes_from_audio_data(data: &[f32], length_in_seconds: u8) -> Res<Vec<Note>> {
+    if length_in_seconds < 1 {
+        return Err(anyhow::Error::msg("Listening length in seconds must be greater than 1."));
+    }
+
+    let num_samples = data.len();
     
     // Perform the FFT.
 
     let mut planner = FftPlanner::new();
     let fft = planner.plan_fft_forward(num_samples);
 
-    let mut buffer = data_from_microphone.into_iter().map(|n| Complex::new(n, 0.0)).collect::<Vec<_>>();
+    let mut buffer = data.into_iter().map(|n| Complex::new(*n, 0.0)).collect::<Vec<_>>();
     fft.process(&mut buffer);
 
     let frequency_space = buffer.into_iter().enumerate()
@@ -180,7 +193,7 @@ fn reduce_notes_by_harmonic_series(notes: &[(Note, f32)]) -> Vec<Note> {
     let cutoff = working_set[0].1 / 10f32;
     working_set.retain(|(_, magnitude)| *magnitude > cutoff);
 
-    dbg!(working_set).into_iter().map(|(note, _)| note).collect()
+    working_set.into_iter().map(|(note, _)| note).collect()
 }
 
 /// Translate the frequency space into a "peak space".

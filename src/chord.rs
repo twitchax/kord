@@ -399,7 +399,7 @@ impl Chord {
         result.sort();
 
         // Remove duplicates (and ignore crunchy; i.e., `C7` and `C7!` should be treated as "the same").
-        dbg!(result.dedup_by(|a, b| a.modifiers == b.modifiers && a.extensions == b.extensions && a.slash == b.slash && a.inversion == b.inversion));
+        result.dedup_by(|a, b| a.modifiers == b.modifiers && a.extensions == b.extensions && a.slash == b.slash && a.inversion == b.inversion);
 
         Ok(result)
     }
