@@ -219,7 +219,7 @@ fn translate_frequency_space_to_peak_space(frequency_space: &[(f32, f32)]) -> Ve
         let max_in_window = (k..k + window_size)
             .map(|i| frequency_space[i].1)
             .max_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap();
+            .unwrap_or_default();
 
         peak_space[k] = (peak_space[k].0, peak_space[k].1);
 
