@@ -8,10 +8,11 @@ use std::{collections::HashMap, ops::Deref};
 
 use rustfft::{FftPlanner, num_complex::{Complex, ComplexFloat}};
 
-use crate::{note::{ALL_PITCH_NOTES_WITH_FREQUENCY}};
+use crate::{note::{ALL_PITCH_NOTES_WITH_FREQUENCY, HasPrimaryHarmonicSeries}};
 
-use crate::{base::Res, note::Note, interval::PRIMARY_HARMONIC_SERIES, pitch::HasFrequency};
+use crate::{base::Res, note::Note, pitch::HasFrequency};
 
+#[no_coverage]
 pub async fn get_notes_from_microphone(length_in_seconds: u8) -> Res<Vec<Note>> {
     if length_in_seconds < 1 {
         return Err(anyhow::Error::msg("Listening length in seconds must be greater than 1."));
@@ -174,8 +175,8 @@ fn reduce_notes_by_harmonic_series(notes: &[(Note, f32)]) -> Vec<Note> {
         while j < working_set.len() {
             let other_note = working_set[j].0;
 
-            for interval in PRIMARY_HARMONIC_SERIES.iter() {
-                if (note + *interval).frequency() == other_note.frequency() {
+            for harmonic in note.primary_harmonic_series() {
+                if harmonic.frequency() == other_note.frequency() {
                     working_set[k].1 += working_set[j].1;
                     working_set.remove(j);
                     j -= 1;
@@ -224,10 +225,6 @@ fn translate_frequency_space_to_peak_space(frequency_space: &[(f32, f32)]) -> Ve
             .map(|i| frequency_space[i].1)
             .max_by(|a, b| a.partial_cmp(b).unwrap())
             .unwrap_or_default();
-
-        if max_in_window == 0.0 {
-            panic!("max_in_window is 0.0!  This should never happen.  k: {}, window_size: {}, frequency_space[k].0: {}, frequency_space[k].1: {}", k, window_size, frequency_space[k].0, frequency_space[k].1);
-        }
 
         peak_space[k] = (peak_space[k].0, peak_space[k].1);
 
@@ -339,4 +336,36 @@ fn plot_frequency_space(frequency_space: &[(f32, f32)], name: &'static str, x_mi
     chart.configure_mesh().draw().unwrap();
 
     chart.draw_series(LineSeries::new(normalized_frequency_space.iter().map(|(x, y)| (**x, *y)), RED)).unwrap();
+}
+
+// Tests.
+
+#[cfg(test)]
+mod tests {
+    use std::{fs::File, io::Read};
+
+    use crate::{chord::Chord, base::Parsable, note::Note};
+
+    #[test]
+    fn test_listen() {
+        let mut file = File::open("tests/vec.bin").unwrap();
+        let file_size = file.metadata().unwrap().len() as usize;
+        let float_size = std::mem::size_of::<f32>();
+        let element_count = file_size / float_size;
+        let mut buffer = vec![0u8; file_size];
+
+        // Read the contents of the file into the buffer
+        file.read_exact(&mut buffer).unwrap();
+
+        // Convert the buffer to a vector of f32
+        let data: Vec<f32> = unsafe {
+            std::slice::from_raw_parts(buffer.as_ptr() as *const f32, element_count).to_vec()
+        };
+
+        let notes = Note::from_audio(&data, 5).unwrap();
+
+        let chord = Chord::from_notes(&notes).unwrap();
+
+        assert_eq!(chord[0], Chord::parse("C7b9").unwrap());
+    }
 }

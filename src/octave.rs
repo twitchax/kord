@@ -210,4 +210,9 @@ mod tests {
         assert_eq!(Octave::Four.octave(), Octave::Four);
         assert_eq!(Octave::default(), Octave::Four);
     }
+
+    #[test]
+    fn test_names() {
+        assert_eq!(ALL_OCTAVES.map(|o| o.static_name()).join(" "), "0 1 2 3 4 5 6 7 8 9 10");
+    }
 }

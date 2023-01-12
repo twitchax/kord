@@ -6,7 +6,7 @@ use std::{ops::{Add, AddAssign}, cmp::Ordering, fmt::{Display, Formatter, self}}
 use once_cell::sync::Lazy;
 use paste::paste;
 use pest::Parser;
-use crate::{named_pitch::{NamedPitch, HasNamedPitch}, interval::{Interval, HasEnharmonicDistance}, base::{HasStaticName, HasName, Parsable, Res}, chord::Chord, pitch::{HasFrequency, HasBaseFrequency, Pitch, HasPitch, ALL_PITCHES}, octave::{Octave, HasOctave, ALL_OCTAVES}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, listen::{get_notes_from_microphone, get_notes_from_audio_data}};
+use crate::{named_pitch::{NamedPitch, HasNamedPitch}, interval::{Interval, HasEnharmonicDistance, PRIMARY_HARMONIC_SERIES}, base::{HasStaticName, HasName, Parsable, Res}, chord::Chord, pitch::{HasFrequency, HasBaseFrequency, Pitch, HasPitch, ALL_PITCHES}, octave::{Octave, HasOctave, ALL_OCTAVES}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, listen::{get_notes_from_microphone, get_notes_from_audio_data}};
 
 // Macros.
 
@@ -99,6 +99,12 @@ pub trait NoteRecreator {
     fn with_octave(self, octave: Octave) -> Self;
 }
 
+/// A trait which allows for obtaining the primary harmonic series of the note.
+pub trait HasPrimaryHarmonicSeries {
+    /// Returns the primary harmonic series of the note.
+    fn primary_harmonic_series(self) -> Vec<Note>;
+}
+
 // Struct.
 
 /// A note type.
@@ -130,6 +136,7 @@ impl Note {
     /// to identify the notes in the recorded audio.
     /// 
     /// Currently, this does not work with WASM.
+    #[no_coverage]
     pub async fn from_listen(length_in_seconds: u8) -> Res<Vec<Self>> {
         get_notes_from_microphone(length_in_seconds).await
     }
@@ -229,6 +236,12 @@ impl NoteRecreator for Note {
 
     fn with_octave(self, octave: Octave) -> Self {
         Self::new(self.named_pitch, octave)
+    }
+}
+
+impl HasPrimaryHarmonicSeries for Note {
+    fn primary_harmonic_series(self) -> Vec<Self> {
+        PRIMARY_HARMONIC_SERIES.iter().map(|interval| self + *interval).collect()
     }
 }
 
@@ -389,8 +402,9 @@ mod tests {
     use pretty_assertions::{assert_eq};
 
     #[test]
-    fn test_name() {
+    fn test_text() {
         assert_eq!(CFlat.static_name(), "C♭");
+        assert_eq!(C.to_string(), "C4");
     }
 
     #[test]
@@ -476,5 +490,11 @@ mod tests {
         assert_eq!(CFlatFour.frequency(), BThree.frequency());
         assert_eq!(BSharp.frequency(), CFive.frequency());
         assert_eq!(DTripleFlatFive.frequency(), B.frequency());
+        assert_eq!(BDoubleSharpFive.with_named_pitch(NamedPitch::A).frequency(), AFive.frequency());
+    }
+
+    #[test]
+    fn test_harmonics() {
+        assert_eq!(C.primary_harmonic_series(), vec![CFive, GFive, CSix, ESix, GSix, BFlatSix]);
     }
 }

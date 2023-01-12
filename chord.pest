@@ -42,14 +42,14 @@ hat = { "^" }
 
 bang = { "!" }
 
-WHITESPACE = _{ " " | "(" | ")" }
+WHITESPACE = _{ " " }
 
 chord = {
     SOI ~
     note ~
     (maj7_modifier | minor | augmented | diminished | half_diminished)? ~
     (maj7_modifier | dominant_modifier)? ~
-    modifier* ~
+    ("("* ~ modifier ~ ")"*)* ~
     (slash ~ note)? ~
     (at ~ digit)? ~
     (hat ~ digit)? ~

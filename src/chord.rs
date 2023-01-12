@@ -1182,6 +1182,7 @@ impl Parsable for Chord {
 
 #[cfg(feature = "audio")]
 impl Playable for Chord {
+    #[no_coverage]
     fn play(&self, delay: f32, length: f32, fade_in: f32) -> Res<PlaybackHandle> {
         use rodio::{Sink, OutputStream, source::SineWave, Source};
 
@@ -1237,6 +1238,10 @@ mod tests {
     #[test]
     fn test_text() {
         assert_eq!(Chord::new(C).flat9().sharp9().sharp11().add13().with_slash(E).name(), "C(♭9)(♯9)(♯11)(add13)/E");
+        assert_eq!(Chord::new(C).flat5().name(), "C(♭5)");
+        assert_eq!(Chord::new(C).minor().augmented().name(), "Cm(♯5)");
+        assert_eq!(Chord::new(C).with_octave(Octave::Six).precise_name(), "C@6");
+
         assert_eq!(format!("{}", Chord::new(C).minor().seven().flat_five()), "Cm7(♭5)\n   half diminished, locrian, minor seven flat five, seventh mode of major scale, major scale starting one half step up\n   C, D, E♭, F, G♭, A♭, B♭\n   C, E♭, G♭, B♭");
     }
 
@@ -1395,11 +1400,33 @@ mod tests {
         assert_eq!(Chord::parse("C7b9#11").unwrap().chord(), vec![C, E, G, BFlat, DFlatFive, FSharpFive]);
         assert_eq!(Chord::parse("C(add6)").unwrap().chord(), vec![C, E, G, A]);
         assert_eq!(Chord::parse("Em(#5)").unwrap().chord(), vec![E, G, BSharp]);
+        assert_eq!(Chord::parse("D+11").unwrap().chord(), vec![D, FSharp, ASharp, CFive, EFive, GFive]);
+        assert_eq!(Chord::parse("Dm13b5").unwrap().chord(), vec![D, F, AFlat, CFive, EFive, GFive, BFive]);
+        assert_eq!(Chord::parse("Dsus2").unwrap().chord(), vec![D, E, A]);
+        assert_eq!(Chord::parse("Dsus4").unwrap().chord(), vec![D, G, A]);
+        assert_eq!(Chord::parse("Dadd2").unwrap().chord(), vec![D, E, FSharp, A]);
+        assert_eq!(Chord::parse("Dadd4").unwrap().chord(), vec![D, FSharp, G, A]);
+        assert_eq!(Chord::parse("Dadd9").unwrap().chord(), vec![D, FSharp, A, EFive]);
+        assert_eq!(Chord::parse("Dadd11").unwrap().chord(), vec![D, FSharp, A, GFive]);
+        assert_eq!(Chord::parse("Dadd13").unwrap().chord(), vec![D, FSharp, A, BFive]);
+        assert_eq!(Chord::parse("Dm#9").unwrap().chord(), vec![D, F, A, ESharpFive]);
+        assert_eq!(Chord::parse("Dmb11").unwrap().chord(), vec![D, F, A, GFlatFive]);
+        assert_eq!(Chord::parse("D(b13)").unwrap().chord(), vec![D, FSharp, A, BFlatFive]);
+        assert_eq!(Chord::parse("D(#13)").unwrap().chord(), vec![D, FSharp, A, BSharpFive]);
     }
 
     #[test]
     fn test_guess() {
         assert_eq!(Chord::from_notes(&[EThree, C, EFlat, FSharp, ASharp, DFive]).unwrap().first().unwrap().chord(), Chord::parse("Cm9b5/E").unwrap().chord());
         assert_eq!(Chord::from_notes(&[C, E, G]).unwrap().first().unwrap().chord(), Chord::parse("C").unwrap().chord());
+        assert_eq!(Chord::from_notes(&[C, E, G, BFlat, DFive, FFive]).unwrap().first().unwrap().chord(), Chord::parse("C11").unwrap().chord());
+        assert_eq!(Chord::from_notes(&[C, E, G, BFlat, DFive, FFive, AFive]).unwrap().first().unwrap().chord(), Chord::parse("C13").unwrap().chord());
+        assert_eq!(Chord::from_notes(&[C, EFlat, GFlat, A]).unwrap().first().unwrap().chord(), Chord::parse("Cdim").unwrap().chord());
+    }
+
+    #[test]
+    #[should_panic(expected = "Must have at least three notes to guess a chord.")]
+    fn test_chord_from_notes_failure() {
+        Chord::from_notes(&[C, E]).unwrap();
     }
 }

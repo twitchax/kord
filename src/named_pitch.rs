@@ -299,20 +299,7 @@ impl Add<i8> for NamedPitch {
 
 impl From<Pitch> for NamedPitch {
     fn from(pitch: Pitch) -> Self {
-        match pitch {
-            Pitch::C => NamedPitch::C,
-            Pitch::CSharp => NamedPitch::CSharp,
-            Pitch::D => NamedPitch::D,
-            Pitch::DSharp => NamedPitch::DSharp,
-            Pitch::E => NamedPitch::E,
-            Pitch::F => NamedPitch::F,
-            Pitch::FSharp => NamedPitch::FSharp,
-            Pitch::G => NamedPitch::G,
-            Pitch::GSharp => NamedPitch::GSharp,
-            Pitch::A => NamedPitch::A,
-            Pitch::ASharp => NamedPitch::ASharp,
-            Pitch::B => NamedPitch::B,
-        }
+        NamedPitch::from(&pitch)
     }
 }
 
@@ -411,5 +398,33 @@ mod tests {
     #[test]
     fn test_properties() {
         assert_eq!(NamedPitch::A.named_pitch(), NamedPitch::A);
+    }
+
+    #[test]
+    fn test_pitch_conversion() {
+        assert_eq!(NamedPitch::from(Pitch::C), NamedPitch::C);
+        assert_eq!(NamedPitch::from(&Pitch::C), NamedPitch::C);
+        assert_eq!(NamedPitch::from(Pitch::CSharp), NamedPitch::CSharp);
+        assert_eq!(NamedPitch::from(&Pitch::CSharp), NamedPitch::CSharp);
+        assert_eq!(NamedPitch::from(Pitch::D), NamedPitch::D);
+        assert_eq!(NamedPitch::from(&Pitch::D), NamedPitch::D);
+        assert_eq!(NamedPitch::from(Pitch::DSharp), NamedPitch::DSharp);
+        assert_eq!(NamedPitch::from(&Pitch::DSharp), NamedPitch::DSharp);
+        assert_eq!(NamedPitch::from(Pitch::E), NamedPitch::E);
+        assert_eq!(NamedPitch::from(&Pitch::E), NamedPitch::E);
+        assert_eq!(NamedPitch::from(Pitch::F), NamedPitch::F);
+        assert_eq!(NamedPitch::from(&Pitch::F), NamedPitch::F);
+        assert_eq!(NamedPitch::from(Pitch::FSharp), NamedPitch::FSharp);
+        assert_eq!(NamedPitch::from(&Pitch::FSharp), NamedPitch::FSharp);
+        assert_eq!(NamedPitch::from(Pitch::G), NamedPitch::G);
+        assert_eq!(NamedPitch::from(&Pitch::G), NamedPitch::G);
+        assert_eq!(NamedPitch::from(Pitch::GSharp), NamedPitch::GSharp);
+        assert_eq!(NamedPitch::from(&Pitch::GSharp), NamedPitch::GSharp);
+        assert_eq!(NamedPitch::from(Pitch::A), NamedPitch::A);
+        assert_eq!(NamedPitch::from(&Pitch::A), NamedPitch::A);
+        assert_eq!(NamedPitch::from(Pitch::ASharp), NamedPitch::ASharp);
+        assert_eq!(NamedPitch::from(&Pitch::ASharp), NamedPitch::ASharp);
+        assert_eq!(NamedPitch::from(Pitch::B), NamedPitch::B);
+        assert_eq!(NamedPitch::from(&Pitch::B), NamedPitch::B);
     }
 }
