@@ -58,6 +58,7 @@ Commands:
   play      Describes and plays a chord
   loop      Loops on a set of chord changes, while simultaneously outputting the descriptions
   guess     Attempt to guess the chord from a set of notes (ordered by simplicity)
+  listen    Records audio from the microphone, and guesses pitches / chords
   help      Print this message or the help of the given subcommand(s)
 
 Options:
@@ -125,6 +126,18 @@ Cm9(♭5)(add2)/E
    half diminished, locrian, minor seven flat five, seventh mode of major scale, major scale starting one half step up
    C, D, E♭, F, G♭, A♭, B♭
    E, C, D, E♭, G♭, B♭, D
+```
+
+### Guess Notes / Chord From Audio
+
+```bash
+$ kord listen
+
+Notes: C3 E3 G3
+C@3
+   major
+   C, D, E, F, G, A, B
+   C, E, G
 ```
 
 ## Library Usage

@@ -32,10 +32,14 @@ pub async fn get_notes_from_microphone(length_in_seconds: u8) -> Res<Vec<Note>> 
     Ok(result)
 }
 
-
 pub fn get_notes_from_audio_data(data: &[f32], length_in_seconds: u8) -> Res<Vec<Note>> {
     if length_in_seconds < 1 {
         return Err(anyhow::Error::msg("Listening length in seconds must be greater than 1."));
+    }
+
+    let num_nan = data.iter().filter(|n| n.is_nan()).count();
+    if num_nan > 0 {
+        return Err(anyhow::Error::msg(format!("{} NaNs in audio data.", num_nan)));
     }
 
     let num_samples = data.len();
@@ -220,6 +224,10 @@ fn translate_frequency_space_to_peak_space(frequency_space: &[(f32, f32)]) -> Ve
             .map(|i| frequency_space[i].1)
             .max_by(|a, b| a.partial_cmp(b).unwrap())
             .unwrap_or_default();
+
+        if max_in_window == 0.0 {
+            panic!("max_in_window is 0.0!  This should never happen.  k: {}, window_size: {}, frequency_space[k].0: {}, frequency_space[k].1: {}", k, window_size, frequency_space[k].0, frequency_space[k].1);
+        }
 
         peak_space[k] = (peak_space[k].0, peak_space[k].1);
 
