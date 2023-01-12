@@ -9,7 +9,7 @@
 
 # kord
 
-A music theory binary and library for Rust.
+A music theory binary and library for Rust ([capability playground](https://kord.twitchax.com/)).
 
 ## Binary Usage
 
