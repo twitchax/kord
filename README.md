@@ -91,7 +91,7 @@ B♭7(♯9)(♯11)
 ### Loop Through Chord Changes
 
 ```bash
-$ kord loop -b 120 "Em7b5@3^2" "A7b13@3#" "D-maj7@3^2" "G7@3" "Cmaj7@3^2"
+$ kord loop -b 120 "Em7b5@3^2" "A7b13@3!" "D-maj7@3^2" "G7@3" "Cmaj7@3^2"
 ```
 
 ### Guess A Chord
