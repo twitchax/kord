@@ -354,7 +354,7 @@ impl Chord {
                             }
             
                             // Check using the first note as a slash.
-                            let candidate_chord_slash = Chord::new(proper_root_slash).with_slash(notes[0]).with_modifiers(mod_set).with_extensions(ext_set).with_inversion(inversion as u8).with_crunchy(is_crunchy);
+                            let candidate_chord_slash = Chord::new(proper_root_slash).with_slash(notes[0]).with_modifiers(mod_set).with_modifiers(mod_set2).with_extensions(ext_set).with_inversion(inversion as u8).with_crunchy(is_crunchy);
                             let candidate_chord_slash_notes = candidate_chord_slash.chord();
             
                             if notes.len() == candidate_chord_slash_notes.len() && notes.iter().zip(&candidate_chord_slash.chord()).all(|(a, b)| a.frequency() == b.frequency()) {
