@@ -281,8 +281,12 @@ impl Ord for Chord {
         };
 
         // Give a slight preference to chords without slashes and inversions.
-        let a_all_changes_len = a_extensions_len + a_modifiers_len + 2 * a_slashes + 3 * a_inversion;
-        let b_all_changes_len = b_extensions_len + b_modifiers_len + 2 * b_slashes + 3 * b_inversion;
+        let a_inversion_exists = if a_inversion == 0 { 0 } else { 1 };
+        let b_inversion_exists = if b_inversion == 0 { 0 } else { 1 };
+
+        let a_all_changes_len = a_extensions_len + a_modifiers_len + 2 * a_slashes + 2 * a_inversion_exists;
+        let b_all_changes_len = b_extensions_len + b_modifiers_len + 2 * b_slashes + 2 * b_inversion_exists;
+
         let cmp_all_changes = a_all_changes_len.cmp(&b_all_changes_len);
 
         let a_root = self.root;
@@ -324,7 +328,7 @@ impl Chord {
         let mut result = Vec::new();
 
         // Iterate through all known chords (and some likely extensions) and find the longest match.
-        for inversion in 0..2 {
+        for inversion in 0..3 {
             let proper_root = if inversion == 0 {
                 notes[0]
             } else {
