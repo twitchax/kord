@@ -259,9 +259,11 @@ impl Add<Interval> for Note {
         };
 
         // There is a "special wrap" for `Cb`, and `Dbbb`, since they don't technically loop; and, for B#, etc., on the other side.
-        let special_octave = if new_pitch == NamedPitch::CFlat || new_pitch == NamedPitch::DTripleFlat {
+        // Basically, if we were already "on" the weird one (this is a perfect unision, or perfect octave, etc.), then we don't
+        // do anything special.  Otherwise, if we landed on on of these edge cases, then we need to adjust the octave.
+        let special_octave = if (self.named_pitch != NamedPitch::CFlat && new_pitch == NamedPitch::CFlat) || (self.named_pitch != NamedPitch::DTripleFlat && new_pitch == NamedPitch::DTripleFlat) {
             1
-        } else if new_pitch == NamedPitch::BSharp || new_pitch == NamedPitch::BDoubleSharp || new_pitch == NamedPitch::BTripleSharp || new_pitch == NamedPitch::ATripleSharp {
+        } else if (self.named_pitch != NamedPitch::BSharp && new_pitch == NamedPitch::BSharp) || (self.named_pitch != NamedPitch::BDoubleSharp && new_pitch == NamedPitch::BDoubleSharp) || (self.named_pitch != NamedPitch::BTripleSharp && new_pitch == NamedPitch::BTripleSharp) || (self.named_pitch != NamedPitch::ATripleSharp && new_pitch == NamedPitch::ATripleSharp) {
             -1
         } else {
             0
@@ -468,6 +470,14 @@ mod tests {
         assert_eq!(BFlatThree + Interval::MinorNinth, CFlatFive);
         assert_eq!(A + Interval::AugmentedNinth, BSharpFive);
         assert_eq!(CSharp + Interval::AugmentedSeventh, BDoubleSharp);
+
+        assert_eq!(DTripleFlat + Interval::PerfectOctave, DTripleFlatFive);
+        assert_eq!(DTripleFlat + Interval::PerfectUnison, DTripleFlat);
+
+        assert_eq!(BSharp + Interval::PerfectOctave, BSharpFive);
+        assert_eq!(BSharp + Interval::PerfectUnison, BSharp);
+
+        assert_eq!(ATripleSharp + Interval::TwoPerfectOctaves, ATripleSharpSix);
     }
 
     #[test]
