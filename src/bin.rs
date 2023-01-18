@@ -88,6 +88,21 @@ enum Command {
         #[arg(short, long, default_value_t = 5)]
         length: u8,
     },
+    #[cfg(feature = "audio")]
+    Analyze {
+        /// Whether or not to play a preview of the selected section of the
+        /// audio file before analyzing.
+        #[arg(long = "no-preview", action=ArgAction::SetFalse, default_value_t = true)]
+        preview: bool,
+        /// How far into the file to begin analyzing, as understood by ffmpeg.
+        #[arg(short, long)]
+        start_time: Option<String>,
+        /// How far into the file to stop analyzing, as understood by ffmpeg.
+        #[arg(short, long)]
+        end_time: Option<String>,
+        /// The source file to listen to/analyze.
+        source: PathBuf,
+    },
 }
 
 fn main() -> Void {
@@ -152,6 +167,16 @@ fn start(args: Args) -> Void {
 
             for candidate in candidates {
                 describe(&candidate);
+            }
+        }
+        Some(Command::Analyze {
+            preview,
+            start_time,
+            end_time,
+            source,
+        }) => {
+            if preview {
+                analyze::preview_audio_file_segment(source, start_time, end_time)?;
             }
         }
         None => {

@@ -37,7 +37,9 @@
 #![feature(concat_idents)]
 #![feature(iter_advance_by)]
 #![feature(no_coverage)]
+#![feature(exit_status_error)]
 
+pub mod analyze;
 pub mod base;
 pub mod chord;
 pub mod interval;
