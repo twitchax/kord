@@ -88,6 +88,7 @@ enum Command {
         #[arg(short, long, default_value_t = 5)]
         length: u8,
     },
+    /// Guess pitches and chords from the specified section of an audio file.
     #[cfg(feature = "audio")]
     Analyze {
         /// Whether or not to play a preview of the selected section of the
@@ -95,11 +96,16 @@ enum Command {
         #[arg(long = "no-preview", action=ArgAction::SetFalse, default_value_t = true)]
         preview: bool,
         /// How far into the file to begin analyzing, as understood by ffmpeg.
+        /// Like `"hh:mm:ss.xmsxns"`.
         #[arg(short, long)]
         start_time: Option<String>,
         /// How far into the file to stop analyzing, as understood by ffmpeg.
+        /// Like `"hh:mm:ss.xmsxns"`.
         #[arg(short, long)]
         end_time: Option<String>,
+        /// Output debugging information from ffmpeg
+        #[arg(short = 'd', long)]
+        ffmpeg_debug: bool,
         /// The source file to listen to/analyze.
         source: PathBuf,
     },
@@ -161,23 +167,27 @@ fn start(args: Args) -> Void {
         Some(Command::Listen { length }) => {
             let notes = futures::executor::block_on(Note::from_listen(length))?;
 
-            println!("Notes: {}", notes.iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" "));
-
-            let candidates = Chord::from_notes(&notes)?;
-
-            for candidate in candidates {
-                describe(&candidate);
-            }
+            show_notes_and_chords(&notes)?;
         }
         Some(Command::Analyze {
             preview,
             start_time,
             end_time,
             source,
+            ffmpeg_debug,
         }) => {
+            check_dependencies(preview)?;
             if preview {
-                analyze::preview_audio_file_segment(source, start_time, end_time)?;
+                analyze::preview_audio_file_segment(
+                    &source,
+                    start_time.as_ref(),
+                    end_time.as_ref(),
+                    ffmpeg_debug,
+                )?;
             }
+            let notes =
+                analyze::get_notes_from_audio_file(source, start_time, end_time, ffmpeg_debug)?;
+            show_notes_and_chords(&notes)?;
         }
         None => {
             println!("No command given.");
@@ -196,6 +206,28 @@ fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
     let _playable = chord.play(delay, length, fade_in)?;
     std::thread::sleep(Duration::from_secs_f32(length));
 
+    Ok(())
+}
+
+fn show_notes_and_chords(notes: &Vec<Note>) -> Res<()> {
+    println!(
+        "Notes: {}",
+        notes
+            .iter()
+            .map(|n| n.to_string())
+            .collect::<Vec<_>>()
+            .join(" ")
+    );
+
+    let candidates = Chord::from_notes(&notes)?;
+
+    if candidates.is_empty() {
+        println!("No chord candidates found");
+    } else {
+        for candidate in candidates {
+            describe(&candidate);
+        }
+    }
     Ok(())
 }
 
