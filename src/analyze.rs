@@ -160,3 +160,24 @@ pub fn preview_audio_file_segment(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use super::*;
+    use crate::note::*;
+
+    #[test]
+    fn test_guess_notes() {
+        let source_file = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/Am.mp3");
+        match get_notes_from_audio_file(&source_file, None::<&str>, None::<&str>, false) {
+            Ok(notes) => {
+                assert!(notes.contains(&A));
+                assert!(notes.contains(&C));
+                assert!(notes.contains(&E));
+            }
+            Err(err) => panic!("failed to get notes from audio file: {err:?}"),
+        }
+    }
+}
