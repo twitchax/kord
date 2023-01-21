@@ -23,7 +23,7 @@ pub trait HasFrequency {
 // Enum.
 
 /// An enum representing the pitch of a note.
-/// 
+///
 /// The frequencies of the pitches are based on the [A4 frequency](https://en.wikipedia.org/wiki/A4_(pitch_standard)).
 /// There is no enharmonic representation here, so all of the sharps are represented.
 #[derive(PartialEq, Eq, Clone, Copy, Hash, Debug, Ord, PartialOrd)]
@@ -85,27 +85,29 @@ impl HasPitch for Pitch {
 
 // Statics.
 
-pub(crate) static ALL_PITCHES: Lazy<[Pitch; 12]> = Lazy::new(|| [
-    Pitch::C,
-    Pitch::CSharp,
-    Pitch::D,
-    Pitch::DSharp,
-    Pitch::E,
-    Pitch::F,
-    Pitch::FSharp,
-    Pitch::G,
-    Pitch::GSharp,
-    Pitch::A,
-    Pitch::ASharp,
-    Pitch::B,    
-]);
+pub(crate) static ALL_PITCHES: Lazy<[Pitch; 12]> = Lazy::new(|| {
+    [
+        Pitch::C,
+        Pitch::CSharp,
+        Pitch::D,
+        Pitch::DSharp,
+        Pitch::E,
+        Pitch::F,
+        Pitch::FSharp,
+        Pitch::G,
+        Pitch::GSharp,
+        Pitch::A,
+        Pitch::ASharp,
+        Pitch::B,
+    ]
+});
 
 // Tests.
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::{assert_eq};
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_properties() {

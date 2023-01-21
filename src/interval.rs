@@ -7,7 +7,7 @@ use crate::octave::{HasOctave, Octave};
 /// A trait for types that have an enharmonic distance.
 pub trait HasEnharmonicDistance {
     /// Returns the enharmonic distance of the type (most likely an interval).
-    /// 
+    ///
     /// Due to the nature of enharmonic intervals, the distance is always an integer,
     /// and it looks a bit funky.  Basically, using the circle of fifths, the distance
     /// is the number of fifths between the two notes.  For example, a perfect fifth
@@ -117,7 +117,7 @@ impl HasEnharmonicDistance for Interval {
 
             Interval::AugmentedFifth => 8,
             Interval::MinorSixth => -4,
-            
+
             Interval::MajorSixth => 3,
             Interval::DiminishedSeventh => -9,
 
@@ -130,7 +130,6 @@ impl HasEnharmonicDistance for Interval {
             Interval::AugmentedSeventh => 12,
             Interval::PerfectOctave => 0,
 
-            
             Interval::MinorNinth => -5,
             Interval::MajorNinth => 2,
             Interval::AugmentedNinth => 9,
@@ -217,11 +216,13 @@ impl HasOctave for Interval {
 
 // Statics.
 
-pub(crate) static PRIMARY_HARMONIC_SERIES: Lazy<[Interval; 6]> = Lazy::new(|| [
-    Interval::PerfectOctave,
-    Interval::PerfectOctaveAndPerfectFifth,
-    Interval::TwoPerfectOctaves,
-    Interval::TwoPerfectOctavesAndMajorThird,
-    Interval::TwoPerfectOctavesAndPerfectFifth,
-    Interval::TwoPerfectOctavesAndMinorSeventh,
-]);
+pub(crate) static PRIMARY_HARMONIC_SERIES: Lazy<[Interval; 6]> = Lazy::new(|| {
+    [
+        Interval::PerfectOctave,
+        Interval::PerfectOctaveAndPerfectFifth,
+        Interval::TwoPerfectOctaves,
+        Interval::TwoPerfectOctavesAndMajorThird,
+        Interval::TwoPerfectOctavesAndPerfectFifth,
+        Interval::TwoPerfectOctavesAndMinorSeventh,
+    ]
+});

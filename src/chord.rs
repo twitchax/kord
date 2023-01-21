@@ -1,8 +1,18 @@
-use std::{collections::HashSet, fmt::Display, cmp::Ordering, time::Duration};
+use std::{cmp::Ordering, collections::HashSet, fmt::Display, time::Duration};
 
 use pest::Parser;
 
-use crate::{note::{Note, CZero, NoteRecreator}, modifier::{Modifier, Extension, Degree, HasIsDominant, known_modifier_sets, likely_extension_sets, one_off_modifier_sets}, known_chord::{KnownChord, HasRelativeChord, HasRelativeScale}, interval::{Interval}, base::{HasDescription, HasName, HasStaticName, Res, Parsable, PlaybackHandle, HasPreciseName, Playable}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, octave::{Octave, HasOctave}, named_pitch::HasNamedPitch, pitch::{HasFrequency}};
+use crate::{
+    base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Playable, PlaybackHandle, Res},
+    interval::Interval,
+    known_chord::{HasRelativeChord, HasRelativeScale, KnownChord},
+    modifier::{known_modifier_sets, likely_extension_sets, one_off_modifier_sets, Degree, Extension, HasIsDominant, Modifier},
+    named_pitch::HasNamedPitch,
+    note::{CZero, Note, NoteRecreator},
+    octave::{HasOctave, Octave},
+    parser::{note_str_to_note, octave_str_to_octave, ChordParser, Rule},
+    pitch::HasFrequency,
+};
 
 // Traits.
 
@@ -55,7 +65,7 @@ pub trait HasChord {
 }
 
 /// A trait that represents a type that has a chord.
-/// 
+///
 /// These methods all take ownership of the existing implementor (usually a [`Chord`]),
 /// and then return a new chord.  This can be circumvented by using an explicit `clone()`.
 /// E.g., `chord.clone().minor()`.
@@ -229,7 +239,7 @@ pub struct Chord {
     /// The inversion of the chord.
     inversion: u8,
     /// Whether or not this chord is "crunchy".
-    /// 
+    ///
     /// Crunchy chords take extensions down an octave, which gives the chord some "crunch".
     is_crunchy: bool,
 }
@@ -281,8 +291,8 @@ impl Ord for Chord {
         };
 
         // Give a slight preference to chords without slashes and inversions.
-        let a_inversion_exists = if a_inversion == 0 { 0 } else { 1 };
-        let b_inversion_exists = if b_inversion == 0 { 0 } else { 1 };
+        let a_inversion_exists = u8::from(a_inversion != 0);
+        let b_inversion_exists = u8::from(b_inversion != 0);
 
         let a_all_changes_len = a_extensions_len + a_modifiers_len + 2 * a_slashes + 2 * a_inversion_exists;
         let b_all_changes_len = b_extensions_len + b_modifiers_len + 2 * b_slashes + 2 * b_inversion_exists;
@@ -293,7 +303,13 @@ impl Ord for Chord {
         let b_root = other.root;
         let cmp_root = a_root.cmp(&b_root);
 
-        cmp_all_changes.then(cmp_inversion).then(cmp_slashes).then(cmp_extensions).then(cmp_modifiers).then(cmp_root).then(cmp_crunchy)
+        cmp_all_changes
+            .then(cmp_inversion)
+            .then(cmp_slashes)
+            .then(cmp_extensions)
+            .then(cmp_modifiers)
+            .then(cmp_root)
+            .then(cmp_crunchy)
     }
 }
 
@@ -306,11 +322,11 @@ impl PartialOrd for Chord {
 impl Chord {
     /// Returns a new chord with the given root.
     pub fn new(root: Note) -> Self {
-        Self { 
-            root, 
-            slash: None, 
-            modifiers: HashSet::new(), 
-            extensions: HashSet::new(), 
+        Self {
+            root,
+            slash: None,
+            modifiers: HashSet::new(),
+            extensions: HashSet::new(),
             inversion: 0,
             is_crunchy: false,
         }
@@ -350,17 +366,28 @@ impl Chord {
                     for ext_set in likely_extension_sets() {
                         for is_crunchy in [false, true] {
                             // Check using the first note as the root.
-                            let candidate_chord_root = Chord::new(proper_root).with_modifiers(mod_set).with_modifiers(mod_set2).with_extensions(ext_set).with_inversion(inversion as u8).with_crunchy(is_crunchy);
+                            let candidate_chord_root = Chord::new(proper_root)
+                                .with_modifiers(mod_set)
+                                .with_modifiers(mod_set2)
+                                .with_extensions(ext_set)
+                                .with_inversion(inversion as u8)
+                                .with_crunchy(is_crunchy);
                             let candidate_chord_root_notes = candidate_chord_root.chord();
-            
+
                             if notes.len() == candidate_chord_root_notes.len() && notes.iter().zip(&candidate_chord_root.chord()).all(|(a, b)| a.frequency() == b.frequency()) {
                                 result.push(candidate_chord_root);
                             }
-            
+
                             // Check using the first note as a slash.
-                            let candidate_chord_slash = Chord::new(proper_root_slash).with_slash(notes[0]).with_modifiers(mod_set).with_modifiers(mod_set2).with_extensions(ext_set).with_inversion(inversion as u8).with_crunchy(is_crunchy);
+                            let candidate_chord_slash = Chord::new(proper_root_slash)
+                                .with_slash(notes[0])
+                                .with_modifiers(mod_set)
+                                .with_modifiers(mod_set2)
+                                .with_extensions(ext_set)
+                                .with_inversion(inversion as u8)
+                                .with_crunchy(is_crunchy);
                             let candidate_chord_slash_notes = candidate_chord_slash.chord();
-            
+
                             if notes.len() == candidate_chord_slash_notes.len() && notes.iter().zip(&candidate_chord_slash.chord()).all(|(a, b)| a.frequency() == b.frequency()) {
                                 result.push(candidate_chord_slash);
                             }
@@ -378,16 +405,16 @@ impl Chord {
                 match degree {
                     Degree::Nine => {
                         c.extensions.remove(&Extension::Add9);
-                    },
+                    }
                     Degree::Eleven => {
                         c.extensions.remove(&Extension::Add9);
                         c.extensions.remove(&Extension::Add11);
-                    },
+                    }
                     Degree::Thirteen => {
                         c.extensions.remove(&Extension::Add9);
                         c.extensions.remove(&Extension::Add11);
                         c.extensions.remove(&Extension::Add13);
-                    },
+                    }
                     _ => {}
                 }
             }
@@ -462,7 +489,7 @@ impl HasName for Chord {
 impl HasPreciseName for Chord {
     fn precise_name(&self) -> String {
         let mut name = String::new();
-        
+
         name.push_str(&self.name());
 
         // Add octave modifier.
@@ -581,17 +608,11 @@ impl Chordable for Chord {
     fn with_octave(self, octave: Octave) -> Self {
         let root = Note::new(self.root.named_pitch(), octave);
 
-        Chord {
-            root,
-            ..self
-        }
+        Chord { root, ..self }
     }
 
     fn with_crunchy(self, is_crunchy: bool) -> Chord {
-        Chord {
-            is_crunchy,
-            ..self
-        }
+        Chord { is_crunchy, ..self }
     }
 
     // Modifiers.
@@ -809,10 +830,10 @@ impl HasKnownChord for Chord {
     fn known_chord(&self) -> KnownChord {
         let modifiers = &self.modifiers;
         let degree = self.dominant_degree();
-        
+
         let contains_dominant = degree.is_some();
         let degree = degree.unwrap_or(Degree::Seven);
-        
+
         if modifiers.contains(&Modifier::Diminished) {
             KnownChord::Diminished
         } else if modifiers.contains(&Modifier::Minor) {
@@ -850,18 +871,18 @@ impl HasKnownChord for Chord {
                 if modifiers.contains(&Modifier::Flat9) {
                     return KnownChord::DominantFlat9(degree);
                 }
-    
+
                 if modifiers.contains(&Modifier::Sharp9) {
                     return KnownChord::DominantSharp9(degree);
                 }
-                
+
                 if modifiers.contains(&Modifier::Sharp11) {
                     return KnownChord::DominantSharp11(degree);
                 }
-                
+
                 return KnownChord::Dominant(degree);
             }
-            
+
             return KnownChord::Major;
         }
     }
@@ -969,7 +990,7 @@ impl HasRelativeChord for Chord {
         if extensions.contains(&Extension::Add13) {
             result.push(Interval::MajorThirteenth);
         }
-        
+
         // Keep everything in order.
         result.sort();
         result.dedup();
@@ -1036,10 +1057,14 @@ impl HasChord for Chord {
 impl HasDomninantDegree for Chord {
     fn dominant_degree(&self) -> Option<Degree> {
         let modifiers = &self.modifiers;
-        if !modifiers.contains(&Modifier::Dominant(Degree::Seven)) && !modifiers.contains(&Modifier::Dominant(Degree::Nine)) && !modifiers.contains(&Modifier::Dominant(Degree::Eleven)) && !modifiers.contains(&Modifier::Dominant(Degree::Thirteen)) {
+        if !modifiers.contains(&Modifier::Dominant(Degree::Seven))
+            && !modifiers.contains(&Modifier::Dominant(Degree::Nine))
+            && !modifiers.contains(&Modifier::Dominant(Degree::Eleven))
+            && !modifiers.contains(&Modifier::Dominant(Degree::Thirteen))
+        {
             return None;
         }
-        
+
         Some(match modifiers.iter().find(|m| m.is_dominant()) {
             Some(Modifier::Dominant(d)) => *d,
             _ => Degree::Seven,
@@ -1053,127 +1078,123 @@ impl Parsable for Chord {
         Self: Sized,
     {
         let root = ChordParser::parse(Rule::chord, input)?.next().unwrap();
-        
+
         assert_eq!(Rule::chord, root.as_rule());
-        
+
         let mut components = root.into_inner();
 
         let note = components.next().unwrap();
 
         assert_eq!(Rule::note, note.as_rule());
-        
+
         let mut result = Chord::new(note_str_to_note(note.into_inner().as_str())?);
 
         while let Some(component) = components.next() {
             match component.as_rule() {
                 Rule::maj7_modifier => {
                     result = result.major7();
-                },
+                }
                 Rule::minor => {
                     result = result.minor();
-                },
+                }
                 Rule::augmented => {
                     result = result.augmented();
-                },
+                }
                 Rule::diminished => {
                     result = result.diminished();
-                },
+                }
                 Rule::half_diminished => {
                     result = result.half_diminished();
-                },
-                Rule::dominant_modifier => {
-                    match component.as_str() {
-                        "7" => {
-                            result = result.seven();
-                        },
-                        "9" => {
-                            result = result.nine();
-                        },
-                        "11" => {
-                            result = result.eleven();
-                        },
-                        "13" => {
-                            result = result.thirteen();
-                        },
-                        _ => {
-                            unreachable!();
-                        }
+                }
+                Rule::dominant_modifier => match component.as_str() {
+                    "7" => {
+                        result = result.seven();
+                    }
+                    "9" => {
+                        result = result.nine();
+                    }
+                    "11" => {
+                        result = result.eleven();
+                    }
+                    "13" => {
+                        result = result.thirteen();
+                    }
+                    _ => {
+                        unreachable!();
                     }
                 },
-                Rule::modifier => {
-                    match component.as_str() {
-                        "sus2" => {
-                            result = result.sus2();
-                        },
-                        "sus4" => {
-                            result = result.sus4();
-                        },
-                        "add2" => {
-                            result = result.add2();
-                        },
-                        "add4" => {
-                            result = result.add4();
-                        },
-                        "add6" | "6" => {
-                            result = result.add6();
-                        },
-                        "b5" | "♭5" => {
-                            result = result.flat5();
-                        },
-                        "#5" | "♯5" => {
-                            result = result.augmented();
-                        },
-                        "add9" => {
-                            result = result.add9();
-                        },
-                        "b9" | "♭9" => {
-                            result = result.flat9();
-                        },
-                        "#9" | "♯9" => {
-                            result = result.sharp9();
-                        },
-                        "add11" => {
-                            result = result.add11();
-                        },
-                        "b11" | "♭11" => {
-                            result = result.flat11();
-                        },
-                        "#11" | "♯11" => {
-                            result = result.sharp11();
-                        },
-                        "add13" => {
-                            result = result.add13();
-                        },
-                        "b13" | "♭13" => {
-                            result = result.flat13();
-                        },
-                        "#13" | "♯13" => {
-                            result = result.sharp13();
-                        },
-                        _ => {
-                            unreachable!();
-                        }
+                Rule::modifier => match component.as_str() {
+                    "sus2" => {
+                        result = result.sus2();
+                    }
+                    "sus4" => {
+                        result = result.sus4();
+                    }
+                    "add2" => {
+                        result = result.add2();
+                    }
+                    "add4" => {
+                        result = result.add4();
+                    }
+                    "add6" | "6" => {
+                        result = result.add6();
+                    }
+                    "b5" | "♭5" => {
+                        result = result.flat5();
+                    }
+                    "#5" | "♯5" => {
+                        result = result.augmented();
+                    }
+                    "add9" => {
+                        result = result.add9();
+                    }
+                    "b9" | "♭9" => {
+                        result = result.flat9();
+                    }
+                    "#9" | "♯9" => {
+                        result = result.sharp9();
+                    }
+                    "add11" => {
+                        result = result.add11();
+                    }
+                    "b11" | "♭11" => {
+                        result = result.flat11();
+                    }
+                    "#11" | "♯11" => {
+                        result = result.sharp11();
+                    }
+                    "add13" => {
+                        result = result.add13();
+                    }
+                    "b13" | "♭13" => {
+                        result = result.flat13();
+                    }
+                    "#13" | "♯13" => {
+                        result = result.sharp13();
+                    }
+                    _ => {
+                        unreachable!();
                     }
                 },
                 Rule::slash => {
                     let note = note_str_to_note(components.next().unwrap().as_str())?;
 
                     result = result.with_slash(note);
-                },
+                }
                 Rule::at => {
                     let octave = octave_str_to_octave(components.next().unwrap().as_str())?;
-                    
+
                     result = result.with_octave(octave);
-                },
+                }
                 Rule::hat => {
                     let inversion = components.next().unwrap().as_str().parse::<u8>()?;
 
                     result = result.with_inversion(inversion);
-                },
+                }
                 Rule::bang => {
                     result = result.with_crunchy(true);
                 }
-                Rule::EOI => {},
+                Rule::EOI => {}
                 _ => {
                     unreachable!();
                 }
@@ -1188,12 +1209,14 @@ impl Parsable for Chord {
 impl Playable for Chord {
     #[no_coverage]
     fn play(&self, delay: f32, length: f32, fade_in: f32) -> Res<PlaybackHandle> {
-        use rodio::{Sink, OutputStream, source::SineWave, Source};
+        use rodio::{source::SineWave, OutputStream, Sink, Source};
 
         let chord_tones = self.chord();
 
         if length <= chord_tones.len() as f32 * delay {
-            return Err(anyhow::Error::msg("The delay is too long for the length of play (i.e., the number of chord tones times the delay is longer than the length)."));
+            return Err(anyhow::Error::msg(
+                "The delay is too long for the length of play (i.e., the number of chord tones times the delay is longer than the length).",
+            ));
         }
 
         let (stream, stream_handle) = OutputStream::try_default()?;
@@ -1202,26 +1225,22 @@ impl Playable for Chord {
 
         for (k, n) in chord_tones.into_iter().enumerate() {
             let sink = Sink::try_new(&stream_handle)?;
-    
+
             let d = k as f32 * delay;
-    
+
             let source = SineWave::new(n.frequency())
                 .take_duration(Duration::from_secs_f32(length - d))
                 .buffered()
                 .delay(Duration::from_secs_f32(d))
                 .fade_in(Duration::from_secs_f32(fade_in))
                 .amplify(0.20);
-    
+
             sink.append(source);
-    
+
             sinks.push(sink);
         }
 
-        Ok(PlaybackHandle::new(
-            stream,
-            stream_handle,
-            sinks,
-        ))
+        Ok(PlaybackHandle::new(stream, stream_handle, sinks))
     }
 }
 
@@ -1236,8 +1255,8 @@ impl Default for Chord {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::{assert_eq};
     use crate::{note::*, octave::HasOctave};
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_text() {
@@ -1246,7 +1265,10 @@ mod tests {
         assert_eq!(Chord::new(C).minor().augmented().name(), "Cm(♯5)");
         assert_eq!(Chord::new(C).with_octave(Octave::Six).precise_name(), "C@6");
 
-        assert_eq!(format!("{}", Chord::new(C).minor().seven().flat_five()), "Cm7(♭5)\n   half diminished, locrian, minor seven flat five, seventh mode of major scale, major scale starting one half step up\n   C, D, E♭, F, G♭, A♭, B♭\n   C, E♭, G♭, B♭");
+        assert_eq!(
+            format!("{}", Chord::new(C).minor().seven().flat_five()),
+            "Cm7(♭5)\n   half diminished, locrian, minor seven flat five, seventh mode of major scale, major scale starting one half step up\n   C, D, E♭, F, G♭, A♭, B♭\n   C, E♭, G♭, B♭"
+        );
     }
 
     #[test]
@@ -1421,10 +1443,19 @@ mod tests {
 
     #[test]
     fn test_guess() {
-        assert_eq!(Chord::from_notes(&[EThree, C, EFlat, FSharp, ASharp, DFive]).unwrap().first().unwrap().chord(), Chord::parse("Cm9b5/E").unwrap().chord());
+        assert_eq!(
+            Chord::from_notes(&[EThree, C, EFlat, FSharp, ASharp, DFive]).unwrap().first().unwrap().chord(),
+            Chord::parse("Cm9b5/E").unwrap().chord()
+        );
         assert_eq!(Chord::from_notes(&[C, E, G]).unwrap().first().unwrap().chord(), Chord::parse("C").unwrap().chord());
-        assert_eq!(Chord::from_notes(&[C, E, G, BFlat, DFive, FFive]).unwrap().first().unwrap().chord(), Chord::parse("C11").unwrap().chord());
-        assert_eq!(Chord::from_notes(&[C, E, G, BFlat, DFive, FFive, AFive]).unwrap().first().unwrap().chord(), Chord::parse("C13").unwrap().chord());
+        assert_eq!(
+            Chord::from_notes(&[C, E, G, BFlat, DFive, FFive]).unwrap().first().unwrap().chord(),
+            Chord::parse("C11").unwrap().chord()
+        );
+        assert_eq!(
+            Chord::from_notes(&[C, E, G, BFlat, DFive, FFive, AFive]).unwrap().first().unwrap().chord(),
+            Chord::parse("C13").unwrap().chord()
+        );
         assert_eq!(Chord::from_notes(&[C, EFlat, GFlat, A]).unwrap().first().unwrap().chord(), Chord::parse("Cdim").unwrap().chord());
     }
 

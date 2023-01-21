@@ -1,9 +1,13 @@
 use pest_derive::Parser;
 
-use crate::{base::Res, note::{self, Note}, octave::Octave};
+use crate::{
+    base::Res,
+    note::{self, Note},
+    octave::Octave,
+};
 
 /// A parser for chord symbols.
-/// 
+///
 /// This is built from a PEG grammar defined in `chord.pest`.
 #[derive(Parser)]
 #[grammar = "../chord.pest"]

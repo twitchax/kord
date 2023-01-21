@@ -1,12 +1,25 @@
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
 
-use std::{ops::{Add, AddAssign}, cmp::Ordering, fmt::{Display, Formatter, self}};
+use std::{
+    cmp::Ordering,
+    fmt::{self, Display, Formatter},
+    ops::{Add, AddAssign},
+};
 
+use crate::{
+    base::{HasName, HasStaticName, Parsable, Res},
+    chord::Chord,
+    interval::{HasEnharmonicDistance, Interval, PRIMARY_HARMONIC_SERIES},
+    listen::{get_notes_from_audio_data, get_notes_from_microphone},
+    named_pitch::{HasNamedPitch, NamedPitch},
+    octave::{HasOctave, Octave, ALL_OCTAVES},
+    parser::{note_str_to_note, octave_str_to_octave, ChordParser, Rule},
+    pitch::{HasBaseFrequency, HasFrequency, HasPitch, Pitch, ALL_PITCHES},
+};
 use once_cell::sync::Lazy;
 use paste::paste;
 use pest::Parser;
-use crate::{named_pitch::{NamedPitch, HasNamedPitch}, interval::{Interval, HasEnharmonicDistance, PRIMARY_HARMONIC_SERIES}, base::{HasStaticName, HasName, Parsable, Res}, chord::Chord, pitch::{HasFrequency, HasBaseFrequency, Pitch, HasPitch, ALL_PITCHES}, octave::{Octave, HasOctave, ALL_OCTAVES}, parser::{ChordParser, Rule, note_str_to_note, octave_str_to_octave}, listen::{get_notes_from_microphone, get_notes_from_audio_data}};
 
 // Macros.
 
@@ -108,7 +121,7 @@ pub trait HasPrimaryHarmonicSeries {
 // Struct.
 
 /// A note type.
-/// 
+///
 /// This is a named pitch with an octave.  This type allows for correctly attributing octave changes
 /// across an interval from one [`Note`] to another.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
@@ -134,7 +147,7 @@ impl Note {
 
     /// Attempts to use the default microphone to listen to audio for the specified time
     /// to identify the notes in the recorded audio.
-    /// 
+    ///
     /// Currently, this does not work with WASM.
     #[no_coverage]
     pub async fn from_listen(length_in_seconds: u8) -> Res<Vec<Self>> {
@@ -177,8 +190,7 @@ impl HasName for Note {
     }
 }
 
-impl HasFrequency for Note
-{
+impl HasFrequency for Note {
     fn frequency(&self) -> f32 {
         let mut octave = self.octave();
         let base_frequency = self.pitch().base_frequency();
@@ -186,10 +198,10 @@ impl HasFrequency for Note
         match self.named_pitch {
             NamedPitch::ATripleSharp | NamedPitch::BTripleSharp | NamedPitch::BDoubleSharp | NamedPitch::BSharp => {
                 octave += 1;
-            },
+            }
             NamedPitch::DTripleFlat | NamedPitch::CTripleFlat | NamedPitch::CDoubleFlat | NamedPitch::CFlat => {
                 octave -= 1;
-            },
+            }
             _ => {}
         }
 
@@ -204,7 +216,10 @@ impl IntoChord for Note {
 }
 
 impl Parsable for Note {
-    fn parse(input: &str) -> Res<Self> where Self: Sized {
+    fn parse(input: &str) -> Res<Self>
+    where
+        Self: Sized,
+    {
         let root = ChordParser::parse(Rule::note_with_octave, input)?.next().unwrap();
 
         assert_eq!(Rule::note_with_octave, root.as_rule());
@@ -252,18 +267,18 @@ impl Add<Interval> for Note {
         let new_pitch = self.named_pitch() + rhs.enharmonic_distance();
 
         // Compute whether or not we "crossed" an octave.
-        let wrapping_octave = if new_pitch.pitch() < self.pitch() {
-            Octave::One
-        } else {
-            Octave::Zero
-        };
+        let wrapping_octave = if new_pitch.pitch() < self.pitch() { Octave::One } else { Octave::Zero };
 
         // There is a "special wrap" for `Cb`, and `Dbbb`, since they don't technically loop; and, for B#, etc., on the other side.
         // Basically, if we were already "on" the weird one (this is a perfect unision, or perfect octave, etc.), then we don't
         // do anything special.  Otherwise, if we landed on on of these edge cases, then we need to adjust the octave.
         let special_octave = if (self.named_pitch != NamedPitch::CFlat && new_pitch == NamedPitch::CFlat) || (self.named_pitch != NamedPitch::DTripleFlat && new_pitch == NamedPitch::DTripleFlat) {
             1
-        } else if (self.named_pitch != NamedPitch::BSharp && new_pitch == NamedPitch::BSharp) || (self.named_pitch != NamedPitch::BDoubleSharp && new_pitch == NamedPitch::BDoubleSharp) || (self.named_pitch != NamedPitch::BTripleSharp && new_pitch == NamedPitch::BTripleSharp) || (self.named_pitch != NamedPitch::ATripleSharp && new_pitch == NamedPitch::ATripleSharp) {
+        } else if (self.named_pitch != NamedPitch::BSharp && new_pitch == NamedPitch::BSharp)
+            || (self.named_pitch != NamedPitch::BDoubleSharp && new_pitch == NamedPitch::BDoubleSharp)
+            || (self.named_pitch != NamedPitch::BTripleSharp && new_pitch == NamedPitch::BTripleSharp)
+            || (self.named_pitch != NamedPitch::ATripleSharp && new_pitch == NamedPitch::ATripleSharp)
+        {
             -1
         } else {
             0
@@ -373,7 +388,7 @@ pub const BTripleSharp: Note = BTripleSharpFour;
 
 pub(crate) static ALL_PITCH_NOTES: Lazy<[Note; 132]> = Lazy::new(|| {
     let mut all_notes = Vec::with_capacity(132);
-    
+
     for octave in ALL_OCTAVES.iter() {
         for pitch in ALL_PITCHES.iter() {
             all_notes.push(Note {
@@ -386,7 +401,7 @@ pub(crate) static ALL_PITCH_NOTES: Lazy<[Note; 132]> = Lazy::new(|| {
     all_notes.try_into().unwrap()
 });
 
-pub(crate) static ALL_PITCH_NOTES_WITH_FREQUENCY : Lazy<[(Note, f32); 132]> = Lazy::new(|| {
+pub(crate) static ALL_PITCH_NOTES_WITH_FREQUENCY: Lazy<[(Note, f32); 132]> = Lazy::new(|| {
     let mut all_notes = Vec::with_capacity(132);
 
     for note in ALL_PITCH_NOTES.iter() {
@@ -401,7 +416,7 @@ pub(crate) static ALL_PITCH_NOTES_WITH_FREQUENCY : Lazy<[(Note, f32); 132]> = La
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::{assert_eq};
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_text() {

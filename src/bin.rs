@@ -1,7 +1,12 @@
 use std::time::Duration;
 
 use clap::{Parser, Subcommand};
-use klib::{base::{Void, Parsable, Playable}, chord::{Chordable, Chord}, octave::Octave, note::Note};
+use klib::{
+    base::{Parsable, Playable, Void},
+    chord::{Chord, Chordable},
+    note::Note,
+    octave::Octave,
+};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -13,21 +18,21 @@ struct Args {
 #[derive(Subcommand, Debug)]
 enum Command {
     /// Describes a chord.
-    /// 
+    ///
     /// The `symbol` has some special syntax.  These are the parts:
-    /// 
+    ///
     /// * The root note (e.g., `C`, `D#`, `Eb`, `F##`, `Gbb`, `A♯`, `B♭`, etc.).
-    /// 
+    ///
     /// * Any modifiers (e.g., `7`, `9`, `m7b5`, `sus4`, `dim`, `+`, `maj7`, `-maj7`, `m7b5#9`, etc.).
-    /// 
+    ///
     /// * Any extensions (e.g., `add9`, `add11`, `add13`, `add2`, etc.).
-    /// 
+    ///
     /// * Zero or one slash notes (e.g., `/E`, `/G#`, `/Fb`, etc.).
-    /// 
+    ///
     /// * Zero or one octaves for the root (default is 4), using the `@` symbol (e.g., `@4`, `@5`, `@6`, etc.).
-    /// 
+    ///
     /// * Zero or one inversions (e.g., `^1`, `^2`, `^3`, etc.).
-    /// 
+    ///
     /// * Zero or one "crunchy" modifiers, which moves "higher notes" into the same octave frame as the root (i.e., `!`).
     Describe {
         /// Chord symbol to parse.
@@ -39,7 +44,7 @@ enum Command {
     },
 
     /// Describes and plays a chord.
-    /// 
+    ///
     /// Please see `describe` for more information on the chord symbol syntax.
     Play {
         /// Chord symbol to parse.
@@ -61,7 +66,7 @@ enum Command {
     /// Loops on a set of chord changes, while simultaneously outputting the descriptions.
     Loop {
         /// Chord symbol to parse, followed by length in 32nd notes (e.g., "Cm7|32 Dm7|32 Em7|32").
-        /// 
+        ///
         /// If no length is given, the default is 32.
         chords: Vec<String>,
 
@@ -82,7 +87,7 @@ enum Command {
         /// Sets the duration of listening time (in seconds).
         #[arg(short, long, default_value_t = 5)]
         length: u8,
-    }
+    },
 }
 
 fn main() -> Void {
@@ -99,12 +104,12 @@ fn start(args: Args) -> Void {
             let chord = Chord::parse(&symbol)?.with_octave(Octave::Zero + octave);
 
             describe(&chord);
-        },
+        }
         Some(Command::Play { symbol, delay, length, fade_in }) => {
             let chord = Chord::parse(&symbol)?;
 
             play(&chord, delay, length, fade_in)?;
-        },
+        }
         Some(Command::Guess { notes }) => {
             // Parse the notes.
             let notes = notes.into_iter().map(|n| Note::parse(&n)).collect::<Result<Vec<_>, _>>()?;
@@ -115,17 +120,20 @@ fn start(args: Args) -> Void {
             for candidate in candidates {
                 describe(&candidate);
             }
-        },
+        }
         Some(Command::Loop { chords, bpm }) => {
-            let chord_pairs = chords.into_iter().map(|c| {
-                let mut parts = c.split('|');
+            let chord_pairs = chords
+                .into_iter()
+                .map(|c| {
+                    let mut parts = c.split('|');
 
-                let chord = Chord::parse(parts.next().unwrap()).unwrap();
+                    let chord = Chord::parse(parts.next().unwrap()).unwrap();
 
-                let length = parts.next().map(|l| l.parse::<u16>().unwrap()).unwrap_or(32);
+                    let length = parts.next().map(|l| l.parse::<u16>().unwrap()).unwrap_or(32);
 
-                (chord, length)
-            }).collect::<Vec<_>>();
+                    (chord, length)
+                })
+                .collect::<Vec<_>>();
 
             loop {
                 for (chord, length) in chord_pairs.iter() {
@@ -133,7 +141,7 @@ fn start(args: Args) -> Void {
                     play(chord, 0.0, length, 0.1)?;
                 }
             }
-        },
+        }
         #[cfg(feature = "audio")]
         Some(Command::Listen { length }) => {
             let notes = futures::executor::block_on(Note::from_listen(length))?;
@@ -145,7 +153,7 @@ fn start(args: Args) -> Void {
             for candidate in candidates {
                 describe(&candidate);
             }
-        },
+        }
         None => {
             println!("No command given.");
         }
@@ -159,7 +167,7 @@ fn describe(chord: &Chord) {
 
 fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
     describe(chord);
-    
+
     let _playable = chord.play(delay, length, fade_in)?;
     std::thread::sleep(Duration::from_secs_f32(length));
 
@@ -179,7 +187,8 @@ mod tests {
                 symbol: "Cmaj7b9@3^2!".to_string(),
                 octave: 4,
             }),
-        }).unwrap();
+        })
+        .unwrap();
     }
 
     #[test]
@@ -188,6 +197,7 @@ mod tests {
             command: Some(Command::Guess {
                 notes: vec!["C".to_owned(), "E".to_owned(), "G".to_owned()],
             }),
-        }).unwrap();
+        })
+        .unwrap();
     }
 }

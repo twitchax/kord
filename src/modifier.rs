@@ -27,8 +27,8 @@ pub enum Degree {
 }
 
 /// An enum representing the modifier of a chord.
-/// 
-/// Modifiers are "special extensions" that essentially have the capacity to _change_ 
+///
+/// Modifiers are "special extensions" that essentially have the capacity to _change_
 /// how the chord is interpreted by the system.  E.g., a dominant flat 9 chord is not
 /// _just_ a dominant chord with a flat 9 extension, but rather a chord that is
 /// represented by an entirely specific scale (half/whole/half diminished).
@@ -61,7 +61,7 @@ pub enum Modifier {
 }
 
 /// An enum representing the extension of a chord.
-/// 
+///
 /// Extensions are not really "special" in the sense that they do not change how the
 /// chord is interpreted by the system.  E.g., an `add2` just adds a 2 to the chord,
 /// and the chord is still interpreted as a major chord.
@@ -169,64 +169,70 @@ pub fn likely_extension_sets() -> &'static [Vec<Extension>] {
 
 // Statics.
 
-static KNOWN_MODIFIER_SETS: Lazy<[Vec<Modifier>; 35]> = Lazy::new(|| [
-    vec![],
-    vec![Modifier::Minor],
-    vec![Modifier::Major7],
-    vec![Modifier::Dominant(Degree::Seven)],
-    vec![Modifier::Dominant(Degree::Nine)],
-    vec![Modifier::Dominant(Degree::Eleven)],
-    vec![Modifier::Dominant(Degree::Thirteen)],
-    vec![Modifier::Minor, Modifier::Major7],
-    vec![Modifier::Minor, Modifier::Dominant(Degree::Seven)],
-    vec![Modifier::Minor, Modifier::Dominant(Degree::Nine)],
-    vec![Modifier::Minor, Modifier::Dominant(Degree::Eleven)],
-    vec![Modifier::Minor, Modifier::Dominant(Degree::Thirteen)],
-    vec![Modifier::Sharp11, Modifier::Dominant(Degree::Seven)],
-    vec![Modifier::Sharp11, Modifier::Dominant(Degree::Nine)],
-    vec![Modifier::Sharp11, Modifier::Dominant(Degree::Eleven)],
-    vec![Modifier::Sharp11, Modifier::Dominant(Degree::Thirteen)],
-    vec![Modifier::Augmented5],
-    vec![Modifier::Augmented5, Modifier::Major7],
-    vec![Modifier::Augmented5, Modifier::Dominant(Degree::Seven)],
-    vec![Modifier::Augmented5, Modifier::Dominant(Degree::Nine)],
-    vec![Modifier::Augmented5, Modifier::Dominant(Degree::Eleven)],
-    vec![Modifier::Augmented5, Modifier::Dominant(Degree::Thirteen)],
-    vec![Modifier::Minor, Modifier::Flat5, Modifier::Dominant(Degree::Seven)],
-    vec![Modifier::Minor, Modifier::Flat5, Modifier::Dominant(Degree::Nine)],
-    vec![Modifier::Minor, Modifier::Flat5, Modifier::Dominant(Degree::Eleven)],
-    vec![Modifier::Minor, Modifier::Flat5, Modifier::Dominant(Degree::Thirteen)],
-    vec![Modifier::Diminished],
-    vec![Modifier::Flat9, Modifier::Dominant(Degree::Seven)],
-    vec![Modifier::Flat9, Modifier::Dominant(Degree::Nine)],
-    vec![Modifier::Flat9, Modifier::Dominant(Degree::Eleven)],
-    vec![Modifier::Flat9, Modifier::Dominant(Degree::Thirteen)],
-    vec![Modifier::Sharp9, Modifier::Dominant(Degree::Seven)],
-    vec![Modifier::Sharp9, Modifier::Dominant(Degree::Nine)],
-    vec![Modifier::Sharp9, Modifier::Dominant(Degree::Eleven)],
-    vec![Modifier::Sharp9, Modifier::Dominant(Degree::Thirteen)],
-]);
+static KNOWN_MODIFIER_SETS: Lazy<[Vec<Modifier>; 35]> = Lazy::new(|| {
+    [
+        vec![],
+        vec![Modifier::Minor],
+        vec![Modifier::Major7],
+        vec![Modifier::Dominant(Degree::Seven)],
+        vec![Modifier::Dominant(Degree::Nine)],
+        vec![Modifier::Dominant(Degree::Eleven)],
+        vec![Modifier::Dominant(Degree::Thirteen)],
+        vec![Modifier::Minor, Modifier::Major7],
+        vec![Modifier::Minor, Modifier::Dominant(Degree::Seven)],
+        vec![Modifier::Minor, Modifier::Dominant(Degree::Nine)],
+        vec![Modifier::Minor, Modifier::Dominant(Degree::Eleven)],
+        vec![Modifier::Minor, Modifier::Dominant(Degree::Thirteen)],
+        vec![Modifier::Sharp11, Modifier::Dominant(Degree::Seven)],
+        vec![Modifier::Sharp11, Modifier::Dominant(Degree::Nine)],
+        vec![Modifier::Sharp11, Modifier::Dominant(Degree::Eleven)],
+        vec![Modifier::Sharp11, Modifier::Dominant(Degree::Thirteen)],
+        vec![Modifier::Augmented5],
+        vec![Modifier::Augmented5, Modifier::Major7],
+        vec![Modifier::Augmented5, Modifier::Dominant(Degree::Seven)],
+        vec![Modifier::Augmented5, Modifier::Dominant(Degree::Nine)],
+        vec![Modifier::Augmented5, Modifier::Dominant(Degree::Eleven)],
+        vec![Modifier::Augmented5, Modifier::Dominant(Degree::Thirteen)],
+        vec![Modifier::Minor, Modifier::Flat5, Modifier::Dominant(Degree::Seven)],
+        vec![Modifier::Minor, Modifier::Flat5, Modifier::Dominant(Degree::Nine)],
+        vec![Modifier::Minor, Modifier::Flat5, Modifier::Dominant(Degree::Eleven)],
+        vec![Modifier::Minor, Modifier::Flat5, Modifier::Dominant(Degree::Thirteen)],
+        vec![Modifier::Diminished],
+        vec![Modifier::Flat9, Modifier::Dominant(Degree::Seven)],
+        vec![Modifier::Flat9, Modifier::Dominant(Degree::Nine)],
+        vec![Modifier::Flat9, Modifier::Dominant(Degree::Eleven)],
+        vec![Modifier::Flat9, Modifier::Dominant(Degree::Thirteen)],
+        vec![Modifier::Sharp9, Modifier::Dominant(Degree::Seven)],
+        vec![Modifier::Sharp9, Modifier::Dominant(Degree::Nine)],
+        vec![Modifier::Sharp9, Modifier::Dominant(Degree::Eleven)],
+        vec![Modifier::Sharp9, Modifier::Dominant(Degree::Thirteen)],
+    ]
+});
 
-static ONE_OFF_MODIFIER_SETS: Lazy<[Vec<Modifier>; 6]> = Lazy::new(|| [
-    vec![],
-    vec![Modifier::Sharp11],
-    vec![Modifier::Augmented5],
-    vec![Modifier::Flat5],
-    vec![Modifier::Flat9],
-    vec![Modifier::Sharp9],
-]);
+static ONE_OFF_MODIFIER_SETS: Lazy<[Vec<Modifier>; 6]> = Lazy::new(|| {
+    [
+        vec![],
+        vec![Modifier::Sharp11],
+        vec![Modifier::Augmented5],
+        vec![Modifier::Flat5],
+        vec![Modifier::Flat9],
+        vec![Modifier::Sharp9],
+    ]
+});
 
-static LIKELY_EXTENSION_SETS: Lazy<[Vec<Extension>; 12]> = Lazy::new(|| [
-    vec![],
-    vec![Extension::Sus2],
-    vec![Extension::Sus4],
-    vec![Extension::Add2],
-    vec![Extension::Add4],
-    vec![Extension::Add6],
-    vec![Extension::Add9],
-    vec![Extension::Add11],
-    vec![Extension::Add13],
-    vec![Extension::Flat11],
-    vec![Extension::Flat13],
-    vec![Extension::Sharp13],
-]);
+static LIKELY_EXTENSION_SETS: Lazy<[Vec<Extension>; 12]> = Lazy::new(|| {
+    [
+        vec![],
+        vec![Extension::Sus2],
+        vec![Extension::Sus4],
+        vec![Extension::Add2],
+        vec![Extension::Add4],
+        vec![Extension::Add6],
+        vec![Extension::Add9],
+        vec![Extension::Add11],
+        vec![Extension::Add13],
+        vec![Extension::Flat11],
+        vec![Extension::Flat13],
+        vec![Extension::Sharp13],
+    ]
+});

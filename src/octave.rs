@@ -132,27 +132,29 @@ impl Default for Octave {
 
 // Statics.
 
-pub(crate) static ALL_OCTAVES: Lazy<[Octave; 11]> = Lazy::new(|| [
-    Octave::Zero,
-    Octave::One,
-    Octave::Two,
-    Octave::Three,
-    Octave::Four,
-    Octave::Five,
-    Octave::Six,
-    Octave::Seven,
-    Octave::Eight,
-    Octave::Nine,
-    Octave::Ten  
-]);
+pub(crate) static ALL_OCTAVES: Lazy<[Octave; 11]> = Lazy::new(|| {
+    [
+        Octave::Zero,
+        Octave::One,
+        Octave::Two,
+        Octave::Three,
+        Octave::Four,
+        Octave::Five,
+        Octave::Six,
+        Octave::Seven,
+        Octave::Eight,
+        Octave::Nine,
+        Octave::Ten,
+    ]
+});
 
 // Tests.
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::{assert_eq};
-    use crate::{octave::HasOctave};
+    use crate::octave::HasOctave;
+    use pretty_assertions::assert_eq;
 
     #[test]
     #[should_panic]

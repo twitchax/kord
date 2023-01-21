@@ -1,12 +1,16 @@
-use crate::{interval::Interval, base::{HasStaticName, HasDescription, HasName}, modifier::Degree};
+use crate::{
+    base::{HasDescription, HasName, HasStaticName},
+    interval::Interval,
+    modifier::Degree,
+};
 
 // Traits.
 
 /// A trait for types that have a relative scale.
 pub trait HasRelativeScale {
     /// Returns the relative scale of the type (usually a [`Chord`]).
-    /// 
-    /// The relative scale is the scale that the chord is built on, using 
+    ///
+    /// The relative scale is the scale that the chord is built on, using
     /// only the intervals, without any need for notes; e.g., a major chord
     /// is built with all the "major" and "perfect" intervals.
     fn relative_scale(&self) -> Vec<Interval>;
@@ -15,7 +19,7 @@ pub trait HasRelativeScale {
 /// A trait for types that have a relative chord.
 pub trait HasRelativeChord {
     /// Returns the relative chord of the type (usually a [`Chord`]).
-    /// 
+    ///
     /// The relative chord is the chord that the chord is built on, using
     /// only the intervals, without any need for notes; e.g., a major chord
     /// is built with the major third and perfect fifth intervals.
@@ -57,7 +61,7 @@ pub enum KnownChord {
     /// A dominant flat 9 chord.
     DominantFlat9(Degree),
     /// A dominant sharp 9 chord.
-    DominantSharp9(Degree)
+    DominantSharp9(Degree),
 }
 
 // Impls.
@@ -89,131 +93,131 @@ impl HasRelativeScale for KnownChord {
         match self {
             KnownChord::Unknown => unreachable!(),
             KnownChord::Major => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorSecond, 
-                Interval::MajorThird, 
-                Interval::PerfectFourth, 
-                Interval::PerfectFifth, 
-                Interval::MajorSixth, 
-                Interval::MajorSeventh
+                Interval::PerfectUnison,
+                Interval::MajorSecond,
+                Interval::MajorThird,
+                Interval::PerfectFourth,
+                Interval::PerfectFifth,
+                Interval::MajorSixth,
+                Interval::MajorSeventh,
             ],
             KnownChord::Minor => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorSecond, 
-                Interval::MinorThird, 
-                Interval::PerfectFourth, 
-                Interval::PerfectFifth, 
-                Interval::MinorSixth, 
-                Interval::MinorSeventh
+                Interval::PerfectUnison,
+                Interval::MajorSecond,
+                Interval::MinorThird,
+                Interval::PerfectFourth,
+                Interval::PerfectFifth,
+                Interval::MinorSixth,
+                Interval::MinorSeventh,
             ],
             KnownChord::Major7 => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorSecond, 
-                Interval::MajorThird, 
-                Interval::PerfectFourth, 
-                Interval::PerfectFifth, 
-                Interval::MajorSixth, 
-                Interval::MajorSeventh
+                Interval::PerfectUnison,
+                Interval::MajorSecond,
+                Interval::MajorThird,
+                Interval::PerfectFourth,
+                Interval::PerfectFifth,
+                Interval::MajorSixth,
+                Interval::MajorSeventh,
             ],
             KnownChord::Dominant(_) => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorSecond, 
-                Interval::MajorThird, 
-                Interval::PerfectFourth, 
-                Interval::PerfectFifth, 
-                Interval::MajorSixth, 
-                Interval::MinorSeventh
+                Interval::PerfectUnison,
+                Interval::MajorSecond,
+                Interval::MajorThird,
+                Interval::PerfectFourth,
+                Interval::PerfectFifth,
+                Interval::MajorSixth,
+                Interval::MinorSeventh,
             ],
             KnownChord::MinorMajor7 => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorSecond, 
-                Interval::MinorThird, 
-                Interval::PerfectFourth, 
-                Interval::PerfectFifth, 
-                Interval::MajorSixth, 
-                Interval::MajorSeventh
+                Interval::PerfectUnison,
+                Interval::MajorSecond,
+                Interval::MinorThird,
+                Interval::PerfectFourth,
+                Interval::PerfectFifth,
+                Interval::MajorSixth,
+                Interval::MajorSeventh,
             ],
             KnownChord::MinorDominant(_) => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorSecond, 
-                Interval::MinorThird, 
-                Interval::PerfectFourth, 
-                Interval::PerfectFifth, 
-                Interval::MajorSixth, 
-                Interval::MinorSeventh
+                Interval::PerfectUnison,
+                Interval::MajorSecond,
+                Interval::MinorThird,
+                Interval::PerfectFourth,
+                Interval::PerfectFifth,
+                Interval::MajorSixth,
+                Interval::MinorSeventh,
             ],
             KnownChord::DominantSharp11(_) => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorSecond, 
-                Interval::MajorThird, 
-                Interval::AugmentedFourth, 
-                Interval::PerfectFifth, 
-                Interval::MajorSixth, 
-                Interval::MinorSeventh
+                Interval::PerfectUnison,
+                Interval::MajorSecond,
+                Interval::MajorThird,
+                Interval::AugmentedFourth,
+                Interval::PerfectFifth,
+                Interval::MajorSixth,
+                Interval::MinorSeventh,
             ],
             KnownChord::Augmented => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorSecond, 
-                Interval::MajorThird, 
-                Interval::PerfectFourth, 
-                Interval::AugmentedFifth, 
+                Interval::PerfectUnison,
+                Interval::MajorSecond,
+                Interval::MajorThird,
+                Interval::PerfectFourth,
+                Interval::AugmentedFifth,
                 Interval::MajorSixth,
-                Interval::MajorSeventh
+                Interval::MajorSeventh,
             ],
             KnownChord::AugmentedMajor7 => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorSecond, 
-                Interval::MajorThird, 
-                Interval::AugmentedFourth, 
-                Interval::AugmentedFifth, 
+                Interval::PerfectUnison,
+                Interval::MajorSecond,
+                Interval::MajorThird,
+                Interval::AugmentedFourth,
+                Interval::AugmentedFifth,
                 Interval::MajorSixth,
-                Interval::MajorSeventh
+                Interval::MajorSeventh,
             ],
             KnownChord::AugmentedDominant(_) => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorSecond, 
-                Interval::MajorThird, 
-                Interval::AugmentedFourth, 
+                Interval::PerfectUnison,
+                Interval::MajorSecond,
+                Interval::MajorThird,
+                Interval::AugmentedFourth,
                 Interval::AugmentedFifth,
-                Interval::AugmentedSixth
+                Interval::AugmentedSixth,
             ],
-            KnownChord::HalfDiminished(_ ) => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorSecond, 
-                Interval::MinorThird, 
-                Interval::PerfectFourth, 
-                Interval::DiminishedFifth, 
-                Interval::MinorSixth, 
-                Interval::MinorSeventh
+            KnownChord::HalfDiminished(_) => vec![
+                Interval::PerfectUnison,
+                Interval::MajorSecond,
+                Interval::MinorThird,
+                Interval::PerfectFourth,
+                Interval::DiminishedFifth,
+                Interval::MinorSixth,
+                Interval::MinorSeventh,
             ],
             KnownChord::Diminished => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorSecond, 
-                Interval::MinorThird, 
-                Interval::PerfectFourth, 
-                Interval::DiminishedFifth, 
-                Interval::MinorSixth, 
+                Interval::PerfectUnison,
+                Interval::MajorSecond,
+                Interval::MinorThird,
+                Interval::PerfectFourth,
+                Interval::DiminishedFifth,
+                Interval::MinorSixth,
                 Interval::DiminishedSeventh,
-                Interval::MajorSeventh
+                Interval::MajorSeventh,
             ],
             KnownChord::DominantFlat9(_) => vec![
-                Interval::PerfectUnison, 
-                Interval::MinorSecond, 
-                Interval::MinorThird,
-                Interval::MajorThird,
-                Interval::AugmentedFourth, 
-                Interval::PerfectFifth, 
-                Interval::MajorSixth, 
-                Interval::MinorSeventh
-            ],
-            KnownChord::DominantSharp9(_) => vec![
-                Interval::PerfectUnison, 
+                Interval::PerfectUnison,
                 Interval::MinorSecond,
                 Interval::MinorThird,
-                Interval::DiminishedFourth, 
-                Interval::DiminishedFifth, 
+                Interval::MajorThird,
+                Interval::AugmentedFourth,
+                Interval::PerfectFifth,
+                Interval::MajorSixth,
+                Interval::MinorSeventh,
+            ],
+            KnownChord::DominantSharp9(_) => vec![
+                Interval::PerfectUnison,
+                Interval::MinorSecond,
+                Interval::MinorThird,
+                Interval::DiminishedFourth,
+                Interval::DiminishedFifth,
                 Interval::MinorSixth,
-                Interval::MinorSeventh
+                Interval::MinorSeventh,
             ],
         }
     }
@@ -223,90 +227,26 @@ impl HasRelativeChord for KnownChord {
     fn relative_chord(&self) -> Vec<Interval> {
         match self {
             KnownChord::Unknown => unreachable!(),
-            KnownChord::Major => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorThird, 
-                Interval::PerfectFifth
-            ],
-            KnownChord::Minor => vec![
-                Interval::PerfectUnison, 
-                Interval::MinorThird, 
-                Interval::PerfectFifth
-            ],
-            KnownChord::Major7 => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorThird, 
-                Interval::PerfectFifth, 
-                Interval::MajorSeventh
-            ],
-            KnownChord::Dominant(_) => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorThird, 
-                Interval::PerfectFifth, 
-                Interval::MinorSeventh
-            ],
-            KnownChord::MinorMajor7 => vec![
-                Interval::PerfectUnison, 
-                Interval::MinorThird, 
-                Interval::PerfectFifth, 
-                Interval::MajorSeventh
-            ],
-            KnownChord::MinorDominant(_) => vec![
-                Interval::PerfectUnison, 
-                Interval::MinorThird, 
-                Interval::PerfectFifth, 
-                Interval::MinorSeventh
-            ],
+            KnownChord::Major => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth],
+            KnownChord::Minor => vec![Interval::PerfectUnison, Interval::MinorThird, Interval::PerfectFifth],
+            KnownChord::Major7 => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth, Interval::MajorSeventh],
+            KnownChord::Dominant(_) => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth, Interval::MinorSeventh],
+            KnownChord::MinorMajor7 => vec![Interval::PerfectUnison, Interval::MinorThird, Interval::PerfectFifth, Interval::MajorSeventh],
+            KnownChord::MinorDominant(_) => vec![Interval::PerfectUnison, Interval::MinorThird, Interval::PerfectFifth, Interval::MinorSeventh],
             KnownChord::DominantSharp11(_) => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorThird, 
-                Interval::PerfectFifth, 
+                Interval::PerfectUnison,
+                Interval::MajorThird,
+                Interval::PerfectFifth,
                 Interval::MinorSeventh,
-                Interval::AugmentedEleventh
+                Interval::AugmentedEleventh,
             ],
-            KnownChord::Augmented => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorThird, 
-                Interval::AugmentedFifth
-            ],
-            KnownChord::AugmentedMajor7 => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorThird, 
-                Interval::AugmentedFifth, 
-                Interval::MajorSeventh
-            ],
-            KnownChord::AugmentedDominant(_) => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorThird, 
-                Interval::AugmentedFifth, 
-                Interval::MinorSeventh
-            ],
-            KnownChord::HalfDiminished(_) => vec![
-                Interval::PerfectUnison, 
-                Interval::MinorThird, 
-                Interval::DiminishedFifth, 
-                Interval::MinorSeventh
-            ],
-            KnownChord::Diminished => vec![
-                Interval::PerfectUnison, 
-                Interval::MinorThird, 
-                Interval::DiminishedFifth, 
-                Interval::DiminishedSeventh
-            ],
-            KnownChord::DominantFlat9(_) => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorThird, 
-                Interval::PerfectFifth, 
-                Interval::MinorSeventh,
-                Interval::MinorNinth
-            ],
-            KnownChord::DominantSharp9(_) => vec![
-                Interval::PerfectUnison, 
-                Interval::MajorThird, 
-                Interval::PerfectFifth, 
-                Interval::MinorSeventh,
-                Interval::AugmentedNinth
-            ],
+            KnownChord::Augmented => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::AugmentedFifth],
+            KnownChord::AugmentedMajor7 => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::AugmentedFifth, Interval::MajorSeventh],
+            KnownChord::AugmentedDominant(_) => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::AugmentedFifth, Interval::MinorSeventh],
+            KnownChord::HalfDiminished(_) => vec![Interval::PerfectUnison, Interval::MinorThird, Interval::DiminishedFifth, Interval::MinorSeventh],
+            KnownChord::Diminished => vec![Interval::PerfectUnison, Interval::MinorThird, Interval::DiminishedFifth, Interval::DiminishedSeventh],
+            KnownChord::DominantFlat9(_) => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth, Interval::MinorSeventh, Interval::MinorNinth],
+            KnownChord::DominantSharp9(_) => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth, Interval::MinorSeventh, Interval::AugmentedNinth],
         }
     }
 }

@@ -1,9 +1,11 @@
 use std::ops::Add;
 
-use crate::{pitch::{HasPitch, Pitch}, base::HasStaticName};
+use crate::{
+    base::HasStaticName,
+    pitch::{HasPitch, Pitch},
+};
 
 // Traits.
-
 
 /// A trait for types that have a named pitch.
 pub trait HasNamedPitch {
@@ -20,7 +22,7 @@ pub trait HasLetter {
 // Enum.
 
 /// An enum representing named pitch.
-/// 
+///
 /// A [`NamedPitch`] is a pitch that has a name, such as `C` or `F♯`.
 /// While a [`Pitch`] is a pitch that has a frequency, a [`NamedPitch`] is a pitch that has an
 /// enharmonic name (could share the same pitch with another).
@@ -253,7 +255,7 @@ impl HasPitch for NamedPitch {
             NamedPitch::A => Pitch::A,
             NamedPitch::E => Pitch::E,
             NamedPitch::B => Pitch::B,
-            
+
             NamedPitch::FSharp => Pitch::FSharp,
             NamedPitch::CSharp => Pitch::CSharp,
             NamedPitch::GSharp => Pitch::GSharp,
@@ -332,7 +334,6 @@ static ALL_PITCHES: [NamedPitch; 49] = [
     NamedPitch::ATripleFlat,
     NamedPitch::ETripleFlat,
     NamedPitch::BTripleFlat,
-
     NamedPitch::FDoubleFlat,
     NamedPitch::CDoubleFlat,
     NamedPitch::GDoubleFlat,
@@ -340,7 +341,6 @@ static ALL_PITCHES: [NamedPitch; 49] = [
     NamedPitch::ADoubleFlat,
     NamedPitch::EDoubleFlat,
     NamedPitch::BDoubleFlat,
-
     NamedPitch::FFlat,
     NamedPitch::CFlat,
     NamedPitch::GFlat,
@@ -348,7 +348,6 @@ static ALL_PITCHES: [NamedPitch; 49] = [
     NamedPitch::AFlat,
     NamedPitch::EFlat,
     NamedPitch::BFlat,
-
     NamedPitch::F,
     NamedPitch::C,
     NamedPitch::G,
@@ -356,7 +355,6 @@ static ALL_PITCHES: [NamedPitch; 49] = [
     NamedPitch::A,
     NamedPitch::E,
     NamedPitch::B,
-
     NamedPitch::FSharp,
     NamedPitch::CSharp,
     NamedPitch::GSharp,
@@ -364,7 +362,6 @@ static ALL_PITCHES: [NamedPitch; 49] = [
     NamedPitch::ASharp,
     NamedPitch::ESharp,
     NamedPitch::BSharp,
-
     NamedPitch::FDoubleSharp,
     NamedPitch::CDoubleSharp,
     NamedPitch::GDoubleSharp,
@@ -372,7 +369,6 @@ static ALL_PITCHES: [NamedPitch; 49] = [
     NamedPitch::ADoubleSharp,
     NamedPitch::EDoubleSharp,
     NamedPitch::BDoubleSharp,
-
     NamedPitch::FTripleSharp,
     NamedPitch::CTripleSharp,
     NamedPitch::GTripleSharp,
@@ -387,7 +383,7 @@ static ALL_PITCHES: [NamedPitch; 49] = [
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{note::*};
+    use crate::note::*;
 
     #[test]
     #[should_panic]

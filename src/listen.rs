@@ -1,14 +1,23 @@
-use std::{sync::{Arc, Mutex}, time::Duration};
+use std::{
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
 use anyhow::Context;
-use cpal::{traits::{HostTrait, StreamTrait}, InputCallbackInfo};
+use cpal::{
+    traits::{HostTrait, StreamTrait},
+    InputCallbackInfo,
+};
 use rodio::DeviceTrait;
 
 use std::{collections::HashMap, ops::Deref};
 
-use rustfft::{FftPlanner, num_complex::{Complex, ComplexFloat}};
+use rustfft::{
+    num_complex::{Complex, ComplexFloat},
+    FftPlanner,
+};
 
-use crate::{note::{ALL_PITCH_NOTES_WITH_FREQUENCY, HasPrimaryHarmonicSeries}};
+use crate::note::{HasPrimaryHarmonicSeries, ALL_PITCH_NOTES_WITH_FREQUENCY};
 
 use crate::{base::Res, note::Note, pitch::HasFrequency};
 
@@ -19,13 +28,13 @@ pub async fn get_notes_from_microphone(length_in_seconds: u8) -> Res<Vec<Note>> 
     }
 
     // Set up devices and systems.
-    
+
     let (device, config) = get_device_and_config()?;
 
     // Record audio from the microphone.
 
     let data_from_microphone = record_from_device(device, config, length_in_seconds).await?;
-    
+
     // Get notes.
 
     let result = get_notes_from_audio_data(&data_from_microphone, length_in_seconds)?;
@@ -44,35 +53,33 @@ pub fn get_notes_from_audio_data(data: &[f32], length_in_seconds: u8) -> Res<Vec
     }
 
     let num_samples = data.len();
-    
+
     // Perform the FFT.
 
     let mut planner = FftPlanner::new();
     let fft = planner.plan_fft_forward(num_samples);
 
-    let mut buffer = data.into_iter().map(|n| Complex::new(*n, 0.0)).collect::<Vec<_>>();
+    let mut buffer = data.iter().map(|n| Complex::new(*n, 0.0)).collect::<Vec<_>>();
     fft.process(&mut buffer);
 
-    let frequency_space = buffer.into_iter().enumerate()
-        .map(|(k, d)| (k as f32 / length_in_seconds as f32, d.abs()))
-        .collect::<Vec<_>>();
+    let frequency_space = buffer.into_iter().enumerate().map(|(k, d)| (k as f32 / length_in_seconds as f32, d.abs())).collect::<Vec<_>>();
 
     // Smooth the frequency space.
 
     let smoothed_frequency_space = get_smoothed_frequency_space(&frequency_space, length_in_seconds);
     //plot_frequency_space(&smoothed_frequency_space, "frequency_space", 100f32, 1000f32);
-    
+
     // Translate the frequency space into a "peak space" (dampen values that are not the "peak" of a specified window).
 
     let peak_space = translate_frequency_space_to_peak_space(&smoothed_frequency_space);
     //plot_frequency_space(&peak_space, "peak_space", 100f32, 1000f32);
-    
+
     // Bucket top N bins into their proper notes, and keep "magnitude".
 
     let best_notes = get_likely_notes_from_peak_space(&peak_space, 12);
 
     // Fold the harmonic series into the core notes.
-    
+
     let result = reduce_notes_by_harmonic_series(&best_notes);
 
     Ok(result)
@@ -82,11 +89,9 @@ pub fn get_notes_from_audio_data(data: &[f32], length_in_seconds: u8) -> Res<Vec
 fn get_device_and_config() -> Res<(cpal::Device, cpal::SupportedStreamConfig)> {
     let host = cpal::default_host();
 
-    let device = host
-        .default_input_device().ok_or_else(|| anyhow::Error::msg("Failed to get default input device."))?;
+    let device = host.default_input_device().ok_or_else(|| anyhow::Error::msg("Failed to get default input device."))?;
 
-    let config = device
-        .default_input_config().context("Could not get default input config.")?;
+    let config = device.default_input_config().context("Could not get default input config.")?;
 
     Ok((device, config))
 }
@@ -103,11 +108,15 @@ async fn record_from_device(device: cpal::Device, config: cpal::SupportedStreamC
         let result = data_from_microphone.clone();
         let last_error = last_error.clone();
 
-        device.build_input_stream::<f32, _, _>(&config.into(), move |data: &[_], _: &InputCallbackInfo| {
-            result.lock().unwrap().extend_from_slice(data);
-        }, move |err| {
-            last_error.lock().unwrap().replace(err);
-        })?
+        device.build_input_stream::<f32, _, _>(
+            &config.into(),
+            move |data: &[_], _: &InputCallbackInfo| {
+                result.lock().unwrap().extend_from_slice(data);
+            },
+            move |err| {
+                last_error.lock().unwrap().replace(err);
+            },
+        )?
     };
 
     // Begin recording.
@@ -129,13 +138,13 @@ async fn record_from_device(device: cpal::Device, config: cpal::SupportedStreamC
 
 /// Get likely notes from the peak space.
 fn get_likely_notes_from_peak_space(peak_space: &[(f32, f32)], count: usize) -> Vec<(Note, f32)> {
-    let mut peak_space = peak_space.iter().filter(|(_,m)|*m > 0.1).copied().collect::<Vec<_>>();
+    let mut peak_space = peak_space.iter().filter(|(_, m)| *m > 0.1).copied().collect::<Vec<_>>();
     peak_space.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
     let mut candidates = HashMap::new();
 
     for (frequency, magnitude) in peak_space.iter().take(count) {
-        if let Some(pair) = binary_search_closest(ALL_PITCH_NOTES_WITH_FREQUENCY.deref(),  *frequency, |t| t.1) {
+        if let Some(pair) = binary_search_closest(ALL_PITCH_NOTES_WITH_FREQUENCY.deref(), *frequency, |t| t.1) {
             let note = pair.0;
             let entry = candidates.entry(note).or_insert(*magnitude);
             *entry += magnitude;
@@ -151,9 +160,9 @@ fn get_smoothed_frequency_space(frequency_space: &[(f32, f32)], length_in_second
     let size = length_in_seconds as usize;
 
     for k in (0..frequency_space.len()).step_by(size) {
-        let average_frequency = frequency_space[k..k+size].iter().map(|(f, _)| f).sum::<f32>() / size as f32;
-        let average_magnitude= frequency_space[k..k+size].iter().map(|(_, m)| m).sum::<f32>() / size as f32;
-        
+        let average_frequency = frequency_space[k..k + size].iter().map(|(f, _)| f).sum::<f32>() / size as f32;
+        let average_magnitude = frequency_space[k..k + size].iter().map(|(_, m)| m).sum::<f32>() / size as f32;
+
         smoothed_frequency_space.push((average_frequency, average_magnitude));
     }
 
@@ -202,7 +211,7 @@ fn reduce_notes_by_harmonic_series(notes: &[(Note, f32)]) -> Vec<Note> {
 }
 
 /// Translate the frequency space into a "peak space".
-/// 
+///
 /// Returns a vector of (frequency, magnitude) pair peaks sorted from largest magnitude to smallest.
 fn translate_frequency_space_to_peak_space(frequency_space: &[(f32, f32)]) -> Vec<(f32, f32)> {
     // Dividing the frequency by 32.5 yields roughly 1/3 the distance between a note and the note one semitone away, which is the window size we want
@@ -215,20 +224,17 @@ fn translate_frequency_space_to_peak_space(frequency_space: &[(f32, f32)]) -> Ve
     let mut peak_space = frequency_space.to_vec();
 
     // Find maximum peaks in the window.
-    
+
     let mut last_k = min_index;
     let mut k = min_index;
     while k < max_index {
         let window_size = (frequency_space[k].0 / magic_window_number) as usize;
 
-        let max_in_window = (k..k + window_size)
-            .map(|i| frequency_space[i].1)
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap_or_default();
+        let max_in_window = (k..k + window_size).map(|i| frequency_space[i].1).max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap_or_default();
 
         peak_space[k] = (peak_space[k].0, peak_space[k].1);
 
-        let mut next =  0;
+        let mut next = 0;
         for j in k..(k + window_size) {
             if frequency_space[j].1 == max_in_window {
                 peak_space[j] = (peak_space[j].0, peak_space[j].1);
@@ -239,7 +245,7 @@ fn translate_frequency_space_to_peak_space(frequency_space: &[(f32, f32)]) -> Ve
         }
 
         k = next;
-        
+
         if last_k == k {
             k += 1;
         }
@@ -271,7 +277,7 @@ fn translate_frequency_space_to_peak_space(frequency_space: &[(f32, f32)]) -> Ve
 }
 
 /// Perform a binary search of an array to find the the element that is closest to the target as defined by a closure.
-/// 
+///
 /// The array must be sorted in ascending order.
 fn binary_search_closest<T, F>(array: &[T], target: f32, mut get_value: F) -> Option<&T>
 where
@@ -318,9 +324,7 @@ fn plot_frequency_space(frequency_space: &[(f32, f32)], name: &'static str, x_mi
     use plotters::prelude::*;
 
     let max = frequency_space.iter().map(|(_, d)| d).max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
-    let normalized_frequency_space = frequency_space.iter().map(|(f, m)| {
-        (f, m / max)
-    }).collect::<Vec<_>>();
+    let normalized_frequency_space = frequency_space.iter().map(|(f, m)| (f, m / max)).collect::<Vec<_>>();
 
     let file_name = format!("{}.png", name);
     let root = BitMapBackend::new(&file_name, (1920, 1080)).into_drawing_area();
@@ -331,7 +335,8 @@ fn plot_frequency_space(frequency_space: &[(f32, f32)], name: &'static str, x_mi
         .margin(5)
         .x_label_area_size(30)
         .y_label_area_size(30)
-        .build_cartesian_2d(x_min..x_max, 0f32..1f32).unwrap();
+        .build_cartesian_2d(x_min..x_max, 0f32..1f32)
+        .unwrap();
 
     chart.configure_mesh().draw().unwrap();
 
@@ -344,7 +349,7 @@ fn plot_frequency_space(frequency_space: &[(f32, f32)], name: &'static str, x_mi
 mod tests {
     use std::{fs::File, io::Read};
 
-    use crate::{chord::Chord, base::Parsable, note::Note};
+    use crate::{base::Parsable, chord::Chord, note::Note};
 
     #[test]
     fn test_listen() {
@@ -358,9 +363,7 @@ mod tests {
         file.read_exact(&mut buffer).unwrap();
 
         // Convert the buffer to a vector of f32
-        let data: Vec<f32> = unsafe {
-            std::slice::from_raw_parts(buffer.as_ptr() as *const f32, element_count).to_vec()
-        };
+        let data: Vec<f32> = unsafe { std::slice::from_raw_parts(buffer.as_ptr() as *const f32, element_count).to_vec() };
 
         let notes = Note::from_audio(&data, 5).unwrap();
 
