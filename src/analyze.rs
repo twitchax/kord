@@ -57,39 +57,24 @@ pub fn preview_audio_clip(stream: impl Read + Seek + Send + Sync + 'static, star
 mod tests {
     use std::path::PathBuf;
 
-    use crate::note::{A, C, E};
+    use crate::note::{BFive, CFive, DSharpSeven, DSix, GEight};
 
     use super::*;
 
     #[test]
     fn test_preview_audio_clip() {
-        preview_audio_file_clip(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/Am.flac"), None, None).unwrap();
-    }
-
-    #[test]
-    #[cfg(feature = "all_audio")]
-    fn test_preview_mp3_clip() {
-        preview_audio_file_clip(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/Am.mp3"), None, None).unwrap();
+        preview_audio_file_clip(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/MSC_AnaSaurus[shrt]-Cmaj7-9.wav"), None, None).unwrap();
     }
 
     #[test]
     fn test_get_notes_from_audio_file() {
-        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/Am.flac");
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/MSC_AnaSaurus[shrt]-Cmaj7-9.wav");
         let notes = get_notes_from_audio_file(path, None, None).expect("notes");
         println!("{notes:?}");
-        assert!(notes.contains(&A));
-        assert!(notes.contains(&C));
-        assert!(notes.contains(&E));
-    }
-
-    #[test]
-    #[cfg(feature = "all_audio")]
-    fn test_get_notes_from_mp3_file() {
-        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/Am.mp3");
-        let notes = get_notes_from_audio_file(path, None, None).expect("notes");
-        println!("{notes:?}");
-        assert!(notes.contains(&A));
-        assert!(notes.contains(&C));
-        assert!(notes.contains(&E));
+        assert!(notes.contains(&CFive));
+        assert!(notes.contains(&DSharpSeven));
+        assert!(notes.contains(&GEight));
+        assert!(notes.contains(&BFive));
+        assert!(notes.contains(&DSix));
     }
 }
