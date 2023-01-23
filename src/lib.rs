@@ -54,3 +54,6 @@ pub use rodio;
 
 #[cfg(feature = "audio")]
 pub mod listen;
+
+#[cfg(feature = "audio")]
+pub mod analyze;
