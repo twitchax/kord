@@ -228,12 +228,12 @@ impl HasPitch for NamedPitch {
             NamedPitch::CTripleFlat => Pitch::A,
             NamedPitch::GTripleFlat => Pitch::E,
             NamedPitch::DTripleFlat => Pitch::B,
-            NamedPitch::ATripleFlat => Pitch::FSharp,
-            NamedPitch::ETripleFlat => Pitch::CSharp,
-            NamedPitch::BTripleFlat => Pitch::GSharp,
+            NamedPitch::ATripleFlat => Pitch::GFlat,
+            NamedPitch::ETripleFlat => Pitch::DFlat,
+            NamedPitch::BTripleFlat => Pitch::AFlat,
 
-            NamedPitch::FDoubleFlat => Pitch::DSharp,
-            NamedPitch::CDoubleFlat => Pitch::ASharp,
+            NamedPitch::FDoubleFlat => Pitch::EFlat,
+            NamedPitch::CDoubleFlat => Pitch::BFlat,
             NamedPitch::GDoubleFlat => Pitch::F,
             NamedPitch::DDoubleFlat => Pitch::C,
             NamedPitch::ADoubleFlat => Pitch::G,
@@ -242,11 +242,11 @@ impl HasPitch for NamedPitch {
 
             NamedPitch::FFlat => Pitch::E,
             NamedPitch::CFlat => Pitch::B,
-            NamedPitch::GFlat => Pitch::FSharp,
-            NamedPitch::DFlat => Pitch::CSharp,
-            NamedPitch::AFlat => Pitch::GSharp,
-            NamedPitch::EFlat => Pitch::DSharp,
-            NamedPitch::BFlat => Pitch::ASharp,
+            NamedPitch::GFlat => Pitch::GFlat,
+            NamedPitch::DFlat => Pitch::DFlat,
+            NamedPitch::AFlat => Pitch::AFlat,
+            NamedPitch::EFlat => Pitch::EFlat,
+            NamedPitch::BFlat => Pitch::BFlat,
 
             NamedPitch::F => Pitch::F,
             NamedPitch::C => Pitch::C,
@@ -256,11 +256,11 @@ impl HasPitch for NamedPitch {
             NamedPitch::E => Pitch::E,
             NamedPitch::B => Pitch::B,
 
-            NamedPitch::FSharp => Pitch::FSharp,
-            NamedPitch::CSharp => Pitch::CSharp,
-            NamedPitch::GSharp => Pitch::GSharp,
-            NamedPitch::DSharp => Pitch::DSharp,
-            NamedPitch::ASharp => Pitch::ASharp,
+            NamedPitch::FSharp => Pitch::GFlat,
+            NamedPitch::CSharp => Pitch::DFlat,
+            NamedPitch::GSharp => Pitch::AFlat,
+            NamedPitch::DSharp => Pitch::EFlat,
+            NamedPitch::ASharp => Pitch::BFlat,
             NamedPitch::ESharp => Pitch::F,
             NamedPitch::BSharp => Pitch::C,
 
@@ -269,12 +269,12 @@ impl HasPitch for NamedPitch {
             NamedPitch::GDoubleSharp => Pitch::A,
             NamedPitch::DDoubleSharp => Pitch::E,
             NamedPitch::ADoubleSharp => Pitch::B,
-            NamedPitch::EDoubleSharp => Pitch::FSharp,
-            NamedPitch::BDoubleSharp => Pitch::CSharp,
+            NamedPitch::EDoubleSharp => Pitch::GFlat,
+            NamedPitch::BDoubleSharp => Pitch::DFlat,
 
-            NamedPitch::FTripleSharp => Pitch::GSharp,
-            NamedPitch::CTripleSharp => Pitch::DSharp,
-            NamedPitch::GTripleSharp => Pitch::ASharp,
+            NamedPitch::FTripleSharp => Pitch::AFlat,
+            NamedPitch::CTripleSharp => Pitch::EFlat,
+            NamedPitch::GTripleSharp => Pitch::BFlat,
             NamedPitch::DTripleSharp => Pitch::F,
             NamedPitch::ATripleSharp => Pitch::C,
             NamedPitch::ETripleSharp => Pitch::G,
@@ -309,16 +309,16 @@ impl From<&Pitch> for NamedPitch {
     fn from(pitch: &Pitch) -> Self {
         match pitch {
             Pitch::C => NamedPitch::C,
-            Pitch::CSharp => NamedPitch::CSharp,
+            Pitch::DFlat => NamedPitch::DFlat,
             Pitch::D => NamedPitch::D,
-            Pitch::DSharp => NamedPitch::DSharp,
+            Pitch::EFlat => NamedPitch::EFlat,
             Pitch::E => NamedPitch::E,
             Pitch::F => NamedPitch::F,
-            Pitch::FSharp => NamedPitch::FSharp,
+            Pitch::GFlat => NamedPitch::GFlat,
             Pitch::G => NamedPitch::G,
-            Pitch::GSharp => NamedPitch::GSharp,
+            Pitch::AFlat => NamedPitch::AFlat,
             Pitch::A => NamedPitch::A,
-            Pitch::ASharp => NamedPitch::ASharp,
+            Pitch::BFlat => NamedPitch::BFlat,
             Pitch::B => NamedPitch::B,
         }
     }
@@ -384,6 +384,7 @@ static ALL_PITCHES: [NamedPitch; 49] = [
 mod tests {
     use super::*;
     use crate::note::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     #[should_panic]
@@ -400,26 +401,26 @@ mod tests {
     fn test_pitch_conversion() {
         assert_eq!(NamedPitch::from(Pitch::C), NamedPitch::C);
         assert_eq!(NamedPitch::from(&Pitch::C), NamedPitch::C);
-        assert_eq!(NamedPitch::from(Pitch::CSharp), NamedPitch::CSharp);
-        assert_eq!(NamedPitch::from(&Pitch::CSharp), NamedPitch::CSharp);
+        assert_eq!(NamedPitch::from(Pitch::DFlat), NamedPitch::DFlat);
+        assert_eq!(NamedPitch::from(&Pitch::DFlat), NamedPitch::DFlat);
         assert_eq!(NamedPitch::from(Pitch::D), NamedPitch::D);
         assert_eq!(NamedPitch::from(&Pitch::D), NamedPitch::D);
-        assert_eq!(NamedPitch::from(Pitch::DSharp), NamedPitch::DSharp);
-        assert_eq!(NamedPitch::from(&Pitch::DSharp), NamedPitch::DSharp);
+        assert_eq!(NamedPitch::from(Pitch::EFlat), NamedPitch::EFlat);
+        assert_eq!(NamedPitch::from(&Pitch::EFlat), NamedPitch::EFlat);
         assert_eq!(NamedPitch::from(Pitch::E), NamedPitch::E);
         assert_eq!(NamedPitch::from(&Pitch::E), NamedPitch::E);
         assert_eq!(NamedPitch::from(Pitch::F), NamedPitch::F);
         assert_eq!(NamedPitch::from(&Pitch::F), NamedPitch::F);
-        assert_eq!(NamedPitch::from(Pitch::FSharp), NamedPitch::FSharp);
-        assert_eq!(NamedPitch::from(&Pitch::FSharp), NamedPitch::FSharp);
+        assert_eq!(NamedPitch::from(Pitch::GFlat), NamedPitch::GFlat);
+        assert_eq!(NamedPitch::from(&Pitch::GFlat), NamedPitch::GFlat);
         assert_eq!(NamedPitch::from(Pitch::G), NamedPitch::G);
         assert_eq!(NamedPitch::from(&Pitch::G), NamedPitch::G);
-        assert_eq!(NamedPitch::from(Pitch::GSharp), NamedPitch::GSharp);
-        assert_eq!(NamedPitch::from(&Pitch::GSharp), NamedPitch::GSharp);
+        assert_eq!(NamedPitch::from(Pitch::AFlat), NamedPitch::AFlat);
+        assert_eq!(NamedPitch::from(&Pitch::AFlat), NamedPitch::AFlat);
         assert_eq!(NamedPitch::from(Pitch::A), NamedPitch::A);
         assert_eq!(NamedPitch::from(&Pitch::A), NamedPitch::A);
-        assert_eq!(NamedPitch::from(Pitch::ASharp), NamedPitch::ASharp);
-        assert_eq!(NamedPitch::from(&Pitch::ASharp), NamedPitch::ASharp);
+        assert_eq!(NamedPitch::from(Pitch::BFlat), NamedPitch::BFlat);
+        assert_eq!(NamedPitch::from(&Pitch::BFlat), NamedPitch::BFlat);
         assert_eq!(NamedPitch::from(Pitch::B), NamedPitch::B);
         assert_eq!(NamedPitch::from(&Pitch::B), NamedPitch::B);
     }

@@ -32,25 +32,25 @@ pub enum Pitch {
     /// The pitch C.
     C,
     /// The pitch C♯.
-    CSharp,
+    DFlat,
     /// The pitch D.
     D,
     /// The pitch D♯.
-    DSharp,
+    EFlat,
     /// The pitch E.
     E,
     /// The pitch F.
     F,
     /// The pitch F♯.
-    FSharp,
+    GFlat,
     /// The pitch G.
     G,
     /// The pitch G♯.
-    GSharp,
+    AFlat,
     /// The pitch A.
     A,
     /// The pitch A♯.
-    ASharp,
+    BFlat,
     /// The pitch B.
     B,
 }
@@ -62,16 +62,16 @@ impl HasBaseFrequency for Pitch {
     fn base_frequency(&self) -> f32 {
         match self {
             Pitch::C => 16.35,
-            Pitch::CSharp => 17.32,
+            Pitch::DFlat => 17.32,
             Pitch::D => 18.35,
-            Pitch::DSharp => 19.45,
+            Pitch::EFlat => 19.45,
             Pitch::E => 20.60,
             Pitch::F => 21.83,
-            Pitch::FSharp => 23.12,
+            Pitch::GFlat => 23.12,
             Pitch::G => 24.50,
-            Pitch::GSharp => 25.96,
+            Pitch::AFlat => 25.96,
             Pitch::A => 27.50,
-            Pitch::ASharp => 29.14,
+            Pitch::BFlat => 29.14,
             Pitch::B => 30.87,
         }
     }
@@ -83,21 +83,43 @@ impl HasPitch for Pitch {
     }
 }
 
+impl TryFrom<u8> for Pitch {
+    type Error = &'static str;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Pitch::C),
+            1 => Ok(Pitch::DFlat),
+            2 => Ok(Pitch::D),
+            3 => Ok(Pitch::EFlat),
+            4 => Ok(Pitch::E),
+            5 => Ok(Pitch::F),
+            6 => Ok(Pitch::GFlat),
+            7 => Ok(Pitch::G),
+            8 => Ok(Pitch::AFlat),
+            9 => Ok(Pitch::A),
+            10 => Ok(Pitch::BFlat),
+            11 => Ok(Pitch::B),
+            _ => Err("Invalid pitch"),
+        }
+    }
+}
+
 // Statics.
 
 pub(crate) static ALL_PITCHES: Lazy<[Pitch; 12]> = Lazy::new(|| {
     [
         Pitch::C,
-        Pitch::CSharp,
+        Pitch::DFlat,
         Pitch::D,
-        Pitch::DSharp,
+        Pitch::EFlat,
         Pitch::E,
         Pitch::F,
-        Pitch::FSharp,
+        Pitch::GFlat,
         Pitch::G,
-        Pitch::GSharp,
+        Pitch::AFlat,
         Pitch::A,
-        Pitch::ASharp,
+        Pitch::BFlat,
         Pitch::B,
     ]
 });

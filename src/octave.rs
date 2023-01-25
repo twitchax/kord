@@ -66,6 +66,19 @@ impl Add for Octave {
     }
 }
 
+impl TryFrom<u8> for Octave {
+    type Error = &'static str;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        if value > 10 {
+            Err("Octave overflow.")
+        } else {
+            // SAFETY: The new octave is guaranteed to be less than or equal to 10.
+            Ok(unsafe { std::mem::transmute(value) })
+        }
+    }
+}
+
 impl Add<i8> for Octave {
     type Output = Self;
 

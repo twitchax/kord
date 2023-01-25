@@ -23,17 +23,9 @@ use crate::{base::Res, note::Note, pitch::HasFrequency};
 
 #[no_coverage]
 pub async fn get_notes_from_microphone(length_in_seconds: u8) -> Res<Vec<Note>> {
-    if length_in_seconds < 1 {
-        return Err(anyhow::Error::msg("Listening length in seconds must be greater than 1."));
-    }
+    // Get data.
 
-    // Set up devices and systems.
-
-    let (device, config) = get_device_and_config()?;
-
-    // Record audio from the microphone.
-
-    let data_from_microphone = record_from_device(device, config, length_in_seconds).await?;
+    let data_from_microphone = get_audio_data_from_microphone(length_in_seconds).await?;
 
     // Get notes.
 
@@ -52,17 +44,7 @@ pub fn get_notes_from_audio_data(data: &[f32], length_in_seconds: u8) -> Res<Vec
         return Err(anyhow::Error::msg(format!("{} NaNs in audio data.", num_nan)));
     }
 
-    let num_samples = data.len();
-
-    // Perform the FFT.
-
-    let mut planner = FftPlanner::new();
-    let fft = planner.plan_fft_forward(num_samples);
-
-    let mut buffer = data.iter().map(|n| Complex::new(*n, 0.0)).collect::<Vec<_>>();
-    fft.process(&mut buffer);
-
-    let frequency_space = buffer.into_iter().enumerate().map(|(k, d)| (k as f32 / length_in_seconds as f32, d.abs())).collect::<Vec<_>>();
+    let frequency_space = get_frequency_space(data, length_in_seconds);
 
     // Smooth the frequency space.
 
@@ -83,6 +65,38 @@ pub fn get_notes_from_audio_data(data: &[f32], length_in_seconds: u8) -> Res<Vec
     let result = reduce_notes_by_harmonic_series(&best_notes);
 
     Ok(result)
+}
+
+/// Gets audio data from the microphone.
+pub async fn get_audio_data_from_microphone(length_in_seconds: u8) -> Res<Vec<f32>> {
+    if length_in_seconds < 1 {
+        return Err(anyhow::Error::msg("Listening length in seconds must be greater than 1."));
+    }
+
+    // Set up devices and systems.
+
+    let (device, config) = get_device_and_config()?;
+
+    // Record audio from the microphone.
+
+    let data_from_microphone = record_from_device(device, config, length_in_seconds).await?;
+
+    Ok(data_from_microphone)
+}
+
+/// Gets the frequency space from the audio data.
+pub fn get_frequency_space(data: &[f32], length_in_seconds: u8) -> Vec<(f32, f32)> {
+    let num_samples = data.len();
+
+    // Perform the FFT.
+
+    let mut planner = FftPlanner::new();
+    let fft = planner.plan_fft_forward(num_samples);
+
+    let mut buffer = data.iter().map(|n| Complex::new(*n, 0.0)).collect::<Vec<_>>();
+    fft.process(&mut buffer);
+
+    buffer.into_iter().enumerate().map(|(k, d)| (k as f32 / length_in_seconds as f32, d.abs())).collect::<Vec<_>>()
 }
 
 /// Gets the system device, and config.
@@ -155,7 +169,7 @@ fn get_likely_notes_from_peak_space(peak_space: &[(f32, f32)], count: usize) -> 
 }
 
 /// Calculates the "smoothed" frequency space by normalizing to 1.0 seconds of playback.
-fn get_smoothed_frequency_space(frequency_space: &[(f32, f32)], length_in_seconds: u8) -> Vec<(f32, f32)> {
+pub fn get_smoothed_frequency_space(frequency_space: &[(f32, f32)], length_in_seconds: u8) -> Vec<(f32, f32)> {
     let mut smoothed_frequency_space = Vec::new();
     let size = length_in_seconds as usize;
 

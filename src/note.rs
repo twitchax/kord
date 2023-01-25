@@ -118,6 +118,16 @@ pub trait HasPrimaryHarmonicSeries {
     fn primary_harmonic_series(self) -> Vec<Note>;
 }
 
+/// A trait which allows for encoding the note as a [`u128`] ID.
+pub trait HasNoteId {
+    /// Returns the ID of the note.
+    fn id(self) -> u128;
+
+    fn from_id(id: u128) -> Res<Self>
+    where
+        Self: Sized;
+}
+
 // Struct.
 
 /// A note type.
@@ -257,6 +267,33 @@ impl NoteRecreator for Note {
 impl HasPrimaryHarmonicSeries for Note {
     fn primary_harmonic_series(self) -> Vec<Self> {
         PRIMARY_HARMONIC_SERIES.iter().map(|interval| self + *interval).collect()
+    }
+}
+
+impl HasNoteId for Note {
+    fn id(self) -> u128 {
+        let mut shift = 0u8;
+
+        shift += 12 * self.octave as u8;
+        shift += self.named_pitch.pitch() as u8;
+
+        1 << shift
+    }
+
+    fn from_id(id: u128) -> Res<Self> {
+        let mut shift = 0u8;
+
+        while id >> shift != 1 {
+            shift += 1;
+        }
+
+        let octave_num = shift / 12;
+        let pitch_num = shift % 12;
+
+        let octave = Octave::try_from(octave_num).map_err(anyhow::Error::msg)?;
+        let pitch = Pitch::try_from(pitch_num).map_err(anyhow::Error::msg)?;
+
+        Ok(Self::new(NamedPitch::from(pitch), octave))
     }
 }
 
@@ -521,5 +558,23 @@ mod tests {
     #[test]
     fn test_harmonics() {
         assert_eq!(C.primary_harmonic_series(), vec![CFive, GFive, CSix, ESix, GSix, BFlatSix]);
+    }
+
+    #[test]
+    fn test_id() {
+        assert_eq!(CZero.id(), 1 << 0);
+        assert_eq!(CSharpZero.id(), 1 << 1);
+        assert_eq!(BZero.id(), 1 << 11);
+        assert_eq!(Note::parse("C1").unwrap().id(), 1 << 12);
+        assert_eq!(Note::parse("C#1").unwrap().id(), 1 << 13);
+        assert_eq!(Note::parse("Db1").unwrap().id(), 1 << 13);
+        assert_eq!(Note::parse("C4").unwrap().id(), 1 << 48);
+
+        assert_eq!(Note::from_id(1 << 0).unwrap(), CZero);
+        assert_eq!(Note::from_id(1 << 1).unwrap(), DFlatZero);
+        assert_eq!(Note::from_id(1 << 11).unwrap(), BZero);
+        assert_eq!(Note::from_id(1 << 12).unwrap(), Note::parse("C1").unwrap());
+        assert_eq!(Note::from_id(1 << 13).unwrap(), Note::parse("Db1").unwrap());
+        assert_eq!(Note::from_id(1 << 48).unwrap(), Note::parse("C4").unwrap());
     }
 }
