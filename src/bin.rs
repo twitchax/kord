@@ -1,8 +1,9 @@
-use std::time::Duration;
+use std::{path::PathBuf, time::Duration};
 
-use clap::{Parser, Subcommand};
+use clap::{ArgAction, Parser, Subcommand};
 use klib::{
-    base::{Parsable, Playable, Void},
+    analyze,
+    base::{Parsable, Playable, Res, Void},
     chord::{Chord, Chordable},
     note::Note,
     octave::Octave,
@@ -88,6 +89,22 @@ enum Command {
         #[arg(short, long, default_value_t = 5)]
         length: u8,
     },
+    /// Guess pitches and chords from the specified section of an audio file.
+    #[cfg(feature = "audio")]
+    Analyze {
+        /// Whether or not to play a preview of the selected section of the
+        /// audio file before analyzing.
+        #[arg(long = "no-preview", action=ArgAction::SetFalse, default_value_t = true)]
+        preview: bool,
+        /// How far into the file to begin analyzing, as understood by systemd.time(7)
+        #[arg(short, long)]
+        start_time: Option<String>,
+        /// How far into the file to stop analyzing, as understood by systemd.time(7)
+        #[arg(short, long)]
+        end_time: Option<String>,
+        /// The source file to listen to/analyze.
+        source: PathBuf,
+    },
 }
 
 fn main() -> Void {
@@ -146,13 +163,17 @@ fn start(args: Args) -> Void {
         Some(Command::Listen { length }) => {
             let notes = futures::executor::block_on(Note::from_listen(length))?;
 
-            println!("Notes: {}", notes.iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" "));
-
-            let candidates = Chord::from_notes(&notes)?;
-
-            for candidate in candidates {
-                describe(&candidate);
+            show_notes_and_chords(&notes)?;
+        }
+        #[cfg(feature = "audio")]
+        Some(Command::Analyze { preview, start_time, end_time, source }) => {
+            let start_time = if let Some(t) = start_time { Some(parse_duration0::parse(&t)?) } else { None };
+            let end_time = if let Some(t) = end_time { Some(parse_duration0::parse(&t)?) } else { None };
+            if preview {
+                analyze::preview_audio_file_clip(&source, start_time, end_time)?;
             }
+            let notes = analyze::get_notes_from_audio_file(&source, start_time, end_time)?;
+            show_notes_and_chords(&notes)?;
         }
         None => {
             println!("No command given.");
@@ -171,6 +192,21 @@ fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
     let _playable = chord.play(delay, length, fade_in)?;
     std::thread::sleep(Duration::from_secs_f32(length));
 
+    Ok(())
+}
+
+fn show_notes_and_chords(notes: &[Note]) -> Res<()> {
+    println!("Notes: {}", notes.iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" "));
+
+    let candidates = Chord::from_notes(notes)?;
+
+    if candidates.is_empty() {
+        println!("No chord candidates found");
+    } else {
+        for candidate in candidates {
+            describe(&candidate);
+        }
+    }
     Ok(())
 }
 

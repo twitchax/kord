@@ -57,7 +57,7 @@ pub fn preview_audio_clip(stream: impl Read + Seek + Send + Sync + 'static, star
 mod tests {
     use std::path::PathBuf;
 
-    use crate::note::{BFive, CFive, DSharpSeven, DSix, GEight};
+    use crate::note::{BFive, CFive, DSix, EFlatSeven, GEight};
 
     use super::*;
 
@@ -72,7 +72,7 @@ mod tests {
         let notes = get_notes_from_audio_file(path, None, None).expect("notes");
         println!("{notes:?}");
         assert!(notes.contains(&CFive));
-        assert!(notes.contains(&DSharpSeven));
+        assert!(notes.contains(&EFlatSeven));
         assert!(notes.contains(&GEight));
         assert!(notes.contains(&BFive));
         assert!(notes.contains(&DSix));
