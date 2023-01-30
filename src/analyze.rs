@@ -13,10 +13,8 @@ use crate::{base::Res, listen::get_notes_from_audio_data, note::Note};
 /// Retrieve a list of notes which are guessed from the given audio clip.
 pub fn get_notes_from_audio_file(file: impl AsRef<Path>, start: Option<Duration>, end: Option<Duration>) -> Res<Vec<Note>> {
     let path = file.as_ref();
-    let file = File::open(path)?;
     let start = start.unwrap_or_default();
-    let decoder = Decoder::new(file)?;
-    let decoder = decoder.skip_duration(start).convert_samples();
+    let decoder = Decoder::new(File::open(path)?)?.skip_duration(start).convert_samples();
     let sample_rate = decoder.sample_rate() as usize;
     let samples: Vec<_> = if let Some(end) = end { decoder.take_duration(end - start).collect() } else { decoder.collect() };
     let clip_length = sample_rate.div_ceil(samples.len()).try_into()?;
@@ -57,24 +55,33 @@ pub fn preview_audio_clip(stream: impl Read + Seek + Send + Sync + 'static, star
 mod tests {
     use std::path::PathBuf;
 
-    use crate::note::{BFive, CFive, DSix, EFlatSeven, GEight};
+    use crate::note::{AFour, EFour, CFour};
 
     use super::*;
 
     #[test]
     fn test_preview_audio_clip() {
-        preview_audio_file_clip(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/MSC_AnaSaurus[shrt]-Cmaj7-9.wav"), None, None).unwrap();
+        preview_audio_file_clip(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/test-Am.wav"), None, None).unwrap();
     }
 
     #[test]
     fn test_get_notes_from_audio_file() {
-        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/MSC_AnaSaurus[shrt]-Cmaj7-9.wav");
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/test-Am.wav");
         let notes = get_notes_from_audio_file(path, None, None).expect("notes");
         println!("{notes:?}");
-        assert!(notes.contains(&CFive));
-        assert!(notes.contains(&EFlatSeven));
-        assert!(notes.contains(&GEight));
-        assert!(notes.contains(&BFive));
-        assert!(notes.contains(&DSix));
+        assert!(notes.contains(&AFour));
+        assert!(notes.contains(&CFour));
+        assert!(notes.contains(&EFour));
+    }
+
+    #[cfg(feature="mp3")]
+    #[test]
+    fn test_get_notes_from_mp3_file() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/test-Am.mp3");
+        let notes = get_notes_from_audio_file(path, None, None).expect("notes");
+        println!("{notes:?}");
+        assert!(notes.contains(&AFour));
+        assert!(notes.contains(&CFour));
+        assert!(notes.contains(&EFour));
     }
 }
