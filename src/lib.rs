@@ -37,6 +37,7 @@
 #![feature(concat_idents)]
 #![feature(iter_advance_by)]
 #![feature(no_coverage)]
+#![feature(int_roundings)]
 
 pub mod base;
 pub mod chord;
@@ -54,3 +55,6 @@ pub use rodio;
 
 #[cfg(feature = "audio")]
 pub mod listen;
+
+#[cfg(feature = "audio")]
+pub mod analyze;
