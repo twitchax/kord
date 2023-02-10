@@ -7,7 +7,7 @@ use std::{
     ops::{Add, AddAssign},
 };
 
-use crate::{
+use crate::core::{
     base::{HasName, HasStaticName, Parsable, Res},
     chord::Chord,
     interval::{HasEnharmonicDistance, Interval, PRIMARY_HARMONIC_SERIES},

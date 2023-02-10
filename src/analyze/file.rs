@@ -8,7 +8,7 @@ use std::{
 
 use rodio::{buffer::SamplesBuffer, Decoder, OutputStream, Source};
 
-use crate::{base::Res, note::Note};
+use crate::core::{base::Res, note::Note};
 
 use super::base::get_notes_from_audio_data;
 
@@ -69,7 +69,7 @@ pub fn preview_audio_clip(stream: impl Read + Seek + Send + Sync + 'static, star
 
 #[cfg(test)]
 mod tests {
-    use crate::{base::Parsable, chord::Chord};
+    use crate::core::{base::Parsable, chord::Chord};
 
     use super::*;
 
@@ -82,7 +82,7 @@ mod tests {
     #[cfg(feature = "analyze_file")]
     #[test]
     fn test_get_notes_from_audio_file() {
-        let notes = dbg!(get_notes_from_audio_file("tests/C7b9.wav", None, None).unwrap());
+        let notes = get_notes_from_audio_file("tests/C7b9.wav", None, None).unwrap();
 
         assert_eq!(Chord::parse("C7b9").unwrap(), Chord::from_notes(&notes).unwrap()[0]);
     }

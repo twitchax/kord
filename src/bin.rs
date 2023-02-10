@@ -1,7 +1,7 @@
 use std::{path::PathBuf, time::Duration};
 
 use clap::{ArgAction, Parser, Subcommand};
-use klib::{
+use klib::core::{
     base::{Parsable, Playable, Res, Void},
     chord::{Chord, Chordable},
     note::Note,

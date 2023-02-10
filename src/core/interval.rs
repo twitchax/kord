@@ -1,6 +1,6 @@
 use once_cell::sync::Lazy;
 
-use crate::octave::{HasOctave, Octave};
+use crate::core::octave::{HasOctave, Octave};
 
 // Traits.
 

@@ -2,7 +2,7 @@ use std::{cmp::Ordering, collections::HashSet, fmt::Display, time::Duration};
 
 use pest::Parser;
 
-use crate::{
+use crate::core::{
     base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Playable, PlaybackHandle, Res},
     interval::Interval,
     known_chord::{HasRelativeChord, HasRelativeScale, KnownChord},
@@ -1246,7 +1246,7 @@ impl Playable for Chord {
 
 impl Default for Chord {
     fn default() -> Self {
-        Chord::new(crate::note::C)
+        Chord::new(super::note::C)
     }
 }
 
@@ -1255,7 +1255,7 @@ impl Default for Chord {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{note::*, octave::HasOctave};
+    use crate::core::{note::*, octave::HasOctave};
     use pretty_assertions::assert_eq;
 
     #[test]

@@ -1,6 +1,6 @@
 use once_cell::sync::Lazy;
 
-use crate::base::HasStaticName;
+use crate::core::base::HasStaticName;
 
 // Traits.
 

@@ -2,7 +2,7 @@ use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 use once_cell::sync::Lazy;
 
-use crate::base::HasStaticName;
+use crate::core::base::HasStaticName;
 
 // Traits.
 
@@ -181,7 +181,7 @@ pub(crate) static ALL_OCTAVES: Lazy<[Octave; 16]> = Lazy::new(|| {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::octave::HasOctave;
+    use crate::core::octave::HasOctave;
     use pretty_assertions::assert_eq;
 
     #[test]

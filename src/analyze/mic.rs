@@ -10,7 +10,7 @@ use cpal::{
 };
 use rodio::DeviceTrait;
 
-use crate::{
+use crate::core::{
     base::Res, note::Note,
 };
 
@@ -104,7 +104,7 @@ async fn record_from_device(device: cpal::Device, config: cpal::SupportedStreamC
 mod tests {
     use std::{fs::File, io::Read};
 
-    use crate::{base::Parsable, chord::Chord, note::Note};
+    use crate::core::{base::Parsable, chord::Chord, note::Note};
 
     #[test]
     fn test_mic() {

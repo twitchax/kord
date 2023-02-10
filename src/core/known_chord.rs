@@ -1,4 +1,4 @@
-use crate::{
+use crate::core::{
     base::{HasDescription, HasName, HasStaticName},
     interval::Interval,
     modifier::Degree,

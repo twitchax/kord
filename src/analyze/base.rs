@@ -5,9 +5,9 @@ use rustfft::{
     FftPlanner,
 };
 
-use crate::note::{HasPrimaryHarmonicSeries, ALL_PITCH_NOTES_WITH_FREQUENCY};
+use crate::core::note::{HasPrimaryHarmonicSeries, ALL_PITCH_NOTES_WITH_FREQUENCY};
 
-use crate::{base::Res, note::Note, pitch::HasFrequency};
+use crate::core::{base::Res, note::Note, pitch::HasFrequency};
 
 pub fn get_notes_from_audio_data(data: &[f32], length_in_seconds: u8) -> Res<Vec<Note>> {
     if length_in_seconds < 1 {

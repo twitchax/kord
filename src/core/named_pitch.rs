@@ -1,6 +1,6 @@
 use std::ops::Add;
 
-use crate::{
+use crate::core::{
     base::HasStaticName,
     pitch::{HasPitch, Pitch},
 };
@@ -383,7 +383,7 @@ static ALL_PITCHES: [NamedPitch; 49] = [
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::note::*;
+    use crate::core::note::*;
     use pretty_assertions::assert_eq;
 
     #[test]

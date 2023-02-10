@@ -1,6 +1,6 @@
 use pest_derive::Parser;
 
-use crate::{
+use crate::core::{
     base::Res,
     note::{self, Note},
     octave::Octave,
@@ -82,7 +82,7 @@ pub fn note_str_to_note(note_str: &str) -> Res<Note> {
         "G♭" => note::GFlat,
         "Gbb" => note::GDoubleFlat,
         "G𝄫" => note::GDoubleFlat,
-        _ => return Err(crate::base::Err::msg("Please use fairly standard notes (e.g., don't use triple sharps / flats).")),
+        _ => return Err(crate::core::base::Err::msg("Please use fairly standard notes (e.g., don't use triple sharps / flats).")),
     };
 
     Ok(chord)
@@ -102,7 +102,7 @@ pub fn octave_str_to_octave(note_str: &str) -> Res<Octave> {
         "7" => Octave::Seven,
         "8" => Octave::Eight,
         "9" => Octave::Nine,
-        _ => return Err(crate::base::Err::msg("Please use a valid octave (0 - 9).")),
+        _ => return Err(crate::core::base::Err::msg("Please use a valid octave (0 - 9).")),
     };
 
     Ok(octave)
