@@ -11,7 +11,6 @@ use crate::{
     base::{HasName, HasStaticName, Parsable, Res},
     chord::Chord,
     interval::{HasEnharmonicDistance, Interval, PRIMARY_HARMONIC_SERIES},
-    listen::{get_notes_from_audio_data, get_notes_from_microphone},
     named_pitch::{HasNamedPitch, NamedPitch},
     octave::{HasOctave, Octave, ALL_OCTAVES},
     parser::{note_str_to_note, octave_str_to_octave, ChordParser, Rule},
@@ -140,7 +139,7 @@ pub trait HasNoteId {
 }
 
 /// A trait which allows for converting a note to the same ovtave, but using universal [`Pitch`]es.
-/// 
+///
 /// Essentially, this would convert an F#4 into a Gb4, since [`Pitch`]es prefer the flats.
 pub trait ToUniversal {
     /// Converts this note to a universal pitch.
@@ -179,12 +178,16 @@ impl Note {
     ///
     /// Currently, this does not work with WASM.
     #[no_coverage]
-    pub async fn from_listen(length_in_seconds: u8) -> Res<Vec<Self>> {
+    #[cfg(feature = "analyze_mic")]
+    pub async fn from_mic(length_in_seconds: u8) -> Res<Vec<Self>> {
+        use crate::analyze::mic::get_notes_from_microphone;
         get_notes_from_microphone(length_in_seconds).await
     }
 
     /// Attempts to use the provided to identify the notes in the audio data.
+    #[cfg(feature = "analyze_base")]
     pub fn from_audio(data: &[f32], length_in_seconds: u8) -> Res<Vec<Self>> {
+        use crate::analyze::base::get_notes_from_audio_data;
         get_notes_from_audio_data(data, length_in_seconds)
     }
 }
@@ -317,14 +320,14 @@ impl HasNoteId for Note {
 
     fn id_mask(notes: &[Self]) -> u128
     where
-        Self: Sized
+        Self: Sized,
     {
         notes.iter().fold(0, |acc, note| acc | note.id())
     }
 
     fn from_id_mask(id_mask: u128) -> Res<Vec<Self>>
     where
-        Self: Sized
+        Self: Sized,
     {
         let mut notes = Vec::new();
         let mut shift = 0u8;
@@ -473,7 +476,7 @@ pub const BTripleSharp: Note = BTripleSharpFour;
 
 // Statics.
 
-pub(crate) static ALL_PITCH_NOTES: Lazy<[Note; 132]> = Lazy::new(|| {
+pub(crate) static ALL_PITCH_NOTES: Lazy<[Note; 192]> = Lazy::new(|| {
     let mut all_notes = Vec::with_capacity(132);
 
     for octave in ALL_OCTAVES.iter() {
@@ -488,7 +491,7 @@ pub(crate) static ALL_PITCH_NOTES: Lazy<[Note; 132]> = Lazy::new(|| {
     all_notes.try_into().unwrap()
 });
 
-pub(crate) static ALL_PITCH_NOTES_WITH_FREQUENCY: Lazy<[(Note, f32); 132]> = Lazy::new(|| {
+pub(crate) static ALL_PITCH_NOTES_WITH_FREQUENCY: Lazy<[(Note, f32); 192]> = Lazy::new(|| {
     let mut all_notes = Vec::with_capacity(132);
 
     for note in ALL_PITCH_NOTES.iter() {

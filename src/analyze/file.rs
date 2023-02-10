@@ -8,17 +8,29 @@ use std::{
 
 use rodio::{buffer::SamplesBuffer, Decoder, OutputStream, Source};
 
-use crate::{base::Res, listen::get_notes_from_audio_data, note::Note};
+use crate::{base::Res, note::Note};
+
+use super::base::get_notes_from_audio_data;
 
 /// Retrieve a list of notes which are guessed from the given audio clip.
 pub fn get_notes_from_audio_file(file: impl AsRef<Path>, start: Option<Duration>, end: Option<Duration>) -> Res<Vec<Note>> {
     let path = file.as_ref();
     let start = start.unwrap_or_default();
+
     let decoder = Decoder::new(File::open(path)?)?.skip_duration(start).convert_samples();
-    let sample_rate = decoder.sample_rate() as usize;
+    
+    let num_channels = decoder.channels();
+    let sample_rate = decoder.sample_rate();
     let samples: Vec<_> = if let Some(end) = end { decoder.take_duration(end - start).collect() } else { decoder.collect() };
-    let clip_length = sample_rate.div_ceil(samples.len()).try_into()?;
-    get_notes_from_audio_data(&samples, clip_length)
+
+    let num_samples = dbg!(samples.len());
+
+    let length_in_seconds = dbg!(num_samples as f32 / (sample_rate as f32 * num_channels as f32)) as u8;
+
+    // Cut the samples to the nearest second.
+    let samples = &samples[..(length_in_seconds as f32 * sample_rate as f32 * num_channels as f32) as usize];
+
+    get_notes_from_audio_data(samples, length_in_seconds)
 }
 
 /// Play the given segment of an audio file. Used to preview a clip before guessing notes from it.
@@ -30,9 +42,10 @@ pub fn preview_audio_file_clip(file: impl AsRef<Path>, start: Option<Duration>, 
 /// Play the given segment of an audio stream. Used to preview a clip before guessing notes from it.
 pub fn preview_audio_clip(stream: impl Read + Seek + Send + Sync + 'static, start: Option<Duration>, end: Option<Duration>) -> Res<()> {
     let start = start.unwrap_or_default();
-    let decoder = Decoder::new(stream)?;
-    let decoder = decoder.skip_duration(start).convert_samples();
+    let decoder = Decoder::new(stream)?.skip_duration(start).convert_samples();
+
     let (_stream, stream_handle) = OutputStream::try_default()?;
+
     if let Some(end) = end {
         stream_handle.play_raw(decoder.take_duration(end - start))?;
         sleep(end - start);
@@ -43,8 +56,11 @@ pub fn preview_audio_clip(stream: impl Read + Seek + Send + Sync + 'static, star
         let channels = decoder.channels();
         let sample_rate = decoder.sample_rate() as f32;
         let samples: Vec<_> = decoder.collect();
+
         let time = Duration::from_secs((samples.len() as f32 / sample_rate).ceil() as u64);
+
         stream_handle.play_raw(SamplesBuffer::new(channels, sample_rate as u32, samples))?;
+
         sleep(time);
     }
 
@@ -53,35 +69,30 @@ pub fn preview_audio_clip(stream: impl Read + Seek + Send + Sync + 'static, star
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-
-    use crate::note::{AFour, EFour, CFour};
+    use crate::{base::Parsable, chord::Chord};
 
     use super::*;
 
+    #[ignore]
     #[test]
     fn test_preview_audio_clip() {
-        preview_audio_file_clip(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/test-Am.wav"), None, None).unwrap();
+        preview_audio_file_clip("tests/C7b9.wav", None, None).unwrap();
     }
 
+    #[cfg(feature = "analyze_file")]
     #[test]
     fn test_get_notes_from_audio_file() {
-        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/test-Am.wav");
-        let notes = get_notes_from_audio_file(path, None, None).expect("notes");
-        println!("{notes:?}");
-        assert!(notes.contains(&AFour));
-        assert!(notes.contains(&CFour));
-        assert!(notes.contains(&EFour));
+        let notes = dbg!(get_notes_from_audio_file("tests/C7b9.wav", None, None).unwrap());
+
+        assert_eq!(Chord::parse("C7b9").unwrap(), Chord::from_notes(&notes).unwrap()[0]);
     }
 
-    #[cfg(feature="mp3")]
+    #[cfg(feature = "analyze_file")]
+    #[cfg(feature = "analyze_file_mp3")]
     #[test]
     fn test_get_notes_from_mp3_file() {
-        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/test-Am.mp3");
-        let notes = get_notes_from_audio_file(path, None, None).expect("notes");
-        println!("{notes:?}");
-        assert!(notes.contains(&AFour));
-        assert!(notes.contains(&CFour));
-        assert!(notes.contains(&EFour));
+        let notes = get_notes_from_audio_file("tests/C7b9.mp3", None, None).unwrap();
+
+        assert_eq!(Chord::parse("C7b9").unwrap(), Chord::from_notes(&notes).unwrap()[0]);
     }
 }

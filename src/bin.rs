@@ -2,7 +2,6 @@ use std::{path::PathBuf, time::Duration};
 
 use clap::{ArgAction, Parser, Subcommand};
 use klib::{
-    analyze,
     base::{Parsable, Playable, Res, Void},
     chord::{Chord, Chordable},
     note::Note,
@@ -82,16 +81,25 @@ enum Command {
         notes: Vec<String>,
     },
 
+    /// Analyze audio data to guess pitches and chords.
+    #[cfg(feature = "analyze")]
+    Analyze {
+        #[command(subcommand)]
+        analyze_command: Option<AnalyzeCommand>,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum AnalyzeCommand {
     /// Records audio from the microphone, and guesses pitches / chords.
-    #[cfg(feature = "audio")]
-    Listen {
+    Mic {
         /// Sets the duration of listening time (in seconds).
         #[arg(short, long, default_value_t = 5)]
         length: u8,
     },
+
     /// Guess pitches and chords from the specified section of an audio file.
-    #[cfg(feature = "audio")]
-    Analyze {
+    File {
         /// Whether or not to play a preview of the selected section of the
         /// audio file before analyzing.
         #[arg(long = "no-preview", action=ArgAction::SetFalse, default_value_t = true)]
@@ -159,24 +167,32 @@ fn start(args: Args) -> Void {
                 }
             }
         }
-        #[cfg(feature = "audio")]
-        Some(Command::Listen { length }) => {
-            let notes = futures::executor::block_on(Note::from_listen(length))?;
+        #[cfg(feature = "analyze")]
+        Some(Command::Analyze { analyze_command }) => {
+            use klib::analyze::file::{get_notes_from_audio_file, preview_audio_file_clip};
 
-            show_notes_and_chords(&notes)?;
-        }
-        #[cfg(feature = "audio")]
-        Some(Command::Analyze { preview, start_time, end_time, source }) => {
-            let start_time = if let Some(t) = start_time { Some(parse_duration0::parse(&t)?) } else { None };
-            let end_time = if let Some(t) = end_time { Some(parse_duration0::parse(&t)?) } else { None };
-            if preview {
-                analyze::preview_audio_file_clip(&source, start_time, end_time)?;
+            match analyze_command {
+                Some(AnalyzeCommand::Mic { length }) => {
+                    let notes = futures::executor::block_on(Note::from_mic(length))?;
+
+                    show_notes_and_chords(&notes)?;
+                }
+                Some(AnalyzeCommand::File { preview, start_time, end_time, source }) => {
+                    let start_time = if let Some(t) = start_time { Some(parse_duration0::parse(&t)?) } else { None };
+                    let end_time = if let Some(t) = end_time { Some(parse_duration0::parse(&t)?) } else { None };
+                    if preview {
+                        preview_audio_file_clip(&source, start_time, end_time)?;
+                    }
+                    let notes = get_notes_from_audio_file(&source, start_time, end_time)?;
+                    show_notes_and_chords(&notes)?;
+                }
+                None => {
+                    return Err(anyhow::Error::msg("No subcommand given for analyze."));
+                }
             }
-            let notes = analyze::get_notes_from_audio_file(&source, start_time, end_time)?;
-            show_notes_and_chords(&notes)?;
         }
         None => {
-            println!("No command given.");
+            return Err(anyhow::Error::msg("No command given."));
         }
     }
     Ok(())

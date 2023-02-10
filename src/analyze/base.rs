@@ -1,15 +1,3 @@
-use std::{
-    sync::{Arc, Mutex},
-    time::Duration,
-};
-
-use anyhow::Context;
-use cpal::{
-    traits::{HostTrait, StreamTrait},
-    InputCallbackInfo,
-};
-use rodio::DeviceTrait;
-
 use std::{collections::HashMap, ops::Deref};
 
 use rustfft::{
@@ -20,19 +8,6 @@ use rustfft::{
 use crate::note::{HasPrimaryHarmonicSeries, ALL_PITCH_NOTES_WITH_FREQUENCY};
 
 use crate::{base::Res, note::Note, pitch::HasFrequency};
-
-#[no_coverage]
-pub async fn get_notes_from_microphone(length_in_seconds: u8) -> Res<Vec<Note>> {
-    // Get data.
-
-    let data_from_microphone = get_audio_data_from_microphone(length_in_seconds).await?;
-
-    // Get notes.
-
-    let result = get_notes_from_audio_data(&data_from_microphone, length_in_seconds)?;
-
-    Ok(result)
-}
 
 pub fn get_notes_from_audio_data(data: &[f32], length_in_seconds: u8) -> Res<Vec<Note>> {
     if length_in_seconds < 1 {
@@ -69,23 +44,6 @@ pub fn get_notes_from_smoothed_frequency_space(smoothed_frequency_space: &[(f32,
     reduce_notes_by_harmonic_series(&best_notes)
 }
 
-/// Gets audio data from the microphone.
-pub async fn get_audio_data_from_microphone(length_in_seconds: u8) -> Res<Vec<f32>> {
-    if length_in_seconds < 1 {
-        return Err(anyhow::Error::msg("Listening length in seconds must be greater than 1."));
-    }
-
-    // Set up devices and systems.
-
-    let (device, config) = get_device_and_config()?;
-
-    // Record audio from the microphone.
-
-    let data_from_microphone = record_from_device(device, config, length_in_seconds).await?;
-
-    Ok(data_from_microphone)
-}
-
 /// Gets the frequency space from the audio data.
 pub fn get_frequency_space(data: &[f32], length_in_seconds: u8) -> Vec<(f32, f32)> {
     let num_samples = data.len();
@@ -99,57 +57,6 @@ pub fn get_frequency_space(data: &[f32], length_in_seconds: u8) -> Vec<(f32, f32
     fft.process(&mut buffer);
 
     buffer.into_iter().enumerate().map(|(k, d)| (k as f32 / length_in_seconds as f32, d.abs())).collect::<Vec<_>>()
-}
-
-/// Gets the system device, and config.
-fn get_device_and_config() -> Res<(cpal::Device, cpal::SupportedStreamConfig)> {
-    let host = cpal::default_host();
-
-    let device = host.default_input_device().ok_or_else(|| anyhow::Error::msg("Failed to get default input device."))?;
-
-    let config = device.default_input_config().context("Could not get default input config.")?;
-
-    Ok((device, config))
-}
-
-async fn record_from_device(device: cpal::Device, config: cpal::SupportedStreamConfig, length_in_seconds: u8) -> Res<Vec<f32>> {
-    // Set up recording.
-
-    let likely_sample_count = config.sample_rate().0 as f32 * config.channels() as f32 * length_in_seconds as f32;
-
-    let data_from_microphone = Arc::new(Mutex::new(Vec::with_capacity(likely_sample_count as usize)));
-    let last_error = Arc::new(Mutex::new(None));
-
-    let stream = {
-        let result = data_from_microphone.clone();
-        let last_error = last_error.clone();
-
-        device.build_input_stream::<f32, _, _>(
-            &config.into(),
-            move |data: &[_], _: &InputCallbackInfo| {
-                result.lock().unwrap().extend_from_slice(data);
-            },
-            move |err| {
-                last_error.lock().unwrap().replace(err);
-            },
-        )?
-    };
-
-    // Begin recording.
-
-    stream.play()?;
-    futures_timer::Delay::new(Duration::from_secs_f32(length_in_seconds as f32)).await;
-    drop(stream);
-
-    // SAFETY: We are the only thread that can access the arc right now since the stream is dropped.
-    if let Err(err) = Arc::try_unwrap(last_error).unwrap().into_inner() {
-        return Err(err.into());
-    }
-
-    // SAFETY: We are the only thread that can access the arc right now since the stream is dropped.
-    let data_from_microphone = Arc::try_unwrap(data_from_microphone).unwrap().into_inner()?;
-
-    Ok(data_from_microphone)
 }
 
 /// Get likely notes from the peak space.
@@ -183,47 +90,6 @@ pub fn get_smoothed_frequency_space(frequency_space: &[(f32, f32)], length_in_se
     }
 
     smoothed_frequency_space
-}
-
-/// Reduce a vector of notes by removing all notes that are part of the harmonic series of another note.
-fn reduce_notes_by_harmonic_series(notes: &[(Note, f32)]) -> Vec<Note> {
-    let mut working_set = notes.to_vec();
-    working_set.sort_by(|a, b| a.0.frequency().partial_cmp(&b.0.frequency()).unwrap());
-
-    // First, remove harmonic series notes.
-
-    let mut k = 0;
-    while k < working_set.len() {
-        let note = working_set[k].0;
-
-        let mut j = k + 1;
-        while j < working_set.len() {
-            let other_note = working_set[j].0;
-
-            for harmonic in note.primary_harmonic_series() {
-                if harmonic.frequency() == other_note.frequency() {
-                    working_set[k].1 += working_set[j].1;
-                    working_set.remove(j);
-                    j -= 1;
-                }
-            }
-
-            j += 1;
-        }
-
-        k += 1;
-    }
-
-    // Reorder the rest by magnitude, and return the notes.
-
-    working_set.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-
-    // Remove notes that are below the threshold.
-
-    let cutoff = working_set[0].1 / 10f32;
-    working_set.retain(|(_, magnitude)| *magnitude > cutoff);
-
-    working_set.into_iter().map(|(note, _)| note).collect()
 }
 
 /// Translate the frequency space into a "peak space".
@@ -292,10 +158,51 @@ fn translate_frequency_space_to_peak_space(frequency_space: &[(f32, f32)]) -> Ve
     peak_space.into_iter().skip(min_index).take(max_index - min_index).collect()
 }
 
+/// Reduce a vector of notes by removing all notes that are part of the harmonic series of another note.
+fn reduce_notes_by_harmonic_series(notes: &[(Note, f32)]) -> Vec<Note> {
+    let mut working_set = notes.to_vec();
+    working_set.sort_by(|a, b| a.0.frequency().partial_cmp(&b.0.frequency()).unwrap());
+
+    // First, remove harmonic series notes.
+
+    let mut k = 0;
+    while k < working_set.len() {
+        let note = working_set[k].0;
+
+        let mut j = k + 1;
+        while j < working_set.len() {
+            let other_note = working_set[j].0;
+
+            for harmonic in note.primary_harmonic_series() {
+                if harmonic.frequency() == other_note.frequency() {
+                    working_set[k].1 += working_set[j].1;
+                    working_set.remove(j);
+                    j -= 1;
+                }
+            }
+
+            j += 1;
+        }
+
+        k += 1;
+    }
+
+    // Reorder the rest by magnitude, and return the notes.
+
+    working_set.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+
+    // Remove notes that are below the threshold.
+
+    let cutoff = working_set[0].1 / 10f32;
+    working_set.retain(|(_, magnitude)| *magnitude > cutoff);
+
+    working_set.into_iter().map(|(note, _)| note).collect()
+}
+
 /// Perform a binary search of an array to find the the element that is closest to the target as defined by a closure.
 ///
 /// The array must be sorted in ascending order.
-fn binary_search_closest<T, F>(array: &[T], target: f32, mut get_value: F) -> Option<&T>
+pub(crate) fn binary_search_closest<T, F>(array: &[T], target: f32, mut get_value: F) -> Option<&T>
 where
     F: FnMut(&T) -> f32,
 {
@@ -357,34 +264,4 @@ fn plot_frequency_space(frequency_space: &[(f32, f32)], name: &'static str, x_mi
     chart.configure_mesh().draw().unwrap();
 
     chart.draw_series(LineSeries::new(normalized_frequency_space.iter().map(|(x, y)| (**x, *y)), RED)).unwrap();
-}
-
-// Tests.
-
-#[cfg(test)]
-mod tests {
-    use std::{fs::File, io::Read};
-
-    use crate::{base::Parsable, chord::Chord, note::Note};
-
-    #[test]
-    fn test_listen() {
-        let mut file = File::open("tests/vec.bin").unwrap();
-        let file_size = file.metadata().unwrap().len() as usize;
-        let float_size = std::mem::size_of::<f32>();
-        let element_count = file_size / float_size;
-        let mut buffer = vec![0u8; file_size];
-
-        // Read the contents of the file into the buffer
-        file.read_exact(&mut buffer).unwrap();
-
-        // Convert the buffer to a vector of f32
-        let data: Vec<f32> = unsafe { std::slice::from_raw_parts(buffer.as_ptr() as *const f32, element_count).to_vec() };
-
-        let notes = Note::from_audio(&data, 5).unwrap();
-
-        let chord = Chord::from_notes(&notes).unwrap();
-
-        assert_eq!(chord[0], Chord::parse("C7b9").unwrap());
-    }
 }

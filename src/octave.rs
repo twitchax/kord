@@ -29,6 +29,11 @@ pub enum Octave {
     Eight,
     Nine,
     Ten,
+    Eleven,
+    Twelve,
+    Thirteen,
+    Fourteen,
+    Fifteen,
 }
 
 // Octave impls.
@@ -47,6 +52,11 @@ impl HasStaticName for Octave {
             Octave::Eight => "8",
             Octave::Nine => "9",
             Octave::Ten => "10",
+            Octave::Eleven => "11",
+            Octave::Twelve => "12",
+            Octave::Thirteen => "13",
+            Octave::Fourteen => "14",
+            Octave::Fifteen => "15",
         }
     }
 }
@@ -57,7 +67,7 @@ impl Add for Octave {
     fn add(self, rhs: Self) -> Self::Output {
         let new_octave = self as u8 + rhs as u8;
 
-        if new_octave > 10 {
+        if new_octave > 15 {
             panic!("Octave overflow");
         }
 
@@ -70,7 +80,7 @@ impl TryFrom<u8> for Octave {
     type Error = &'static str;
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
-        if value > 10 {
+        if value > 15 {
             Err("Octave overflow.")
         } else {
             // SAFETY: The new octave is guaranteed to be less than or equal to 10.
@@ -85,7 +95,7 @@ impl Add<i8> for Octave {
     fn add(self, rhs: i8) -> Self::Output {
         let new_octave = self as i8 + rhs;
 
-        if new_octave > 10 {
+        if new_octave > 15 {
             panic!("Octave overflow.");
         } else if new_octave < 0 {
             panic!("Octave underflow.");
@@ -102,7 +112,7 @@ impl Sub<i8> for Octave {
     fn sub(self, rhs: i8) -> Self::Output {
         let new_octave = self as i8 - rhs;
 
-        if new_octave > 10 {
+        if new_octave > 15 {
             panic!("Octave overflow.");
         } else if new_octave < 0 {
             panic!("Octave underflow.");
@@ -145,7 +155,7 @@ impl Default for Octave {
 
 // Statics.
 
-pub(crate) static ALL_OCTAVES: Lazy<[Octave; 11]> = Lazy::new(|| {
+pub(crate) static ALL_OCTAVES: Lazy<[Octave; 16]> = Lazy::new(|| {
     [
         Octave::Zero,
         Octave::One,
@@ -158,6 +168,11 @@ pub(crate) static ALL_OCTAVES: Lazy<[Octave; 11]> = Lazy::new(|| {
         Octave::Eight,
         Octave::Nine,
         Octave::Ten,
+        Octave::Eleven,
+        Octave::Twelve,
+        Octave::Thirteen,
+        Octave::Fourteen,
+        Octave::Fifteen,
     ]
 });
 
@@ -172,13 +187,13 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_self_overflow() {
-        let _ = Octave::Ten + Octave::One;
+        let _ = Octave::Fifteen + Octave::One;
     }
 
     #[test]
     #[should_panic]
     fn test_i8_add_overflow() {
-        let _ = Octave::Ten + 1;
+        let _ = Octave::Fifteen + 1;
     }
 
     #[test]
@@ -190,7 +205,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_i8_sub_overflow() {
-        let _ = Octave::Ten - -1;
+        let _ = Octave::Fifteen - -1;
     }
 
     #[test]
@@ -228,6 +243,6 @@ mod tests {
 
     #[test]
     fn test_names() {
-        assert_eq!(ALL_OCTAVES.map(|o| o.static_name()).join(" "), "0 1 2 3 4 5 6 7 8 9 10");
+        assert_eq!(ALL_OCTAVES.map(|o| o.static_name()).join(" "), "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15");
     }
 }

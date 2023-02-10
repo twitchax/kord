@@ -1,6 +1,6 @@
 [package]
 name = "kord"
-version = "0.4.2"
+version = "0.5.0"
 edition = "2021"
 authors = ["Aaron Roney <twitchax@gmail.com>"]
 license = "MIT"
@@ -12,15 +12,24 @@ keywords = ["cli", "music", "theory", "jazz", "chords"]
 categories = ["command-line-utilities"]
 
 [features]
-default = ["cli", "audio"]
+default = ["cli", "analyze", "audio"]
+
 cli = ["clap", "futures"]
-audio = ["rodio", "cpal", "rustfft", "futures-timer", "symphonia", "parse_duration0"]
-all_audio = ["audio", "mp3", "aac", "alac"]
+
+audio = ["rodio"]
+
+analyze = ["analyze_mic", "analyze_file"]
+analyze_base = ["rustfft"]
+analyze_mic = ["analyze_base", "rodio", "cpal", "futures-timer"]
+analyze_file = ["analyze_base", "rodio", "symphonia", "parse_duration0"]
+
+analyze_file_mp3 = ["symphonia/mp3"]
+analyze_file_aac = ["symphonia/aac", "symphonia/isomp4"]
+analyze_file_alac = ["symphonia/alac", "symphonia/isomp4"]
+
 wasm = ["rodio/wasm-bindgen"]
+
 plot = ["plotters"]
-mp3 = ["symphonia/mp3"]
-aac = ["symphonia/aac", "symphonia/isomp4"]
-alac = ["symphonia/alac", "symphonia/isomp4"]
 
 [lib]
 name = "klib"
@@ -32,6 +41,7 @@ path = "src/bin.rs"
 required-features = ["cli"]
 
 [dependencies]
+async-trait = "0.1.64"
 once_cell = "1.16.0"
 paste = "1.0.9"
 clap = { version = "4.0.29", features = ["derive"], optional = true }

@@ -50,11 +50,8 @@ pub mod octave;
 pub mod parser;
 pub mod pitch;
 
-#[cfg(feature = "audio")]
-pub use rodio;
-
-#[cfg(feature = "audio")]
-pub mod listen;
-
-#[cfg(feature = "audio")]
+#[cfg(feature = "analyze")]
 pub mod analyze;
+
+#[cfg(feature = "analyze")]
+pub use rodio;
