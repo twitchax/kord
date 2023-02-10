@@ -51,9 +51,13 @@ pub fn get_notes_from_audio_data(data: &[f32], length_in_seconds: u8) -> Res<Vec
     let smoothed_frequency_space = get_smoothed_frequency_space(&frequency_space, length_in_seconds);
     //plot_frequency_space(&smoothed_frequency_space, "frequency_space", 100f32, 1000f32);
 
+    Ok(get_notes_from_smoothed_frequency_space(&smoothed_frequency_space))
+}
+
+pub fn get_notes_from_smoothed_frequency_space(smoothed_frequency_space: &[(f32, f32)]) -> Vec<Note> {
     // Translate the frequency space into a "peak space" (dampen values that are not the "peak" of a specified window).
 
-    let peak_space = translate_frequency_space_to_peak_space(&smoothed_frequency_space);
+    let peak_space = translate_frequency_space_to_peak_space(smoothed_frequency_space);
     //plot_frequency_space(&peak_space, "peak_space", 100f32, 1000f32);
 
     // Bucket top N bins into their proper notes, and keep "magnitude".
@@ -62,9 +66,7 @@ pub fn get_notes_from_audio_data(data: &[f32], length_in_seconds: u8) -> Res<Vec
 
     // Fold the harmonic series into the core notes.
 
-    let result = reduce_notes_by_harmonic_series(&best_notes);
-
-    Ok(result)
+    reduce_notes_by_harmonic_series(&best_notes)
 }
 
 /// Gets audio data from the microphone.

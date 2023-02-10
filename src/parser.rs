@@ -92,6 +92,7 @@ pub fn note_str_to_note(note_str: &str) -> Res<Note> {
 #[no_coverage]
 pub fn octave_str_to_octave(note_str: &str) -> Res<Octave> {
     let octave = match note_str {
+        "0" => Octave::Zero,
         "1" => Octave::One,
         "2" => Octave::Two,
         "3" => Octave::Three,
@@ -101,7 +102,7 @@ pub fn octave_str_to_octave(note_str: &str) -> Res<Octave> {
         "7" => Octave::Seven,
         "8" => Octave::Eight,
         "9" => Octave::Nine,
-        _ => return Err(crate::base::Err::msg("Please use a valid octave (1 - 9).")),
+        _ => return Err(crate::base::Err::msg("Please use a valid octave (0 - 9).")),
     };
 
     Ok(octave)

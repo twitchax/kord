@@ -123,9 +123,28 @@ pub trait HasNoteId {
     /// Returns the ID of the note.
     fn id(self) -> u128;
 
+    /// Returns the note from the given ID.
     fn from_id(id: u128) -> Res<Self>
     where
         Self: Sized;
+
+    /// Returns the ID mask for the given notes.
+    fn id_mask(notes: &[Self]) -> u128
+    where
+        Self: Sized;
+
+    /// Returns the notes from the given ID mask.
+    fn from_id_mask(id_mask: u128) -> Res<Vec<Self>>
+    where
+        Self: Sized;
+}
+
+/// A trait which allows for converting a note to the same ovtave, but using universal [`Pitch`]es.
+/// 
+/// Essentially, this would convert an F#4 into a Gb4, since [`Pitch`]es prefer the flats.
+pub trait ToUniversal {
+    /// Converts this note to a universal pitch.
+    fn to_universal(self) -> Self;
 }
 
 // Struct.
@@ -294,6 +313,37 @@ impl HasNoteId for Note {
         let pitch = Pitch::try_from(pitch_num).map_err(anyhow::Error::msg)?;
 
         Ok(Self::new(NamedPitch::from(pitch), octave))
+    }
+
+    fn id_mask(notes: &[Self]) -> u128
+    where
+        Self: Sized
+    {
+        notes.iter().fold(0, |acc, note| acc | note.id())
+    }
+
+    fn from_id_mask(id_mask: u128) -> Res<Vec<Self>>
+    where
+        Self: Sized
+    {
+        let mut notes = Vec::new();
+        let mut shift = 0u8;
+
+        while id_mask >> shift != 0 {
+            if id_mask & (1 << shift) != 0 {
+                notes.push(Self::from_id(1 << shift)?);
+            }
+
+            shift += 1;
+        }
+
+        Ok(notes)
+    }
+}
+
+impl ToUniversal for Note {
+    fn to_universal(self) -> Note {
+        self.with_named_pitch(NamedPitch::from(self.pitch()))
     }
 }
 
@@ -562,6 +612,8 @@ mod tests {
 
     #[test]
     fn test_id() {
+        // Individual notes.
+
         assert_eq!(CZero.id(), 1 << 0);
         assert_eq!(CSharpZero.id(), 1 << 1);
         assert_eq!(BZero.id(), 1 << 11);
@@ -576,5 +628,20 @@ mod tests {
         assert_eq!(Note::from_id(1 << 12).unwrap(), Note::parse("C1").unwrap());
         assert_eq!(Note::from_id(1 << 13).unwrap(), Note::parse("Db1").unwrap());
         assert_eq!(Note::from_id(1 << 48).unwrap(), Note::parse("C4").unwrap());
+
+        // Chords.
+
+        assert_eq!(Note::id_mask(&[CZero, CSharpZero]), 1 << 0 | 1 << 1);
+        assert_eq!(Note::id_mask(&[CZero, CSharpZero, DFlatZero]), 1 << 0 | 1 << 1);
+        assert_eq!(Note::id_mask(&[CZero, CSharpZero, BZero]), 1 << 0 | 1 << 1 | 1 << 11);
+
+        assert_eq!(Note::from_id_mask(1 << 0 | 1 << 1).unwrap(), vec![CZero, DFlatZero]);
+        assert_eq!(Note::from_id_mask(1 << 0 | 1 << 1 | 1 << 11).unwrap(), vec![CZero, DFlatZero, BZero]);
+        assert_eq!(Note::from_id_mask(1 << 13 | 1 << 48).unwrap(), vec![DFlatOne, CFour]);
+    }
+
+    #[test]
+    fn test_universal() {
+        assert_eq!(FSharpFive.to_universal(), Note::parse("Gb5").unwrap());
     }
 }
