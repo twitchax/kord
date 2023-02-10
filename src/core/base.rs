@@ -1,3 +1,5 @@
+//! Base types and traits.
+
 // Helpers.
 
 use rodio::{OutputStream, OutputStreamHandle, Sink};

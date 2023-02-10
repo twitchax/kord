@@ -1,3 +1,5 @@
+//! A module for working with intervals.
+
 use once_cell::sync::Lazy;
 
 use crate::core::octave::{HasOctave, Octave};

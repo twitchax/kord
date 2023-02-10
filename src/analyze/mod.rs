@@ -1,3 +1,5 @@
+//! Analysis types and functions for the `kord` crate.
+
 #[cfg(feature = "analyze_base")]
 pub mod base;
 

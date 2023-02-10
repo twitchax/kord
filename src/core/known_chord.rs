@@ -1,3 +1,5 @@
+//! A module for working with known chords.
+
 use crate::core::{
     base::{HasDescription, HasName, HasStaticName},
     interval::Interval,

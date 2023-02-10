@@ -1,3 +1,5 @@
+//! A module for working with the parser for chord symbols.
+
 use pest_derive::Parser;
 
 use crate::core::{

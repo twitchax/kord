@@ -1,3 +1,5 @@
+//! A module that contains the [`Chord`] struct and related traits.
+
 use std::{cmp::Ordering, collections::HashSet, fmt::Display, time::Duration};
 
 use pest::Parser;

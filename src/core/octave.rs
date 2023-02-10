@@ -1,3 +1,5 @@
+//! A module for the octave of a note.
+
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 use once_cell::sync::Lazy;

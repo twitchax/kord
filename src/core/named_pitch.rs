@@ -1,3 +1,5 @@
+//! A module for working with named pitches.
+
 use std::ops::Add;
 
 use crate::core::{

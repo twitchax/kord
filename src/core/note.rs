@@ -1,3 +1,7 @@
+//! A module for working with notes.
+//!
+//! A note is a named pitch with an octave.
+
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
 

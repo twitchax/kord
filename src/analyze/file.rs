@@ -1,3 +1,5 @@
+//! Functions for analyzing audio files.
+
 use std::{
     fs::File,
     io::{Read, Seek},
@@ -18,7 +20,7 @@ pub fn get_notes_from_audio_file(file: impl AsRef<Path>, start: Option<Duration>
     let start = start.unwrap_or_default();
 
     let decoder = Decoder::new(File::open(path)?)?.skip_duration(start).convert_samples();
-    
+
     let num_channels = decoder.channels();
     let sample_rate = decoder.sample_rate();
     let samples: Vec<_> = if let Some(end) = end { decoder.take_duration(end - start).collect() } else { decoder.collect() };

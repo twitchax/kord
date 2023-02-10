@@ -1,3 +1,7 @@
+//! Base audio analysis functions.
+//!
+//! Performs ffts, frequency space smoothing, peak detection, harmonic collapsing, and note detection.
+
 use std::{collections::HashMap, ops::Deref};
 
 use rustfft::{

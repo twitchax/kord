@@ -1,3 +1,5 @@
+//! A module for working with chord modifiers.
+
 use once_cell::sync::Lazy;
 
 use crate::core::base::HasStaticName;

@@ -1,3 +1,5 @@
+//! A module for the [`Pitch`] enum.
+
 // Traits.
 
 use once_cell::sync::Lazy;

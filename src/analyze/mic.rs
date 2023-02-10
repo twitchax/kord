@@ -1,3 +1,5 @@
+//! Analyzes audio data from the microphone.
+
 use std::{
     sync::{Arc, Mutex},
     time::Duration,
@@ -10,11 +12,9 @@ use cpal::{
 };
 use rodio::DeviceTrait;
 
-use crate::core::{
-    base::Res, note::Note,
-};
+use crate::core::{base::Res, note::Note};
 
-use super::base::{get_notes_from_audio_data};
+use super::base::get_notes_from_audio_data;
 
 #[no_coverage]
 pub async fn get_notes_from_microphone(length_in_seconds: u8) -> Res<Vec<Note>> {

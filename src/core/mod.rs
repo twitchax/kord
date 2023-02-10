@@ -1,3 +1,5 @@
+//! Core types and functions for the `kord` crate.
+
 pub mod base;
 pub mod chord;
 pub mod interval;
