@@ -1,11 +1,11 @@
 //! A module that contains the [`Chord`] struct and related traits.
 
-use std::{cmp::Ordering, collections::HashSet, fmt::Display, time::Duration};
+use std::{cmp::Ordering, collections::HashSet, fmt::Display};
 
 use pest::Parser;
 
 use crate::core::{
-    base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Playable, PlaybackHandle, Res},
+    base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Res},
     interval::Interval,
     known_chord::{HasRelativeChord, HasRelativeScale, KnownChord},
     modifier::{known_modifier_sets, likely_extension_sets, one_off_modifier_sets, Degree, Extension, HasIsDominant, Modifier},
@@ -1208,9 +1208,13 @@ impl Parsable for Chord {
 }
 
 #[cfg(feature = "audio")]
+use super::base::{Playable, PlaybackHandle};
+
+#[cfg(feature = "audio")]
 impl Playable for Chord {
     #[no_coverage]
     fn play(&self, delay: f32, length: f32, fade_in: f32) -> Res<PlaybackHandle> {
+        use std::time::Duration;
         use rodio::{source::SineWave, OutputStream, Sink, Source};
 
         let chord_tones = self.chord();

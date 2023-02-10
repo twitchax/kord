@@ -1,8 +1,8 @@
-use std::{path::PathBuf, time::Duration};
+use std::{path::PathBuf};
 
 use clap::{ArgAction, Parser, Subcommand};
 use klib::core::{
-    base::{Parsable, Playable, Res, Void},
+    base::{Parsable, Res, Void},
     chord::{Chord, Chordable},
     note::Note,
     octave::Octave,
@@ -205,8 +205,14 @@ fn describe(chord: &Chord) {
 fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
     describe(chord);
 
-    let _playable = chord.play(delay, length, fade_in)?;
-    std::thread::sleep(Duration::from_secs_f32(length));
+    #[cfg(feature = "audio")]
+    {
+        use std::time::Duration;
+        use klib::core::base::Playable;
+           
+        let _playable = chord.play(delay, length, fade_in)?;
+        std::thread::sleep(Duration::from_secs_f32(length));
+    }
 
     Ok(())
 }

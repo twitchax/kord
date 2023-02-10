@@ -7,10 +7,9 @@ use std::{
 
 use anyhow::Context;
 use cpal::{
-    traits::{HostTrait, StreamTrait},
+    traits::{HostTrait, StreamTrait, DeviceTrait},
     InputCallbackInfo,
 };
-use rodio::DeviceTrait;
 
 use crate::core::{base::Res, note::Note};
 
@@ -78,6 +77,7 @@ async fn record_from_device(device: cpal::Device, config: cpal::SupportedStreamC
             move |err| {
                 last_error.lock().unwrap().replace(err);
             },
+            None
         )?
     };
 
