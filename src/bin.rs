@@ -339,6 +339,7 @@ fn start(args: Args) -> Void {
                 };
                 
                 match device.as_str() {
+                    #[cfg(feature = "ml_gpu")]
                     "gpu" => {
                         use burn_tch::{TchDevice, TchBackend};
 
@@ -354,7 +355,7 @@ fn start(args: Args) -> Void {
                         klib::ml::train::run::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config);
                     },
                     _ => {
-                        return Err(anyhow::Error::msg("Invalid device (must choose either `gpu` or `cpu`)."));
+                        return Err(anyhow::Error::msg("Invalid device (must choose either `gpu` [requires `ml_gpu` feature] or `cpu`)."));
                     }
                 }
             }

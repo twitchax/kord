@@ -29,6 +29,7 @@ pub async fn get_notes_from_microphone(length_in_seconds: u8) -> Res<Vec<Note>> 
 }
 
 /// Gets audio data from the microphone.
+#[no_coverage]
 pub async fn get_audio_data_from_microphone(length_in_seconds: u8) -> Res<Vec<f32>> {
     if length_in_seconds < 1 {
         return Err(anyhow::Error::msg("Listening length in seconds must be greater than 1."));
@@ -46,6 +47,7 @@ pub async fn get_audio_data_from_microphone(length_in_seconds: u8) -> Res<Vec<f3
 }
 
 /// Gets the system device, and config.
+#[no_coverage]
 fn get_device_and_config() -> Res<(cpal::Device, cpal::SupportedStreamConfig)> {
     let host = cpal::default_host();
 
@@ -57,6 +59,7 @@ fn get_device_and_config() -> Res<(cpal::Device, cpal::SupportedStreamConfig)> {
 }
 
 /// Records audio data from the device.
+#[no_coverage]
 async fn record_from_device(device: cpal::Device, config: cpal::SupportedStreamConfig, length_in_seconds: u8) -> Res<Vec<f32>> {
     // Set up recording.
 

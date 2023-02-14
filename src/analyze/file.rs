@@ -42,6 +42,7 @@ pub fn preview_audio_file_clip(file: impl AsRef<Path>, start: Option<Duration>, 
 }
 
 /// Play the given segment of an audio stream. Used to preview a clip before guessing notes from it.
+#[no_coverage]
 pub fn preview_audio_clip(stream: impl Read + Seek + Send + Sync + 'static, start: Option<Duration>, end: Option<Duration>) -> Res<()> {
     let start = start.unwrap_or_default();
     let decoder = Decoder::new(stream)?.skip_duration(start).convert_samples();

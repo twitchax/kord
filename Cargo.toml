@@ -29,8 +29,9 @@ analyze_file_alac = ["symphonia/alac", "symphonia/isomp4"]
 
 ml = ["ml_train", "ml_infer"]
 ml_base = []
-ml_train = ["ml_base", "byteorder", "rand", "burn", "burn-autodiff", "burn-tch", "burn-ndarray", "serde"]
+ml_train = ["ml_base", "byteorder", "rand", "burn", "burn-autodiff", "burn-ndarray", "serde"]
 ml_infer = ["ml_base", "burn", "burn-ndarray"]
+ml_gpu = ["ml_train", "burn-tch"]
 
 wasm = ["rodio/wasm-bindgen"]
 
