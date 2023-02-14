@@ -1214,8 +1214,8 @@ use super::base::{Playable, PlaybackHandle};
 impl Playable for Chord {
     #[no_coverage]
     fn play(&self, delay: f32, length: f32, fade_in: f32) -> Res<PlaybackHandle> {
-        use std::time::Duration;
         use rodio::{source::SineWave, OutputStream, Sink, Source};
+        use std::time::Duration;
 
         let chord_tones = self.chord();
 

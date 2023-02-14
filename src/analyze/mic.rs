@@ -7,7 +7,7 @@ use std::{
 
 use anyhow::Context;
 use cpal::{
-    traits::{HostTrait, StreamTrait, DeviceTrait},
+    traits::{DeviceTrait, HostTrait, StreamTrait},
     InputCallbackInfo,
 };
 
@@ -77,7 +77,7 @@ async fn record_from_device(device: cpal::Device, config: cpal::SupportedStreamC
             move |err| {
                 last_error.lock().unwrap().replace(err);
             },
-            None
+            None,
         )?
     };
 

@@ -1,4 +1,4 @@
-use std::{path::PathBuf};
+use std::path::PathBuf;
 
 use clap::{ArgAction, Parser, Subcommand};
 use klib::core::{
@@ -81,24 +81,33 @@ enum Command {
         notes: Vec<String>,
     },
 
-    /// Analyze audio data to guess pitches and chords.
-    #[cfg(feature = "analyze")]
+    /// Set of commands to analyze audio data.
+    #[cfg(any(feature = "analyze", feature = "analyze_base", feature = "analyze_mic", feature = "analyze_file"))]
     Analyze {
         #[command(subcommand)]
         analyze_command: Option<AnalyzeCommand>,
+    },
+
+    /// Set of commands to train and infer with ML.
+    #[cfg(any(feature = "ml", feature = "ml_base", feature = "ml_gather", feature = "ml_train", feature = "ml_infer"))]
+    Ml {
+        #[command(subcommand)]
+        ml_command: Option<MlCommand>,
     },
 }
 
 #[derive(Subcommand, Debug)]
 enum AnalyzeCommand {
     /// Records audio from the microphone, and guesses pitches / chords.
+    #[cfg(feature = "analyze_mic")]
     Mic {
         /// Sets the duration of listening time (in seconds).
-        #[arg(short, long, default_value_t = 5)]
+        #[arg(short, long, default_value_t = 10)]
         length: u8,
     },
 
     /// Guess pitches and chords from the specified section of an audio file.
+    #[cfg(feature = "analyze_file")]
     File {
         /// Whether or not to play a preview of the selected section of the
         /// audio file before analyzing.
@@ -113,6 +122,33 @@ enum AnalyzeCommand {
         /// The source file to listen to/analyze.
         source: PathBuf,
     },
+}
+
+#[derive(Subcommand, Debug)]
+enum MlCommand {
+    /// Records audio from the microphone, and writes the resulting sample to disk.
+    #[cfg(feature = "ml_gather")]
+    Gather {
+        /// Sets the destination directory for the gathered samples.
+        #[arg(short, long, default_value = ".hidden/samples")]
+        destination: String,
+
+        /// Sets the duration of listening time (in seconds).
+        #[arg(short, long, default_value_t = 10)]
+        length: u8,
+    },
+
+    /// Runs the ML trainer using burn-rs, tch-rs, and CUDA as defaults.
+    #[cfg(feature = "ml_train")]
+    Train {
+        
+    },
+
+    /// Records audio from the microphone, and using the trained model, guesses the chord.
+    #[cfg(feature = "ml_infer")]
+    Infer {
+
+    }
 }
 
 fn main() -> Void {
@@ -167,17 +203,19 @@ fn start(args: Args) -> Void {
                 }
             }
         }
-        #[cfg(feature = "analyze")]
+        #[cfg(any(feature = "analyze", feature = "analyze_base", feature = "analyze_mic", feature = "analyze_file"))]
         Some(Command::Analyze { analyze_command }) => {
-            use klib::analyze::file::{get_notes_from_audio_file, preview_audio_file_clip};
-
             match analyze_command {
+                #[cfg(feature = "analyze_mic")]
                 Some(AnalyzeCommand::Mic { length }) => {
                     let notes = futures::executor::block_on(Note::from_mic(length))?;
 
                     show_notes_and_chords(&notes)?;
                 }
+                #[cfg(feature = "analyze_file")]
                 Some(AnalyzeCommand::File { preview, start_time, end_time, source }) => {
+                    use klib::analyze::file::{get_notes_from_audio_file, preview_audio_file_clip};
+
                     let start_time = if let Some(t) = start_time { Some(parse_duration0::parse(&t)?) } else { None };
                     let end_time = if let Some(t) = end_time { Some(parse_duration0::parse(&t)?) } else { None };
                     if preview {
@@ -187,7 +225,29 @@ fn start(args: Args) -> Void {
                     show_notes_and_chords(&notes)?;
                 }
                 None => {
-                    return Err(anyhow::Error::msg("No subcommand given for analyze."));
+                    return Err(anyhow::Error::msg("No subcommand given for `analyze`."));
+                }
+            }
+        }
+        #[cfg(any(feature = "ml", feature = "ml_base", feature = "ml_gather", feature = "ml_train", feature = "ml_infer"))]
+        Some(Command::Ml { ml_command }) => {
+            match ml_command {
+                #[cfg(feature = "ml_gather")]
+                Some(MlCommand::Gather { destination, length }) => {
+                    use klib::ml::gather::{gather_sample};
+
+                    gather_sample(&destination, length)?;
+                }
+                #[cfg(feature = "ml_train")]
+                Some(MlCommand::Train {}) => {
+                    unimplemented!();
+                }
+                #[cfg(feature = "ml_infer")]
+                Some(MlCommand::Infer {}) => {
+                    unimplemented!();
+                }
+                None => {
+                    return Err(anyhow::Error::msg("No subcommand given for `ml`."));
                 }
             }
         }
@@ -207,9 +267,9 @@ fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
 
     #[cfg(feature = "audio")]
     {
-        use std::time::Duration;
         use klib::core::base::Playable;
-           
+        use std::time::Duration;
+
         let _playable = chord.play(delay, length, fade_in)?;
         std::thread::sleep(Duration::from_secs_f32(length));
     }
