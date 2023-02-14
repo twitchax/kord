@@ -89,7 +89,7 @@ enum Command {
     },
 
     /// Set of commands to train and infer with ML.
-    #[cfg(any(feature = "ml", feature = "ml_base", feature = "ml_gather", feature = "ml_train", feature = "ml_infer"))]
+    #[cfg(any(feature = "ml", feature = "ml_base", feature = "ml_train", feature = "ml_infer"))]
     Ml {
         #[command(subcommand)]
         ml_command: Option<MlCommand>,
@@ -127,7 +127,7 @@ enum AnalyzeCommand {
 #[derive(Subcommand, Debug)]
 enum MlCommand {
     /// Records audio from the microphone, and writes the resulting sample to disk.
-    #[cfg(feature = "ml_gather")]
+    #[cfg(feature = "ml_train")]
     Gather {
         /// Sets the destination directory for the gathered samples.
         #[arg(short, long, default_value = ".hidden/samples")]
@@ -229,12 +229,12 @@ fn start(args: Args) -> Void {
                 }
             }
         }
-        #[cfg(any(feature = "ml", feature = "ml_base", feature = "ml_gather", feature = "ml_train", feature = "ml_infer"))]
+        #[cfg(any(feature = "ml", feature = "ml_base", feature = "ml_train", feature = "ml_infer"))]
         Some(Command::Ml { ml_command }) => {
             match ml_command {
-                #[cfg(feature = "ml_gather")]
+                #[cfg(feature = "ml_train")]
                 Some(MlCommand::Gather { destination, length }) => {
-                    use klib::ml::gather::{gather_sample};
+                    use klib::ml::train::gather::gather_sample;
 
                     gather_sample(&destination, length)?;
                 }

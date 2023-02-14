@@ -44,7 +44,7 @@ pub mod core;
 #[cfg(any(feature = "analyze", feature = "analyze_base", feature = "analyze_mic", feature = "analyze_file"))]
 pub mod analyze;
 
-#[cfg(any(feature = "ml", feature = "ml_base", feature = "ml_gather", feature = "ml_train", feature = "ml_infer"))]
+#[cfg(any(feature = "ml", feature = "ml_base", feature = "ml_train", feature = "ml_infer"))]
 pub mod ml;
 
 #[cfg(any(feature = "analyze", feature = "analyze_base", feature = "analyze_mic", feature = "analyze_file"))]

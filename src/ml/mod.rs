@@ -3,5 +3,8 @@
 #[cfg(feature = "ml_base")]
 pub mod base;
 
-#[cfg(all(feature = "ml_gather", feature = "analyze_mic"))]
-pub mod gather;
+#[cfg(all(feature = "ml_train",feature = "analyze_mic"))]
+pub mod train;
+
+// #[cfg(all(feature = "ml_infer",feature = "analyze_mic"))]
+// pub mod infer;

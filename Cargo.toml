@@ -27,10 +27,9 @@ analyze_file_mp3 = ["symphonia/mp3"]
 analyze_file_aac = ["symphonia/aac", "symphonia/isomp4"]
 analyze_file_alac = ["symphonia/alac", "symphonia/isomp4"]
 
-ml = ["ml_gather", "ml_train", "ml_infer"]
+ml = ["ml_train", "ml_infer"]
 ml_base = []
-ml_gather = ["ml_base", "byteorder"]
-ml_train = ["ml_base"]
+ml_train = ["ml_base", "byteorder"]
 ml_infer = ["ml_base"]
 
 wasm = ["rodio/wasm-bindgen"]
