@@ -11,11 +11,14 @@ use crate::{
         base::{Parsable, Void},
         note::{HasNoteId, Note},
     },
-    ml::{base::{KordItem, FREQUENCY_SPACE_SIZE}, train::base::save_kord_item},
+    ml::{
+        base::{KordItem, FREQUENCY_SPACE_SIZE},
+        train::base::save_kord_item,
+    },
 };
 
-
 /// Gather a sample from the microphone and save it to disk.
+#[no_coverage]
 pub fn gather_sample(destination: impl AsRef<Path>, length_in_seconds: u8) -> Void {
     println!("Listening ...");
 

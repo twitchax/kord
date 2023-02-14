@@ -29,8 +29,8 @@ analyze_file_alac = ["symphonia/alac", "symphonia/isomp4"]
 
 ml = ["ml_train", "ml_infer"]
 ml_base = []
-ml_train = ["ml_base", "byteorder"]
-ml_infer = ["ml_base"]
+ml_train = ["ml_base", "byteorder", "rand", "burn", "burn-autodiff", "burn-tch", "burn-ndarray", "serde"]
+ml_infer = ["ml_base", "burn", "burn-ndarray"]
 
 wasm = ["rodio/wasm-bindgen"]
 
@@ -71,6 +71,12 @@ futures-timer = { version = "3.0.2", optional = true }
 cpal = { version = "0.15.0", optional = true }
 
 # ml
+burn = { version = "0.5.0", optional = true }
+burn-autodiff = { version = "0.5.0", optional = true }
+burn-tch = { version = "0.5.0", optional = true }
+burn-ndarray = { version = "0.5.0", optional = true }
+serde = { version = "1.0.152", features = ["derive"], optional = true }
+rand = { version = "0.8.4", optional = true }
 byteorder = { version = "1.4.3", optional = true }
 
 # plot

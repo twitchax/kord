@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 
 use clap::{ArgAction, Parser, Subcommand};
-use klib::core::{
+use klib::{core::{
     base::{Parsable, Res, Void},
     chord::{Chord, Chordable},
     note::Note,
     octave::Octave,
-};
+}};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -113,12 +113,15 @@ enum AnalyzeCommand {
         /// audio file before analyzing.
         #[arg(long = "no-preview", action=ArgAction::SetFalse, default_value_t = true)]
         preview: bool,
+
         /// How far into the file to begin analyzing, as understood by systemd.time(7)
         #[arg(short, long)]
         start_time: Option<String>,
+
         /// How far into the file to stop analyzing, as understood by systemd.time(7)
         #[arg(short, long)]
         end_time: Option<String>,
+
         /// The source file to listen to/analyze.
         source: PathBuf,
     },
@@ -141,14 +144,74 @@ enum MlCommand {
     /// Runs the ML trainer using burn-rs, tch-rs, and CUDA as defaults.
     #[cfg(feature = "ml_train")]
     Train {
-        
+        /// The source directory for the gathered samples.
+        #[arg(long, default_value = ".hidden/samples")]
+        source: String,
+
+        /// The destination directory for the trained model.
+        #[arg(long, default_value = ".hidden/model")]
+        destination: String,
+
+        /// The device to use for training.
+        #[arg(long, default_value = "gpu")]
+        device: String,
+
+        /// The number of Multi Layer Perceptron (MLP) layers.
+        #[arg(long, default_value_t = 3)]
+        mlp_layers: usize,
+
+        /// The number of neurons in each Multi Layer Perceptron (MLP) layer.
+        #[arg(long, default_value_t = 512)]
+        mlp_size: usize,
+
+        /// The Multi Layer Perceptron (MLP) dropout rate.
+        #[arg(long, default_value_t = 0.3)]
+        mlp_dropout: f64,
+
+        /// The number of epochs to train for.
+        #[arg(long, default_value_t = 128)]
+        model_epochs: usize,
+
+        /// The number of samples to use per epoch.
+        #[arg(long, default_value_t = 12)]
+        model_batch_size: usize,
+
+        /// The number of workers to use for training.
+        #[arg(long, default_value_t = 32)]
+        model_workers: usize,
+
+        /// The seed used for training.
+        #[arg(long, default_value_t = 42)]
+        model_seed: u64,
+
+        /// The Adam optimizer learning rate.
+        #[arg(long, default_value_t = 1e-4)]
+        adam_learning_rate: f64,
+
+        /// The Adam optimizer weight decay.
+        #[arg(long, default_value_t = 5e-5)]
+        adam_weight_decay: f64,
+
+        /// The Adam optimizer beta1.
+        #[arg(long, default_value_t = 0.9)]
+        adam_beta1: f32,
+
+        /// The Adam optimizer beta2.
+        #[arg(long, default_value_t = 0.999)]
+        adam_beta2: f32,
+
+        /// The Adam optimizer epsilon.`
+        #[arg(long, default_value_t = 1e-5)]
+        adam_epsilon: f32,
+
+        /// The "sigmoid strength" of the final pass.
+        #[arg(long, default_value_t = 10.0)]
+        sigmoid_strength: f32,
     },
 
     /// Records audio from the microphone, and using the trained model, guesses the chord.
     #[cfg(feature = "ml_infer")]
-    Infer {
-
-    }
+    Infer {},
 }
 
 fn main() -> Void {
@@ -204,53 +267,105 @@ fn start(args: Args) -> Void {
             }
         }
         #[cfg(any(feature = "analyze", feature = "analyze_base", feature = "analyze_mic", feature = "analyze_file"))]
-        Some(Command::Analyze { analyze_command }) => {
-            match analyze_command {
-                #[cfg(feature = "analyze_mic")]
-                Some(AnalyzeCommand::Mic { length }) => {
-                    let notes = futures::executor::block_on(Note::from_mic(length))?;
+        Some(Command::Analyze { analyze_command }) => match analyze_command {
+            #[cfg(feature = "analyze_mic")]
+            Some(AnalyzeCommand::Mic { length }) => {
+                let notes = futures::executor::block_on(Note::from_mic(length))?;
 
-                    show_notes_and_chords(&notes)?;
-                }
-                #[cfg(feature = "analyze_file")]
-                Some(AnalyzeCommand::File { preview, start_time, end_time, source }) => {
-                    use klib::analyze::file::{get_notes_from_audio_file, preview_audio_file_clip};
-
-                    let start_time = if let Some(t) = start_time { Some(parse_duration0::parse(&t)?) } else { None };
-                    let end_time = if let Some(t) = end_time { Some(parse_duration0::parse(&t)?) } else { None };
-                    if preview {
-                        preview_audio_file_clip(&source, start_time, end_time)?;
-                    }
-                    let notes = get_notes_from_audio_file(&source, start_time, end_time)?;
-                    show_notes_and_chords(&notes)?;
-                }
-                None => {
-                    return Err(anyhow::Error::msg("No subcommand given for `analyze`."));
-                }
+                show_notes_and_chords(&notes)?;
             }
-        }
+            #[cfg(feature = "analyze_file")]
+            Some(AnalyzeCommand::File { preview, start_time, end_time, source }) => {
+                use klib::analyze::file::{get_notes_from_audio_file, preview_audio_file_clip};
+
+                let start_time = if let Some(t) = start_time { Some(parse_duration0::parse(&t)?) } else { None };
+                let end_time = if let Some(t) = end_time { Some(parse_duration0::parse(&t)?) } else { None };
+                if preview {
+                    preview_audio_file_clip(&source, start_time, end_time)?;
+                }
+                let notes = get_notes_from_audio_file(&source, start_time, end_time)?;
+                show_notes_and_chords(&notes)?;
+            }
+            None => {
+                return Err(anyhow::Error::msg("No subcommand given for `analyze`."));
+            }
+        },
         #[cfg(any(feature = "ml", feature = "ml_base", feature = "ml_train", feature = "ml_infer"))]
-        Some(Command::Ml { ml_command }) => {
-            match ml_command {
-                #[cfg(feature = "ml_train")]
-                Some(MlCommand::Gather { destination, length }) => {
-                    use klib::ml::train::gather::gather_sample;
+        Some(Command::Ml { ml_command }) => match ml_command {
+            #[cfg(feature = "ml_train")]
+            Some(MlCommand::Gather { destination, length }) => {
+                use klib::ml::train::gather::gather_sample;
 
-                    gather_sample(&destination, length)?;
-                }
-                #[cfg(feature = "ml_train")]
-                Some(MlCommand::Train {}) => {
-                    unimplemented!();
-                }
-                #[cfg(feature = "ml_infer")]
-                Some(MlCommand::Infer {}) => {
-                    unimplemented!();
-                }
-                None => {
-                    return Err(anyhow::Error::msg("No subcommand given for `ml`."));
+                gather_sample(&destination, length)?;
+            }
+            #[cfg(feature = "ml_train")]
+            Some(MlCommand::Train {
+                source,
+                destination,
+                device,
+                mlp_layers,
+                mlp_size,
+                mlp_dropout,
+                model_epochs,
+                model_batch_size,
+                model_workers,
+                model_seed,
+                adam_learning_rate,
+                adam_weight_decay,
+                adam_beta1,
+                adam_beta2,
+                adam_epsilon,
+                sigmoid_strength,
+            }) => {
+                use klib::ml::train::base::TrainConfig;
+                use burn_autodiff::ADBackendDecorator;
+
+                let config = TrainConfig {
+                    source,
+                    destination,
+                    mlp_layers,
+                    mlp_size,
+                    mlp_dropout,
+                    model_epochs,
+                    model_batch_size,
+                    model_workers,
+                    model_seed,
+                    adam_learning_rate,
+                    adam_weight_decay,
+                    adam_beta1,
+                    adam_beta2,
+                    adam_epsilon,
+                    sigmoid_strength,
+                };
+                
+                match device.as_str() {
+                    "gpu" => {
+                        use burn_tch::{TchDevice, TchBackend};
+
+                        let device = TchDevice::Cuda(0);
+
+                        klib::ml::train::run::<ADBackendDecorator<TchBackend<f32>>>(device, &config);
+                    },
+                    "cpu" => {
+                        use burn_ndarray::{NdArrayDevice, NdArrayBackend};
+
+                        let device = NdArrayDevice::Cpu;
+
+                        klib::ml::train::run::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config);
+                    },
+                    _ => {
+                        return Err(anyhow::Error::msg("Invalid device (must choose either `gpu` or `cpu`)."));
+                    }
                 }
             }
-        }
+            #[cfg(feature = "ml_infer")]
+            Some(MlCommand::Infer {}) => {
+                unimplemented!();
+            }
+            None => {
+                return Err(anyhow::Error::msg("No subcommand given for `ml`."));
+            }
+        },
         None => {
             return Err(anyhow::Error::msg("No command given."));
         }
