@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 
 use clap::{ArgAction, Parser, Subcommand};
-use klib::{core::{
+use klib::core::{
     base::{Parsable, Res, Void},
     chord::{Chord, Chordable},
     note::Note,
     octave::Octave,
-}};
+};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -317,8 +317,8 @@ fn start(args: Args) -> Void {
                 adam_epsilon,
                 sigmoid_strength,
             }) => {
-                use klib::ml::train::base::TrainConfig;
                 use burn_autodiff::ADBackendDecorator;
+                use klib::ml::train::base::TrainConfig;
 
                 let config = TrainConfig {
                     source,
@@ -337,23 +337,23 @@ fn start(args: Args) -> Void {
                     adam_epsilon,
                     sigmoid_strength,
                 };
-                
+
                 match device.as_str() {
                     #[cfg(feature = "ml_gpu")]
                     "gpu" => {
-                        use burn_tch::{TchDevice, TchBackend};
+                        use burn_tch::{TchBackend, TchDevice};
 
                         let device = TchDevice::Cuda(0);
 
                         klib::ml::train::run::<ADBackendDecorator<TchBackend<f32>>>(device, &config);
-                    },
+                    }
                     "cpu" => {
-                        use burn_ndarray::{NdArrayDevice, NdArrayBackend};
+                        use burn_ndarray::{NdArrayBackend, NdArrayDevice};
 
                         let device = NdArrayDevice::Cpu;
 
-                        klib::ml::train::run::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config);
-                    },
+                        klib::ml::train::run::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config, true);
+                    }
                     _ => {
                         return Err(anyhow::Error::msg("Invalid device (must choose either `gpu` [requires `ml_gpu` feature] or `cpu`)."));
                     }

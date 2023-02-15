@@ -5,14 +5,14 @@ use std::{
     fs::File,
     hash::{Hash, Hasher},
     io::{BufReader, Cursor, Write},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 use burn::config::Config;
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 
 use crate::{
-    core::base::Void,
+    core::base::Res,
     ml::base::{KordItem, FREQUENCY_SPACE_SIZE, MEL_SPACE_SIZE},
 };
 
@@ -31,7 +31,7 @@ pub struct TrainConfig {
     pub mlp_size: usize,
     /// The Multi Layer Perceptron (MLP) dropout rate.
     pub mlp_dropout: f64,
-    
+
     /// The number of epochs to train for.
     pub model_epochs: usize,
     /// The number of samples to use per epoch.
@@ -72,11 +72,15 @@ pub(crate) fn load_kord_item(path: impl AsRef<Path>) -> KordItem {
 
     let label = reader.read_u128::<BigEndian>().unwrap();
 
-    KordItem { path: path.as_ref().to_owned(), frequency_space, label }
+    KordItem {
+        path: path.as_ref().to_owned(),
+        frequency_space,
+        label,
+    }
 }
 
 /// Save the kord sample into a binary file.
-pub(crate) fn save_kord_item(destination: impl AsRef<Path>, note_names: &str, item: &KordItem) -> Void {
+pub(crate) fn save_kord_item(destination: impl AsRef<Path>, note_names: &str, item: &KordItem) -> Res<PathBuf> {
     let mut output_data: Vec<u8> = Vec::with_capacity(FREQUENCY_SPACE_SIZE);
     let mut cursor = Cursor::new(&mut output_data);
 
@@ -94,10 +98,11 @@ pub(crate) fn save_kord_item(destination: impl AsRef<Path>, note_names: &str, it
     let hash = hasher.finish();
 
     // Write the file.
-    let mut f = File::create(destination.as_ref().join(format!("{}_{}.bin", note_names, hash)))?;
+    let path = destination.as_ref().join(format!("{}_{}.bin", note_names, hash));
+    let mut f = File::create(&path)?;
     f.write_all(&output_data)?;
 
-    Ok(())
+    Ok(path)
 }
 
 // Operations for working with mels.
@@ -124,7 +129,6 @@ pub(crate) fn mel_filter_banks_from(spectrum: &[f32]) -> [f32; MEL_SPACE_SIZE] {
         let k = (num_frequencies as f32 * f_m / 8192f32).floor() as usize;
         let k_plus = (num_frequencies as f32 * f_m_plus / 8192f32).floor() as usize;
 
-        
         for j in k_minus..k {
             filter_banks[i] += spectrum[j] * (j - k_minus) as f32 / (k - k_minus) as f32;
         }
@@ -155,16 +159,25 @@ pub(crate) fn inv_mel(m: f32) -> f32 {
 
 // Tests.
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use pretty_assertions::assert_eq;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use pretty_assertions::assert_eq;
 
-//     #[test]
-//     fn test_kord_item() {
-//         let destination = Path::new("test_data");
-//         let length_in_seconds = 1;
+    #[test]
+    fn test_kord_item() {
+        let destination = Path::new(".hidden/test_data");
+        std::fs::create_dir(destination).unwrap();
 
-//         gather_sample(destination, length_in_seconds).unwrap();
-//     }
-// }
+        let item = KordItem {
+            path: destination.to_owned(),
+            frequency_space: [3f32; FREQUENCY_SPACE_SIZE],
+            label: 42,
+        };
+
+        let path = save_kord_item(destination, "test", &item).unwrap();
+        let loaded = load_kord_item(path);
+
+        assert_eq!(item.label, loaded.label);
+    }
+}

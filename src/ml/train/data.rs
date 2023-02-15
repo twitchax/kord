@@ -8,7 +8,11 @@ use burn::{
 };
 use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
 
-use crate::{ml::base::{KordItem, INPUT_SPACE_SIZE, NUM_CLASSES, MEL_SPACE_SIZE}, analyze::base::get_notes_from_smoothed_frequency_space, core::note::{Note, HasNoteId}};
+use crate::{
+    analyze::base::get_notes_from_smoothed_frequency_space,
+    core::note::{HasNoteId, Note},
+    ml::base::{KordItem, INPUT_SPACE_SIZE, MEL_SPACE_SIZE, NUM_CLASSES},
+};
 
 use super::base::{load_kord_item, mel_filter_banks_from};
 
@@ -84,15 +88,9 @@ pub(crate) struct KordBatch<B: Backend> {
 
 impl<B: Backend> Batcher<KordItem, KordBatch<B>> for KordBatcher<B> {
     fn batch(&self, items: Vec<KordItem>) -> KordBatch<B> {
-        let frequency_spaces = items
-            .iter()
-            .map(kord_item_to_sample_tensor)
-            .collect();
+        let frequency_spaces = items.iter().map(kord_item_to_sample_tensor).collect();
 
-        let targets = items
-            .iter()
-            .map(kord_item_to_target_tensor)
-            .collect();
+        let targets = items.iter().map(kord_item_to_target_tensor).collect();
 
         let frequency_spaces = Tensor::cat(frequency_spaces, 0).to_device(&self.device).detach();
         let targets = Tensor::cat(targets, 0).to_device(&self.device).detach();
@@ -118,10 +116,7 @@ pub(crate) fn kord_item_to_sample_tensor<B: Backend>(item: &KordItem) -> Tensor<
     // Get the "deterministic guess".
     let deterministic_guess = u128_to_binary(get_deterministic_guess(item));
 
-    let result: [f32; INPUT_SPACE_SIZE] = [
-        &deterministic_guess[..],
-        &normalized_mel_space[..],
-    ].concat().try_into().unwrap();
+    let result: [f32; INPUT_SPACE_SIZE] = [&deterministic_guess[..], &normalized_mel_space[..]].concat().try_into().unwrap();
 
     let data = Data::<f32, 1>::from(result);
     let tensor = Tensor::<B, 1>::from_data(data.convert());

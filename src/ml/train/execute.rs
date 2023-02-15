@@ -1,12 +1,23 @@
 use std::sync::Arc;
 
-use burn::{tensor::backend::{ADBackend, Backend}, optim::{AdamConfig, decay::WeightDecayConfig, Adam}, data::dataloader::DataLoaderBuilder, train::{LearnerBuilder, metric::LossMetric}, config::Config};
+use burn::{
+    config::Config,
+    data::dataloader::DataLoaderBuilder,
+    optim::{decay::WeightDecayConfig, Adam, AdamConfig},
+    tensor::backend::{ADBackend, Backend},
+    train::{metric::LossMetric, LearnerBuilder},
+};
 
-use crate::core::note::{Note, HasNoteId};
+use crate::core::note::{HasNoteId, Note};
 
-use super::{data::{KordDataset, KordBatcher, binary_to_u128}, base::{TrainConfig}, model::KordModel, helpers::KordAccuracyMetric};
+use super::{
+    base::TrainConfig,
+    data::{binary_to_u128, KordBatcher, KordDataset},
+    helpers::KordAccuracyMetric,
+    model::KordModel,
+};
 
-pub fn run<B: ADBackend>(device: B::Device, config: &TrainConfig) {
+pub fn run<B: ADBackend>(device: B::Device, config: &TrainConfig, print_accuracy_report: bool) {
     // Define the Adam config.
 
     let adam_config = AdamConfig::new(config.adam_learning_rate)
@@ -56,15 +67,14 @@ pub fn run<B: ADBackend>(device: B::Device, config: &TrainConfig) {
 
     // Save the config.
 
-    config
-        .save(format!("{}/config.json", &config.destination).as_str())
-        .unwrap();
+    config.save(format!("{}/config.json", &config.destination).as_str()).unwrap();
 
     // Compute overall accuracy.
 
-    let accuracy = compute_overall_accuracy(&model_trained, &device);
-
-    println!("Overall accuracy: {}%", accuracy);
+    if print_accuracy_report {
+        let accuracy = compute_overall_accuracy(&model_trained, &device);
+        println!("Overall accuracy: {}%", accuracy);
+    }
 }
 
 pub(crate) fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device: &B::Device) -> f32 {
@@ -74,7 +84,7 @@ pub(crate) fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>,
     kord_items.extend(dataset.1.items);
 
     let mut correct = 0;
-    
+
     for kord_item in &kord_items {
         let sample = super::data::kord_item_to_sample_tensor(kord_item).to_device(device).detach();
         let target: Vec<f32> = super::data::kord_item_to_target_tensor::<B>(kord_item).into_data().convert().value;
@@ -97,7 +107,7 @@ pub(crate) fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>,
             println!("{} -> {} (inferred) -> {} (target)", kord_item.path.to_string_lossy(), inferred_notes, target_notes);
         }
     }
-    
+
     100.0 * (correct as f32 / kord_items.len() as f32)
 }
 
@@ -107,12 +117,12 @@ pub(crate) fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>,
 mod tests {
     use super::*;
     use burn_autodiff::ADBackendDecorator;
-    use burn_ndarray::{NdArrayDevice, NdArrayBackend};
+    use burn_ndarray::{NdArrayBackend, NdArrayDevice};
 
     #[test]
     fn test_train() {
         let device = NdArrayDevice::Cpu;
-        
+
         let config = TrainConfig {
             source: "tests/samples".to_string(),
             destination: ".hidden/tmp/".to_string(),
@@ -131,6 +141,6 @@ mod tests {
             sigmoid_strength: 10.0,
         };
 
-        run::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config);
+        run::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config, false);
     }
 }

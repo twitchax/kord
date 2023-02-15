@@ -10,11 +10,11 @@ use burn::{
     train::{TrainOutput, TrainStep, ValidStep},
 };
 
-use crate::ml::base::{NUM_CLASSES, INPUT_SPACE_SIZE};
+use crate::ml::base::{INPUT_SPACE_SIZE, NUM_CLASSES};
 
 use super::{
     data::KordBatch,
-    helpers::{KordClassificationOutput, Sigmoid, BinaryCrossEntropyLoss},
+    helpers::{BinaryCrossEntropyLoss, KordClassificationOutput, Sigmoid},
     mlp::Mlp,
 };
 

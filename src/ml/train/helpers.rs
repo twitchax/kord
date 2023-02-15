@@ -3,20 +3,14 @@
 // Sigmoid.
 
 use burn::{
-    tensor::{
-        backend::Backend,
-        Tensor
-    },
-    train::{
-        metric::{
-            state::{FormatOptions, NumericMetricState},
-            Adaptor, LossInput, Metric, MetricEntry, Numeric,
-        },
+    tensor::{backend::Backend, Tensor},
+    train::metric::{
+        state::{FormatOptions, NumericMetricState},
+        Adaptor, LossInput, Metric, MetricEntry, Numeric,
     },
 };
 
 use crate::ml::base::NUM_CLASSES;
-
 
 #[derive(Debug, Clone)]
 pub(crate) struct Sigmoid {
@@ -114,7 +108,6 @@ impl<B: Backend> Metric for KordAccuracyMetric<B> {
         let targets = input.targets.to_device(&device);
         let outputs = input.outputs.to_device(&device);
 
-
         // let abs_targets = targets.powf(2.0f32).sqrt();
         // let delta = targets.sub(&outputs);
         // let abs_delta = delta.powf(2.0f32).sqrt();
@@ -124,20 +117,17 @@ impl<B: Backend> Metric for KordAccuracyMetric<B> {
 
         // let accuracy = 100.0 * (1.0 - error);
 
-
         // let mse: f64 = targets.sub(&outputs).powf(2.0).mean().to_data().convert().value[0];
         // let rmse = mse.sqrt();
 
         // let accuracy = 100.0 * (1.0 - rmse);
 
-
         let target_round = targets.greater_equal_scalar(0.5).to_int();
         let output_round = outputs.greater_equal_scalar(0.5).to_int();
 
         let counts: Vec<u8> = target_round.equal(&output_round).to_int().sum_dim(1).into_data().convert().value;
-        
-        let accuracy = 100.0 * counts.iter().filter(|&&x| x == NUM_CLASSES as u8).count() as f64 / counts.len() as f64;
 
+        let accuracy = 100.0 * counts.iter().filter(|&&x| x == NUM_CLASSES as u8).count() as f64 / counts.len() as f64;
 
         // let loss: f64 = (targets.mul(&outputs.log()) + (targets.neg().add_scalar(1.0)).mul(&outputs.neg().add_scalar(1.0).log())).mean().neg().to_data().convert().value[0];
         // let accuracy = 100.0 * (1.0 - loss);
