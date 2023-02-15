@@ -10,11 +10,11 @@ use burn::{
     train::{TrainOutput, TrainStep, ValidStep},
 };
 
-use crate::ml::base::{NUM_CLASSES, MEL_SPACE_SIZE};
+use crate::ml::base::{NUM_CLASSES, INPUT_SPACE_SIZE};
 
 use super::{
     data::KordBatch,
-    helpers::{KordClassificationOutput, MeanSquareLoss, Sigmoid},
+    helpers::{KordClassificationOutput, Sigmoid, BinaryCrossEntropyLoss},
     mlp::Mlp,
 };
 
@@ -28,7 +28,7 @@ pub(crate) struct KordModel<B: Backend> {
 
 impl<B: Backend> KordModel<B> {
     pub(crate) fn new(mlp_layers: usize, mlp_size: usize, mlp_dropout: f64, sigmoid_strength: f32) -> Self {
-        let input = nn::Linear::new(&nn::LinearConfig::new(MEL_SPACE_SIZE, mlp_size));
+        let input = nn::Linear::new(&nn::LinearConfig::new(INPUT_SPACE_SIZE, mlp_size));
         let mlp = Mlp::new(mlp_layers, mlp_size, mlp_dropout);
         let output = nn::Linear::new(&nn::LinearConfig::new(mlp_size, NUM_CLASSES));
         let sigmoid = Sigmoid::new(sigmoid_strength);
@@ -45,11 +45,8 @@ impl<B: Backend> KordModel<B> {
         let mut x = input;
 
         x = self.input.forward(x);
-
-        //x = self.mlp.forward(x);
-
+        x = self.mlp.forward(x);
         x = self.output.forward(x);
-
         x = self.sigmoid.forward(x);
 
         x
@@ -57,9 +54,12 @@ impl<B: Backend> KordModel<B> {
 
     pub(crate) fn forward_classification(&self, item: KordBatch<B>) -> KordClassificationOutput<B> {
         let targets = item.targets;
-        let output = self.forward(item.frequency_spaces);
+        let output = self.forward(item.samples);
 
-        let loss = MeanSquareLoss::new();
+        // let loss = MeanSquareLoss::new();
+        // let loss = loss.forward(&output, &targets);
+
+        let loss = BinaryCrossEntropyLoss::default();
         let loss = loss.forward(&output, &targets);
 
         KordClassificationOutput { loss, output, targets }

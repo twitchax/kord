@@ -1,8 +1,10 @@
 use std::sync::Arc;
 
-use burn::{tensor::backend::ADBackend, optim::{AdamConfig, decay::WeightDecayConfig, Adam}, data::dataloader::DataLoaderBuilder, train::{LearnerBuilder, metric::LossMetric}, config::Config};
+use burn::{tensor::backend::{ADBackend, Backend}, optim::{AdamConfig, decay::WeightDecayConfig, Adam}, data::dataloader::DataLoaderBuilder, train::{LearnerBuilder, metric::LossMetric}, config::Config};
 
-use super::{data::{KordDataset, KordBatcher}, base::TrainConfig, model::KordModel, helpers::KordAccuracyMetric};
+use crate::core::note::{Note, HasNoteId};
+
+use super::{data::{KordDataset, KordBatcher, binary_to_u128}, base::{TrainConfig}, model::KordModel, helpers::KordAccuracyMetric};
 
 pub fn run<B: ADBackend>(device: B::Device, config: &TrainConfig) {
     // Define the Adam config.
@@ -44,19 +46,59 @@ pub fn run<B: ADBackend>(device: B::Device, config: &TrainConfig) {
         .metric_train_plot(LossMetric::new())
         .metric_valid_plot(LossMetric::new())
         //.with_file_checkpointer::<f32>(2)
-        .devices(vec![device])
+        .devices(vec![device.clone()])
         .num_epochs(config.model_epochs)
         .build(model, optimizer);
 
     // Train the model.
 
-    let _model_trained = learner.fit(dataloader_train, dataloader_test);
+    let model_trained = learner.fit(dataloader_train, dataloader_test);
 
     // Save the config.
 
     config
         .save(format!("{}/config.json", &config.destination).as_str())
         .unwrap();
+
+    // Compute overall accuracy.
+
+    let accuracy = compute_overall_accuracy(&model_trained, &device);
+
+    println!("Overall accuracy: {}%", accuracy);
+}
+
+pub(crate) fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device: &B::Device) -> f32 {
+    let dataset = KordDataset::from_folder(".hidden/samples", 0);
+
+    let mut kord_items = dataset.0.items;
+    kord_items.extend(dataset.1.items);
+
+    let mut correct = 0;
+    
+    for kord_item in &kord_items {
+        let sample = super::data::kord_item_to_sample_tensor(kord_item).to_device(device).detach();
+        let target: Vec<f32> = super::data::kord_item_to_target_tensor::<B>(kord_item).into_data().convert().value;
+
+        let inferred = model_trained.forward(sample).to_data().convert().value.into_iter().map(f32::round).collect::<Vec<_>>();
+
+        if target == inferred {
+            correct += 1;
+        } else {
+            let target_array: [_; 128] = target.try_into().unwrap();
+            let mut target_notes = Note::from_id_mask(binary_to_u128(&target_array)).unwrap();
+            target_notes.sort();
+            let target_notes = target_notes.into_iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" ");
+
+            let inferred_array: [_; 128] = inferred.try_into().unwrap();
+            let mut inferred_notes = Note::from_id_mask(binary_to_u128(&inferred_array)).unwrap();
+            inferred_notes.sort();
+            let inferred_notes = inferred_notes.into_iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" ");
+
+            println!("{} -> {} (inferred) -> {} (target)", kord_item.path.to_string_lossy(), inferred_notes, target_notes);
+        }
+    }
+    
+    100.0 * (correct as f32 / kord_items.len() as f32)
 }
 
 // Tests.

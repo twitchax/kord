@@ -40,6 +40,7 @@ pub fn gather_sample(destination: impl AsRef<Path>, length_in_seconds: u8) -> Vo
     }
 
     let item = KordItem {
+        path: destination.as_ref().to_owned(),
         frequency_space: smoothed_frequency_space.into_iter().map(|(_, v)| v).collect::<Vec<_>>().try_into().unwrap(),
         label,
     };

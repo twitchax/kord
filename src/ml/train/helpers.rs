@@ -5,7 +5,7 @@
 use burn::{
     tensor::{
         backend::Backend,
-        Tensor,
+        Tensor
     },
     train::{
         metric::{
@@ -14,6 +14,8 @@ use burn::{
         },
     },
 };
+
+use crate::ml::base::NUM_CLASSES;
 
 
 #[derive(Debug, Clone)]
@@ -35,18 +37,26 @@ impl Sigmoid {
 
 // Loss function.
 
-pub(crate) struct MeanSquareLoss<B: Backend> {
+// #[derive(Debug, Clone, Default)]
+// pub(crate) struct MeanSquareLoss<B: Backend> {
+//     _b: B,
+// }
+
+// impl<B: Backend> MeanSquareLoss<B> {
+//     pub fn forward(&self, outputs: &Tensor<B, 2>, targets: &Tensor<B, 2>) -> Tensor<B, 1> {
+//         // Compute the mean square error loss.
+//         outputs.sub(targets).powf(2.0).mean()
+//     }
+// }
+
+#[derive(Debug, Clone, Default)]
+pub struct BinaryCrossEntropyLoss<B: Backend> {
     _b: B,
 }
 
-impl<B: Backend> MeanSquareLoss<B> {
-    pub fn new() -> Self {
-        Self { _b: B::default() }
-    }
-
+impl<B: Backend> BinaryCrossEntropyLoss<B> {
     pub fn forward(&self, outputs: &Tensor<B, 2>, targets: &Tensor<B, 2>) -> Tensor<B, 1> {
-        // Compute the mean square error loss.
-        outputs.sub(targets).powf(2.0).mean()
+        (targets.mul(&outputs.log()) + (targets.neg().add_scalar(1.0)).mul(&outputs.neg().add_scalar(1.0).log())).mean().neg()
     }
 }
 
@@ -104,6 +114,7 @@ impl<B: Backend> Metric for KordAccuracyMetric<B> {
         let targets = input.targets.to_device(&device);
         let outputs = input.outputs.to_device(&device);
 
+
         // let abs_targets = targets.powf(2.0f32).sqrt();
         // let delta = targets.sub(&outputs);
         // let abs_delta = delta.powf(2.0f32).sqrt();
@@ -113,10 +124,23 @@ impl<B: Backend> Metric for KordAccuracyMetric<B> {
 
         // let accuracy = 100.0 * (1.0 - error);
 
-        let mse: f64 = targets.sub(&outputs).powf(2.0).mean().to_data().convert().value[0];
-        let rmse = mse.sqrt();
 
-        let accuracy = 100.0 * (1.0 - rmse);
+        // let mse: f64 = targets.sub(&outputs).powf(2.0).mean().to_data().convert().value[0];
+        // let rmse = mse.sqrt();
+
+        // let accuracy = 100.0 * (1.0 - rmse);
+
+
+        let target_round = targets.greater_equal_scalar(0.5).to_int();
+        let output_round = outputs.greater_equal_scalar(0.5).to_int();
+
+        let counts: Vec<u8> = target_round.equal(&output_round).to_int().sum_dim(1).into_data().convert().value;
+        
+        let accuracy = 100.0 * counts.iter().filter(|&&x| x == NUM_CLASSES as u8).count() as f64 / counts.len() as f64;
+
+
+        // let loss: f64 = (targets.mul(&outputs.log()) + (targets.neg().add_scalar(1.0)).mul(&outputs.neg().add_scalar(1.0).log())).mean().neg().to_data().convert().value[0];
+        // let accuracy = 100.0 * (1.0 - loss);
 
         self.state.update(accuracy, batch_size, FormatOptions::new("Accuracy").unit("%").precision(2))
     }

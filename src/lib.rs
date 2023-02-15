@@ -31,6 +31,8 @@
 //! ```
 
 #![allow(incomplete_features)]
+#![allow(clippy::needless_range_loop)]
+
 #![feature(adt_const_params)]
 #![feature(generic_const_exprs)]
 #![feature(specialization)]

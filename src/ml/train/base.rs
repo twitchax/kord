@@ -18,7 +18,6 @@ use crate::{
 
 // Training configuration.
 
-#[allow(clippy::too_many_arguments)]
 #[derive(Debug, Config)]
 pub struct TrainConfig {
     /// The source directory for the gathered samples.
@@ -60,8 +59,8 @@ pub struct TrainConfig {
 // Operations for working with kord samples.
 
 /// Load the kord sample from the binary file into a new [`KordItem`].
-pub(crate) fn load_kord_item(path: &std::path::Path) -> KordItem {
-    let file = std::fs::File::open(path).unwrap();
+pub(crate) fn load_kord_item(path: impl AsRef<Path>) -> KordItem {
+    let file = std::fs::File::open(path.as_ref()).unwrap();
     let mut reader = BufReader::new(file);
 
     // Read 8192 f32s in big endian from the file.
@@ -73,7 +72,7 @@ pub(crate) fn load_kord_item(path: &std::path::Path) -> KordItem {
 
     let label = reader.read_u128::<BigEndian>().unwrap();
 
-    KordItem { frequency_space, label }
+    KordItem { path: path.as_ref().to_owned(), frequency_space, label }
 }
 
 /// Save the kord sample into a binary file.
@@ -104,7 +103,6 @@ pub(crate) fn save_kord_item(destination: impl AsRef<Path>, note_names: &str, it
 // Operations for working with mels.
 
 /// Convert the [`FREQUENCY_SPACE_SIZE`] f32s in frequency space into [`MEL_SPACE_SIZE`] mel filter bands.
-#[allow(clippy::needless_range_loop)]
 pub(crate) fn mel_filter_banks_from(spectrum: &[f32]) -> [f32; MEL_SPACE_SIZE] {
     let num_frequencies = spectrum.len();
     let num_mels = MEL_SPACE_SIZE;
