@@ -167,7 +167,7 @@ mod tests {
     #[test]
     fn test_kord_item() {
         let destination = Path::new(".hidden/test_data");
-        std::fs::create_dir(destination).unwrap();
+        std::fs::create_dir_all(destination).unwrap();
 
         let item = KordItem {
             path: destination.to_owned(),
