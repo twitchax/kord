@@ -12,7 +12,7 @@ keywords = ["cli", "music", "theory", "jazz", "chords"]
 categories = ["command-line-utilities"]
 
 [features]
-default = ["cli", "analyze", "ml", "audio"]
+default = ["cli", "analyze", "ml", "audio", "plot"]
 
 cli = ["clap", "futures"]
 

@@ -41,6 +41,7 @@
 #![feature(int_roundings)]
 
 pub mod core;
+pub mod helpers;
 
 #[cfg(any(feature = "analyze", feature = "analyze_base", feature = "analyze_mic", feature = "analyze_file"))]
 pub mod analyze;

@@ -1,0 +1,18 @@
+{
+  "source": ".hidden/samples",
+  "destination": "model",
+  "log": ".hidden/train_log",
+  "mlp_layers": 0,
+  "mlp_size": 512,
+  "mlp_dropout": 0.3,
+  "model_epochs": 512,
+  "model_batch_size": 12,
+  "model_workers": 32,
+  "model_seed": 76980,
+  "adam_learning_rate": 0.00001,
+  "adam_weight_decay": 5e-6,
+  "adam_beta1": 0.9,
+  "adam_beta2": 0.999,
+  "adam_epsilon": 0.00001,
+  "sigmoid_strength": 10.0
+}

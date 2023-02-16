@@ -24,6 +24,8 @@ pub struct TrainConfig {
     pub source: String,
     /// The destination directory for the trained model.
     pub destination: String,
+    /// The log directory for training.
+    pub log: String,
 
     /// The number of Multi Layer Perceptron (MLP) layers.
     pub mlp_layers: usize,
@@ -59,7 +61,7 @@ pub struct TrainConfig {
 // Operations for working with kord samples.
 
 /// Load the kord sample from the binary file into a new [`KordItem`].
-pub(crate) fn load_kord_item(path: impl AsRef<Path>) -> KordItem {
+pub fn load_kord_item(path: impl AsRef<Path>) -> KordItem {
     let file = std::fs::File::open(path.as_ref()).unwrap();
     let mut reader = BufReader::new(file);
 
@@ -80,7 +82,7 @@ pub(crate) fn load_kord_item(path: impl AsRef<Path>) -> KordItem {
 }
 
 /// Save the kord sample into a binary file.
-pub(crate) fn save_kord_item(destination: impl AsRef<Path>, note_names: &str, item: &KordItem) -> Res<PathBuf> {
+pub fn save_kord_item(destination: impl AsRef<Path>, note_names: &str, item: &KordItem) -> Res<PathBuf> {
     let mut output_data: Vec<u8> = Vec::with_capacity(FREQUENCY_SPACE_SIZE);
     let mut cursor = Cursor::new(&mut output_data);
 

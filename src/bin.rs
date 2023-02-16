@@ -1,11 +1,14 @@
 use std::path::PathBuf;
 
 use clap::{ArgAction, Parser, Subcommand};
-use klib::core::{
-    base::{Parsable, Res, Void},
-    chord::{Chord, Chordable},
-    note::Note,
-    octave::Octave,
+use klib::{
+    core::{
+        base::{Parsable, Res, Void},
+        chord::{Chord, Chordable},
+        note::Note,
+        octave::Octave,
+    },
+    ml::base::{KordItem, FREQUENCY_SPACE_SIZE},
 };
 
 #[derive(Parser, Debug)]
@@ -149,8 +152,12 @@ enum MlCommand {
         source: String,
 
         /// The destination directory for the trained model.
-        #[arg(long, default_value = ".hidden/model")]
+        #[arg(long, default_value = "model")]
         destination: String,
+
+        /// The log directory for training.
+        #[arg(long, default_value = ".hidden/train_log")]
+        log: String,
 
         /// The device to use for training.
         #[arg(long, default_value = "gpu")]
@@ -210,8 +217,27 @@ enum MlCommand {
     },
 
     /// Records audio from the microphone, and using the trained model, guesses the chord.
-    #[cfg(feature = "ml_infer")]
-    Infer {},
+    #[cfg(all(feature = "ml_infer", feature = "analyze_mic"))]
+    Infer {
+        /// Sets the duration of listening time (in seconds).
+        #[arg(short, long, default_value_t = 10)]
+        length: u8,
+    },
+
+    /// Plots the kord item from the specified source file.
+    #[cfg(feature = "plot")]
+    Plot {
+        /// The source file to plot.
+        source: String,
+
+        /// The minimum frequency value of the plot.
+        #[arg(long, default_value_t = 0.0)]
+        x_min: f32,
+
+        /// The maximum frequency value of the plot.
+        #[arg(long, default_value_t = 8192.0)]
+        x_max: f32,
+    },
 }
 
 fn main() -> Void {
@@ -302,6 +328,7 @@ fn start(args: Args) -> Void {
             Some(MlCommand::Train {
                 source,
                 destination,
+                log,
                 device,
                 mlp_layers,
                 mlp_size,
@@ -323,6 +350,7 @@ fn start(args: Args) -> Void {
                 let config = TrainConfig {
                     source,
                     destination,
+                    log,
                     mlp_layers,
                     mlp_size,
                     mlp_dropout,
@@ -345,23 +373,60 @@ fn start(args: Args) -> Void {
 
                         let device = TchDevice::Cuda(0);
 
-                        klib::ml::train::run::<ADBackendDecorator<TchBackend<f32>>>(device, &config);
+                        klib::ml::train::run_training::<ADBackendDecorator<TchBackend<f32>>>(device, &config, true)?;
                     }
                     "cpu" => {
                         use burn_ndarray::{NdArrayBackend, NdArrayDevice};
 
                         let device = NdArrayDevice::Cpu;
 
-                        klib::ml::train::run::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config, true);
+                        klib::ml::train::run_training::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config, true)?;
                     }
                     _ => {
                         return Err(anyhow::Error::msg("Invalid device (must choose either `gpu` [requires `ml_gpu` feature] or `cpu`)."));
                     }
                 }
             }
-            #[cfg(feature = "ml_infer")]
-            Some(MlCommand::Infer {}) => {
-                unimplemented!();
+            #[cfg(all(feature = "ml_infer", feature = "analyze_mic"))]
+            Some(MlCommand::Infer { length }) => {
+                use burn_ndarray::{NdArrayBackend, NdArrayDevice};
+
+                // Prepare the audio data.
+                let audio_data = futures::executor::block_on(klib::analyze::mic::get_audio_data_from_microphone(length))?;
+                let frequency_space = klib::analyze::base::get_frequency_space(&audio_data, length);
+                let smoothed_frequency_space: [_; FREQUENCY_SPACE_SIZE] = klib::analyze::base::get_smoothed_frequency_space(&frequency_space, length)
+                    .into_iter()
+                    .take(FREQUENCY_SPACE_SIZE)
+                    .map(|(_, v)| v)
+                    .collect::<Vec<_>>()
+                    .try_into()
+                    .unwrap();
+
+                let kord_item = KordItem {
+                    frequency_space: smoothed_frequency_space,
+                    ..Default::default()
+                };
+
+                let device = NdArrayDevice::Cpu;
+
+                // Run the inference.
+                let notes = klib::ml::train::run_inference::<NdArrayBackend<f32>>(&device, &kord_item)?;
+
+                // Show the results.
+                show_notes_and_chords(&notes)?;
+            }
+            #[cfg(feature = "plot")]
+            Some(MlCommand::Plot { source, x_min, x_max }) => {
+                use klib::helpers::plot_frequency_space;
+                use klib::ml::train::base::load_kord_item;
+
+                let kord_item = load_kord_item(&source);
+                let frequency_space = kord_item.frequency_space.into_iter().enumerate().map(|(k, v)| (k as f32, v)).collect::<Vec<_>>();
+
+                let path = std::path::Path::new(&source);
+                let name = path.file_name().unwrap().to_str().unwrap();
+
+                plot_frequency_space(&frequency_space, name, x_min, x_max);
             }
             None => {
                 return Err(anyhow::Error::msg("No subcommand given for `ml`."));

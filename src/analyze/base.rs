@@ -63,24 +63,6 @@ pub fn get_frequency_space(data: &[f32], length_in_seconds: u8) -> Vec<(f32, f32
     buffer.into_iter().enumerate().map(|(k, d)| (k as f32 / length_in_seconds as f32, d.abs())).collect::<Vec<_>>()
 }
 
-/// Get likely notes from the peak space.
-fn get_likely_notes_from_peak_space(peak_space: &[(f32, f32)], count: usize) -> Vec<(Note, f32)> {
-    let mut peak_space = peak_space.iter().filter(|(_, m)| *m > 0.1).copied().collect::<Vec<_>>();
-    peak_space.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-
-    let mut candidates = HashMap::new();
-
-    for (frequency, magnitude) in peak_space.iter().take(count) {
-        if let Some(pair) = binary_search_closest(ALL_PITCH_NOTES_WITH_FREQUENCY.deref(), *frequency, |t| t.1) {
-            let note = pair.0;
-            let entry = candidates.entry(note).or_insert(*magnitude);
-            *entry += magnitude;
-        }
-    }
-
-    candidates.into_iter().collect::<Vec<_>>()
-}
-
 /// Calculates the "smoothed" frequency space by normalizing to 1.0 seconds of playback.
 pub fn get_smoothed_frequency_space(frequency_space: &[(f32, f32)], length_in_seconds: u8) -> Vec<(f32, f32)> {
     let mut smoothed_frequency_space = Vec::new();
@@ -160,6 +142,24 @@ fn translate_frequency_space_to_peak_space(frequency_space: &[(f32, f32)]) -> Ve
     }
 
     peak_space.into_iter().skip(min_index).take(max_index - min_index).collect()
+}
+
+/// Get likely notes from the peak space.
+fn get_likely_notes_from_peak_space(peak_space: &[(f32, f32)], count: usize) -> Vec<(Note, f32)> {
+    let mut peak_space = peak_space.iter().filter(|(_, m)| *m > 0.1).copied().collect::<Vec<_>>();
+    peak_space.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+
+    let mut candidates = HashMap::new();
+
+    for (frequency, magnitude) in peak_space.iter().take(count) {
+        if let Some(pair) = binary_search_closest(ALL_PITCH_NOTES_WITH_FREQUENCY.deref(), *frequency, |t| t.1) {
+            let note = pair.0;
+            let entry = candidates.entry(note).or_insert(*magnitude);
+            *entry += magnitude;
+        }
+    }
+
+    candidates.into_iter().collect::<Vec<_>>()
 }
 
 /// Reduce a vector of notes by removing all notes that are part of the harmonic series of another note.
@@ -243,29 +243,4 @@ where
     } else {
         Some(&array[low_index])
     }
-}
-
-/// Plot the frequency space of the microphone input using plotters.
-#[cfg(feature = "plot")]
-fn plot_frequency_space(frequency_space: &[(f32, f32)], name: &'static str, x_min: f32, x_max: f32) {
-    use plotters::prelude::*;
-
-    let max = frequency_space.iter().map(|(_, d)| d).max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
-    let normalized_frequency_space = frequency_space.iter().map(|(f, m)| (f, m / max)).collect::<Vec<_>>();
-
-    let file_name = format!("{}.png", name);
-    let root = BitMapBackend::new(&file_name, (1920, 1080)).into_drawing_area();
-    root.fill(&WHITE).unwrap();
-
-    let mut chart = ChartBuilder::on(&root)
-        .caption("Frequency Space", ("sans-serif", 50).into_font())
-        .margin(5)
-        .x_label_area_size(30)
-        .y_label_area_size(30)
-        .build_cartesian_2d(x_min..x_max, 0f32..1f32)
-        .unwrap();
-
-    chart.configure_mesh().draw().unwrap();
-
-    chart.draw_series(LineSeries::new(normalized_frequency_space.iter().map(|(x, y)| (**x, *y)), RED)).unwrap();
 }
