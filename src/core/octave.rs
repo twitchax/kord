@@ -157,7 +157,7 @@ impl Default for Octave {
 
 // Statics.
 
-pub(crate) static ALL_OCTAVES: Lazy<[Octave; 16]> = Lazy::new(|| {
+pub static ALL_OCTAVES: Lazy<[Octave; 16]> = Lazy::new(|| {
     [
         Octave::Zero,
         Octave::One,

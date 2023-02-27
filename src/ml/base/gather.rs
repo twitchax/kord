@@ -13,9 +13,10 @@ use crate::{
     },
     ml::{
         base::{KordItem, FREQUENCY_SPACE_SIZE},
-        train::base::save_kord_item,
     },
 };
+
+use super::helpers::save_kord_item;
 
 /// Gather a sample from the microphone and save it to disk.
 #[no_coverage]
@@ -45,7 +46,7 @@ pub fn gather_sample(destination: impl AsRef<Path>, length_in_seconds: u8) -> Vo
         label,
     };
 
-    save_kord_item(destination, &note_names, &item)?;
+    save_kord_item(destination, "", &note_names, &item)?;
 
     Ok(())
 }

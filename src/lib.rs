@@ -43,11 +43,11 @@
 pub mod core;
 pub mod helpers;
 
-#[cfg(any(feature = "analyze", feature = "analyze_base", feature = "analyze_mic", feature = "analyze_file"))]
+#[cfg(any(feature = "analyze_base"))]
 pub mod analyze;
 
-#[cfg(any(feature = "ml", feature = "ml_base", feature = "ml_train", feature = "ml_infer"))]
+#[cfg(feature = "ml_base")]
 pub mod ml;
 
-#[cfg(any(feature = "analyze", feature = "analyze_base", feature = "analyze_mic", feature = "analyze_file"))]
+#[cfg(feature = "analyze_base")]
 pub use rodio;

@@ -12,7 +12,7 @@ keywords = ["cli", "music", "theory", "jazz", "chords"]
 categories = ["command-line-utilities"]
 
 [features]
-default = ["cli", "analyze", "ml", "audio", "plot"]
+default = ["cli", "analyze", "ml_infer", "audio"]
 
 cli = ["clap", "futures"]
 
@@ -28,9 +28,9 @@ analyze_file_aac = ["symphonia/aac", "symphonia/isomp4"]
 analyze_file_alac = ["symphonia/alac", "symphonia/isomp4"]
 
 ml = ["ml_train", "ml_infer"]
-ml_base = []
-ml_train = ["ml_base", "byteorder", "rand", "burn", "burn-autodiff", "burn-ndarray", "serde"]
-ml_infer = ["ml_base", "burn", "burn-ndarray"]
+ml_base = ["serde", "byteorder", "burn", "burn-ndarray"]
+ml_train = ["ml_base", "rand", "burn-autodiff"]
+ml_infer = ["ml_base"]
 ml_gpu = ["ml_train", "burn-tch"]
 
 wasm = ["rodio/wasm-bindgen"]

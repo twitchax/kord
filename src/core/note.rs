@@ -480,7 +480,7 @@ pub const BTripleSharp: Note = BTripleSharpFour;
 
 // Statics.
 
-pub(crate) static ALL_PITCH_NOTES: Lazy<[Note; 192]> = Lazy::new(|| {
+pub static ALL_PITCH_NOTES: Lazy<[Note; 192]> = Lazy::new(|| {
     let mut all_notes = Vec::with_capacity(132);
 
     for octave in ALL_OCTAVES.iter() {
@@ -495,7 +495,7 @@ pub(crate) static ALL_PITCH_NOTES: Lazy<[Note; 192]> = Lazy::new(|| {
     all_notes.try_into().unwrap()
 });
 
-pub(crate) static ALL_PITCH_NOTES_WITH_FREQUENCY: Lazy<[(Note, f32); 192]> = Lazy::new(|| {
+pub static ALL_PITCH_NOTES_WITH_FREQUENCY: Lazy<[(Note, f32); 192]> = Lazy::new(|| {
     let mut all_notes = Vec::with_capacity(132);
 
     for note in ALL_PITCH_NOTES.iter() {
@@ -614,7 +614,7 @@ mod tests {
 
     #[test]
     fn test_harmonics() {
-        assert_eq!(C.primary_harmonic_series(), vec![CFive, GFive, CSix, ESix, GSix, BFlatSix]);
+        assert_eq!(C.primary_harmonic_series(), vec![CFive, GFive, CSix, ESix, GSix, BFlatSix, DSeven, ESeven, FSharpSeven, GSeven, AFlatSeven, BFlatSeven, BSeven]);
     }
 
     #[test]

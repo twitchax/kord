@@ -5,10 +5,8 @@ use klib::{
     core::{
         base::{Parsable, Res, Void},
         chord::{Chord, Chordable},
-        note::Note,
-        octave::Octave,
+        octave::Octave, note::Note,
     },
-    ml::base::{KordItem, FREQUENCY_SPACE_SIZE},
 };
 
 #[derive(Parser, Debug)]
@@ -159,16 +157,20 @@ enum MlCommand {
         #[arg(long, default_value = ".hidden/train_log")]
         log: String,
 
+        /// Simulation data set size.
+        #[arg(long, default_value_t = 100)]
+        simulation_size: usize,
+
         /// The device to use for training.
         #[arg(long, default_value = "gpu")]
         device: String,
 
         /// The number of Multi Layer Perceptron (MLP) layers.
-        #[arg(long, default_value_t = 3)]
+        #[arg(long, default_value_t = 0)]
         mlp_layers: usize,
 
         /// The number of neurons in each Multi Layer Perceptron (MLP) layer.
-        #[arg(long, default_value_t = 512)]
+        #[arg(long, default_value_t = 1024)]
         mlp_size: usize,
 
         /// The Multi Layer Perceptron (MLP) dropout rate.
@@ -176,11 +178,11 @@ enum MlCommand {
         mlp_dropout: f64,
 
         /// The number of epochs to train for.
-        #[arg(long, default_value_t = 128)]
+        #[arg(long, default_value_t = 32)]
         model_epochs: usize,
 
         /// The number of samples to use per epoch.
-        #[arg(long, default_value_t = 12)]
+        #[arg(long, default_value_t = 100)]
         model_batch_size: usize,
 
         /// The number of workers to use for training.
@@ -188,7 +190,7 @@ enum MlCommand {
         model_workers: usize,
 
         /// The seed used for training.
-        #[arg(long, default_value_t = 42)]
+        #[arg(long, default_value_t = 76980)]
         model_seed: u64,
 
         /// The Adam optimizer learning rate.
@@ -207,12 +209,12 @@ enum MlCommand {
         #[arg(long, default_value_t = 0.999)]
         adam_beta2: f32,
 
-        /// The Adam optimizer epsilon.`
-        #[arg(long, default_value_t = 1e-5)]
+        /// The Adam optimizer epsilon.
+        #[arg(long, default_value_t = f32::EPSILON)]
         adam_epsilon: f32,
 
         /// The "sigmoid strength" of the final pass.
-        #[arg(long, default_value_t = 10.0)]
+        #[arg(long, default_value_t = 1.0)]
         sigmoid_strength: f32,
     },
 
@@ -237,6 +239,30 @@ enum MlCommand {
         /// The maximum frequency value of the plot.
         #[arg(long, default_value_t = 8192.0)]
         x_max: f32,
+    },
+
+    /// Generates simulated audio samples for the specified notes.
+    #[cfg(feature = "ml_train")]
+    GenerateSamples {
+        /// The destination directory for the generated samples.
+        #[arg(long, default_value = ".hidden/samples")]
+        destination: String,
+
+        /// The prefix of the generated sample files.
+        #[arg(long, default_value = "0_")]
+        prefix: String,
+        
+        /// The radius of the generated note peaks.
+        #[arg(long, default_value_t = 5.0)]
+        peak_radius: f32,
+
+        /// The harmonic decay of the generated note peaks (how much each harmonic is decayed from the previous).
+        #[arg(long, default_value_t = 0.5)]
+        harmonic_decay: f32,
+
+        /// The amount of "frequency wobble" in the generated note peaks.
+        #[arg(long, default_value_t = 1.0)]
+        frequency_wobble: f32,
     },
 }
 
@@ -292,7 +318,7 @@ fn start(args: Args) -> Void {
                 }
             }
         }
-        #[cfg(any(feature = "analyze", feature = "analyze_base", feature = "analyze_mic", feature = "analyze_file"))]
+        #[cfg(any(feature = "analyze_mic", feature = "analyze_file"))]
         Some(Command::Analyze { analyze_command }) => match analyze_command {
             #[cfg(feature = "analyze_mic")]
             Some(AnalyzeCommand::Mic { length }) => {
@@ -320,15 +346,14 @@ fn start(args: Args) -> Void {
         Some(Command::Ml { ml_command }) => match ml_command {
             #[cfg(feature = "ml_train")]
             Some(MlCommand::Gather { destination, length }) => {
-                use klib::ml::train::gather::gather_sample;
-
-                gather_sample(&destination, length)?;
+                klib::ml::base::gather::gather_sample(&destination, length)?;
             }
             #[cfg(feature = "ml_train")]
             Some(MlCommand::Train {
                 source,
                 destination,
                 log,
+                simulation_size,
                 device,
                 mlp_layers,
                 mlp_size,
@@ -345,12 +370,13 @@ fn start(args: Args) -> Void {
                 sigmoid_strength,
             }) => {
                 use burn_autodiff::ADBackendDecorator;
-                use klib::ml::train::base::TrainConfig;
+                use klib::ml::base::TrainConfig;
 
                 let config = TrainConfig {
                     source,
                     destination,
                     log,
+                    simulation_size,
                     mlp_layers,
                     mlp_size,
                     mlp_dropout,
@@ -390,6 +416,7 @@ fn start(args: Args) -> Void {
             #[cfg(all(feature = "ml_infer", feature = "analyze_mic"))]
             Some(MlCommand::Infer { length }) => {
                 use burn_ndarray::{NdArrayBackend, NdArrayDevice};
+                use klib::ml::{base::{FREQUENCY_SPACE_SIZE, KordItem}, infer::run_inference};
 
                 // Prepare the audio data.
                 let audio_data = futures::executor::block_on(klib::analyze::mic::get_audio_data_from_microphone(length))?;
@@ -410,23 +437,98 @@ fn start(args: Args) -> Void {
                 let device = NdArrayDevice::Cpu;
 
                 // Run the inference.
-                let notes = klib::ml::train::run_inference::<NdArrayBackend<f32>>(&device, &kord_item)?;
+                let notes = run_inference::<NdArrayBackend<f32>>(&device, &kord_item)?;
 
                 // Show the results.
                 show_notes_and_chords(&notes)?;
             }
             #[cfg(feature = "plot")]
             Some(MlCommand::Plot { source, x_min, x_max }) => {
-                use klib::helpers::plot_frequency_space;
-                use klib::ml::train::base::load_kord_item;
+                use anyhow::Context;
+                use klib::{helpers::plot_frequency_space, analyze::base::translate_frequency_space_to_peak_space, ml::{base::MEL_SPACE_SIZE, train::helpers::{load_kord_item, mel_filter_banks_from}}};
 
                 let kord_item = load_kord_item(&source);
-                let frequency_space = kord_item.frequency_space.into_iter().enumerate().map(|(k, v)| (k as f32, v)).collect::<Vec<_>>();
 
                 let path = std::path::Path::new(&source);
-                let name = path.file_name().unwrap().to_str().unwrap();
+                let name = path.file_name().context("Could not get file name.")?.to_str().context("Could not map file name to str.")?;
 
-                plot_frequency_space(&frequency_space, name, x_min, x_max);
+                // Plot frequency space.
+                let frequency_file_name = format!("{}_frequency", name);
+                let frequency_space = kord_item.frequency_space.into_iter().enumerate().map(|(k, v)| (k as f32, v)).collect::<Vec<_>>();
+                plot_frequency_space(&frequency_space, "KordItem Frequency Space", &frequency_file_name, x_min, x_max);
+
+                // Plot mel space.
+                let mel_file_name = format!("{}_mel", name);
+                let mel_space = mel_filter_banks_from(&kord_item.frequency_space)
+                    .into_iter()
+                    .enumerate()
+                    .map(|(k, v)| (k as f32, v))
+                    .collect::<Vec<_>>();
+                plot_frequency_space(&mel_space, "KordItem Mel Space", &mel_file_name, 0.0, MEL_SPACE_SIZE as f32);
+
+                // Plot peak space.
+                let peak_file_name = format!("{}_peak", name);
+                let mut peak_space = translate_frequency_space_to_peak_space(&frequency_space);
+                peak_space.sort_by(|(_, a), (_, b)| b.partial_cmp(a).unwrap());
+                peak_space.iter_mut().skip(12).for_each(|(_, v)| *v = 0.0);
+                peak_space.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
+                plot_frequency_space(&peak_space, "KordItem Peak Space", &peak_file_name, x_min, x_max);
+
+                // Plot mel peak space.
+                let mel_peak_file_name = format!("{}_mel_peak", name);
+                let peak_space = peak_space.into_iter().map(|(_, v)| v).collect::<Vec<_>>();
+                let mel_peak_space = mel_filter_banks_from(&peak_space).into_iter().enumerate().map(|(k, v)| (k as f32, v)).collect::<Vec<_>>();
+                plot_frequency_space(&mel_peak_space, "KordItem Mel Peak Space", &mel_peak_file_name, 0.0, MEL_SPACE_SIZE as f32);
+                
+                // Log Frequency Space
+                let log_file_name = format!("{}_log", name);
+                let log_frequency_space = kord_item.frequency_space.into_iter().map(|v| v.log2()).collect::<Vec<_>>();
+                plot_frequency_space(&log_frequency_space.iter().enumerate().map(|(k, v)| (k as f32, *v)).collect::<Vec<_>>(), "KordItem Log Space", &log_file_name, x_min, x_max);
+
+                // Plot time space.
+                let harmonic_file_name = format!("{}_time", name);
+                let time_space = klib::analyze::base::get_time_space(&peak_space);
+                plot_frequency_space(&time_space, "KordItem Time Space", &harmonic_file_name, x_min, x_max);
+            }
+            #[cfg(feature = "ml_train")]
+            Some(MlCommand::GenerateSamples { destination, prefix, peak_radius, harmonic_decay, frequency_wobble }) => {
+                use klib::{core::{note::ALL_PITCH_NOTES, interval::Interval}, ml::{base::helpers::save_kord_item, train::helpers::get_simulated_kord_item}};
+
+                for _ in 0..10 {
+                    for note in ALL_PITCH_NOTES.iter().skip(12).take(74) {
+                        let note = *note;
+    
+                        for k in 0..4 {
+                            let mut notes = vec![note];
+    
+                            match k {
+                                0 => {}
+                                1 => {
+                                    notes.push(note + Interval::MajorThird);
+                                }
+                                2 => {
+                                    notes.push(note + Interval::MajorThird);
+                                    notes.push(note + Interval::PerfectFifth);
+                                }
+                                3 => {
+                                    notes.push(note + Interval::MajorThird);
+                                    notes.push(note + Interval::PerfectFifth);
+                                    notes.push(note + Interval::MajorSeventh);
+                                }
+                                _ => unreachable!(),
+                            }
+    
+                            notes.sort();
+                            let note_names = notes.iter().map(|n| n.to_string()).collect::<Vec<_>>().join("_");
+    
+                            // Generate the sample.
+                            let kord_item = get_simulated_kord_item(&notes, peak_radius, harmonic_decay, frequency_wobble);
+    
+                            // Save the sample.
+                            save_kord_item(&destination, &prefix, &note_names, &kord_item)?;
+                        }
+                    }
+                }
             }
             None => {
                 return Err(anyhow::Error::msg("No subcommand given for `ml`."));

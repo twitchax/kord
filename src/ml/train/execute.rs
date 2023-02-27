@@ -3,7 +3,7 @@ use std::sync::Arc;
 use burn::{
     config::Config,
     data::dataloader::DataLoaderBuilder,
-    module::{Module, State},
+    module::{Module},
     optim::{decay::WeightDecayConfig, Adam, AdamConfig},
     tensor::backend::{ADBackend, Backend},
     train::{metric::LossMetric, LearnerBuilder},
@@ -12,20 +12,17 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     core::{
-        base::{Res, Void},
-        note::{HasNoteId, Note},
+        base::{Void},
     },
-    ml::base::KordItem,
+    ml::base::{data::{kord_item_to_sample_tensor, kord_item_to_target_tensor}, model::KordModel, helpers::{binary_to_u128, get_deterministic_guess}},
 };
 
 use super::{
-    base::TrainConfig,
-    data::{binary_to_u128, get_deterministic_guess, KordBatcher, KordDataset},
-    helpers::KordAccuracyMetric,
-    model::KordModel,
+    helpers::KordAccuracyMetric, data::{KordDataset, KordBatcher},
 };
 
-#[cfg(feature = "ml_train")]
+use crate::ml::base::TrainConfig;
+
 pub fn run_training<B: ADBackend>(device: B::Device, config: &TrainConfig, print_accuracy_report: bool) -> Void
 where
     B::Elem: Serialize + DeserializeOwned,
@@ -40,7 +37,7 @@ where
 
     // Define the datasets.
 
-    let (train_dataset, test_dataset) = KordDataset::from_folder(&config.source, config.model_seed);
+    let (train_dataset, test_dataset) = KordDataset::from_folder_and_simulation(&config.source, config.simulation_size);
 
     // Define the data loaders.
 
@@ -92,104 +89,79 @@ where
     // Compute overall accuracy.
 
     if print_accuracy_report {
-        let accuracy = compute_overall_accuracy(&model_trained, &device);
-        println!("Overall accuracy: {}%", accuracy);
+        compute_overall_accuracy(&model_trained, &device);
     }
 
     Ok(())
 }
 
-#[cfg(feature = "ml_infer")]
-pub fn run_inference<B: Backend>(device: &B::Device, kord_item: &KordItem) -> Res<Vec<Note>>
-where
-    B::Elem: Serialize + DeserializeOwned,
-{
-    // Load the config and state.
-
-    // [TODO] Read this from within the binary itself.
-    let config = TrainConfig::load("model/model_config.json")?;
-    let state = State::<B::Elem>::load("model/state.json.gz")?;
-
-    // Define the model.
-    let mut model = KordModel::<B>::new(config.mlp_layers, config.mlp_size, config.mlp_dropout, config.sigmoid_strength);
-    model.load(&state)?;
-
-    // Prepare the sample.
-    let sample = super::data::kord_item_to_sample_tensor(kord_item).to_device(device).detach();
-
-    // Run the inference.
-    let inferred = model.forward(sample).to_data().convert().value.into_iter().map(f32::round).collect::<Vec<_>>();
-    let inferred_array: [_; 128] = inferred.try_into().unwrap();
-    let mut inferred_notes = Note::from_id_mask(binary_to_u128(&inferred_array)).unwrap();
-    inferred_notes.sort();
-
-    Ok(inferred_notes)
-}
-
 #[no_coverage]
-pub(crate) fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device: &B::Device) -> f32 {
-    let dataset = KordDataset::from_folder(".hidden/samples", 0);
+pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device: &B::Device) {
+    let dataset = KordDataset::from_folder_and_simulation(".hidden/samples", 0);
 
-    let mut kord_items = dataset.0.items;
-    kord_items.extend(dataset.1.items);
+    let kord_items = dataset.1.items;
+    //kord_items.extend(dataset.1.items);
 
-    let mut correct = 0;
+    let mut deterministic_correct = 0;
+    let mut inferrence_correct = 0;
 
     for kord_item in &kord_items {
-        let sample = super::data::kord_item_to_sample_tensor(kord_item).to_device(device).detach();
-        let target: Vec<f32> = super::data::kord_item_to_target_tensor::<B>(kord_item).into_data().convert().value;
+        let sample = kord_item_to_sample_tensor(kord_item).to_device(device).detach();
+        let target: Vec<f32> = kord_item_to_target_tensor::<B>(kord_item).into_data().convert().value;
+        let target_array: [_; 128] = target.clone().try_into().unwrap();
+        let target_binary = binary_to_u128(&target_array);
 
         let deterministic = get_deterministic_guess(kord_item);
 
         let inferred = model_trained.forward(sample).to_data().convert().value.into_iter().map(f32::round).collect::<Vec<_>>();
 
+        if target_binary == deterministic {
+            deterministic_correct += 1;
+        }
+
         if target == inferred {
-            correct += 1;
+            inferrence_correct += 1;
         } else {
-            let target_array: [_; 128] = target.try_into().unwrap();
-            let mut target_notes = Note::from_id_mask(binary_to_u128(&target_array)).unwrap();
-            target_notes.sort();
-            let target_notes = target_notes.into_iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" ");
+            // let mut target_notes = Note::from_id_mask(target_binary).unwrap();
+            // target_notes.sort();
+            // let target_notes = target_notes.into_iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" ");
 
-            let mut deterministic_notes = Note::from_id_mask(deterministic).unwrap();
-            deterministic_notes.sort();
-            let deterministic_notes = deterministic_notes.into_iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" ");
+            // let mut deterministic_notes = Note::from_id_mask(deterministic).unwrap();
+            // deterministic_notes.sort();
+            // let deterministic_notes = deterministic_notes.into_iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" ");
 
-            let inferred_array: [_; 128] = inferred.try_into().unwrap();
-            let mut inferred_notes = Note::from_id_mask(binary_to_u128(&inferred_array)).unwrap();
-            inferred_notes.sort();
-            let inferred_notes = inferred_notes.into_iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" ");
+            // let inferred_array: [_; 128] = inferred.clone().try_into().unwrap();
+            // let mut inferred_notes = Note::from_id_mask(binary_to_u128(&inferred_array)).unwrap();
+            // inferred_notes.sort();
+            // let inferred_notes = inferred_notes.into_iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" ");
 
-            println!(
-                "{:>60} -> {:>20} (deterministic) -> {:>20} (inferred) -> {:>20} (target)",
-                kord_item.path.to_string_lossy(),
-                deterministic_notes,
-                inferred_notes,
-                target_notes
-            );
+            // println!(
+            //     "{:>60} -> {:>20} (deterministic) -> {:>20} (inferred) -> {:>20} (target)",
+            //     kord_item.path.to_string_lossy(),
+            //     deterministic_notes,
+            //     inferred_notes,
+            //     target_notes
+            // );
         }
     }
 
-    100.0 * (correct as f32 / kord_items.len() as f32)
+    let deterministic_accuracy = 100.0 * (deterministic_correct as f32 / kord_items.len() as f32);
+    println!("Deterministic accuracy: {}%", deterministic_accuracy);
+
+    let inference_accuracy = 100.0 * (inferrence_correct as f32 / kord_items.len() as f32);
+    println!("Inference accuracy: {}%", inference_accuracy);
 }
 
 // Tests.
 
 #[cfg(test)]
+#[cfg(feature = "ml_train")]
 mod tests {
-    use std::{fs::File, io::Read};
-
-    use crate::{
-        analyze::base::{get_frequency_space, get_smoothed_frequency_space},
-        ml::base::FREQUENCY_SPACE_SIZE,
-    };
-
     use super::*;
     use burn_autodiff::ADBackendDecorator;
     use burn_ndarray::{NdArrayBackend, NdArrayDevice};
 
     #[test]
-    #[cfg(feature = "ml_train")]
     fn test_train() {
         let device = NdArrayDevice::Cpu;
 
@@ -197,11 +169,12 @@ mod tests {
             source: "tests/samples".to_string(),
             destination: ".hidden/test_model".to_string(),
             log: ".hidden/test_log".to_string(),
+            simulation_size: 1,
             mlp_layers: 1,
             mlp_size: 64,
             mlp_dropout: 0.3,
             model_epochs: 1,
-            model_batch_size: 1,
+            model_batch_size: 10,
             model_workers: 1,
             model_seed: 42,
             adam_learning_rate: 1e-4,
@@ -209,51 +182,9 @@ mod tests {
             adam_beta1: 0.9,
             adam_beta2: 0.999,
             adam_epsilon: 1e-5,
-            sigmoid_strength: 10.0,
+            sigmoid_strength: 1.0,
         };
 
         run_training::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config, false).unwrap();
-    }
-
-    #[test]
-    #[cfg(feature = "ml_infer")]
-    fn test_inference() {
-        use crate::core::{base::Parsable, chord::Chord};
-
-        let mut file = File::open("tests/vec.bin").unwrap();
-        let file_size = file.metadata().unwrap().len() as usize;
-        let float_size = std::mem::size_of::<f32>();
-        let element_count = file_size / float_size;
-        let mut buffer = vec![0u8; file_size];
-
-        // Read the contents of the file into the buffer
-        file.read_exact(&mut buffer).unwrap();
-
-        // Convert the buffer to a vector of f32
-        let audio_data: Vec<f32> = unsafe { std::slice::from_raw_parts(buffer.as_ptr() as *const f32, element_count).to_vec() };
-
-        // Prepare the audio data.
-        let frequency_space = get_frequency_space(&audio_data, 5);
-        let smoothed_frequency_space: [_; FREQUENCY_SPACE_SIZE] = get_smoothed_frequency_space(&frequency_space, 5)
-            .into_iter()
-            .take(FREQUENCY_SPACE_SIZE)
-            .map(|(_, v)| v)
-            .collect::<Vec<_>>()
-            .try_into()
-            .unwrap();
-
-        let kord_item = KordItem {
-            frequency_space: smoothed_frequency_space,
-            ..Default::default()
-        };
-
-        let device = NdArrayDevice::Cpu;
-
-        // Run the inference.
-        let notes = super::run_inference::<NdArrayBackend<f32>>(&device, &kord_item).unwrap();
-
-        let chord = Chord::from_notes(&notes).unwrap();
-
-        assert_eq!(chord[0], Chord::parse("C7b9").unwrap());
     }
 }

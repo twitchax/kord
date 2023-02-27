@@ -10,3 +10,4 @@ pub mod note;
 pub mod octave;
 pub mod parser;
 pub mod pitch;
+pub mod helpers;

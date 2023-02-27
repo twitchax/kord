@@ -1,0 +1,164 @@
+//! Module for generic training and inference helpers.
+
+use std::{path::{Path, PathBuf}, io::{BufReader, Cursor, Write}, collections::hash_map::DefaultHasher, hash::{Hash, Hasher}, fs::File};
+
+use burn::tensor::{Tensor, backend::Backend};
+use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
+
+use crate::{analyze::base::get_notes_from_smoothed_frequency_space, core::{note::{Note, HasNoteId}, helpers::{mel, inv_mel}, base::Res}};
+
+use super::{KordItem, MEL_SPACE_SIZE, FREQUENCY_SPACE_SIZE};
+
+// Operations for working with kord samples.
+
+/// Load the kord sample from the binary file into a new [`KordItem`].
+pub fn load_kord_item(path: impl AsRef<Path>) -> KordItem {
+    let file = std::fs::File::open(path.as_ref()).unwrap();
+    let mut reader = BufReader::new(file);
+
+    // Read 8192 f32s in big endian from the file.
+    let mut frequency_space = [0f32; 8192];
+
+    (0usize..FREQUENCY_SPACE_SIZE).for_each(|k| {
+        frequency_space[k] = reader.read_f32::<BigEndian>().unwrap();
+    });
+
+    let label = reader.read_u128::<BigEndian>().unwrap();
+
+    KordItem {
+        path: path.as_ref().to_owned(),
+        frequency_space,
+        label,
+    }
+}
+
+/// Save the kord sample into a binary file.
+pub fn save_kord_item(destination: impl AsRef<Path>, prefix: &str, note_names: &str, item: &KordItem) -> Res<PathBuf> {
+    let mut output_data: Vec<u8> = Vec::with_capacity(FREQUENCY_SPACE_SIZE);
+    let mut cursor = Cursor::new(&mut output_data);
+
+    // Write frequency space.
+    for value in item.frequency_space {
+        cursor.write_f32::<BigEndian>(value)?;
+    }
+
+    // Write result.
+    cursor.write_u128::<BigEndian>(item.label)?;
+
+    // Get the hash.
+    let mut hasher = DefaultHasher::new();
+    output_data.hash(&mut hasher);
+    let hash = hasher.finish();
+
+    // Write the file.
+    let path = destination.as_ref().join(format!("{}{}_{}.bin", prefix, note_names, hash));
+    let mut f = File::create(&path)?;
+    f.write_all(&output_data)?;
+
+    Ok(path)
+}
+
+// Operations for working with mels.
+
+/// Convert the [`FREQUENCY_SPACE_SIZE`] f32s in frequency space into [`MEL_SPACE_SIZE`] mel filter bands.
+pub fn mel_filter_banks_from(spectrum: &[f32]) -> [f32; MEL_SPACE_SIZE] {
+    let num_frequencies = spectrum.len();
+    let num_mels = MEL_SPACE_SIZE;
+
+    let f_min = 0f32;
+    let f_max = FREQUENCY_SPACE_SIZE as f32;
+
+    let mel_points = linspace(mel(f_min), mel(f_max), num_mels + 2);
+    let f_points = mel_points.iter().map(|m| inv_mel(*m)).collect::<Vec<_>>();
+
+    let mut filter_banks = [0f32; MEL_SPACE_SIZE];
+
+    for i in 0..num_mels {
+        let f_m_minus = f_points[i];
+        let f_m = f_points[i + 1];
+        let f_m_plus = f_points[i + 2];
+
+        let k_minus = (num_frequencies as f32 * f_m_minus / 8192f32).floor() as usize;
+        let k = (num_frequencies as f32 * f_m / 8192f32).floor() as usize;
+        let k_plus = (num_frequencies as f32 * f_m_plus / 8192f32).floor() as usize;
+
+        for j in k_minus..k {
+            filter_banks[i] += spectrum[j] * (j - k_minus) as f32 / (k - k_minus) as f32;
+        }
+
+        for j in k..k_plus {
+            filter_banks[i] += spectrum[j] * (k_plus - j) as f32 / (k_plus - k) as f32;
+        }
+    }
+
+    filter_banks
+}
+
+/// Create a linearly spaced vector.
+pub fn linspace(start: f32, end: f32, num_points: usize) -> Vec<f32> {
+    let step = (end - start) / (num_points - 1) as f32;
+    (0..num_points).map(|i| start + i as f32 * step).collect()
+}
+
+/// Gets the "deterministic guess" for a given kord item.
+pub fn get_deterministic_guess(kord_item: &KordItem) -> u128 {
+    let smoothed_frequency_space = kord_item.frequency_space.into_iter().enumerate().map(|(k, v)| (k as f32, v)).collect::<Vec<_>>();
+
+    let notes = get_notes_from_smoothed_frequency_space(&smoothed_frequency_space);
+
+    Note::id_mask(&notes)
+}
+
+/// Produces a 128 element array of 0s and 1s from a u128.
+pub fn u128_to_binary(num: u128) -> [f32; 128] {
+    let mut binary = [0f32; 128];
+    for i in 0..128 {
+        binary[127 - i] = (num >> i & 1) as f32;
+    }
+
+    binary
+}
+
+/// Produces a u128 from a 128 element array of 0s and 1s.
+pub fn binary_to_u128(binary: &[f32]) -> u128 {
+    let mut num = 0u128;
+    for i in 0..128 {
+        num += (binary[i] as u128) << (127 - i);
+    }
+
+    num
+}
+
+#[allow(dead_code)]
+pub fn fold_binary(binary: &[f32; 128]) -> [f32; 12] {
+    let mut folded = [0f32; 12];
+
+    for k in 0..10 {
+        let slice = &binary[k * 12..(k + 1) * 12];
+
+        for i in 0..12 {
+            folded[i] = slice[i].max(folded[i]);
+        }
+    }
+
+    folded
+}
+
+// Common tensor operations.
+
+#[derive(Debug, Clone)]
+pub struct Sigmoid {
+    scale: f32,
+}
+
+impl Sigmoid {
+    /// Create the module from the given configuration.
+    pub fn new(scale: f32) -> Self {
+        Self { scale }
+    }
+
+    pub fn forward<B: Backend, const D: usize>(&self, input: Tensor<B, D>) -> Tensor<B, D> {
+        let scaled = input.mul_scalar(self.scale);
+        scaled.exp().div(&scaled.exp().add_scalar(1.0))
+    }
+}

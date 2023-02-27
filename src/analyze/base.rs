@@ -41,11 +41,16 @@ pub fn get_notes_from_smoothed_frequency_space(smoothed_frequency_space: &[(f32,
 
     // Bucket top N bins into their proper notes, and keep "magnitude".
 
-    let best_notes = get_likely_notes_from_peak_space(&peak_space, 12);
+    let peak_best_notes = get_likely_notes_from_peak_space(&peak_space, 0.1);
+    //.into_iter().map(|(n, _)| n).collect::<Vec<_>>();
+    let best_notes = peak_best_notes;
+    //let binned_best_notes = get_likely_notes_using_bins(smoothed_frequency_space, 0.5, 0.1);
+
+    //let best_notes = binned_best_notes.into_iter().filter(|(n, _)| peak_best_notes.contains(n)).collect::<Vec<_>>();
 
     // Fold the harmonic series into the core notes.
 
-    reduce_notes_by_harmonic_series(&best_notes)
+    reduce_notes_by_harmonic_series(&best_notes, 0.1)
 }
 
 /// Gets the frequency space from the audio data.
@@ -61,6 +66,21 @@ pub fn get_frequency_space(data: &[f32], length_in_seconds: u8) -> Vec<(f32, f32
     fft.process(&mut buffer);
 
     buffer.into_iter().enumerate().map(|(k, d)| (k as f32 / length_in_seconds as f32, d.abs())).collect::<Vec<_>>()
+}
+
+/// Gets the time space from the frequency space.
+pub fn get_time_space(data: &[f32]) -> Vec<(f32, f32)> {
+    let num_samples = data.len();
+
+    // Perform the FFT.
+
+    let mut planner = FftPlanner::new();
+    let fft = planner.plan_fft_inverse(num_samples);
+
+    let mut buffer = data.iter().map(|n| Complex::new(*n, 0.0)).collect::<Vec<_>>();
+    fft.process(&mut buffer);
+
+    buffer.into_iter().enumerate().map(|(k, d)| (k as f32, d.abs())).collect::<Vec<_>>()
 }
 
 /// Calculates the "smoothed" frequency space by normalizing to 1.0 seconds of playback.
@@ -81,7 +101,7 @@ pub fn get_smoothed_frequency_space(frequency_space: &[(f32, f32)], length_in_se
 /// Translate the frequency space into a "peak space".
 ///
 /// Returns a vector of (frequency, magnitude) pair peaks sorted from largest magnitude to smallest.
-fn translate_frequency_space_to_peak_space(frequency_space: &[(f32, f32)]) -> Vec<(f32, f32)> {
+pub fn translate_frequency_space_to_peak_space(frequency_space: &[(f32, f32)]) -> Vec<(f32, f32)> {
     // Dividing the frequency by 32.5 yields roughly 1/3 the distance between a note and the note one semitone away, which is the window size we want
     let magic_window_number = 50f32;
 
@@ -145,13 +165,18 @@ fn translate_frequency_space_to_peak_space(frequency_space: &[(f32, f32)]) -> Ve
 }
 
 /// Get likely notes from the peak space.
-fn get_likely_notes_from_peak_space(peak_space: &[(f32, f32)], count: usize) -> Vec<(Note, f32)> {
+fn get_likely_notes_from_peak_space(peak_space: &[(f32, f32)], cutoff: f32) -> Vec<(Note, f32)> {
     let mut peak_space = peak_space.iter().filter(|(_, m)| *m > 0.1).copied().collect::<Vec<_>>();
     peak_space.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
+    let max_power = peak_space[0].1;
+
+    // Take all peaks with 10% or more of the max power.
+    let peak_space = peak_space.into_iter().filter(|(_, m)| *m > max_power * cutoff).collect::<Vec<_>>();
+
     let mut candidates = HashMap::new();
 
-    for (frequency, magnitude) in peak_space.iter().take(count) {
+    for (frequency, magnitude) in peak_space.iter() {
         if let Some(pair) = binary_search_closest(ALL_PITCH_NOTES_WITH_FREQUENCY.deref(), *frequency, |t| t.1) {
             let note = pair.0;
             let entry = candidates.entry(note).or_insert(*magnitude);
@@ -163,9 +188,9 @@ fn get_likely_notes_from_peak_space(peak_space: &[(f32, f32)], count: usize) -> 
 }
 
 /// Reduce a vector of notes by removing all notes that are part of the harmonic series of another note.
-fn reduce_notes_by_harmonic_series(notes: &[(Note, f32)]) -> Vec<Note> {
+fn reduce_notes_by_harmonic_series(notes: &[(Note, f32)], cutoff: f32) -> Vec<Note> {
     let mut working_set = notes.to_vec();
-    working_set.sort_by(|a, b| a.0.frequency().partial_cmp(&b.0.frequency()).unwrap());
+    working_set.sort_unstable_by(|a, b| a.0.frequency().partial_cmp(&b.0.frequency()).unwrap());
 
     // First, remove harmonic series notes.
 
@@ -197,16 +222,42 @@ fn reduce_notes_by_harmonic_series(notes: &[(Note, f32)]) -> Vec<Note> {
 
     // Remove notes that are below the threshold.
 
-    let cutoff = working_set[0].1 / 10f32;
+    let cutoff = working_set[0].1 * cutoff;
     working_set.retain(|(_, magnitude)| *magnitude > cutoff);
 
     working_set.into_iter().map(|(note, _)| note).collect()
 }
 
+/// For every note, get its "frequency window", which is halfway between the frequency of the note and the frequency of the
+/// the one before, and the next one.
+/// 
+/// Returns a vector of tuples, where the first element is the note, and the second element is the frequency window as a (low, high) tuple.
+pub fn get_frequency_bins(notes: &[Note]) -> Vec<(Note, (f32, f32))> {
+    let mut bins = Vec::new();
+
+    for (i, note) in notes.iter().enumerate() {
+        let low = if i == 0 {
+            continue;
+        } else {
+            note.frequency() - 0.50 * (note.frequency() - notes[i - 1].frequency())
+        };
+
+        let high = if i == notes.len() - 1 {
+            continue;
+        } else {
+            note.frequency() + 0.50 * (notes[i + 1].frequency() - note.frequency())
+        };
+
+        bins.push((*note, (low, high)));
+    }
+
+    bins
+}
+
 /// Perform a binary search of an array to find the the element that is closest to the target as defined by a closure.
 ///
 /// The array must be sorted in ascending order.
-pub(crate) fn binary_search_closest<T, F>(array: &[T], target: f32, mut get_value: F) -> Option<&T>
+pub fn binary_search_closest<T, F>(array: &[T], target: f32, mut get_value: F) -> Option<&T>
 where
     F: FnMut(&T) -> f32,
 {

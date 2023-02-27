@@ -4,6 +4,8 @@
 
 use once_cell::sync::Lazy;
 
+use super::helpers::mel;
+
 /// A trait for types that have a pitch property.
 pub trait HasPitch {
     /// Returns the pitch of the type (usually a [`Note`]).
@@ -20,6 +22,14 @@ pub trait HasBaseFrequency {
 pub trait HasFrequency {
     /// Returns the frequency of the type (usually a [`Note`]).
     fn frequency(&self) -> f32;
+}
+
+/// A trait for types that have a mel property.
+pub trait HasMel: HasFrequency {
+    /// Returns the mel of the type (usually a [`Note`]).
+    fn mel(&self) -> f32 {
+        mel(self.frequency())
+    }
 }
 
 // Enum.
@@ -109,7 +119,7 @@ impl TryFrom<u8> for Pitch {
 
 // Statics.
 
-pub(crate) static ALL_PITCHES: Lazy<[Pitch; 12]> = Lazy::new(|| {
+pub static ALL_PITCHES: Lazy<[Pitch; 12]> = Lazy::new(|| {
     [
         Pitch::C,
         Pitch::DFlat,
