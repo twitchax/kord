@@ -16,6 +16,13 @@ use super::base::get_notes_from_audio_data;
 
 /// Retrieve a list of notes which are guessed from the given audio clip.
 pub fn get_notes_from_audio_file(file: impl AsRef<Path>, start: Option<Duration>, end: Option<Duration>) -> Res<Vec<Note>> {
+    let (data, length_in_seconds) = get_audio_data_from_file(file, start, end)?;
+
+    get_notes_from_audio_data(&data, length_in_seconds)
+}
+
+/// Gets the audio data from a file.
+pub fn get_audio_data_from_file(file: impl AsRef<Path>, start: Option<Duration>, end: Option<Duration>) -> Res<(Vec<f32>, u8)> {
     let path = file.as_ref();
     let start = start.unwrap_or_default();
 
@@ -25,14 +32,14 @@ pub fn get_notes_from_audio_file(file: impl AsRef<Path>, start: Option<Duration>
     let sample_rate = decoder.sample_rate();
     let samples: Vec<_> = if let Some(end) = end { decoder.take_duration(end - start).collect() } else { decoder.collect() };
 
-    let num_samples = dbg!(samples.len());
+    let num_samples = samples.len();
 
     let length_in_seconds = dbg!(num_samples as f32 / (sample_rate as f32 * num_channels as f32)) as u8;
 
     // Cut the samples to the nearest second.
-    let samples = &samples[..(length_in_seconds as f32 * sample_rate as f32 * num_channels as f32) as usize];
+    let data = samples[..(length_in_seconds as f32 * sample_rate as f32 * num_channels as f32) as usize].to_vec();
 
-    get_notes_from_audio_data(samples, length_in_seconds)
+    Ok((data, length_in_seconds))
 }
 
 /// Play the given segment of an audio file. Used to preview a clip before guessing notes from it.

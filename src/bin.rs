@@ -82,7 +82,7 @@ enum Command {
     },
 
     /// Set of commands to analyze audio data.
-    #[cfg(any(feature = "analyze", feature = "analyze_base", feature = "analyze_mic", feature = "analyze_file"))]
+    #[cfg(feature = "analyze_base")]
     Analyze {
         #[command(subcommand)]
         analyze_command: Option<AnalyzeCommand>,
@@ -218,11 +218,10 @@ enum MlCommand {
     },
 
     /// Records audio from the microphone, and using the trained model, guesses the chord.
-    #[cfg(all(feature = "ml_infer", feature = "analyze_mic"))]
+    #[cfg(feature = "ml_infer")]
     Infer {
-        /// Sets the duration of listening time (in seconds).
-        #[arg(short, long, default_value_t = 10)]
-        length: u8,
+        #[command(subcommand)]
+        infer_command: Option<InferCommand>,
     },
 
     /// Plots the kord item from the specified source file.
@@ -239,29 +238,36 @@ enum MlCommand {
         #[arg(long, default_value_t = 8192.0)]
         x_max: f32,
     },
+}
 
-    /// Generates simulated audio samples for the specified notes.
-    #[cfg(feature = "ml_train")]
-    GenerateSamples {
-        /// The destination directory for the generated samples.
-        #[arg(long, default_value = ".hidden/samples")]
-        destination: String,
+#[derive(Subcommand, Debug)]
+enum InferCommand {
+    /// Records audio from the microphone, and guesses pitches / chords.
+    #[cfg(feature = "analyze_mic")]
+    Mic {
+        /// Sets the duration of listening time (in seconds).
+        #[arg(short, long, default_value_t = 10)]
+        length: u8,
+    },
 
-        /// The prefix of the generated sample files.
-        #[arg(long, default_value = "0_")]
-        prefix: String,
+    /// Guess pitches and chords from the specified section of an audio file.
+    #[cfg(feature = "analyze_file")]
+    File {
+        /// Whether or not to play a preview of the selected section of the
+        /// audio file before analyzing.
+        #[arg(long = "no-preview", action=ArgAction::SetFalse, default_value_t = true)]
+        preview: bool,
 
-        /// The radius of the generated note peaks.
-        #[arg(long, default_value_t = 5.0)]
-        peak_radius: f32,
+        /// How far into the file to begin analyzing, as understood by systemd.time(7)
+        #[arg(short, long)]
+        start_time: Option<String>,
 
-        /// The harmonic decay of the generated note peaks (how much each harmonic is decayed from the previous).
-        #[arg(long, default_value_t = 0.5)]
-        harmonic_decay: f32,
+        /// How far into the file to stop analyzing, as understood by systemd.time(7)
+        #[arg(short, long)]
+        end_time: Option<String>,
 
-        /// The amount of "frequency wobble" in the generated note peaks.
-        #[arg(long, default_value_t = 1.0)]
-        frequency_wobble: f32,
+        /// The source file to listen to/analyze.
+        source: PathBuf,
     },
 }
 
@@ -317,7 +323,7 @@ fn start(args: Args) -> Void {
                 }
             }
         }
-        #[cfg(any(feature = "analyze_mic", feature = "analyze_file"))]
+        #[cfg(feature = "analyze_base")]
         Some(Command::Analyze { analyze_command }) => match analyze_command {
             #[cfg(feature = "analyze_mic")]
             Some(AnalyzeCommand::Mic { length }) => {
@@ -341,7 +347,7 @@ fn start(args: Args) -> Void {
                 return Err(anyhow::Error::msg("No subcommand given for `analyze`."));
             }
         },
-        #[cfg(any(feature = "ml", feature = "ml_base", feature = "ml_train", feature = "ml_infer"))]
+        #[cfg(feature = "ml_base")]
         Some(Command::Ml { ml_command }) => match ml_command {
             #[cfg(feature = "ml_train")]
             Some(MlCommand::Gather { destination, length }) => {
@@ -412,38 +418,48 @@ fn start(args: Args) -> Void {
                     }
                 }
             }
-            #[cfg(all(feature = "ml_infer", feature = "analyze_mic"))]
-            Some(MlCommand::Infer { length }) => {
-                use burn_ndarray::{NdArrayBackend, NdArrayDevice};
-                use klib::ml::{
-                    base::{KordItem, FREQUENCY_SPACE_SIZE},
-                    infer::run_inference,
-                };
+            #[cfg(feature = "ml_infer")]
+            Some(MlCommand::Infer { infer_command }) => match infer_command {
+                #[cfg(feature = "analyze_mic")]
+                Some(InferCommand::Mic { length }) => {
+                    use klib::ml::infer::infer;
 
-                // Prepare the audio data.
-                let audio_data = futures::executor::block_on(klib::analyze::mic::get_audio_data_from_microphone(length))?;
-                let frequency_space = klib::analyze::base::get_frequency_space(&audio_data, length);
-                let smoothed_frequency_space: [_; FREQUENCY_SPACE_SIZE] = klib::analyze::base::get_smoothed_frequency_space(&frequency_space, length)
-                    .into_iter()
-                    .take(FREQUENCY_SPACE_SIZE)
-                    .map(|(_, v)| v)
-                    .collect::<Vec<_>>()
-                    .try_into()
-                    .unwrap();
+                    // Prepare the audio data.
+                    let audio_data = futures::executor::block_on(klib::analyze::mic::get_audio_data_from_microphone(length))?;
 
-                let kord_item = KordItem {
-                    frequency_space: smoothed_frequency_space,
-                    ..Default::default()
-                };
+                    // Run the inference.
+                    let notes = infer(&audio_data, length)?;
 
-                let device = NdArrayDevice::Cpu;
+                    // Show the results.
+                    show_notes_and_chords(&notes)?;
+                }
+                #[cfg(feature = "analyze_file")]
+                Some(InferCommand::File { preview, start_time, end_time, source }) => {
+                    use klib::{
+                        analyze::file::{get_audio_data_from_file, preview_audio_file_clip},
+                        ml::infer::infer,
+                    };
 
-                // Run the inference.
-                let notes = run_inference::<NdArrayBackend<f32>>(&device, &kord_item)?;
+                    let start_time = if let Some(t) = start_time { Some(parse_duration0::parse(&t)?) } else { None };
+                    let end_time = if let Some(t) = end_time { Some(parse_duration0::parse(&t)?) } else { None };
 
-                // Show the results.
-                show_notes_and_chords(&notes)?;
-            }
+                    if preview {
+                        preview_audio_file_clip(&source, start_time, end_time)?;
+                    }
+
+                    // Prepare the audio data.
+                    let (audio_data, length) = get_audio_data_from_file(&source, start_time, end_time)?;
+
+                    // Run inference.
+                    let notes = infer(&audio_data, length)?;
+
+                    // Show the results.
+                    show_notes_and_chords(&notes)?;
+                }
+                None => {
+                    return Err(anyhow::Error::msg("Invalid inference command."));
+                }
+            },
             #[cfg(feature = "plot")]
             Some(MlCommand::Plot { source, x_min, x_max }) => {
                 use anyhow::Context;
@@ -504,55 +520,6 @@ fn start(args: Args) -> Void {
                 let harmonic_file_name = format!("{}_time", name);
                 let time_space = klib::analyze::base::get_time_space(&peak_space);
                 plot_frequency_space(&time_space, "KordItem Time Space", &harmonic_file_name, x_min, x_max);
-            }
-            #[cfg(feature = "ml_train")]
-            Some(MlCommand::GenerateSamples {
-                destination,
-                prefix,
-                peak_radius,
-                harmonic_decay,
-                frequency_wobble,
-            }) => {
-                use klib::{
-                    core::{interval::Interval, note::ALL_PITCH_NOTES},
-                    ml::{base::helpers::save_kord_item, train::helpers::get_simulated_kord_item},
-                };
-
-                for _ in 0..10 {
-                    for note in ALL_PITCH_NOTES.iter().skip(12).take(74) {
-                        let note = *note;
-
-                        for k in 0..4 {
-                            let mut notes = vec![note];
-
-                            match k {
-                                0 => {}
-                                1 => {
-                                    notes.push(note + Interval::MajorThird);
-                                }
-                                2 => {
-                                    notes.push(note + Interval::MajorThird);
-                                    notes.push(note + Interval::PerfectFifth);
-                                }
-                                3 => {
-                                    notes.push(note + Interval::MajorThird);
-                                    notes.push(note + Interval::PerfectFifth);
-                                    notes.push(note + Interval::MajorSeventh);
-                                }
-                                _ => unreachable!(),
-                            }
-
-                            notes.sort();
-                            let note_names = notes.iter().map(|n| n.to_string()).collect::<Vec<_>>().join("_");
-
-                            // Generate the sample.
-                            let kord_item = get_simulated_kord_item(&notes, peak_radius, harmonic_decay, frequency_wobble);
-
-                            // Save the sample.
-                            save_kord_item(&destination, &prefix, &note_names, &kord_item)?;
-                        }
-                    }
-                }
             }
             None => {
                 return Err(anyhow::Error::msg("No subcommand given for `ml`."));

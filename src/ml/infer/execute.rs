@@ -5,14 +5,16 @@ use burn::{
     module::{Module, State},
     tensor::backend::Backend,
 };
+use burn_ndarray::{NdArrayBackend, NdArrayDevice};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
+    analyze::base::{get_frequency_space, get_smoothed_frequency_space},
     core::{
         base::Res,
         note::{HasNoteId, Note},
     },
-    ml::base::{data::kord_item_to_sample_tensor, helpers::binary_to_u128, model::KordModel, KordItem, TrainConfig},
+    ml::base::{data::kord_item_to_sample_tensor, helpers::binary_to_u128, model::KordModel, KordItem, TrainConfig, FREQUENCY_SPACE_SIZE},
 };
 
 pub fn run_inference<B: Backend>(device: &B::Device, kord_item: &KordItem) -> Res<Vec<Note>>
@@ -42,6 +44,29 @@ where
     Ok(inferred_notes)
 }
 
+pub fn infer(audio_data: &[f32], length_in_seconds: u8) -> Res<Vec<Note>> {
+    let frequency_space = get_frequency_space(audio_data, length_in_seconds);
+    let smoothed_frequency_space: [_; FREQUENCY_SPACE_SIZE] = get_smoothed_frequency_space(&frequency_space, length_in_seconds)
+        .into_iter()
+        .take(FREQUENCY_SPACE_SIZE)
+        .map(|(_, v)| v)
+        .collect::<Vec<_>>()
+        .try_into()
+        .unwrap();
+
+    let kord_item = KordItem {
+        frequency_space: smoothed_frequency_space,
+        ..Default::default()
+    };
+
+    let device = NdArrayDevice::Cpu;
+
+    // Run the inference.
+    let notes = run_inference::<NdArrayBackend<f32>>(&device, &kord_item)?;
+
+    Ok(notes)
+}
+
 // Tests.
 
 #[cfg(test)]
@@ -50,12 +75,7 @@ mod tests {
     use std::{fs::File, io::Read};
 
     use super::*;
-    use crate::{
-        analyze::base::{get_frequency_space, get_smoothed_frequency_space},
-        core::{base::Parsable, chord::Chord},
-        ml::base::FREQUENCY_SPACE_SIZE,
-    };
-    use burn_ndarray::{NdArrayBackend, NdArrayDevice};
+    use crate::core::{base::Parsable, chord::Chord};
 
     #[test]
     fn test_inference() {
@@ -71,25 +91,7 @@ mod tests {
         // Convert the buffer to a vector of f32
         let audio_data: Vec<f32> = unsafe { std::slice::from_raw_parts(buffer.as_ptr() as *const f32, element_count).to_vec() };
 
-        // Prepare the audio data.
-        let frequency_space = get_frequency_space(&audio_data, 5);
-        let smoothed_frequency_space: [_; FREQUENCY_SPACE_SIZE] = get_smoothed_frequency_space(&frequency_space, 5)
-            .into_iter()
-            .take(FREQUENCY_SPACE_SIZE)
-            .map(|(_, v)| v)
-            .collect::<Vec<_>>()
-            .try_into()
-            .unwrap();
-
-        let kord_item = KordItem {
-            frequency_space: smoothed_frequency_space,
-            ..Default::default()
-        };
-
-        let device = NdArrayDevice::Cpu;
-
-        // Run the inference.
-        let notes = super::run_inference::<NdArrayBackend<f32>>(&device, &kord_item).unwrap();
+        let notes = infer(&audio_data, 5).unwrap();
 
         let chord = Chord::from_notes(&notes).unwrap();
 
