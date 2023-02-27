@@ -1,13 +1,26 @@
 //! Module for generic training and inference helpers.
 
-use std::{path::{Path, PathBuf}, io::{BufReader, Cursor, Write}, collections::hash_map::DefaultHasher, hash::{Hash, Hasher}, fs::File};
+use std::{
+    collections::hash_map::DefaultHasher,
+    fs::File,
+    hash::{Hash, Hasher},
+    io::{BufReader, Cursor, Write},
+    path::{Path, PathBuf},
+};
 
-use burn::tensor::{Tensor, backend::Backend};
+use burn::tensor::{backend::Backend, Tensor};
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 
-use crate::{analyze::base::get_notes_from_smoothed_frequency_space, core::{note::{Note, HasNoteId}, helpers::{mel, inv_mel}, base::Res}};
+use crate::{
+    analyze::base::get_notes_from_smoothed_frequency_space,
+    core::{
+        base::Res,
+        helpers::{inv_mel, mel},
+        note::{HasNoteId, Note},
+    },
+};
 
-use super::{KordItem, MEL_SPACE_SIZE, FREQUENCY_SPACE_SIZE};
+use super::{KordItem, FREQUENCY_SPACE_SIZE, MEL_SPACE_SIZE};
 
 // Operations for working with kord samples.
 

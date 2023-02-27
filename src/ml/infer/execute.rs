@@ -3,16 +3,16 @@
 use burn::{
     config::Config,
     module::{Module, State},
-    tensor::backend::{Backend},
+    tensor::backend::Backend,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     core::{
-        base::{Res},
+        base::Res,
         note::{HasNoteId, Note},
     },
-    ml::base::{KordItem, TrainConfig, model::KordModel, data::kord_item_to_sample_tensor, helpers::binary_to_u128},
+    ml::base::{data::kord_item_to_sample_tensor, helpers::binary_to_u128, model::KordModel, KordItem, TrainConfig},
 };
 
 pub fn run_inference<B: Backend>(device: &B::Device, kord_item: &KordItem) -> Res<Vec<Note>>
@@ -47,11 +47,15 @@ where
 #[cfg(test)]
 #[cfg(feature = "ml_infer")]
 mod tests {
-    use std::{io::Read, fs::File};
+    use std::{fs::File, io::Read};
 
     use super::*;
+    use crate::{
+        analyze::base::{get_frequency_space, get_smoothed_frequency_space},
+        core::{base::Parsable, chord::Chord},
+        ml::base::FREQUENCY_SPACE_SIZE,
+    };
     use burn_ndarray::{NdArrayBackend, NdArrayDevice};
-    use crate::{core::{base::Parsable, chord::Chord}, analyze::base::{get_frequency_space, get_smoothed_frequency_space}, ml::base::FREQUENCY_SPACE_SIZE};
 
     #[test]
     fn test_inference() {

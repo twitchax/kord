@@ -7,11 +7,13 @@ use burn::{
     tensor::{backend::Backend, Tensor},
 };
 
-use crate::{
-    ml::base::{KordItem, data::{kord_item_to_sample_tensor, kord_item_to_target_tensor}, helpers::load_kord_item},
+use crate::ml::base::{
+    data::{kord_item_to_sample_tensor, kord_item_to_target_tensor},
+    helpers::load_kord_item,
+    KordItem,
 };
 
-use super::helpers::{get_simulated_kord_items};
+use super::helpers::get_simulated_kord_items;
 
 // Dataset.
 

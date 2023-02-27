@@ -1,17 +1,27 @@
 //! Helpers for training models.
 
 use burn::{
-    tensor::{backend::{Backend, ADBackend}, Tensor},
-    train::{metric::{
-        state::{FormatOptions, NumericMetricState},
-        Adaptor, LossInput, Metric, MetricEntry, Numeric,
-    }, TrainStep, TrainOutput, ValidStep},
+    tensor::{
+        backend::{ADBackend, Backend},
+        Tensor,
+    },
+    train::{
+        metric::{
+            state::{FormatOptions, NumericMetricState},
+            Adaptor, LossInput, Metric, MetricEntry, Numeric,
+        },
+        TrainOutput, TrainStep, ValidStep,
+    },
 };
 use rand::Rng;
 
 use crate::{
-    core::{note::{Note, HasNoteId, ALL_PITCH_NOTES}, pitch::HasFrequency, interval::{Interval, PRIMARY_HARMONIC_SERIES}},
-    ml::base::{KordItem, FREQUENCY_SPACE_SIZE, NUM_CLASSES, model::KordModel, helpers::load_kord_item},
+    core::{
+        interval::{Interval, PRIMARY_HARMONIC_SERIES},
+        note::{HasNoteId, Note, ALL_PITCH_NOTES},
+        pitch::HasFrequency,
+    },
+    ml::base::{helpers::load_kord_item, model::KordModel, KordItem, FREQUENCY_SPACE_SIZE, NUM_CLASSES},
 };
 
 use super::data::KordBatch;
@@ -167,7 +177,10 @@ pub fn get_simulated_kord_item(notes: &[Note], peak_radius: f32, harmonic_decay:
 
         let true_harmonic_series = (1..31).into_iter().map(|k| k as f32 * note_frequency).collect::<Vec<_>>();
 
-        let mut equal_temperament_harmonic_series = PRIMARY_HARMONIC_SERIES.into_iter().map(|k| (*note + k).frequency() + get_random_between(-frequency_wobble, frequency_wobble)).collect::<Vec<_>>();
+        let mut equal_temperament_harmonic_series = PRIMARY_HARMONIC_SERIES
+            .into_iter()
+            .map(|k| (*note + k).frequency() + get_random_between(-frequency_wobble, frequency_wobble))
+            .collect::<Vec<_>>();
         equal_temperament_harmonic_series.insert(0, note_frequency);
 
         for harmonic_frequency in true_harmonic_series {
@@ -180,7 +193,7 @@ pub fn get_simulated_kord_item(notes: &[Note], peak_radius: f32, harmonic_decay:
             for i in (harmonic_frequency - peak_radius).round() as usize..(harmonic_frequency + peak_radius).round() as usize {
                 result.frequency_space[i] += peak_strength * (1.0 - ((2.0 / peak_radius) * (i as f32 - harmonic_frequency).abs()).tanh());
             }
-            
+
             harmonic_strength *= 1.0 - harmonic_decay;
         }
     }
@@ -248,7 +261,7 @@ pub fn get_random_between(min: f32, max: f32) -> f32 {
 mod tests {
     use std::path::Path;
 
-    use crate::ml::base::{KordItem, FREQUENCY_SPACE_SIZE, helpers::save_kord_item};
+    use crate::ml::base::{helpers::save_kord_item, KordItem, FREQUENCY_SPACE_SIZE};
 
     use super::*;
     use pretty_assertions::assert_eq;

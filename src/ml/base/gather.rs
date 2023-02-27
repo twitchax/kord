@@ -11,9 +11,7 @@ use crate::{
         base::{Parsable, Void},
         note::{HasNoteId, Note},
     },
-    ml::{
-        base::{KordItem, FREQUENCY_SPACE_SIZE},
-    },
+    ml::base::{KordItem, FREQUENCY_SPACE_SIZE},
 };
 
 use super::helpers::save_kord_item;

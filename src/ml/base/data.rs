@@ -1,10 +1,13 @@
 //! Generic data structures and functions for training or inference.
 
-use burn::tensor::{backend::Backend, Tensor, Data};
+use burn::tensor::{backend::Backend, Data, Tensor};
 
 use crate::analyze::base::translate_frequency_space_to_peak_space;
 
-use super::{KordItem, MEL_SPACE_SIZE, helpers::{u128_to_binary, get_deterministic_guess, mel_filter_banks_from}, INPUT_SPACE_SIZE, NUM_CLASSES};
+use super::{
+    helpers::{get_deterministic_guess, mel_filter_banks_from, u128_to_binary},
+    KordItem, INPUT_SPACE_SIZE, MEL_SPACE_SIZE, NUM_CLASSES,
+};
 
 /// Takes a loaded kord item and converts it to a sample tensor that is ready for classification.
 pub fn kord_item_to_sample_tensor<B: Backend>(item: &KordItem) -> Tensor<B, 2> {

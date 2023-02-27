@@ -230,7 +230,7 @@ fn reduce_notes_by_harmonic_series(notes: &[(Note, f32)], cutoff: f32) -> Vec<No
 
 /// For every note, get its "frequency window", which is halfway between the frequency of the note and the frequency of the
 /// the one before, and the next one.
-/// 
+///
 /// Returns a vector of tuples, where the first element is the note, and the second element is the frequency window as a (low, high) tuple.
 pub fn get_frequency_bins(notes: &[Note]) -> Vec<(Note, (f32, f32))> {
     let mut bins = Vec::new();

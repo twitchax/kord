@@ -3,7 +3,7 @@ use std::sync::Arc;
 use burn::{
     config::Config,
     data::dataloader::DataLoaderBuilder,
-    module::{Module},
+    module::Module,
     optim::{decay::WeightDecayConfig, Adam, AdamConfig},
     tensor::backend::{ADBackend, Backend},
     train::{metric::LossMetric, LearnerBuilder},
@@ -11,14 +11,17 @@ use burn::{
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
-    core::{
-        base::{Void},
+    core::base::Void,
+    ml::base::{
+        data::{kord_item_to_sample_tensor, kord_item_to_target_tensor},
+        helpers::{binary_to_u128, get_deterministic_guess},
+        model::KordModel,
     },
-    ml::base::{data::{kord_item_to_sample_tensor, kord_item_to_target_tensor}, model::KordModel, helpers::{binary_to_u128, get_deterministic_guess}},
 };
 
 use super::{
-    helpers::KordAccuracyMetric, data::{KordDataset, KordBatcher},
+    data::{KordBatcher, KordDataset},
+    helpers::KordAccuracyMetric,
 };
 
 use crate::ml::base::TrainConfig;

@@ -4,13 +4,10 @@ use core::f32;
 use std::ops::Deref;
 
 use burn::{
+    config::Config,
     module::{Module, Param},
     nn::{self},
-    tensor::{
-        backend::{Backend},
-        Tensor, Distribution, ElementConversion, Data
-    },
-    config::Config,
+    tensor::{backend::Backend, Data, Distribution, ElementConversion, Tensor},
 };
 
 use super::{helpers::Sigmoid, mlp::Mlp, INPUT_SPACE_SIZE, NUM_CLASSES};
@@ -18,7 +15,10 @@ use super::{helpers::Sigmoid, mlp::Mlp, INPUT_SPACE_SIZE, NUM_CLASSES};
 use crate::{analyze::base::get_frequency_bins, core::note::ALL_PITCH_NOTES};
 
 #[cfg(feature = "ml_train")]
-use crate::ml::train::{helpers::{KordClassificationOutput, MeanSquareLoss}, data::KordBatch};
+use crate::ml::train::{
+    data::KordBatch,
+    helpers::{KordClassificationOutput, MeanSquareLoss},
+};
 
 #[derive(Module, Debug)]
 pub struct KordModel<B: Backend> {
@@ -61,10 +61,6 @@ impl<B: Backend> KordModel<B> {
 
     #[cfg(feature = "ml_train")]
     pub fn forward_classification(&self, item: KordBatch<B>) -> KordClassificationOutput<B> {
-        
-
-        
-
         let targets = item.targets;
         let output = self.forward(item.samples);
 
@@ -107,7 +103,7 @@ impl<B: Backend> HarmonicConvolution<B> {
         let mut masks = vec![];
         let mut weights = vec![];
 
-        for (_, (low, high)) in get_frequency_bins(&ALL_PITCH_NOTES.iter().skip(23).take(62).cloned().collect::<Vec<_>>())  {
+        for (_, (low, high)) in get_frequency_bins(&ALL_PITCH_NOTES.iter().skip(23).take(62).cloned().collect::<Vec<_>>()) {
             let weight = Tensor::random([config.d_input], distribution).reshape([config.d_input, 1]);
 
             let mut mask = [0.0f32; D];
@@ -119,7 +115,7 @@ impl<B: Backend> HarmonicConvolution<B> {
                 if high_harmonic >= config.d_input {
                     break;
                 }
-                
+
                 for k in low_harmonic..high_harmonic {
                     mask[k] = 1.0;
                 }
@@ -146,7 +142,7 @@ impl<B: Backend> HarmonicConvolution<B> {
             bias: Param::new(bias),
         }
     }
-    
+
     pub fn forward<const D: usize>(&self, input: Tensor<B, D>) -> Tensor<B, D> {
         let device = input.device();
 

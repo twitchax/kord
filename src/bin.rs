@@ -1,12 +1,11 @@
 use std::path::PathBuf;
 
 use clap::{ArgAction, Parser, Subcommand};
-use klib::{
-    core::{
-        base::{Parsable, Res, Void},
-        chord::{Chord, Chordable},
-        octave::Octave, note::Note,
-    },
+use klib::core::{
+    base::{Parsable, Res, Void},
+    chord::{Chord, Chordable},
+    note::Note,
+    octave::Octave,
 };
 
 #[derive(Parser, Debug)]
@@ -251,7 +250,7 @@ enum MlCommand {
         /// The prefix of the generated sample files.
         #[arg(long, default_value = "0_")]
         prefix: String,
-        
+
         /// The radius of the generated note peaks.
         #[arg(long, default_value_t = 5.0)]
         peak_radius: f32,
@@ -416,7 +415,10 @@ fn start(args: Args) -> Void {
             #[cfg(all(feature = "ml_infer", feature = "analyze_mic"))]
             Some(MlCommand::Infer { length }) => {
                 use burn_ndarray::{NdArrayBackend, NdArrayDevice};
-                use klib::ml::{base::{FREQUENCY_SPACE_SIZE, KordItem}, infer::run_inference};
+                use klib::ml::{
+                    base::{KordItem, FREQUENCY_SPACE_SIZE},
+                    infer::run_inference,
+                };
 
                 // Prepare the audio data.
                 let audio_data = futures::executor::block_on(klib::analyze::mic::get_audio_data_from_microphone(length))?;
@@ -445,7 +447,14 @@ fn start(args: Args) -> Void {
             #[cfg(feature = "plot")]
             Some(MlCommand::Plot { source, x_min, x_max }) => {
                 use anyhow::Context;
-                use klib::{helpers::plot_frequency_space, analyze::base::translate_frequency_space_to_peak_space, ml::{base::MEL_SPACE_SIZE, train::helpers::{load_kord_item, mel_filter_banks_from}}};
+                use klib::{
+                    analyze::base::translate_frequency_space_to_peak_space,
+                    helpers::plot_frequency_space,
+                    ml::{
+                        base::MEL_SPACE_SIZE,
+                        train::helpers::{load_kord_item, mel_filter_banks_from},
+                    },
+                };
 
                 let kord_item = load_kord_item(&source);
 
@@ -479,11 +488,17 @@ fn start(args: Args) -> Void {
                 let peak_space = peak_space.into_iter().map(|(_, v)| v).collect::<Vec<_>>();
                 let mel_peak_space = mel_filter_banks_from(&peak_space).into_iter().enumerate().map(|(k, v)| (k as f32, v)).collect::<Vec<_>>();
                 plot_frequency_space(&mel_peak_space, "KordItem Mel Peak Space", &mel_peak_file_name, 0.0, MEL_SPACE_SIZE as f32);
-                
+
                 // Log Frequency Space
                 let log_file_name = format!("{}_log", name);
                 let log_frequency_space = kord_item.frequency_space.into_iter().map(|v| v.log2()).collect::<Vec<_>>();
-                plot_frequency_space(&log_frequency_space.iter().enumerate().map(|(k, v)| (k as f32, *v)).collect::<Vec<_>>(), "KordItem Log Space", &log_file_name, x_min, x_max);
+                plot_frequency_space(
+                    &log_frequency_space.iter().enumerate().map(|(k, v)| (k as f32, *v)).collect::<Vec<_>>(),
+                    "KordItem Log Space",
+                    &log_file_name,
+                    x_min,
+                    x_max,
+                );
 
                 // Plot time space.
                 let harmonic_file_name = format!("{}_time", name);
@@ -491,16 +506,25 @@ fn start(args: Args) -> Void {
                 plot_frequency_space(&time_space, "KordItem Time Space", &harmonic_file_name, x_min, x_max);
             }
             #[cfg(feature = "ml_train")]
-            Some(MlCommand::GenerateSamples { destination, prefix, peak_radius, harmonic_decay, frequency_wobble }) => {
-                use klib::{core::{note::ALL_PITCH_NOTES, interval::Interval}, ml::{base::helpers::save_kord_item, train::helpers::get_simulated_kord_item}};
+            Some(MlCommand::GenerateSamples {
+                destination,
+                prefix,
+                peak_radius,
+                harmonic_decay,
+                frequency_wobble,
+            }) => {
+                use klib::{
+                    core::{interval::Interval, note::ALL_PITCH_NOTES},
+                    ml::{base::helpers::save_kord_item, train::helpers::get_simulated_kord_item},
+                };
 
                 for _ in 0..10 {
                     for note in ALL_PITCH_NOTES.iter().skip(12).take(74) {
                         let note = *note;
-    
+
                         for k in 0..4 {
                             let mut notes = vec![note];
-    
+
                             match k {
                                 0 => {}
                                 1 => {
@@ -517,13 +541,13 @@ fn start(args: Args) -> Void {
                                 }
                                 _ => unreachable!(),
                             }
-    
+
                             notes.sort();
                             let note_names = notes.iter().map(|n| n.to_string()).collect::<Vec<_>>().join("_");
-    
+
                             // Generate the sample.
                             let kord_item = get_simulated_kord_item(&notes, peak_radius, harmonic_decay, frequency_wobble);
-    
+
                             // Save the sample.
                             save_kord_item(&destination, &prefix, &note_names, &kord_item)?;
                         }

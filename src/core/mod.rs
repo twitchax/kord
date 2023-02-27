@@ -2,6 +2,7 @@
 
 pub mod base;
 pub mod chord;
+pub mod helpers;
 pub mod interval;
 pub mod known_chord;
 pub mod modifier;
@@ -10,4 +11,3 @@ pub mod note;
 pub mod octave;
 pub mod parser;
 pub mod pitch;
-pub mod helpers;

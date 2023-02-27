@@ -1,13 +1,13 @@
 //! Base types for machine learning.
 
-pub mod helpers;
 pub mod data;
 pub mod gather;
-pub mod model;
+pub mod helpers;
 pub mod mlp;
+pub mod model;
 
-use std::path::PathBuf;
 use burn::config::Config;
+use std::path::PathBuf;
 
 /// The standard frequency space size to use across all ML operations.
 ///

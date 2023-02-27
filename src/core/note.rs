@@ -614,7 +614,10 @@ mod tests {
 
     #[test]
     fn test_harmonics() {
-        assert_eq!(C.primary_harmonic_series(), vec![CFive, GFive, CSix, ESix, GSix, BFlatSix, DSeven, ESeven, FSharpSeven, GSeven, AFlatSeven, BFlatSeven, BSeven]);
+        assert_eq!(
+            C.primary_harmonic_series(),
+            vec![CFive, GFive, CSix, ESix, GSix, BFlatSix, DSeven, ESeven, FSharpSeven, GSeven, AFlatSeven, BFlatSeven, BSeven]
+        );
     }
 
     #[test]
