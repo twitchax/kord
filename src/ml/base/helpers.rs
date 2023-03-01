@@ -172,6 +172,6 @@ impl Sigmoid {
 
     pub fn forward<B: Backend, const D: usize>(&self, input: Tensor<B, D>) -> Tensor<B, D> {
         let scaled = input.mul_scalar(self.scale);
-        scaled.exp().div(&scaled.exp().add_scalar(1.0))
+        scaled.clone().exp().div(scaled.exp().add_scalar(1.0))
     }
 }

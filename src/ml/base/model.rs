@@ -147,11 +147,11 @@ impl<B: Backend> HarmonicConvolution<B> {
         let device = input.device();
 
         let mask = Tensor::from_data(self.mask.clone()).to_device(&device);
-        let matrix = mask.mul(&self.weight).unsqueeze();
-        let output = input.matmul(&matrix);
+        let matrix = mask.mul((*self.weight.deref()).clone()).unsqueeze();
+        let output = input.matmul(matrix);
 
         match self.bias.deref() {
-            Some(bias) => output + bias.unsqueeze(),
+            Some(bias) => output + bias.clone().unsqueeze(),
             None => output,
         }
     }

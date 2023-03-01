@@ -30,7 +30,7 @@ where
 
     // Define the model.
     let mut model = KordModel::<B>::new(config.mlp_layers, config.mlp_size, config.mlp_dropout, config.sigmoid_strength);
-    model.load(&state)?;
+    model = model.load(&state)?;
 
     // Prepare the sample.
     let sample = kord_item_to_sample_tensor(kord_item).to_device(device).detach();
