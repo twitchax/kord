@@ -68,14 +68,14 @@ pub fn infer(audio_data: &[f32], length_in_seconds: u8) -> Res<Vec<Note>> {
 }
 
 // Statics.
-#[cfg(any(target_family = "unix", target_family = "wasm"))]
+#[cfg(host_family_unix)]
 static CONFIG: &[u8] = include_bytes!("../../../model/model_config.json");
-#[cfg(any(target_family = "unix", target_family = "wasm"))]
+#[cfg(host_family_unix)]
 static STATE: &[u8] = include_bytes!("../../../model/state.json.gz");
 
-#[cfg(target_family = "windows")]
+#[cfg(host_family_windows)]
 static CONFIG: &[u8] = include_bytes!("..\\..\\..\\model\\model_config.json");
-#[cfg(target_family = "windows")]
+#[cfg(host_family_windows)]
 static STATE: &[u8] = include_bytes!("..\\..\\..\\model\\state.json.gz");
 
 
