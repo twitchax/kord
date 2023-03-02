@@ -65,7 +65,7 @@ impl<B: Backend> KordModel<B> {
         let output = self.forward(item.samples);
 
         let loss = MeanSquareLoss::default();
-        let loss = loss.forward(&output, &targets);
+        let loss = loss.forward(output.clone(), targets.clone());
 
         // let loss = BinaryCrossEntropyLoss::default();
         // let loss = loss.forward(&output, &targets);

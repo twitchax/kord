@@ -165,7 +165,6 @@ pub struct Sigmoid {
 }
 
 impl Sigmoid {
-    /// Create the module from the given configuration.
     pub fn new(scale: f32) -> Self {
         Self { scale }
     }

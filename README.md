@@ -58,7 +58,8 @@ Commands:
   play      Describes and plays a chord
   loop      Loops on a set of chord changes, while simultaneously outputting the descriptions
   guess     Attempt to guess the chord from a set of notes (ordered by simplicity)
-  listen    Records audio from the microphone, and guesses pitches / chords
+  analyze   Set of commands to analyze audio data
+  ml        Set of commands to train and infer with ML
   help      Print this message or the help of the given subcommand(s)
 
 Options:
@@ -130,8 +131,22 @@ Cm9(♭5)(add2)/E
 
 ### Guess Notes / Chord From Audio
 
+Using the deterministic algorithm only:
+
 ```bash
-$ kord listen
+$ kord analyze mic
+
+Notes: C3 E3 G3
+C@3
+   major
+   C, D, E, F, G, A, B
+   C, E, G
+```
+
+Using the ML algorithm:
+
+```bash
+$ kord ml infer mic
 
 Notes: C3 E3 G3
 C@3
@@ -177,6 +192,26 @@ use klib::chord::*;
 // From a note, create a chord, and look at the chord tones.
 assert_eq!(C.into_chord().augmented().major7().chord(), vec![C, E, GSharp, B]);
 ```
+
+## Feature Flags
+
+The library and binary both support various feature flags.  Of most important note are:
+* `default = ["cli", "analyze", "ml_infer", "audio"]`
+* `cli`: enables the CLI features, and can be removed if only compiling the library.
+* `analyze = ["analyze_mic", "analyze_file"]`: enables the `analyze` subcommand, which allows for analyzing audio data (and the underlying library features).
+  * `analyze_mic`: enables the `analyze mic` subcommand, which allows for analyzing audio from a microphone (and the underlying library features).
+  * `analyze_file`: enables the `analyze file` subcommand, which allows for analyzing audio from a file (and the underlying library features).
+    * `analyze_file_mp3`: enables the features to analyze mp3 files.
+    * `analyze_file_aac`: enables the features to analyze aac files.
+    * `analyze_file_alac`: enables the features to analyze alac files.
+* `ml = ["ml_train", "ml_infer"]`: enables the `ml` subcommand, which allows for training and inferring with ML (and the underlying library features).
+  * `ml_train`: enables the `ml train` subcommand, which allows for training ML models (and the underlying library features).
+  * `ml_infer`: enables the `ml infer` subcommand, which allows for inferring with ML models (and the underlying library features).
+    * > NOTE: Adding the `analyze_mic` feature flag will enable the `ml infer mic` subcommand, which allows for inferring with ML models from a microphone.
+    * > NOTE: Adding the `analyze_file` feature flag will enable the `ml infer file` subcommand, which allows for inferring with ML models from a file.
+  * `ml_gpu`: enables the features to use a GPU for ML _training_.
+* `wasm`: enables the features to compile to wasm.
+* `plot`: enables the features to plot data.
 
 ## Test
 

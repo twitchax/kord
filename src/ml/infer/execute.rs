@@ -25,8 +25,8 @@ where
 
     // [TODO] Read this from within the binary itself.
 
-    let config = TrainConfig::load("model/model_config.json")?;
-    let state = State::<B::Elem>::load("model/state.json.gz")?;
+    let config = TrainConfig::load_binary(CONFIG)?;
+    let state = State::<B::Elem>::load_binary(STATE)?;
 
     // Define the model.
     let mut model = KordModel::<B>::new(config.mlp_layers, config.mlp_size, config.mlp_dropout, config.sigmoid_strength);
@@ -66,6 +66,18 @@ pub fn infer(audio_data: &[f32], length_in_seconds: u8) -> Res<Vec<Note>> {
 
     Ok(notes)
 }
+
+// Statics.
+#[cfg(any(target_family = "unix", target_family = "wasm"))]
+static CONFIG: &[u8] = include_bytes!("../../../model/model_config.json");
+#[cfg(any(target_family = "unix", target_family = "wasm"))]
+static STATE: &[u8] = include_bytes!("../../../model/state.json.gz");
+
+#[cfg(target_family = "windows")]
+static CONFIG: &[u8] = include_bytes!("..\\..\\..\\model\\model_config.json");
+#[cfg(target_family = "windows")]
+static STATE: &[u8] = include_bytes!("..\\..\\..\\model\\state.json.gz");
+
 
 // Tests.
 

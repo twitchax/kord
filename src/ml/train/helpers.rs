@@ -34,7 +34,7 @@ pub struct MeanSquareLoss<B: Backend> {
 }
 
 impl<B: Backend> MeanSquareLoss<B> {
-    pub fn forward(&self, outputs: &Tensor<B, 2>, targets: &Tensor<B, 2>) -> Tensor<B, 1> {
+    pub fn forward(&self, outputs: Tensor<B, 2>, targets: Tensor<B, 2>) -> Tensor<B, 1> {
         // Compute the mean square error loss.
         outputs.sub(targets).powf(2.0).mean()
     }
@@ -46,9 +46,9 @@ pub struct BinaryCrossEntropyLoss<B: Backend> {
 }
 
 impl<B: Backend> BinaryCrossEntropyLoss<B> {
-    pub fn forward(&self, outputs: &Tensor<B, 2>, targets: &Tensor<B, 2>) -> Tensor<B, 1> {
-        let outputs = outputs.mul_scalar(0.999999f32);
-        let result = (targets.mul(&outputs.log()) + (targets.neg().add_scalar(1.0f32)).mul(&(outputs.neg().add_scalar(1.0f32)).log()))
+    pub fn forward(&self, outputs: &Tensor<B, 2>, targets: Tensor<B, 2>) -> Tensor<B, 1> {
+        let outputs = outputs.clone().mul_scalar(0.999999f32);
+        let result = (targets.clone().mul(outputs.clone().log()) + (targets.neg().add_scalar(1.0f32)).mul((outputs.neg().add_scalar(1.0f32)).log()))
             .mean()
             .neg();
 
@@ -87,8 +87,8 @@ impl<B: Backend> Adaptor<LossInput<B>> for KordClassificationOutput<B> {
 
 // Classification adapters.
 
-impl<B: ADBackend> TrainStep<B, KordBatch<B>, KordClassificationOutput<B>> for KordModel<B> {
-    fn step(&self, item: KordBatch<B>) -> TrainOutput<B, KordClassificationOutput<B>> {
+impl<B: ADBackend> TrainStep<KordBatch<B>, KordClassificationOutput<B>> for KordModel<B> {
+    fn step(&self, item: KordBatch<B>) -> TrainOutput<KordClassificationOutput<B>> {
         let item = self.forward_classification(item);
         TrainOutput::new(self, item.loss.backward(), item)
     }
@@ -128,18 +128,18 @@ impl<B: Backend> Metric for KordAccuracyMetric<B> {
         let [batch_size, _n_classes] = input.targets.dims();
         let device = B::Device::default();
 
-        let targets = input.targets.to_device(&device);
-        let outputs = input.outputs.to_device(&device);
+        let targets = input.targets.clone().to_device(&device);
+        let outputs = input.outputs.clone().to_device(&device);
 
         // let mse: f64 = targets.sub(&outputs).powf(2.0).mean().to_data().convert().value[0];
         // let rmse = mse.sqrt();
 
         // let accuracy = 100.0 * (1.0 - rmse);
 
-        let target_round = targets.greater_equal_scalar(0.5).to_int();
-        let output_round = outputs.greater_equal_scalar(0.5).to_int();
+        let target_round = targets.greater_equal_scalar(0.5).into_int();
+        let output_round = outputs.greater_equal_scalar(0.5).into_int();
 
-        let counts: Vec<u8> = target_round.equal(&output_round).to_int().sum_dim(1).into_data().convert().value;
+        let counts: Vec<u8> = target_round.equal(output_round).into_int().sum_dim(1).into_data().convert().value;
 
         let accuracy = 100.0 * counts.iter().filter(|&&x| x == NUM_CLASSES as u8).count() as f64 / counts.len() as f64;
 
