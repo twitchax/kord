@@ -295,3 +295,63 @@ where
         Some(&array[low_index])
     }
 }
+
+// Tests.
+
+#[cfg(test)]
+pub(crate) mod tests {
+    use std::{fs::File, io::Read};
+
+    use crate::core::note::ALL_PITCH_NOTES;
+
+    use super::*;
+
+    pub fn load_test_data() -> Vec<f32> {
+        let mut file = File::open("tests/vec.bin").unwrap();
+        let file_size = file.metadata().unwrap().len() as usize;
+        let float_size = std::mem::size_of::<f32>();
+        let element_count = file_size / float_size;
+        let mut buffer = vec![0u8; file_size];
+
+        // Read the contents of the file into the buffer
+        file.read_exact(&mut buffer).unwrap();
+
+        // Convert the buffer to a vector of f32
+        let data: Vec<f32> = unsafe { std::slice::from_raw_parts(buffer.as_ptr() as *const f32, element_count).to_vec() };
+
+        data
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_get_notes_from_audio_data_length() {
+        get_notes_from_audio_data(&[0.0, 0.0, 0.0], 0).unwrap();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_get_notes_from_audio_data_nan() {
+        get_notes_from_audio_data(&[0.0, 0.0, f32::NAN], 10).unwrap();
+    }
+
+    #[test]
+    fn test_get_time_space() {
+        let data = load_test_data();
+
+        let frequency_space = get_frequency_space(&data, 5).into_iter().map(|(_, v)| v).collect::<Vec<_>>();
+        let _ = get_time_space(&frequency_space);
+    }
+
+    #[test]
+    fn test_get_frequency_bins() {
+        let bins = get_frequency_bins(&ALL_PITCH_NOTES.iter().skip(23).take(62).cloned().collect::<Vec<_>>());
+
+        assert_eq!(bins.len(), 60);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_binary_search_closest_empty() {
+        binary_search_closest(&[], 0.0, |x| *x).unwrap();
+    }
+}

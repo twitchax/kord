@@ -43,6 +43,7 @@ pub fn get_audio_data_from_file(file: impl AsRef<Path>, start: Option<Duration>,
 }
 
 /// Play the given segment of an audio file. Used to preview a clip before guessing notes from it.
+#[no_coverage]
 pub fn preview_audio_file_clip(file: impl AsRef<Path>, start: Option<Duration>, end: Option<Duration>) -> Res<()> {
     let file = File::open(file)?;
     preview_audio_clip(file, start, end)

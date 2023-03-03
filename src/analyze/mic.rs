@@ -105,23 +105,11 @@ async fn record_from_device(device: cpal::Device, config: cpal::SupportedStreamC
 
 #[cfg(test)]
 mod tests {
-    use std::{fs::File, io::Read};
-
     use crate::core::{base::Parsable, chord::Chord, note::Note};
 
     #[test]
     fn test_mic() {
-        let mut file = File::open("tests/vec.bin").unwrap();
-        let file_size = file.metadata().unwrap().len() as usize;
-        let float_size = std::mem::size_of::<f32>();
-        let element_count = file_size / float_size;
-        let mut buffer = vec![0u8; file_size];
-
-        // Read the contents of the file into the buffer
-        file.read_exact(&mut buffer).unwrap();
-
-        // Convert the buffer to a vector of f32
-        let data: Vec<f32> = unsafe { std::slice::from_raw_parts(buffer.as_ptr() as *const f32, element_count).to_vec() };
+        let data = crate::analyze::base::tests::load_test_data();
 
         let notes = Note::from_audio(&data, 5).unwrap();
 
