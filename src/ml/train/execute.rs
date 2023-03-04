@@ -82,12 +82,15 @@ where
 
     let config_path = format!("{}/model_config.json", &config.destination);
     let state_path = format!("{}/state.json.gz", &config.destination);
+    let state_bincode_path = format!("{}/state.bincode", &config.destination);
     let _ = std::fs::create_dir_all(&config.destination);
     let _ = std::fs::remove_file(&config_path);
     let _ = std::fs::remove_file(&state_path);
+    let _ = std::fs::remove_file(&state_bincode_path);
 
     config.save(&config_path)?;
     model_trained.state().save(&state_path)?;
+    std::fs::write(&state_bincode_path, bincode::serde::encode_to_vec(&model_trained.state(), bincode::config::standard())?)?;
 
     // Compute overall accuracy.
 

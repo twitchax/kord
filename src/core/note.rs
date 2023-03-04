@@ -185,6 +185,7 @@ impl Note {
     #[cfg(feature = "analyze_mic")]
     pub async fn from_mic(length_in_seconds: u8) -> Res<Vec<Self>> {
         use crate::analyze::mic::get_notes_from_microphone;
+
         get_notes_from_microphone(length_in_seconds).await
     }
 
@@ -192,7 +193,30 @@ impl Note {
     #[cfg(feature = "analyze_base")]
     pub fn from_audio(data: &[f32], length_in_seconds: u8) -> Res<Vec<Self>> {
         use crate::analyze::base::get_notes_from_audio_data;
+        
         get_notes_from_audio_data(data, length_in_seconds)
+    }
+
+    /// Attempts to use the default microphone to listen to audio for the specified time
+    /// to identify the notes in the recorded audio using ML.
+    ///
+    /// Currently, this does not work with WASM.
+    #[no_coverage]
+    #[cfg(all(feature = "ml_infer", feature = "analyze_mic"))]
+    pub async fn from_mic_ml(length_in_seconds: u8) -> Res<Vec<Self>> {
+        use crate::{ml::infer::infer, analyze::mic::get_audio_data_from_microphone};
+
+        let audio_data = get_audio_data_from_microphone(length_in_seconds).await?;
+
+        infer(&audio_data, length_in_seconds)
+    }
+
+    /// Attempts to use the provided to identify the notes in the audio data using ML.
+    #[cfg(all(feature = "ml_infer", feature = "analyze_base"))]
+    pub fn from_audio_ml(data: &[f32], length_in_seconds: u8) -> Res<Vec<Self>> {
+        use crate::ml::infer::infer;
+
+        infer(data, length_in_seconds)
     }
 }
 

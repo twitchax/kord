@@ -1,5 +1,6 @@
 //! Module for executing inference.
 
+use anyhow::Context;
 use burn::{
     config::Config,
     module::{Module, State},
@@ -23,14 +24,24 @@ where
 {
     // Load the config and state.
 
-    // [TODO] Read this from within the binary itself.
+    let config = match TrainConfig::load_binary(CONFIG) {
+        Ok(config) => config,
+        Err(_) => {
+            return Err(anyhow::Error::msg("Could not load the config from within the binary."));
+        }
+    };
 
-    let config = TrainConfig::load_binary(CONFIG)?;
-    let state = State::<B::Elem>::load_binary(STATE)?;
+    //let state = State::<B::Elem>::load_binary(STATE)?;
+    let (state, _len): (State<B::Elem>, usize) = bincode::serde::decode_from_slice(STATE_BINCODE, bincode::config::standard()).context("Failed to decode state.")?;
 
     // Define the model.
     let mut model = KordModel::<B>::new(config.mlp_layers, config.mlp_size, config.mlp_dropout, config.sigmoid_strength);
-    model = model.load(&state)?;
+    model = match model.load(&state) {
+        Ok(model) => model,
+        Err(_) => {
+            return Err(anyhow::Error::msg("Could not load the model state from within the binary."));
+        }
+    };
 
     // Prepare the sample.
     let sample = kord_item_to_sample_tensor(kord_item).to_device(device).detach();
@@ -71,13 +82,14 @@ pub fn infer(audio_data: &[f32], length_in_seconds: u8) -> Res<Vec<Note>> {
 #[cfg(host_family_unix)]
 static CONFIG: &[u8] = include_bytes!("../../../model/model_config.json");
 #[cfg(host_family_unix)]
-static STATE: &[u8] = include_bytes!("../../../model/state.json.gz");
+//static STATE: &[u8] = include_bytes!("../../../model/state.json.gz");
+static STATE_BINCODE: &[u8] = include_bytes!("../../../model/state.bincode");
 
 #[cfg(host_family_windows)]
 static CONFIG: &[u8] = include_bytes!("..\\..\\..\\model\\model_config.json");
 #[cfg(host_family_windows)]
-static STATE: &[u8] = include_bytes!("..\\..\\..\\model\\state.json.gz");
-
+//static STATE: &[u8] = include_bytes!("..\\..\\..\\model\\state.json.gz");
+static STATE_BINCODE: &[u8] = include_bytes!("..\\..\\..\\model\\state.bincode");
 
 // Tests.
 
