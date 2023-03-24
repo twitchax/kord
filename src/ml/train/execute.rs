@@ -8,10 +8,11 @@ use burn::{
     tensor::backend::{ADBackend, Backend},
     train::{metric::LossMetric, LearnerBuilder},
 };
+use burn_autodiff::ADBackendDecorator;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
-    core::{base::{Res}},
+    core::{base::{Res, Void}},
     ml::base::{
         data::{kord_item_to_sample_tensor, kord_item_to_target_tensor},
         helpers::{binary_to_u128, get_deterministic_guess},
@@ -185,6 +186,114 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
     println!("Inference accuracy: {}%", inference_accuracy);
 
     inference_accuracy
+}
+
+#[no_coverage]
+pub fn hyper_parameter_tuning(source: String, destination: String, log: String, device: String) -> Void {
+    let peak_radiuses = [1.0];
+    let harmonic_decays = [0.1];
+    let frequency_wobbles = [0.4];
+    let mlp_layers = [3];
+    let mlp_sizes = [4096];
+    let mlp_dropouts = [0.1, 0.3, 0.5];
+    let epochs = [256];
+    let learning_rates = [1e-5];
+    let weight_decays = [5e-4];
+
+    let mut count = 1;
+    let total = peak_radiuses.len() * harmonic_decays.len() * frequency_wobbles.len() * mlp_layers.len() * mlp_dropouts.len() * mlp_sizes.len() * epochs.len() * learning_rates.len() * weight_decays.len();
+
+    let mut max_accuracy = 0.0;
+    let mut best_config = None;
+
+    for peak_radius in &peak_radiuses {
+        for harmonic_decay in &harmonic_decays {
+            for frequency_wobble in &frequency_wobbles {
+                for mlp_layer in &mlp_layers {
+                    for mlp_size in &mlp_sizes {
+                        for mlp_dropout in &mlp_dropouts {
+                            for epoch in &epochs {
+                                for learning_rate in &learning_rates {
+                                    for weight_decay in &weight_decays {
+                                        let config = TrainConfig {
+                                            source: source.clone(),
+                                            destination: destination.clone(),
+                                            log: log.clone(),
+                                            simulation_size: 20,
+                                            simulation_peak_radius: *peak_radius,
+                                            simulation_harmonic_decay: *harmonic_decay,
+                                            simulation_frequency_wobble: *frequency_wobble,
+                                            mlp_layers: *mlp_layer,
+                                            mlp_size: *mlp_size,
+                                            mlp_dropout: *mlp_dropout,
+                                            model_epochs: *epoch as usize,
+                                            model_batch_size: 100,  
+                                            model_workers: 32,
+                                            model_seed: 76980,
+                                            adam_learning_rate: *learning_rate,
+                                            adam_weight_decay: *weight_decay,
+                                            adam_beta1: 0.9,
+                                            adam_beta2: 0.999,
+                                            adam_epsilon: f32::EPSILON,
+                                            sigmoid_strength: 1.0,
+                                            no_plots: true,
+                                        };
+
+                                        println!("Running training {}/{}:\n\n{}\n", count, total, config);
+
+                                        let accuracy = match device.as_str() {
+                                            #[cfg(feature = "ml_gpu")]
+                                            "gpu" => {
+                                                use burn_tch::{TchBackend, TchDevice};
+
+                                                #[cfg(not(target_os = "macos"))]
+                                                let device = TchDevice::Cuda(0);
+                                                #[cfg(target_os = "macos")]
+                                                let device = TchDevice::Mps;
+
+                                                run_training::<ADBackendDecorator<TchBackend<f32>>>(device, &config, true, false)?
+                                            }
+                                            "cpu" => {
+                                                use burn_ndarray::{NdArrayBackend, NdArrayDevice};
+
+                                                let device = NdArrayDevice::Cpu;
+
+                                                run_training::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config, true, false)?
+                                            }
+                                            _ => {
+                                                return Err(anyhow::Error::msg("Invalid device (must choose either `gpu` [requires `ml_gpu` feature] or `cpu`)."));
+                                            }
+                                        };
+
+                                        if accuracy > max_accuracy {
+                                            println!("New max accuracy: {}%", accuracy);
+
+                                            max_accuracy = accuracy;
+                                            best_config = Some(config);
+                                        }
+
+                                        println!();
+
+                                        count += 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    if let Some(best_config) = best_config {
+        println!();
+        println!();
+        println!();
+        println!("Best config: {}", best_config);
+        println!("Best accuracy: {}%", max_accuracy);
+    }
+
+    Ok(())
 }
 
 // Tests.

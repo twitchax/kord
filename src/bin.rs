@@ -6,7 +6,7 @@ use klib::{core::{
     chord::{Chord, Chordable},
     note::Note,
     octave::Octave,
-}, ml::base::{helpers::harmonic_convolution}};
+}};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -181,7 +181,7 @@ enum MlCommand {
         mlp_layers: usize,
 
         /// The number of neurons in each Multi Layer Perceptron (MLP) layer.
-        #[arg(long, default_value_t = 4096)]
+        #[arg(long, default_value_t = 1024)]
         mlp_size: usize,
 
         /// The Multi Layer Perceptron (MLP) dropout rate.
@@ -189,7 +189,7 @@ enum MlCommand {
         mlp_dropout: f64,
 
         /// The number of epochs to train for.
-        #[arg(long, default_value_t = 256)]
+        #[arg(long, default_value_t = 32)]
         model_epochs: usize,
 
         /// The number of samples to use per epoch.
@@ -197,7 +197,7 @@ enum MlCommand {
         model_batch_size: usize,
 
         /// The number of workers to use for training.
-        #[arg(long, default_value_t = 32)]
+        #[arg(long, default_value_t = 64)]
         model_workers: usize,
 
         /// The seed used for training.
@@ -514,7 +514,7 @@ fn start(args: Args) -> Void {
                     analyze::base::{translate_frequency_space_to_peak_space, compute_cqt},
                     helpers::plot_frequency_space,
                     ml::{
-                        base::{MEL_SPACE_SIZE, helpers::{load_kord_item, mel_filter_banks_from}},
+                        base::{MEL_SPACE_SIZE, helpers::{load_kord_item, mel_filter_banks_from, harmonic_convolution}},
                     },
                 };
 
@@ -579,111 +579,9 @@ fn start(args: Args) -> Void {
             }
             #[cfg(feature = "ml_train")]
             Some(MlCommand::Hpt { source, destination, log, device }) => {
-                use burn_autodiff::ADBackendDecorator;
-                use klib::ml::base::TrainConfig;
+                use klib::ml::train::execute::hyper_parameter_tuning;
 
-                let peak_radiuses = [1.0];
-                let harmonic_decays = [0.1];
-                let frequency_wobbles = [0.4];
-                let mlp_layers = [3];
-                let mlp_sizes = [4096];
-                let mlp_dropouts = [0.1, 0.3, 0.5];
-                let epochs = [256];
-                let learning_rates = [1e-5];
-                let weight_decays = [5e-4];
-
-                let mut count = 1;
-                let total = peak_radiuses.len() * harmonic_decays.len() * frequency_wobbles.len() * mlp_layers.len() * mlp_dropouts.len() * mlp_sizes.len() * epochs.len() * learning_rates.len() * weight_decays.len();
-
-                let mut max_accuracy = 0.0;
-                let mut best_config = None;
-
-                for peak_radius in &peak_radiuses {
-                    for harmonic_decay in &harmonic_decays {
-                        for frequency_wobble in &frequency_wobbles {
-                            for mlp_layer in &mlp_layers {
-                                for mlp_size in &mlp_sizes {
-                                    for mlp_dropout in &mlp_dropouts {
-                                        for epoch in &epochs {
-                                            for learning_rate in &learning_rates {
-                                                for weight_decay in &weight_decays {
-                                                    let config = TrainConfig {
-                                                        source: source.clone(),
-                                                        destination: destination.clone(),
-                                                        log: log.clone(),
-                                                        simulation_size: 20,
-                                                        simulation_peak_radius: *peak_radius,
-                                                        simulation_harmonic_decay: *harmonic_decay,
-                                                        simulation_frequency_wobble: *frequency_wobble,
-                                                        mlp_layers: *mlp_layer,
-                                                        mlp_size: *mlp_size,
-                                                        mlp_dropout: *mlp_dropout,
-                                                        model_epochs: *epoch as usize,
-                                                        model_batch_size: 100,  
-                                                        model_workers: 32,
-                                                        model_seed: 76980,
-                                                        adam_learning_rate: *learning_rate,
-                                                        adam_weight_decay: *weight_decay,
-                                                        adam_beta1: 0.9,
-                                                        adam_beta2: 0.999,
-                                                        adam_epsilon: f32::EPSILON,
-                                                        sigmoid_strength: 1.0,
-                                                        no_plots: true,
-                                                    };
-
-                                                    println!("Running training {}/{}:\n\n{}\n", count, total, config);
-
-                                                    let accuracy = match device.as_str() {
-                                                        #[cfg(feature = "ml_gpu")]
-                                                        "gpu" => {
-                                                            use burn_tch::{TchBackend, TchDevice};
-
-                                                            #[cfg(not(target_os = "macos"))]
-                                                            let device = TchDevice::Cuda(0);
-                                                            #[cfg(target_os = "macos")]
-                                                            let device = TchDevice::Mps;
-
-                                                            klib::ml::train::run_training::<ADBackendDecorator<TchBackend<f32>>>(device, &config, true, false)?
-                                                        }
-                                                        "cpu" => {
-                                                            use burn_ndarray::{NdArrayBackend, NdArrayDevice};
-
-                                                            let device = NdArrayDevice::Cpu;
-
-                                                            klib::ml::train::run_training::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config, true, false)?
-                                                        }
-                                                        _ => {
-                                                            return Err(anyhow::Error::msg("Invalid device (must choose either `gpu` [requires `ml_gpu` feature] or `cpu`)."));
-                                                        }
-                                                    };
-
-                                                    if accuracy > max_accuracy {
-                                                        println!("New max accuracy: {}%", accuracy);
-
-                                                        max_accuracy = accuracy;
-                                                        best_config = Some(config);
-                                                    }
-
-                                                    println!();
-
-                                                    count += 1;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                if let Some(best_config) = best_config {
-                    println!();
-                    println!();
-                    println!();
-                    println!("Best config: {}", best_config);
-                    println!("Best accuracy: {}%", max_accuracy);
-                }
+                hyper_parameter_tuning(source, destination, log, device)?;
             }
             None => {
                 return Err(anyhow::Error::msg("No subcommand given for `ml`."));
