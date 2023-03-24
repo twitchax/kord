@@ -52,7 +52,6 @@ impl<B: Backend> KordModel<B> {
 
     #[cfg(feature = "ml_train")]
     pub fn forward_classification(&self, item: KordBatch<B>) -> KordClassificationOutput<B> {
-
         let targets = item.targets;
         let output = self.forward(item.samples);
 
@@ -85,9 +84,7 @@ pub struct ConvBlock<B: Backend> {
 
 impl<B: Backend> ConvBlock<B> {
     pub fn new(in_channels: usize, out_channels: usize, kernel_size: usize) -> Self {
-        let conv = nn::conv::Conv1d::new(
-            &nn::conv::Conv1dConfig::new(in_channels, out_channels, kernel_size).with_bias(false),
-        );
+        let conv = nn::conv::Conv1d::new(&nn::conv::Conv1dConfig::new(in_channels, out_channels, kernel_size).with_bias(false));
 
         Self {
             conv: Param::from(conv),

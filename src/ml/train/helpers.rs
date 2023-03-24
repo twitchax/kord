@@ -1,9 +1,10 @@
 //! Helpers for training models.
 
 use burn::{
+    module::{Module, ModuleVisitor, ParamId},
     tensor::{
         backend::{ADBackend, Backend},
-        Tensor, Data,
+        Data, Tensor,
     },
     train::{
         metric::{
@@ -11,18 +12,22 @@ use burn::{
             Adaptor, LossInput, Metric, MetricEntry, Numeric,
         },
         TrainOutput, TrainStep, ValidStep,
-    }, module::{Module, ModuleVisitor, ParamId},
+    },
 };
 use rand::Rng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
 use crate::{
     core::{
-        interval::{Interval},
-        note::{HasNoteId, Note, ALL_PITCH_NOTES, HasPrimaryHarmonicSeries},
+        interval::Interval,
+        note::{HasNoteId, HasPrimaryHarmonicSeries, Note, ALL_PITCH_NOTES},
         pitch::HasFrequency,
     },
-    ml::base::{helpers::{load_kord_item, u128_to_binary}, model::KordModel, KordItem, FREQUENCY_SPACE_SIZE, NUM_CLASSES},
+    ml::base::{
+        helpers::{load_kord_item, u128_to_binary},
+        model::KordModel,
+        KordItem, FREQUENCY_SPACE_SIZE, NUM_CLASSES,
+    },
 };
 
 use super::data::KordBatch;
@@ -133,7 +138,7 @@ pub fn get_harmonic_penalty_tensor<B: Backend>() -> Tensor<B, 2> {
     }
 
     Tensor::cat(tensors, 1).detach()
-} 
+}
 
 // Classification.
 
@@ -248,13 +253,16 @@ pub fn get_simulated_kord_item(notes: &[Note], peak_radius: f32, harmonic_decay:
 
     for note in notes {
         let mut harmonic_strength = 1.0;
-        
+
         let note_frequency = note.frequency() + (1.0 + 1.0 / wobble_divisor * get_random_between(-frequency_wobble, frequency_wobble));
 
-        let true_harmonic_series = (1..14).into_iter().map(|k| {
-            let f = k as f32 * note_frequency;
-            f * (1.0 + 1.0 / wobble_divisor * get_random_between(-frequency_wobble, frequency_wobble))
-        }).collect::<Vec<_>>();
+        let true_harmonic_series = (1..14)
+            .into_iter()
+            .map(|k| {
+                let f = k as f32 * note_frequency;
+                f * (1.0 + 1.0 / wobble_divisor * get_random_between(-frequency_wobble, frequency_wobble))
+            })
+            .collect::<Vec<_>>();
 
         // let mut equal_temperament_harmonic_series = PRIMARY_HARMONIC_SERIES
         //     .into_iter()
@@ -317,7 +325,21 @@ pub fn get_simulated_kord_items(count: usize, peak_radius: f32, harmonic_decay: 
                         notes.push(note);
                         notes.push(note + get_random_item(&[Interval::MinorSecond, Interval::MajorSecond, Interval::MinorThird, Interval::MajorThird, Interval::PerfectFourth]));
                         notes.push(note + get_random_item(&[Interval::AugmentedFourth, Interval::PerfectFifth, Interval::AugmentedFifth, Interval::MajorSixth]));
-                        notes.push(note + get_random_item(&[Interval::MinorSeventh, Interval::MajorSeventh, Interval::MinorNinth, Interval::MajorNinth, Interval::AugmentedNinth, Interval::DiminishedEleventh, Interval::PerfectEleventh, Interval::AugmentedEleventh, Interval::MinorThirteenth, Interval::MajorThirteenth, Interval::AugmentedThirteenth]));
+                        notes.push(
+                            note + get_random_item(&[
+                                Interval::MinorSeventh,
+                                Interval::MajorSeventh,
+                                Interval::MinorNinth,
+                                Interval::MajorNinth,
+                                Interval::AugmentedNinth,
+                                Interval::DiminishedEleventh,
+                                Interval::PerfectEleventh,
+                                Interval::AugmentedEleventh,
+                                Interval::MinorThirteenth,
+                                Interval::MajorThirteenth,
+                                Interval::AugmentedThirteenth,
+                            ]),
+                        );
                     }
                     _ => unreachable!(),
                 }

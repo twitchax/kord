@@ -8,11 +8,11 @@ use burn::{
 };
 use rayon::prelude::*;
 
-use crate::{ml::base::{
+use crate::ml::base::{
     data::{kord_item_to_sample_tensor, kord_item_to_target_tensor},
     helpers::load_kord_item,
     KordItem,
-}};
+};
 
 use super::helpers::get_simulated_kord_items;
 

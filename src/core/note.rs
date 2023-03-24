@@ -193,7 +193,7 @@ impl Note {
     #[cfg(feature = "analyze_base")]
     pub fn from_audio(data: &[f32], length_in_seconds: u8) -> Res<Vec<Self>> {
         use crate::analyze::base::get_notes_from_audio_data;
-        
+
         get_notes_from_audio_data(data, length_in_seconds)
     }
 
@@ -204,7 +204,7 @@ impl Note {
     #[no_coverage]
     #[cfg(all(feature = "ml_infer", feature = "analyze_mic"))]
     pub async fn from_mic_ml(length_in_seconds: u8) -> Res<Vec<Self>> {
-        use crate::{ml::infer::infer, analyze::mic::get_audio_data_from_microphone};
+        use crate::{analyze::mic::get_audio_data_from_microphone, ml::infer::infer};
 
         let audio_data = get_audio_data_from_microphone(length_in_seconds).await?;
 

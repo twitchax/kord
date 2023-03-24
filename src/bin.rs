@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 
 use clap::{ArgAction, Parser, Subcommand};
-use klib::{core::{
+use klib::core::{
     base::{Parsable, Res, Void},
     chord::{Chord, Chordable},
     note::Note,
     octave::Octave,
-}};
+};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -273,7 +273,7 @@ enum MlCommand {
         /// The device to use for training.
         #[arg(long, default_value = "gpu")]
         device: String,
-    }
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -412,7 +412,7 @@ fn start(args: Args) -> Void {
                 adam_beta2,
                 adam_epsilon,
                 sigmoid_strength,
-                no_plots
+                no_plots,
             }) => {
                 use burn_autodiff::ADBackendDecorator;
                 use klib::ml::base::TrainConfig;
@@ -511,10 +511,11 @@ fn start(args: Args) -> Void {
             Some(MlCommand::Plot { source, x_min, x_max }) => {
                 use anyhow::Context;
                 use klib::{
-                    analyze::base::{translate_frequency_space_to_peak_space, compute_cqt},
+                    analyze::base::{compute_cqt, translate_frequency_space_to_peak_space},
                     helpers::plot_frequency_space,
-                    ml::{
-                        base::{MEL_SPACE_SIZE, helpers::{load_kord_item, mel_filter_banks_from, harmonic_convolution}},
+                    ml::base::{
+                        helpers::{harmonic_convolution, load_kord_item, mel_filter_banks_from},
+                        MEL_SPACE_SIZE,
                     },
                 };
 
