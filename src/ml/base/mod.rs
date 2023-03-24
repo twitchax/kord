@@ -36,6 +36,12 @@ pub struct TrainConfig {
 
     /// Simulation data set size.
     pub simulation_size: usize,
+    /// Simulation peak radius.
+    pub simulation_peak_radius: f32,
+    /// Simulation harmonic decay.
+    pub simulation_harmonic_decay: f32,
+    /// Simulation frequency wobble.
+    pub simulation_frequency_wobble: f32,
 
     /// The number of Multi Layer Perceptron (MLP) layers.
     pub mlp_layers: usize,
@@ -66,6 +72,9 @@ pub struct TrainConfig {
 
     /// The "sigmoid strength" of the final pass.
     pub sigmoid_strength: f32,
+
+    /// Suppresses the training plots.
+    pub no_plots: bool,
 }
 
 /// A single kord sample.

@@ -12,7 +12,7 @@ use burn::tensor::{backend::Backend, Tensor};
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 
 use crate::{
-    analyze::base::get_notes_from_smoothed_frequency_space,
+    analyze::base::{get_notes_from_smoothed_frequency_space},
     core::{
         base::Res,
         helpers::{inv_mel, mel},
@@ -105,6 +105,41 @@ pub fn mel_filter_banks_from(spectrum: &[f32]) -> [f32; MEL_SPACE_SIZE] {
     }
 
     filter_banks
+}
+
+/// Run a "harmonic convolution" over the frequency space data.
+pub fn harmonic_convolution(spectrum: &[f32]) -> [f32; FREQUENCY_SPACE_SIZE] {
+    let mut harmonic_convolution = [0f32; FREQUENCY_SPACE_SIZE];
+
+    let (peak, _) = spectrum.iter().enumerate().fold((0usize, 0f32), |(k, max), (j, x)| {
+        if *x > max {
+            (j, *x)
+        } else {
+            (k, max)
+        }
+    });
+
+    for center in (peak / 2)..4000 {
+        let mut sum = spectrum[center];
+
+        for k in 2..16 {
+            let index = center * k;
+            if index < FREQUENCY_SPACE_SIZE {
+                sum += spectrum[index];
+            }
+        }
+
+        for k in 2..16 {
+            let index = center / k;
+            if index < FREQUENCY_SPACE_SIZE {
+                sum -= spectrum[index];
+            }
+        }
+
+        harmonic_convolution[center] = sum.clamp(0.0, f32::MAX);
+    }
+
+    harmonic_convolution
 }
 
 /// Create a linearly spaced vector.

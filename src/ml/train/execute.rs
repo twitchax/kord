@@ -11,11 +11,11 @@ use burn::{
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
-    core::base::Void,
+    core::{base::{Res}},
     ml::base::{
         data::{kord_item_to_sample_tensor, kord_item_to_target_tensor},
         helpers::{binary_to_u128, get_deterministic_guess},
-        model::KordModel,
+        model::KordModel, NUM_CLASSES,
     },
 };
 
@@ -26,9 +26,9 @@ use super::{
 
 use crate::ml::base::TrainConfig;
 
-pub fn run_training<B: ADBackend>(device: B::Device, config: &TrainConfig, print_accuracy_report: bool) -> Void
+pub fn run_training<B: ADBackend>(device: B::Device, config: &TrainConfig, print_accuracy_report: bool, save_model: bool) -> Res<f32>
 where
-    B::Elem: Serialize + DeserializeOwned,
+    B::FloatElem: Serialize + DeserializeOwned,
 {
     // Define the Adam config.
 
@@ -40,7 +40,7 @@ where
 
     // Define the datasets.
 
-    let (train_dataset, test_dataset) = KordDataset::from_folder_and_simulation(&config.source, config.simulation_size);
+    let (train_dataset, test_dataset) = KordDataset::from_folder_and_simulation(&config.source, config.simulation_size, config.simulation_peak_radius, config.simulation_harmonic_decay, config.simulation_frequency_wobble);
 
     // Define the data loaders.
 
@@ -63,16 +63,19 @@ where
     let optimizer = Adam::new(&adam_config);
     let model = KordModel::new(config.mlp_layers, config.mlp_size, config.mlp_dropout, config.sigmoid_strength);
 
-    let learner = LearnerBuilder::new(&config.log)
-        .metric_train_plot(KordAccuracyMetric::new())
-        .metric_valid_plot(KordAccuracyMetric::new())
-        .metric_train_plot(LossMetric::new())
-        .metric_valid_plot(LossMetric::new())
-        //.grads_accumulation(2)
+    let mut learner_builder = LearnerBuilder::new(&config.log)
         //.with_file_checkpointer::<f32>(2)
         .devices(vec![device.clone()])
-        .num_epochs(config.model_epochs)
-        .build(model, optimizer);
+        .num_epochs(config.model_epochs);
+
+    if !config.no_plots {
+        learner_builder = learner_builder.metric_train_plot(KordAccuracyMetric::new())
+        .metric_valid_plot(KordAccuracyMetric::new())
+        .metric_train_plot(LossMetric::new())
+        .metric_valid_plot(LossMetric::new());
+    }
+        
+    let learner = learner_builder.build(model, optimizer);
 
     // Train the model.
 
@@ -80,33 +83,37 @@ where
 
     // Save the model.
 
-    let config_path = format!("{}/model_config.json", &config.destination);
-    let state_path = format!("{}/state.json.gz", &config.destination);
-    let state_bincode_path = format!("{}/state.bincode", &config.destination);
-    let _ = std::fs::create_dir_all(&config.destination);
-    let _ = std::fs::remove_file(&config_path);
-    let _ = std::fs::remove_file(&state_path);
-    let _ = std::fs::remove_file(&state_bincode_path);
-
-    config.save(&config_path)?;
-    model_trained.state().save(&state_path)?;
-    std::fs::write(&state_bincode_path, bincode::serde::encode_to_vec(&model_trained.state(), bincode::config::standard())?)?;
+    if save_model {
+        let config_path = format!("{}/model_config.json", &config.destination);
+        let state_path = format!("{}/state.json.gz", &config.destination);
+        let state_bincode_path = format!("{}/state.bincode", &config.destination);
+        let _ = std::fs::create_dir_all(&config.destination);
+        let _ = std::fs::remove_file(&config_path);
+        let _ = std::fs::remove_file(&state_path);
+        let _ = std::fs::remove_file(&state_bincode_path);
+        
+        config.save(&config_path)?;
+        model_trained.state().save(&state_path)?;
+        std::fs::write(&state_bincode_path, bincode::serde::encode_to_vec(&model_trained.state(), bincode::config::standard())?)?;
+    }
 
     // Compute overall accuracy.
 
-    if print_accuracy_report {
-        compute_overall_accuracy(&model_trained, &device);
-    }
+    let accuracy = if print_accuracy_report {
+        compute_overall_accuracy(&model_trained, &device)
+    } else {
+        0.0
+    };
 
-    Ok(())
+    Ok(accuracy)
 }
 
 #[no_coverage]
-pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device: &B::Device) {
-    let dataset = KordDataset::from_folder_and_simulation(".hidden/samples", 0);
+pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device: &B::Device) -> f32 {
+    let dataset = KordDataset::from_folder_and_simulation("samples", 0, 0.0, 0.0, 0.0);
 
     let kord_items = dataset.1.items;
-    //kord_items.extend(dataset.1.items);
+    //kord_items.extend(dataset.0.items);
 
     let mut deterministic_correct = 0;
     let mut inferrence_correct = 0;
@@ -114,15 +121,34 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
     for kord_item in &kord_items {
         let sample = kord_item_to_sample_tensor(kord_item).to_device(device).detach();
         let target: Vec<f32> = kord_item_to_target_tensor::<B>(kord_item).into_data().convert().value;
-        let target_array: [_; 128] = target.clone().try_into().unwrap();
+        let target_array: [_; NUM_CLASSES] = target.clone().try_into().unwrap();
         let target_binary = binary_to_u128(&target_array);
 
         let deterministic = get_deterministic_guess(kord_item);
 
-        let inferred = model_trained.forward(sample).to_data().convert().value.into_iter().map(f32::round).collect::<Vec<_>>();
+        let inference = model_trained.forward(sample).to_data().convert().value.into_iter().collect::<Vec<f32>>();
+        let inferred = inference.iter().cloned().map(f32::round).collect::<Vec<_>>();
+
+        //let strength = inference.iter().zip(inferred.iter()).map(|(l, r)| l * r).filter(|v| *v > 0.1).collect::<Vec<_>>();
 
         if target_binary == deterministic {
             deterministic_correct += 1;
+        } else {
+            // let mut target_notes = Note::from_id_mask(target_binary).unwrap();
+            // target_notes.sort();
+            // let target_notes = target_notes.into_iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" ");
+
+            // let mut deterministic_notes = Note::from_id_mask(deterministic).unwrap();
+            // deterministic_notes.sort();
+            // let deterministic_notes = deterministic_notes.into_iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" ");
+
+            // println!();
+            // println!(
+            //     "{:>60} -> {:>20} (determninistic) -> {:>20} (target)",
+            //     kord_item.path.to_string_lossy(),
+            //     deterministic_notes,
+            //     target_notes
+            // );
         }
 
         if target == inferred {
@@ -141,10 +167,11 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
             // inferred_notes.sort();
             // let inferred_notes = inferred_notes.into_iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" ");
 
+            // println!();
+            // println!("{:?}", strength);
             // println!(
-            //     "{:>60} -> {:>20} (deterministic) -> {:>20} (inferred) -> {:>20} (target)",
+            //     "{:>60} -> {:>20} (inferred) -> {:>20} (target)",
             //     kord_item.path.to_string_lossy(),
-            //     deterministic_notes,
             //     inferred_notes,
             //     target_notes
             // );
@@ -156,6 +183,8 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
 
     let inference_accuracy = 100.0 * (inferrence_correct as f32 / kord_items.len() as f32);
     println!("Inference accuracy: {}%", inference_accuracy);
+
+    inference_accuracy
 }
 
 // Tests.
@@ -176,6 +205,9 @@ mod tests {
             destination: ".hidden/test_model".to_string(),
             log: ".hidden/test_log".to_string(),
             simulation_size: 1,
+            simulation_peak_radius: 1.0,
+            simulation_harmonic_decay: 0.5,
+            simulation_frequency_wobble: 0.5,
             mlp_layers: 1,
             mlp_size: 64,
             mlp_dropout: 0.3,
@@ -189,8 +221,9 @@ mod tests {
             adam_beta2: 0.999,
             adam_epsilon: 1e-5,
             sigmoid_strength: 1.0,
+            no_plots: true
         };
 
-        run_training::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config, false).unwrap();
+        run_training::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config, false, false).unwrap();
     }
 }

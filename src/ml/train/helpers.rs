@@ -3,7 +3,7 @@
 use burn::{
     tensor::{
         backend::{ADBackend, Backend},
-        Tensor,
+        Tensor, Data,
     },
     train::{
         metric::{
@@ -11,20 +11,53 @@ use burn::{
             Adaptor, LossInput, Metric, MetricEntry, Numeric,
         },
         TrainOutput, TrainStep, ValidStep,
-    },
+    }, module::{Module, ModuleVisitor, ParamId},
 };
 use rand::Rng;
+use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
 use crate::{
     core::{
-        interval::{Interval, PRIMARY_HARMONIC_SERIES},
-        note::{HasNoteId, Note, ALL_PITCH_NOTES},
+        interval::{Interval},
+        note::{HasNoteId, Note, ALL_PITCH_NOTES, HasPrimaryHarmonicSeries},
         pitch::HasFrequency,
     },
-    ml::base::{helpers::load_kord_item, model::KordModel, KordItem, FREQUENCY_SPACE_SIZE, NUM_CLASSES},
+    ml::base::{helpers::{load_kord_item, u128_to_binary}, model::KordModel, KordItem, FREQUENCY_SPACE_SIZE, NUM_CLASSES},
 };
 
 use super::data::KordBatch;
+
+// Regularization.
+
+#[derive(Debug, Clone, Default)]
+struct L1Visitor {
+    sum: f32,
+}
+
+impl L1Visitor {
+    pub fn new() -> Self {
+        Self { sum: 0.0 }
+    }
+
+    pub fn sum(&self) -> f32 {
+        self.sum
+    }
+}
+
+impl<B: Backend> ModuleVisitor<B> for L1Visitor {
+    fn visit<const D: usize>(&mut self, _: &ParamId, tensor: &Tensor<B, D>) {
+        let sum: f32 = tensor.clone().powf(2.0).sum().to_full_precision().into_data().convert().value[0];
+        self.sum += sum;
+    }
+}
+
+pub fn l1_regularization<B: Backend>(model: &KordModel<B>, lambda: f32) -> f32 {
+    let mut visitor = L1Visitor::new();
+    model.visit(&mut visitor);
+    let sum = visitor.sum();
+
+    sum * lambda
+}
 
 // Loss function.
 
@@ -46,9 +79,8 @@ pub struct BinaryCrossEntropyLoss<B: Backend> {
 }
 
 impl<B: Backend> BinaryCrossEntropyLoss<B> {
-    pub fn forward(&self, outputs: &Tensor<B, 2>, targets: Tensor<B, 2>) -> Tensor<B, 1> {
-        let outputs = outputs.clone().mul_scalar(0.999999f32);
-        let result = (targets.clone().mul(outputs.clone().log()) + (targets.neg().add_scalar(1.0f32)).mul((outputs.neg().add_scalar(1.0f32)).log()))
+    pub fn forward(&self, outputs: Tensor<B, 2>, targets: Tensor<B, 2>) -> Tensor<B, 1> {
+        let result = (targets.clone().mul(outputs.clone().log()) + (targets.neg().add_scalar(1.000001f32)).mul((outputs.neg().add_scalar(1.000001f32)).log()))
             .mean()
             .neg();
 
@@ -61,6 +93,47 @@ impl<B: Backend> BinaryCrossEntropyLoss<B> {
         result
     }
 }
+
+#[derive(Debug, Clone, Default)]
+pub struct FocalLoss<B: Backend> {
+    pub gamma: f32,
+    _b: B,
+}
+
+impl<B: Backend> FocalLoss<B> {
+    pub fn forward(&self, outputs: Tensor<B, 2>, targets: Tensor<B, 2>) -> Tensor<B, 1> {
+        let gamma = self.gamma;
+
+        let p = outputs;
+        let term1 = targets.clone().mul(p.clone().log()).mul((p.clone().neg().add_scalar(1.000001f32)).powf(gamma).neg());
+        let term2 = targets.neg().add_scalar(1.000001f32).mul((p.clone().neg().add_scalar(1.000001f32)).log()).mul(p.powf(gamma).neg());
+        let loss = (term1 + term2).mean();
+
+        let value: f32 = loss.to_data().convert().value[0];
+
+        if value.is_nan() {
+            panic!("NaN loss");
+        }
+
+        loss
+    }
+}
+
+// Harmonic loss penalty.
+
+pub fn get_harmonic_penalty_tensor<B: Backend>() -> Tensor<B, 2> {
+    let mut tensors = Vec::with_capacity(128);
+
+    for note in ALL_PITCH_NOTES.iter().take(128) {
+        let harmonic_mask = Note::id_mask(&note.primary_harmonic_series());
+        let harmonics_binary = u128_to_binary(harmonic_mask);
+        let harmonic_tensor = Tensor::<B, 1>::from_data(Data::<f32, 1>::from(harmonics_binary).convert()).reshape([NUM_CLASSES, 1]);
+
+        tensors.push(harmonic_tensor);
+    }
+
+    Tensor::cat(tensors, 1).detach()
+} 
 
 // Classification.
 
@@ -136,8 +209,8 @@ impl<B: Backend> Metric for KordAccuracyMetric<B> {
 
         // let accuracy = 100.0 * (1.0 - rmse);
 
-        let target_round = targets.greater_equal_scalar(0.5).into_int();
-        let output_round = outputs.greater_equal_scalar(0.5).into_int();
+        let target_round = targets.greater_equal_elem(0.5).into_int();
+        let output_round = outputs.greater_equal_elem(0.5).into_int();
 
         let counts: Vec<u8> = target_round.equal(output_round).into_int().sum_dim(1).into_data().convert().value;
 
@@ -163,6 +236,8 @@ impl<B: Backend> Numeric for KordAccuracyMetric<B> {
 // Operations for simulating kord samples.
 
 pub fn get_simulated_kord_item(notes: &[Note], peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> KordItem {
+    let wobble_divisor = 35.0;
+
     let mut result = match get_random_between(0.0, 4.0).round() as u32 {
         0 | 4 => load_kord_item("assets/no_noise.bin"),
         1 => load_kord_item("assets/pink_noise.bin"),
@@ -173,15 +248,22 @@ pub fn get_simulated_kord_item(notes: &[Note], peak_radius: f32, harmonic_decay:
 
     for note in notes {
         let mut harmonic_strength = 1.0;
-        let note_frequency = note.frequency() + get_random_between(-frequency_wobble, frequency_wobble);
+        
+        let note_frequency = note.frequency() + (1.0 + 1.0 / wobble_divisor * get_random_between(-frequency_wobble, frequency_wobble));
 
-        let true_harmonic_series = (1..31).into_iter().map(|k| k as f32 * note_frequency).collect::<Vec<_>>();
+        let true_harmonic_series = (1..14).into_iter().map(|k| {
+            let f = k as f32 * note_frequency;
+            f * (1.0 + 1.0 / wobble_divisor * get_random_between(-frequency_wobble, frequency_wobble))
+        }).collect::<Vec<_>>();
 
-        let mut equal_temperament_harmonic_series = PRIMARY_HARMONIC_SERIES
-            .into_iter()
-            .map(|k| (*note + k).frequency() + get_random_between(-frequency_wobble, frequency_wobble))
-            .collect::<Vec<_>>();
-        equal_temperament_harmonic_series.insert(0, note_frequency);
+        // let mut equal_temperament_harmonic_series = PRIMARY_HARMONIC_SERIES
+        //     .into_iter()
+        //     .map(|k| {
+        //         let f = (*note + k).frequency();
+        //         f * (1.0 + 1.0 / wobble_divisor * get_random_between(-frequency_wobble, frequency_wobble))
+        //     })
+        //     .collect::<Vec<_>>();
+        // equal_temperament_harmonic_series.insert(0, note_frequency);
 
         for harmonic_frequency in true_harmonic_series {
             if harmonic_frequency - peak_radius < 0.0 || harmonic_frequency + peak_radius > FREQUENCY_SPACE_SIZE as f32 {
@@ -203,29 +285,39 @@ pub fn get_simulated_kord_item(notes: &[Note], peak_radius: f32, harmonic_decay:
     result
 }
 
-pub fn get_simulated_kord_items(count: usize) -> Vec<KordItem> {
-    let mut result = Vec::with_capacity(2960);
+pub fn get_simulated_kord_items(count: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> Vec<KordItem> {
+    let results = (0..count).into_par_iter().map(|_| {
+        let note_count = 60;
+        let chord_count = 5;
+        let mut inner_result = Vec::with_capacity(note_count * chord_count);
 
-    for _ in 0..count {
-        for note in ALL_PITCH_NOTES.iter().skip(24).take(60) {
+        for note in ALL_PITCH_NOTES.iter().skip(24).take(note_count) {
             let note = *note;
 
-            for k in 0..4 {
-                let mut notes = vec![note];
+            for k in 0..chord_count {
+                let mut notes = vec![];
 
                 match k {
-                    0 => {}
+                    0 => {
+                        notes.push(note);
+                    }
                     1 => {
-                        notes.push(note + Interval::MajorThird);
+                        notes.push(note);
                     }
                     2 => {
-                        notes.push(note + Interval::MajorThird);
-                        notes.push(note + Interval::PerfectFifth);
+                        notes.push(note);
+                        notes.push(note + get_random_item(&[Interval::MinorSecond, Interval::MajorSecond, Interval::MinorThird, Interval::MajorThird, Interval::PerfectFourth]));
                     }
                     3 => {
-                        notes.push(note + Interval::MajorThird);
-                        notes.push(note + Interval::PerfectFifth);
-                        notes.push(note + Interval::MajorSeventh);
+                        notes.push(note);
+                        notes.push(note + get_random_item(&[Interval::MinorSecond, Interval::MajorSecond, Interval::MinorThird, Interval::MajorThird, Interval::PerfectFourth]));
+                        notes.push(note + get_random_item(&[Interval::AugmentedFourth, Interval::PerfectFifth, Interval::AugmentedFifth, Interval::MajorSixth]));
+                    }
+                    4 => {
+                        notes.push(note);
+                        notes.push(note + get_random_item(&[Interval::MinorSecond, Interval::MajorSecond, Interval::MinorThird, Interval::MajorThird, Interval::PerfectFourth]));
+                        notes.push(note + get_random_item(&[Interval::AugmentedFourth, Interval::PerfectFifth, Interval::AugmentedFifth, Interval::MajorSixth]));
+                        notes.push(note + get_random_item(&[Interval::MinorSeventh, Interval::MajorSeventh, Interval::MinorNinth, Interval::MajorNinth, Interval::AugmentedNinth, Interval::DiminishedEleventh, Interval::PerfectEleventh, Interval::AugmentedEleventh, Interval::MinorThirteenth, Interval::MajorThirteenth, Interval::AugmentedThirteenth]));
                     }
                     _ => unreachable!(),
                 }
@@ -233,14 +325,23 @@ pub fn get_simulated_kord_items(count: usize) -> Vec<KordItem> {
                 notes.sort();
 
                 // Generate the sample.
-                let kord_item = get_simulated_kord_item(&notes, 1.0, 0.5, 1.0);
+                let kord_item = get_simulated_kord_item(&notes, peak_radius, harmonic_decay, frequency_wobble);
 
-                result.push(kord_item);
+                inner_result.push(kord_item);
             }
         }
-    }
 
-    result
+        inner_result
+    });
+
+    results.flatten().collect()
+}
+
+/// Get a random item from a list of items.
+pub fn get_random_item<T: Copy>(items: &[T]) -> T {
+    let mut rng = rand::thread_rng();
+    let index = rng.gen_range(0..items.len());
+    items[index]
 }
 
 /// Get a random number between 0 and 1.
