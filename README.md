@@ -196,7 +196,7 @@ assert_eq!(C.into_chord().augmented().major7().chord(), vec![C, E, GSharp, B]);
 ## Feature Flags
 
 The library and binary both support various feature flags.  Of most important note are:
-* `default = ["cli", "analyze", "ml_infer", "audio"]`
+* `default = ["cli", "analyze", "audio"]`
 * `cli`: enables the CLI features, and can be removed if only compiling the library.
 * `analyze = ["analyze_mic", "analyze_file"]`: enables the `analyze` subcommand, which allows for analyzing audio data (and the underlying library features).
   * `analyze_mic`: enables the `analyze mic` subcommand, which allows for analyzing audio from a microphone (and the underlying library features).

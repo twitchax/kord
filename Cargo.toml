@@ -17,7 +17,7 @@ exclude = [
 ]
 
 [features]
-default = ["cli", "analyze", "ml_infer", "audio"]
+default = ["cli", "analyze", "audio"]
 
 cli = ["clap", "futures"]
 
