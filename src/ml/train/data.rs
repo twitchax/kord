@@ -6,12 +6,13 @@ use burn::{
     data::{dataloader::batcher::Batcher, dataset::Dataset},
     tensor::{backend::Backend, Tensor},
 };
+use rayon::prelude::*;
 
-use crate::ml::base::{
+use crate::{ml::base::{
     data::{kord_item_to_sample_tensor, kord_item_to_target_tensor},
     helpers::load_kord_item,
     KordItem,
-};
+}};
 
 use super::helpers::get_simulated_kord_items;
 
@@ -24,7 +25,7 @@ pub struct KordDataset {
 
 impl KordDataset {
     /// Load the kord dataset from the given folder.
-    pub fn from_folder_and_simulation(name: impl AsRef<Path>, count: usize) -> (Self, Self) {
+    pub fn from_folder_and_simulation(name: impl AsRef<Path>, count: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> (Self, Self) {
         // First, get all of the *.bin files in the folder.
         let test_files = std::fs::read_dir(name)
             .unwrap()
@@ -33,8 +34,8 @@ impl KordDataset {
             .filter(|path| path.extension().unwrap() == "bin")
             .collect::<Vec<_>>();
 
-        let test_items = test_files.iter().map(load_kord_item).collect();
-        let train_items = get_simulated_kord_items(count);
+        let test_items: Vec<_> = test_files.par_iter().map(load_kord_item).collect();
+        let train_items = get_simulated_kord_items(count, peak_radius, harmonic_decay, frequency_wobble);
 
         // Return the train and test datasets.
         let train = Self { items: train_items };
@@ -74,11 +75,11 @@ pub struct KordBatch<B: Backend> {
 
 impl<B: Backend> Batcher<KordItem, KordBatch<B>> for KordBatcher<B> {
     fn batch(&self, items: Vec<KordItem>) -> KordBatch<B> {
-        let frequency_spaces = items.iter().map(kord_item_to_sample_tensor).collect();
+        let samples = items.iter().map(kord_item_to_sample_tensor).collect();
 
         let targets = items.iter().map(kord_item_to_target_tensor).collect();
 
-        let frequency_spaces = Tensor::cat(frequency_spaces, 0).to_device(&self.device).detach();
+        let frequency_spaces = Tensor::cat(samples, 0).to_device(&self.device).detach();
         let targets = Tensor::cat(targets, 0).to_device(&self.device).detach();
 
         KordBatch { samples: frequency_spaces, targets }

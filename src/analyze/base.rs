@@ -83,6 +83,56 @@ pub fn get_time_space(data: &[f32]) -> Vec<(f32, f32)> {
     buffer.into_iter().enumerate().map(|(k, d)| (k as f32, d.abs())).collect::<Vec<_>>()
 }
 
+pub fn compute_cqt(frequency_space: &[f32]) -> Vec<f32> {
+    const Q_FACTOR: f32 = 24.7; // Q-factor for the CQT
+    const MIN_FREQ: f32 = 65.41; // minimum frequency for the CQT
+    const MAX_FREQ: f32 = 2093.0; // maximum frequency for the CQT
+    const N_BINS: usize = 60; // number of frequency bins for the CQT
+
+    let mut cqt_output = vec![vec![0.0; frequency_space.len()]; N_BINS];
+
+    let log_min_freq = MIN_FREQ.log2();
+    let log_max_freq = MAX_FREQ.log2();
+    let log_freq_step = (log_max_freq - log_min_freq) / (N_BINS as f32 - 1.0);
+
+    for i in 0..N_BINS {
+        let log_freq_center = log_min_freq + i as f32 * log_freq_step;
+        let freq_center = 2.0f32.powf(log_freq_center);
+        let freq_bw = freq_center / Q_FACTOR;
+        let fft_freq_step = 1.0;
+
+        let start_bin = (freq_center - freq_bw / 2.0) / fft_freq_step;
+        let end_bin = (freq_center + freq_bw / 2.0) / fft_freq_step;
+
+        let mut cqt_bin = vec![rustfft::num_complex::Complex::new(0.0, 0.0); frequency_space.len()];
+
+        for j in start_bin as usize..=end_bin as usize {
+            let weight = (j as f32 - freq_center / fft_freq_step) / freq_bw;
+            let weight = weight * std::f32::consts::PI * 2.0;
+            let fft_bin = frequency_space[j];
+            cqt_bin[j] = rustfft::num_complex::Complex::new(fft_bin * weight.sin(), 0.0);
+        }
+
+        let ifft = rustfft::FftPlanner::<f32>::new().plan_fft_inverse(cqt_bin.len());
+        ifft.process(&mut cqt_bin);
+
+        for j in 0..frequency_space.len() {
+            cqt_output[i][j] = cqt_bin[j].abs();
+        }
+    }
+
+    let mut result = vec![];
+    for k in 0..N_BINS {
+        let mut sum = 0.0;
+        for j in 0..frequency_space.len() {
+            sum += cqt_output[k][j];
+        }
+        result.push(sum);
+    }
+
+    result
+}
+
 /// Calculates the "smoothed" frequency space by normalizing to 1.0 seconds of playback.
 pub fn get_smoothed_frequency_space(frequency_space: &[(f32, f32)], length_in_seconds: u8) -> Vec<(f32, f32)> {
     let mut smoothed_frequency_space = Vec::new();
@@ -232,6 +282,7 @@ fn reduce_notes_by_harmonic_series(notes: &[(Note, f32)], cutoff: f32) -> Vec<No
 /// the one before, and the next one.
 ///
 /// Returns a vector of tuples, where the first element is the note, and the second element is the frequency window as a (low, high) tuple.
+/// The first and the last note supplied are ignored, so this method returns `notes.len() - 2` elements.
 pub fn get_frequency_bins(notes: &[Note]) -> Vec<(Note, (f32, f32))> {
     let mut bins = Vec::new();
 
@@ -344,7 +395,7 @@ pub(crate) mod tests {
 
     #[test]
     fn test_get_frequency_bins() {
-        let bins = get_frequency_bins(&ALL_PITCH_NOTES.iter().skip(23).take(62).cloned().collect::<Vec<_>>());
+        let bins = get_frequency_bins(&ALL_PITCH_NOTES.iter().skip(24).take(62).cloned().collect::<Vec<_>>());
 
         assert_eq!(bins.len(), 60);
     }

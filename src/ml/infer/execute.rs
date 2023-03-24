@@ -20,7 +20,7 @@ use crate::{
 
 pub fn run_inference<B: Backend>(device: &B::Device, kord_item: &KordItem) -> Res<Vec<Note>>
 where
-    B::Elem: Serialize + DeserializeOwned,
+    B::FloatElem: Serialize + DeserializeOwned,
 {
     // Load the config and state.
 
@@ -32,7 +32,7 @@ where
     };
 
     //let state = State::<B::Elem>::load_binary(STATE)?;
-    let (state, _len): (State<B::Elem>, usize) = bincode::serde::decode_from_slice(STATE_BINCODE, bincode::config::standard()).context("Failed to decode state.")?;
+    let (state, _len): (State<B::FloatElem>, usize) = bincode::serde::decode_from_slice(STATE_BINCODE, bincode::config::standard()).context("Failed to decode state.")?;
 
     // Define the model.
     let mut model = KordModel::<B>::new(config.mlp_layers, config.mlp_size, config.mlp_dropout, config.sigmoid_strength);

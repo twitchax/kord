@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 
 use clap::{ArgAction, Parser, Subcommand};
-use klib::core::{
+use klib::{core::{
     base::{Parsable, Res, Void},
     chord::{Chord, Chordable},
     note::Note,
     octave::Octave,
-};
+}};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -145,7 +145,7 @@ enum MlCommand {
     #[cfg(feature = "ml_train")]
     Train {
         /// The source directory for the gathered samples.
-        #[arg(long, default_value = ".hidden/samples")]
+        #[arg(long, default_value = "samples")]
         source: String,
 
         /// The destination directory for the trained model.
@@ -156,16 +156,28 @@ enum MlCommand {
         #[arg(long, default_value = ".hidden/train_log")]
         log: String,
 
-        /// Simulation data set size.
-        #[arg(long, default_value_t = 100)]
-        simulation_size: usize,
-
         /// The device to use for training.
         #[arg(long, default_value = "gpu")]
         device: String,
 
+        /// Simulation data set size.
+        #[arg(long, default_value_t = 100)]
+        simulation_size: usize,
+
+        /// Simulation peak radius.
+        #[arg(long, default_value_t = 1.0)]
+        simulation_peak_radius: f32,
+
+        /// Simulation harmonic decay.
+        #[arg(long, default_value_t = 0.1)]
+        simulation_harmonic_decay: f32,
+
+        /// Simulation frequency wobble.
+        #[arg(long, default_value_t = 0.4)]
+        simulation_frequency_wobble: f32,
+
         /// The number of Multi Layer Perceptron (MLP) layers.
-        #[arg(long, default_value_t = 0)]
+        #[arg(long, default_value_t = 3)]
         mlp_layers: usize,
 
         /// The number of neurons in each Multi Layer Perceptron (MLP) layer.
@@ -173,7 +185,7 @@ enum MlCommand {
         mlp_size: usize,
 
         /// The Multi Layer Perceptron (MLP) dropout rate.
-        #[arg(long, default_value_t = 0.3)]
+        #[arg(long, default_value_t = 0.1)]
         mlp_dropout: f64,
 
         /// The number of epochs to train for.
@@ -185,7 +197,7 @@ enum MlCommand {
         model_batch_size: usize,
 
         /// The number of workers to use for training.
-        #[arg(long, default_value_t = 32)]
+        #[arg(long, default_value_t = 64)]
         model_workers: usize,
 
         /// The seed used for training.
@@ -193,11 +205,11 @@ enum MlCommand {
         model_seed: u64,
 
         /// The Adam optimizer learning rate.
-        #[arg(long, default_value_t = 1e-4)]
+        #[arg(long, default_value_t = 1e-5)]
         adam_learning_rate: f64,
 
         /// The Adam optimizer weight decay.
-        #[arg(long, default_value_t = 5e-5)]
+        #[arg(long, default_value_t = 5e-4)]
         adam_weight_decay: f64,
 
         /// The Adam optimizer beta1.
@@ -215,6 +227,10 @@ enum MlCommand {
         /// The "sigmoid strength" of the final pass.
         #[arg(long, default_value_t = 1.0)]
         sigmoid_strength: f32,
+
+        /// Suppresses the training plots.
+        #[arg(long, action=ArgAction::SetTrue, default_value_t = false)]
+        no_plots: bool,
     },
 
     /// Records audio from the microphone, and using the trained model, guesses the chord.
@@ -238,6 +254,26 @@ enum MlCommand {
         #[arg(long, default_value_t = 8192.0)]
         x_max: f32,
     },
+
+    /// Runs the ML trainer across various hyperparameters, and outputs the results.
+    #[cfg(feature = "ml_train")]
+    Hpt {
+        /// The source directory for the gathered samples.
+        #[arg(long, default_value = "samples")]
+        source: String,
+
+        /// The destination directory for the trained model.
+        #[arg(long, default_value = "model")]
+        destination: String,
+
+        /// The log directory for training.
+        #[arg(long, default_value = ".hidden/train_log")]
+        log: String,
+
+        /// The device to use for training.
+        #[arg(long, default_value = "gpu")]
+        device: String,
+    }
 }
 
 #[derive(Subcommand, Debug)]
@@ -360,6 +396,9 @@ fn start(args: Args) -> Void {
                 log,
                 simulation_size,
                 device,
+                simulation_peak_radius,
+                simulation_harmonic_decay,
+                simulation_frequency_wobble,
                 mlp_layers,
                 mlp_size,
                 mlp_dropout,
@@ -373,6 +412,7 @@ fn start(args: Args) -> Void {
                 adam_beta2,
                 adam_epsilon,
                 sigmoid_strength,
+                no_plots
             }) => {
                 use burn_autodiff::ADBackendDecorator;
                 use klib::ml::base::TrainConfig;
@@ -382,6 +422,9 @@ fn start(args: Args) -> Void {
                     destination,
                     log,
                     simulation_size,
+                    simulation_peak_radius,
+                    simulation_harmonic_decay,
+                    simulation_frequency_wobble,
                     mlp_layers,
                     mlp_size,
                     mlp_dropout,
@@ -395,6 +438,7 @@ fn start(args: Args) -> Void {
                     adam_beta2,
                     adam_epsilon,
                     sigmoid_strength,
+                    no_plots,
                 };
 
                 match device.as_str() {
@@ -402,16 +446,19 @@ fn start(args: Args) -> Void {
                     "gpu" => {
                         use burn_tch::{TchBackend, TchDevice};
 
+                        #[cfg(not(target_os = "macos"))]
                         let device = TchDevice::Cuda(0);
+                        #[cfg(target_os = "macos")]
+                        let device = TchDevice::Mps;
 
-                        klib::ml::train::run_training::<ADBackendDecorator<TchBackend<f32>>>(device, &config, true)?;
+                        klib::ml::train::run_training::<ADBackendDecorator<TchBackend<f32>>>(device, &config, true, true)?;
                     }
                     "cpu" => {
                         use burn_ndarray::{NdArrayBackend, NdArrayDevice};
 
                         let device = NdArrayDevice::Cpu;
 
-                        klib::ml::train::run_training::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config, true)?;
+                        klib::ml::train::run_training::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config, true, true)?;
                     }
                     _ => {
                         return Err(anyhow::Error::msg("Invalid device (must choose either `gpu` [requires `ml_gpu` feature] or `cpu`)."));
@@ -464,11 +511,10 @@ fn start(args: Args) -> Void {
             Some(MlCommand::Plot { source, x_min, x_max }) => {
                 use anyhow::Context;
                 use klib::{
-                    analyze::base::translate_frequency_space_to_peak_space,
+                    analyze::base::{translate_frequency_space_to_peak_space, compute_cqt},
                     helpers::plot_frequency_space,
                     ml::{
-                        base::MEL_SPACE_SIZE,
-                        train::helpers::{load_kord_item, mel_filter_banks_from},
+                        base::{MEL_SPACE_SIZE, helpers::{load_kord_item, mel_filter_banks_from, harmonic_convolution}},
                     },
                 };
 
@@ -481,6 +527,16 @@ fn start(args: Args) -> Void {
                 let frequency_file_name = format!("{}_frequency", name);
                 let frequency_space = kord_item.frequency_space.into_iter().enumerate().map(|(k, v)| (k as f32, v)).collect::<Vec<_>>();
                 plot_frequency_space(&frequency_space, "KordItem Frequency Space", &frequency_file_name, x_min, x_max);
+
+                // Plot harmonic convolution.
+                let harmonic_file_name = format!("{}_harmonic", name);
+                let harmonic_space = harmonic_convolution(&kord_item.frequency_space).into_iter().enumerate().map(|(k, v)| (k as f32, v)).collect::<Vec<_>>();
+                plot_frequency_space(&harmonic_space, "KordItem Harmonic Space", &harmonic_file_name, x_min, x_max);
+
+                // Plot CQT space.
+                let cqt_file_name = format!("{}_cqt", name);
+                let cqt_space = compute_cqt(&kord_item.frequency_space).into_iter().enumerate().map(|(k, v)| (k as f32, v)).collect::<Vec<_>>();
+                plot_frequency_space(&cqt_space, "KordItem CQT Space", &cqt_file_name, 0.0, 256.0);
 
                 // Plot mel space.
                 let mel_file_name = format!("{}_mel", name);
@@ -520,6 +576,12 @@ fn start(args: Args) -> Void {
                 let harmonic_file_name = format!("{}_time", name);
                 let time_space = klib::analyze::base::get_time_space(&peak_space);
                 plot_frequency_space(&time_space, "KordItem Time Space", &harmonic_file_name, x_min, x_max);
+            }
+            #[cfg(feature = "ml_train")]
+            Some(MlCommand::Hpt { source, destination, log, device }) => {
+                use klib::ml::train::execute::hyper_parameter_tuning;
+
+                hyper_parameter_tuning(source, destination, log, device)?;
             }
             None => {
                 return Err(anyhow::Error::msg("No subcommand given for `ml`."));
