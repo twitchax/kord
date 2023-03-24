@@ -10,6 +10,11 @@ homepage = "https://github.com/twitchax/kord"
 repository = "https://github.com/twitchax/kord"
 keywords = ["cli", "music", "theory", "jazz", "chords"]
 categories = ["command-line-utilities"]
+exclude = [
+    "model/**/*",
+    "samples/**/*",
+    "assets/**/*"
+]
 
 [features]
 default = ["cli", "analyze", "ml_infer", "audio"]
