@@ -33,6 +33,7 @@ use wasm_bindgen::prelude::*;
 macro_rules! define_note {
     ( $name:ident, $named_pitch:expr, $octave_num:ident, $octave:expr) => {
         paste! {
+            /// The note [<$name$octave_num>].
             pub const [<$name$octave_num>]: Note = Note {
                 named_pitch: $named_pitch,
                 octave: $octave,
@@ -455,64 +456,114 @@ define_octave!(Ten, Octave::Ten);
 
 // Define notes.
 
+/// The default F triple flat (in the fourth octave).
 pub const FTripleFlat: Note = FTripleFlatFour;
+/// The default C triple flat (in the fourth octave).
 pub const CTripleFlat: Note = CTripleFlatFour;
+/// The default G triple flat (in the fourth octave).
 pub const GTripleFlat: Note = GTripleFlatFour;
+/// The default D triple flat (in the fourth octave).
 pub const DTripleFlat: Note = DTripleFlatFour;
+/// The default A triple flat (in the fourth octave).
 pub const ATripleFlat: Note = ATripleFlatFour;
+/// The default E triple flat (in the fourth octave).
 pub const ETripleFlat: Note = ETripleFlatFour;
+/// The default B triple flat (in the fourth octave).
 pub const BTripleFlat: Note = BTripleFlatFour;
 
+/// The default F double flat (in the fourth octave).
 pub const FDoubleFlat: Note = FDoubleFlatFour;
+/// The default C double flat (in the fourth octave).
 pub const CDoubleFlat: Note = CDoubleFlatFour;
+/// The default G double flat (in the fourth octave).
 pub const GDoubleFlat: Note = GDoubleFlatFour;
+/// The default D double flat (in the fourth octave).
 pub const DDoubleFlat: Note = DDoubleFlatFour;
+/// The default A double flat (in the fourth octave).
 pub const ADoubleFlat: Note = ADoubleFlatFour;
+/// The default E double flat (in the fourth octave).
 pub const EDoubleFlat: Note = EDoubleFlatFour;
+/// The default B double flat (in the fourth octave).
 pub const BDoubleFlat: Note = BDoubleFlatFour;
 
+/// The default F flat (in the fourth octave).
 pub const FFlat: Note = FFlatFour;
+/// The default C flat (in the fourth octave).
 pub const CFlat: Note = CFlatFour;
+/// The default G flat (in the fourth octave).
 pub const GFlat: Note = GFlatFour;
+/// The default D flat (in the fourth octave).
 pub const DFlat: Note = DFlatFour;
+/// The default A flat (in the fourth octave).
 pub const AFlat: Note = AFlatFour;
+/// The default E flat (in the fourth octave).
 pub const EFlat: Note = EFlatFour;
+/// The default B flat (in the fourth octave).
 pub const BFlat: Note = BFlatFour;
 
+/// The default F (in the fourth octave).
 pub const F: Note = FFour;
+/// The default C (in the fourth octave).
 pub const C: Note = CFour;
+/// The default G (in the fourth octave).
 pub const G: Note = GFour;
+/// The default D (in the fourth octave).
 pub const D: Note = DFour;
+/// The default A (in the fourth octave).
 pub const A: Note = AFour;
+/// The default E (in the fourth octave).
 pub const E: Note = EFour;
+/// The default B (in the fourth octave).
 pub const B: Note = BFour;
 
+/// The default F sharp (in the fourth octave).
 pub const FSharp: Note = FSharpFour;
+/// The default C sharp (in the fourth octave).
 pub const CSharp: Note = CSharpFour;
+/// The default G sharp (in the fourth octave).
 pub const GSharp: Note = GSharpFour;
+/// The default D sharp (in the fourth octave).
 pub const DSharp: Note = DSharpFour;
+/// The default A sharp (in the fourth octave).
 pub const ASharp: Note = ASharpFour;
+/// The default E sharp (in the fourth octave).
 pub const ESharp: Note = ESharpFour;
+/// The default B sharp (in the fourth octave).
 pub const BSharp: Note = BSharpFour;
 
+/// The default F double sharp (in the fourth octave).
 pub const FDoubleSharp: Note = FDoubleSharpFour;
+/// The default C double sharp (in the fourth octave).
 pub const CDoubleSharp: Note = CDoubleSharpFour;
+/// The default G double sharp (in the fourth octave).
 pub const GDoubleSharp: Note = GDoubleSharpFour;
+/// The default D double sharp (in the fourth octave).
 pub const DDoubleSharp: Note = DDoubleSharpFour;
+/// The default A double sharp (in the fourth octave).
 pub const ADoubleSharp: Note = ADoubleSharpFour;
+/// The default E double sharp (in the fourth octave).
 pub const EDoubleSharp: Note = EDoubleSharpFour;
+/// The default B double sharp (in the fourth octave).
 pub const BDoubleSharp: Note = BDoubleSharpFour;
 
+/// The default F triple sharp (in the fourth octave).
 pub const FTripleSharp: Note = FTripleSharpFour;
+/// The default C triple sharp (in the fourth octave).
 pub const CTripleSharp: Note = CTripleSharpFour;
+/// The default G triple sharp (in the fourth octave).
 pub const GTripleSharp: Note = GTripleSharpFour;
+/// The default D triple sharp (in the fourth octave).
 pub const DTripleSharp: Note = DTripleSharpFour;
+/// The default A triple sharp (in the fourth octave).
 pub const ATripleSharp: Note = ATripleSharpFour;
+/// The default E triple sharp (in the fourth octave).
 pub const ETripleSharp: Note = ETripleSharpFour;
+/// The default B triple sharp (in the fourth octave).
 pub const BTripleSharp: Note = BTripleSharpFour;
 
 // Statics.
 
+/// All the notes in all octaves.
 pub static ALL_PITCH_NOTES: Lazy<[Note; 192]> = Lazy::new(|| {
     let mut all_notes = Vec::with_capacity(132);
 
@@ -528,6 +579,7 @@ pub static ALL_PITCH_NOTES: Lazy<[Note; 192]> = Lazy::new(|| {
     all_notes.try_into().unwrap()
 });
 
+/// All the notes in all octaves with their frequency.
 pub static ALL_PITCH_NOTES_WITH_FREQUENCY: Lazy<[(Note, f32); 192]> = Lazy::new(|| {
     let mut all_notes = Vec::with_capacity(132);
 

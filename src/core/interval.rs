@@ -32,69 +32,117 @@ pub trait CanReduceFrame {
 #[repr(u8)]
 #[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum Interval {
+    /// A perfect unison interval.
     PerfectUnison,
+    /// A diminished second interval.
     DiminishedSecond,
 
+    /// An augmented unison interval.
     AugmentedUnison,
+    /// A minor second interval.
     MinorSecond,
 
+    /// A major second interval.
     MajorSecond,
+    /// A diminished third interval.
     DiminishedThird,
 
+    /// An augmented second interval.
     AugmentedSecond,
+    /// A minor third interval.
     MinorThird,
 
+    /// A major third interval.
     MajorThird,
+    /// A diminished fourth interval.
     DiminishedFourth,
 
+    /// An augmented third interval.
     AugmentedThird,
+    /// A perfect fourth interval.
     PerfectFourth,
 
+    /// An augmented fourth interval.
     AugmentedFourth,
+    /// A diminished fifth interval.
     DiminishedFifth,
 
+    /// A perfect fifth interval.
     PerfectFifth,
+    /// A diminished sixth interval.
     DiminishedSixth,
 
+    /// An augmented fifth interval.
     AugmentedFifth,
+    /// A minor sixth interval.
     MinorSixth,
 
+    /// A major sixth interval.
     MajorSixth,
+    /// A diminished seventh interval.
     DiminishedSeventh,
 
+    /// An augmented sixth interval.
     AugmentedSixth,
+    /// A minor seventh interval.
     MinorSeventh,
 
+    /// A major seventh interval.
     MajorSeventh,
+    /// A diminished octave interval.
     DiminishedOctave,
 
+    /// An augmented seventh interval.
     AugmentedSeventh,
+    /// A perfect octave interval.
     PerfectOctave,
 
+    /// An minor ninth interval.
     MinorNinth,
+    /// A major ninth interval.
     MajorNinth,
+    /// An augmented ninth interval.
     AugmentedNinth,
 
+    /// A diminished eleventh interval.
     DiminishedEleventh,
+    /// A perfect eleventh interval.
     PerfectEleventh,
+    /// An augmented eleventh interval.
     AugmentedEleventh,
 
+    /// A minor thirteenth interval.
     MinorThirteenth,
+    /// A major thirteenth interval.
     MajorThirteenth,
+    /// An augmented thirteenth interval.
     AugmentedThirteenth,
 
+    /// A perfect octave and perfect fifth interval.
     PerfectOctaveAndPerfectFifth,
+    /// Two perfect octaves.
     TwoPerfectOctaves,
+    /// Two perfect octaves and a major third.
     TwoPerfectOctavesAndMajorThird,
+    /// Two perfect octaves and a perfect fifth.
     TwoPerfectOctavesAndPerfectFifth,
+    /// Two perfect octaves and a minor sixth.
     TwoPerfectOctavesAndMinorSeventh,
+    /// Three perfect octaves.
     ThreePerfectOctaves,
+    /// Three perfect octaves and a major second.
     ThreePerfectOctavesAndMajorSecond,
+    /// Three perfect octaves and a major third.
     ThreePerfectOctavesAndMajorThird,
+    /// Three perfect octaves and an augmented fourth.
     ThreePerfectOctavesAndAugmentedFourth,
+    /// Three perfect octaves and a perfect fifth.
     ThreePerfectOctavesAndPerfectFifth,
+    /// Three perfect octaves and a minor sixth.
     ThreePerfectOctavesAndMinorSixth,
+    /// Three perfect octaves and a minor seventh.
     ThreePerfectOctavesAndMinorSeventh,
+    /// Three perfect octaves and a major seventh.
     ThreePerfectOctavesAndMajorSeventh,
 }
 
@@ -244,6 +292,7 @@ impl HasOctave for Interval {
 
 // Statics.
 
+/// The primary (first 13) harmonic series expressed as [`Interval`]s.
 pub static PRIMARY_HARMONIC_SERIES: [Interval; 13] = [
     Interval::PerfectOctave,
     Interval::PerfectOctaveAndPerfectFifth,

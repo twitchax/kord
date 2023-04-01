@@ -15,6 +15,7 @@ use crate::core::{base::Res, note::Note};
 
 use super::base::get_notes_from_audio_data;
 
+/// Gets notes from the microphone input over the specified period of time.
 #[no_coverage]
 pub async fn get_notes_from_microphone(length_in_seconds: u8) -> Res<Vec<Note>> {
     // Get data.

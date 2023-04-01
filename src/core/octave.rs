@@ -23,21 +23,37 @@ pub trait HasOctave {
 #[repr(u8)]
 #[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum Octave {
+    /// The octave 0.
     Zero,
+    /// The octave 1.
     One,
+    /// The octave 2.
     Two,
+    /// The octave 3.
     Three,
+    /// The octave 4.
     Four,
+    /// The octave 5.
     Five,
+    /// The octave 6.
     Six,
+    /// The octave 7.
     Seven,
+    /// The octave 8.
     Eight,
+    /// The octave 9.
     Nine,
+    /// The octave 10.
     Ten,
+    /// The octave 11.
     Eleven,
+    /// The octave 12.
     Twelve,
+    /// The octave 13.
     Thirteen,
+    /// The octave 14.
     Fourteen,
+    /// The octave 15.
     Fifteen,
 }
 
@@ -161,6 +177,7 @@ impl Default for Octave {
 
 // Statics.
 
+/// An array of all octaves.
 pub static ALL_OCTAVES: Lazy<[Octave; 16]> = Lazy::new(|| {
     [
         Octave::Zero,

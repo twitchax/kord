@@ -1,3 +1,5 @@
+//! Helper functions.
+
 /// Converts a frequency to a mel.
 pub fn mel(f: f32) -> f32 {
     2595f32 * (1f32 + f / 700f32).log10()

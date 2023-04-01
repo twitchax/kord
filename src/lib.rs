@@ -30,9 +30,9 @@
 //! assert_eq!(C.into_chord().augmented().major7().chord(), vec![C, E, GSharp, B]);
 //! ```
 
+#![warn(rustdoc::broken_intra_doc_links, rust_2018_idioms, clippy::all, missing_docs)]
 #![allow(incomplete_features)]
 #![allow(clippy::needless_range_loop)]
-#![warn(rustdoc::broken_intra_doc_links, rust_2018_idioms, clippy::all, missing_docs)]
 #![feature(adt_const_params)]
 #![feature(generic_const_exprs)]
 #![feature(specialization)]

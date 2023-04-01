@@ -35,60 +35,109 @@ pub trait HasLetter {
 #[repr(u8)]
 #[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum NamedPitch {
+    /// The pitch F triple flat.
     FTripleFlat,
+    /// The pitch C triple flat.
     CTripleFlat,
+    /// The pitch G triple flat.
     GTripleFlat,
+    /// The pitch D triple flat.
     DTripleFlat,
+    /// The pitch A triple flat.
     ATripleFlat,
+    /// The pitch E triple flat.
     ETripleFlat,
+    /// The pitch B triple flat.
     BTripleFlat,
 
+    /// The pitch F double flat.
     FDoubleFlat,
+    /// The pitch C double flat.
     CDoubleFlat,
+    /// The pitch G double flat.
     GDoubleFlat,
+    /// The pitch D double flat.
     DDoubleFlat,
+    /// The pitch A double flat.
     ADoubleFlat,
+    /// The pitch E double flat.
     EDoubleFlat,
+    /// The pitch B double flat.
     BDoubleFlat,
 
+    /// The pitch F flat.
     FFlat,
+    /// The pitch C flat.
     CFlat,
+    /// The pitch G flat.
     GFlat,
+    /// The pitch D flat.
     DFlat,
+    /// The pitch A flat.
     AFlat,
+    /// The pitch E flat.
     EFlat,
+    /// The pitch B flat.
     BFlat,
 
+    /// The pitch F.
     F,
+    /// The pitch C.
     C,
+    /// The pitch G.
     G,
+    /// The pitch D.
     D,
+    /// The pitch A.
     A,
+    /// The pitch E.
     E,
+    /// The pitch B.
     B,
 
+    /// The pitch F sharp.
     FSharp,
+    /// The pitch C sharp.
     CSharp,
+    /// The pitch G sharp.
     GSharp,
+    /// The pitch D sharp.
     DSharp,
+    /// The pitch A sharp.
     ASharp,
+    /// The pitch E sharp.
     ESharp,
+    /// The pitch B sharp.
     BSharp,
 
+    /// The pitch F double sharp.
     FDoubleSharp,
+    /// The pitch C double sharp.
     CDoubleSharp,
+    /// The pitch G double sharp.
     GDoubleSharp,
+    /// The pitch D double sharp.
     DDoubleSharp,
+    /// The pitch A double sharp.
     ADoubleSharp,
+    /// The pitch E double sharp.
     EDoubleSharp,
+    /// The pitch B double sharp.
     BDoubleSharp,
 
+    /// The pitch F triple sharp.
     FTripleSharp,
+    /// The pitch C triple sharp.
     CTripleSharp,
+    /// The pitch G triple sharp.
     GTripleSharp,
+    /// The pitch D triple sharp.
     DTripleSharp,
+    /// The pitch A triple sharp.
     ATripleSharp,
+    /// The pitch E triple sharp.
     ETripleSharp,
+    /// The pitch B triple sharp.
     BTripleSharp,
 }
 

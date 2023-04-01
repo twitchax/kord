@@ -123,6 +123,7 @@ impl TryFrom<u8> for Pitch {
 
 // Statics.
 
+/// An array of all the pitches.
 pub static ALL_PITCHES: Lazy<[Pitch; 12]> = Lazy::new(|| {
     [
         Pitch::C,

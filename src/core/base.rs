@@ -41,6 +41,7 @@ pub trait HasDescription {
 
 /// A trait for types that can be parsed from a string.
 pub trait Parsable {
+    /// Parses the type from a string.
     fn parse(symbol: &str) -> Res<Self>
     where
         Self: Sized;

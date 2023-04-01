@@ -25,6 +25,7 @@ pub const NUM_CLASSES: usize = 128;
 
 // Training configuration.
 
+/// The training configuration used for all training, inference, and hyper parameter tuning.
 #[derive(Debug, Config)]
 pub struct TrainConfig {
     /// The source directory for the gathered samples.
@@ -82,8 +83,11 @@ pub struct TrainConfig {
 /// This is a single sample of a kord, which is a set of notes played together.
 #[derive(Clone, Debug)]
 pub struct KordItem {
+    /// The path to the sample.
     pub path: PathBuf,
+    /// The frequency space of the sample.
     pub frequency_space: [f32; FREQUENCY_SPACE_SIZE],
+    /// The label of the sample.
     pub label: u128,
 }
 

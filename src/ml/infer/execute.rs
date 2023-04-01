@@ -18,6 +18,7 @@ use crate::{
     ml::base::{data::kord_item_to_sample_tensor, helpers::binary_to_u128, model::KordModel, KordItem, TrainConfig, FREQUENCY_SPACE_SIZE},
 };
 
+/// Run the inference on a sample to produce a [`Vec`] of [`Note`]s.
 pub fn run_inference<B: Backend>(device: &B::Device, kord_item: &KordItem) -> Res<Vec<Note>>
 where
     B::FloatElem: Serialize + DeserializeOwned,
@@ -55,6 +56,7 @@ where
     Ok(inferred_notes)
 }
 
+/// Infer notes from the audio data.
 pub fn infer(audio_data: &[f32], length_in_seconds: u8) -> Res<Vec<Note>> {
     let frequency_space = get_frequency_space(audio_data, length_in_seconds);
     let smoothed_frequency_space: [_; FREQUENCY_SPACE_SIZE] = get_smoothed_frequency_space(&frequency_space, length_in_seconds)

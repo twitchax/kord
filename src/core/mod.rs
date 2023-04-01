@@ -9,5 +9,6 @@ pub mod modifier;
 pub mod named_pitch;
 pub mod note;
 pub mod octave;
+#[allow(missing_docs)]
 pub mod parser;
 pub mod pitch;

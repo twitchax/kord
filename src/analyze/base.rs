@@ -16,7 +16,7 @@ use crate::core::{base::Res, note::Note, pitch::HasFrequency};
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
 
-//#[cfg_attr(wasm, wasm_bindgen)]
+/// Gets notes from audio data.
 pub fn get_notes_from_audio_data(data: &[f32], length_in_seconds: u8) -> Res<Vec<Note>> {
     if length_in_seconds < 1 {
         return Err(anyhow::Error::msg("Listening length in seconds must be greater than 1."));
@@ -37,6 +37,7 @@ pub fn get_notes_from_audio_data(data: &[f32], length_in_seconds: u8) -> Res<Vec
     Ok(get_notes_from_smoothed_frequency_space(&smoothed_frequency_space))
 }
 
+/// Gets notes from pre-smoothed frequency data (helps with model training deterministic features).
 pub fn get_notes_from_smoothed_frequency_space(smoothed_frequency_space: &[(f32, f32)]) -> Vec<Note> {
     // Translate the frequency space into a "peak space" (dampen values that are not the "peak" of a specified window).
 
@@ -87,6 +88,7 @@ pub fn get_time_space(data: &[f32]) -> Vec<(f32, f32)> {
     buffer.into_iter().enumerate().map(|(k, d)| (k as f32, d.abs())).collect::<Vec<_>>()
 }
 
+/// Computes the CQT (constant Q transform) from the frequency space.
 #[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub fn compute_cqt(frequency_space: &[f32]) -> Vec<f32> {
     const Q_FACTOR: f32 = 24.7; // Q-factor for the CQT

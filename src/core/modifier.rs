@@ -50,15 +50,15 @@ pub enum Modifier {
     /// Dominant modifier with degree.
     Dominant(Degree),
 
-    // Flat 9 modifier.
+    /// Flat 9 modifier.
     Flat9,
-    // Sharp 9 modifier.
+    /// Sharp 9 modifier.
     Sharp9,
 
-    // Sharp 11 modifier.
+    /// Sharp 11 modifier.
     Sharp11,
 
-    // Diminished modifier.
+    /// Diminished modifier.
     Diminished,
 }
 
@@ -70,20 +70,31 @@ pub enum Modifier {
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
 #[repr(u8)]
 pub enum Extension {
+    /// Sus2 extension.
     Sus2,
+    /// Sus4 extension.
     Sus4,
 
+    /// Flat 11 extension.
     Flat11,
 
+    /// Flat 13 extension.
     Flat13,
+    /// Sharp 13 extension.
     Sharp13,
 
+    /// Add2 extension.
     Add2,
+    /// Add4 extension.
     Add4,
+    /// Add6 extension.
     Add6,
 
+    /// Add9 extension.
     Add9,
+    /// Add11 extension.
     Add11,
+    /// Add13 extension.
     Add13,
 }
 
