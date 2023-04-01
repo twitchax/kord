@@ -27,7 +27,7 @@ path = "src/bin.rs"
 required-features = ["cli"]
 
 [features]
-default = ["cli", "analyze", "audio", "ml_infer"]
+default = ["cli", "analyze", "audio"]
 
 cli = ["clap", "futures"]
 
