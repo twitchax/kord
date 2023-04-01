@@ -4,6 +4,9 @@ use std::{cmp::Ordering, collections::HashSet, fmt::Display};
 
 use pest::Parser;
 
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
+
 use crate::core::{
     base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Res},
     interval::Interval,
@@ -229,6 +232,7 @@ pub trait HasDomninantDegree {
 
 /// The primary chord struct.
 #[derive(PartialEq, Eq, Clone, Debug)]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub struct Chord {
     /// The root note of the chord.
     root: Note,
@@ -321,8 +325,10 @@ impl PartialOrd for Chord {
     }
 }
 
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl Chord {
     /// Returns a new chord with the given root.
+    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new(root: Note) -> Self {
         Self {
             root,
@@ -333,9 +339,11 @@ impl Chord {
             is_crunchy: false,
         }
     }
+}
 
+impl Chord {
     /// Attempts to guess the chord from the notes.
-    pub fn from_notes(notes: &[Note]) -> Res<Vec<Self>> {
+    pub fn try_from_notes(notes: &[Note]) -> Res<Vec<Self>> {
         if notes.len() < 3 {
             return Err(anyhow::Error::msg("Must have at least three notes to guess a chord."));
         }
@@ -1450,24 +1458,24 @@ mod tests {
     #[test]
     fn test_guess() {
         assert_eq!(
-            Chord::from_notes(&[EThree, C, EFlat, FSharp, ASharp, DFive]).unwrap().first().unwrap().chord(),
+            Chord::try_from_notes(&[EThree, C, EFlat, FSharp, ASharp, DFive]).unwrap().first().unwrap().chord(),
             Chord::parse("Cm9b5/E").unwrap().chord()
         );
-        assert_eq!(Chord::from_notes(&[C, E, G]).unwrap().first().unwrap().chord(), Chord::parse("C").unwrap().chord());
+        assert_eq!(Chord::try_from_notes(&[C, E, G]).unwrap().first().unwrap().chord(), Chord::parse("C").unwrap().chord());
         assert_eq!(
-            Chord::from_notes(&[C, E, G, BFlat, DFive, FFive]).unwrap().first().unwrap().chord(),
+            Chord::try_from_notes(&[C, E, G, BFlat, DFive, FFive]).unwrap().first().unwrap().chord(),
             Chord::parse("C11").unwrap().chord()
         );
         assert_eq!(
-            Chord::from_notes(&[C, E, G, BFlat, DFive, FFive, AFive]).unwrap().first().unwrap().chord(),
+            Chord::try_from_notes(&[C, E, G, BFlat, DFive, FFive, AFive]).unwrap().first().unwrap().chord(),
             Chord::parse("C13").unwrap().chord()
         );
-        assert_eq!(Chord::from_notes(&[C, EFlat, GFlat, A]).unwrap().first().unwrap().chord(), Chord::parse("Cdim").unwrap().chord());
+        assert_eq!(Chord::try_from_notes(&[C, EFlat, GFlat, A]).unwrap().first().unwrap().chord(), Chord::parse("Cdim").unwrap().chord());
     }
 
     #[test]
     #[should_panic(expected = "Must have at least three notes to guess a chord.")]
     fn test_chord_from_notes_failure() {
-        Chord::from_notes(&[C, E]).unwrap();
+        Chord::try_from_notes(&[C, E]).unwrap();
     }
 }

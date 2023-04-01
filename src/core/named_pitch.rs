@@ -2,6 +2,9 @@
 
 use std::ops::Add;
 
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
+
 use crate::core::{
     base::HasStaticName,
     pitch::{HasPitch, Pitch},
@@ -30,6 +33,7 @@ pub trait HasLetter {
 /// enharmonic name (could share the same pitch with another).
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
 #[repr(u8)]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum NamedPitch {
     FTripleFlat,
     CTripleFlat,

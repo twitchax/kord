@@ -111,9 +111,9 @@ mod tests {
     fn test_mic() {
         let data = crate::analyze::base::tests::load_test_data();
 
-        let notes = Note::from_audio(&data, 5).unwrap();
+        let notes = Note::try_from_audio(&data, 5).unwrap();
 
-        let chord = Chord::from_notes(&notes).unwrap();
+        let chord = Chord::try_from_notes(&notes).unwrap();
 
         assert_eq!(chord[0], Chord::parse("C7b9").unwrap());
     }

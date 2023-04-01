@@ -117,7 +117,7 @@ mod tests {
 
         let notes = infer(&audio_data, 5).unwrap();
 
-        let chord = Chord::from_notes(&notes).unwrap();
+        let chord = Chord::try_from_notes(&notes).unwrap();
 
         assert_eq!(chord[0], Chord::parse("C7b9").unwrap());
     }

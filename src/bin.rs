@@ -332,7 +332,7 @@ fn start(args: Args) -> Void {
             let notes = notes.into_iter().map(|n| Note::parse(&n)).collect::<Result<Vec<_>, _>>()?;
 
             // Get the chord from the notes.
-            let candidates = Chord::from_notes(&notes)?;
+            let candidates = Chord::try_from_notes(&notes)?;
 
             for candidate in candidates {
                 describe(&candidate);
@@ -363,7 +363,7 @@ fn start(args: Args) -> Void {
         Some(Command::Analyze { analyze_command }) => match analyze_command {
             #[cfg(feature = "analyze_mic")]
             Some(AnalyzeCommand::Mic { length }) => {
-                let notes = futures::executor::block_on(Note::from_mic(length))?;
+                let notes = futures::executor::block_on(Note::try_from_mic(length))?;
 
                 show_notes_and_chords(&notes)?;
             }
@@ -617,7 +617,7 @@ fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
 fn show_notes_and_chords(notes: &[Note]) -> Res<()> {
     println!("Notes: {}", notes.iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" "));
 
-    let candidates = Chord::from_notes(notes)?;
+    let candidates = Chord::try_from_notes(notes)?;
 
     if candidates.is_empty() {
         println!("No chord candidates found");

@@ -1586,6 +1586,8 @@ dependencies = [
  "rustfft",
  "serde",
  "symphonia",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
 ]
 
 [[package]]

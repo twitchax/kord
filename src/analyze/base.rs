@@ -13,6 +13,10 @@ use crate::core::note::{HasPrimaryHarmonicSeries, ALL_PITCH_NOTES_WITH_FREQUENCY
 
 use crate::core::{base::Res, note::Note, pitch::HasFrequency};
 
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
+
+//#[cfg_attr(wasm, wasm_bindgen)]
 pub fn get_notes_from_audio_data(data: &[f32], length_in_seconds: u8) -> Res<Vec<Note>> {
     if length_in_seconds < 1 {
         return Err(anyhow::Error::msg("Listening length in seconds must be greater than 1."));
@@ -83,6 +87,7 @@ pub fn get_time_space(data: &[f32]) -> Vec<(f32, f32)> {
     buffer.into_iter().enumerate().map(|(k, d)| (k as f32, d.abs())).collect::<Vec<_>>()
 }
 
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub fn compute_cqt(frequency_space: &[f32]) -> Vec<f32> {
     const Q_FACTOR: f32 = 24.7; // Q-factor for the CQT
     const MIN_FREQ: f32 = 65.41; // minimum frequency for the CQT
