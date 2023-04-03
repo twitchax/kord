@@ -172,7 +172,7 @@ pub fn binary_to_u128(binary: &[f32]) -> u128 {
 }
 
 /// Folds a 128 element array of 0s and 1s into a 12 element array of 0s and 1s.
-/// 
+///
 /// Essentially, this is useful if we want to do inference on the pitches without octaves.
 #[allow(dead_code)]
 pub fn fold_binary(binary: &[f32; 128]) -> [f32; 12] {

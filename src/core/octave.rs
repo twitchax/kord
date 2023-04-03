@@ -3,8 +3,6 @@
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 use once_cell::sync::Lazy;
-#[cfg(feature = "wasm")]
-use wasm_bindgen::prelude::*;
 
 use crate::core::base::HasStaticName;
 
@@ -21,7 +19,6 @@ pub trait HasOctave {
 /// An enum representing the octave of a note.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
 #[repr(u8)]
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum Octave {
     /// The octave 0.
     Zero,

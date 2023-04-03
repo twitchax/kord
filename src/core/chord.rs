@@ -4,9 +4,6 @@ use std::{cmp::Ordering, collections::HashSet, fmt::Display};
 
 use pest::Parser;
 
-#[cfg(feature = "wasm")]
-use wasm_bindgen::prelude::*;
-
 use crate::core::{
     base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Res},
     interval::Interval,
@@ -232,7 +229,6 @@ pub trait HasDomninantDegree {
 
 /// The primary chord struct.
 #[derive(PartialEq, Eq, Clone, Debug)]
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub struct Chord {
     /// The root note of the chord.
     root: Note,
@@ -325,10 +321,8 @@ impl PartialOrd for Chord {
     }
 }
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl Chord {
     /// Returns a new chord with the given root.
-    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new(root: Note) -> Self {
         Self {
             root,

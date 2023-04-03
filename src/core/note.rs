@@ -24,9 +24,6 @@ use once_cell::sync::Lazy;
 use paste::paste;
 use pest::Parser;
 
-#[cfg(feature = "wasm")]
-use wasm_bindgen::prelude::*;
-
 // Macros.
 
 /// Defines a note from a [`NamedPitch`].
@@ -161,7 +158,6 @@ pub trait ToUniversal {
 /// This is a named pitch with an octave.  This type allows for correctly attributing octave changes
 /// across an interval from one [`Note`] to another.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub struct Note {
     /// The octave of the note.
     octave: Octave,
@@ -177,10 +173,8 @@ impl Display for Note {
 
 // Impls.
 
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
 impl Note {
     /// Creates a new [`Note`] from the given [`NamedPitch`] and [`Octave`].
-    #[cfg_attr(feature = "wasm", wasm_bindgen(constructor))]
     pub fn new(pitch: NamedPitch, octave: Octave) -> Self {
         Self { named_pitch: pitch, octave }
     }

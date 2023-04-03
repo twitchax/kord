@@ -1,8 +1,5 @@
 //! A module for working with intervals.
 
-#[cfg(feature = "wasm")]
-use wasm_bindgen::prelude::*;
-
 use crate::core::octave::{HasOctave, Octave};
 
 // Traits.
@@ -30,7 +27,6 @@ pub trait CanReduceFrame {
 /// An enum representing the interval between two notes.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
 #[repr(u8)]
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum Interval {
     /// A perfect unison interval.
     PerfectUnison,

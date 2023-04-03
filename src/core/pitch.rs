@@ -4,9 +4,6 @@
 
 use once_cell::sync::Lazy;
 
-#[cfg(feature = "wasm")]
-use wasm_bindgen::prelude::*;
-
 use super::helpers::mel;
 
 /// A trait for types that have a pitch property.
@@ -43,7 +40,6 @@ pub trait HasMel: HasFrequency {
 /// There is no enharmonic representation here, so all of the sharps are represented.
 #[derive(PartialEq, Eq, Clone, Copy, Hash, Debug, Ord, PartialOrd)]
 #[repr(u8)]
-#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum Pitch {
     /// The pitch C.
     C,
