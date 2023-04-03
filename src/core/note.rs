@@ -143,7 +143,7 @@ pub trait HasNoteId {
         Self: Sized;
 }
 
-/// A trait which allows for converting a note to the same ovtave, but using universal [`Pitch`]es.
+/// A trait which allows for converting a note to the same octave, but using universal [`Pitch`]es.
 ///
 /// Essentially, this would convert an F#4 into a Gb4, since [`Pitch`]es prefer the flats.
 pub trait ToUniversal {

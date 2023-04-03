@@ -27,7 +27,7 @@ path = "src/bin.rs"
 required-features = ["cli"]
 
 [features]
-default = ["cli", "analyze", "audio"]
+default = ["cli", "analyze", "audio", "wasm"]
 
 cli = ["clap", "futures"]
 
@@ -48,7 +48,7 @@ ml_train = ["ml_base", "rand", "rayon", "burn-autodiff", "burn/train", "burn/std
 ml_infer = ["ml_base", "burn", "burn-ndarray"]
 ml_gpu = ["ml_train", "burn-tch"]
 
-wasm = ["rodio/wasm-bindgen", "wasm-bindgen", "wasm-bindgen-futures"]
+wasm = ["rodio/wasm-bindgen", "wasm-bindgen", "wasm-bindgen-futures", "js-sys"]
 
 plot = ["plotters"]
 
@@ -94,6 +94,7 @@ plotters = { version = "0.3.4", optional = true }
 # wasm
 wasm-bindgen = { version = "0.2.84", optional = true }
 wasm-bindgen-futures = { version = "0.4.34", optional = true }
+js-sys = { version = "0.3.61", optional = true }
 
 [dev-dependencies]
 pretty_assertions = "1.3.0"

@@ -48,6 +48,12 @@ pub trait HasInversion {
     fn inversion(&self) -> u8;
 }
 
+/// A trait that represents a type that has "crunchiness".
+pub trait HasIsCrunchy {
+    /// Returns the "crunchiness" of the implementor (most likely a [`Chord`]).
+    fn is_crunchy(&self) -> bool;
+}
+
 /// A trait that represents a type that has an octave.
 pub trait HasKnownChord {
     /// Returns the known chord of the implementor (most likely a [`Chord`]).
@@ -542,6 +548,12 @@ impl HasExtensions for Chord {
 impl HasInversion for Chord {
     fn inversion(&self) -> u8 {
         self.inversion
+    }
+}
+
+impl HasIsCrunchy for Chord {
+    fn is_crunchy(&self) -> bool {
+        self.is_crunchy
     }
 }
 

@@ -1573,6 +1573,7 @@ dependencies = [
  "cpal 0.15.0",
  "futures",
  "futures-timer",
+ "js-sys",
  "once_cell",
  "parse_duration0",
  "paste",
