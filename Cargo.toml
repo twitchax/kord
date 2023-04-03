@@ -1,6 +1,6 @@
 [package]
 name = "kord"
-version = "0.5.3"
+version = "0.5.4"
 edition = "2021"
 authors = ["Aaron Roney <twitchax@gmail.com>"]
 license = "MIT"
@@ -27,7 +27,7 @@ path = "src/bin.rs"
 required-features = ["cli"]
 
 [features]
-default = ["cli", "analyze", "audio", "wasm"]
+default = ["cli", "analyze", "audio"]
 
 cli = ["clap", "futures"]
 

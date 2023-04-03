@@ -1,12 +1,19 @@
 //! The WASM module.
-//! 
+//!
 //! This module contains the WASM wrappers / bindings for the rest of the library.
 
 use anyhow::Context;
 
 use wasm_bindgen::prelude::*;
 
-use crate::core::{note::Note, base::{Parsable, Res, HasName, HasDescription, HasStaticName, HasPreciseName}, chord::{Chord, HasChord, HasRoot, HasScale, HasSlash, HasInversion, HasIsCrunchy}, pitch::{HasFrequency}, named_pitch::HasNamedPitch, octave::HasOctave};
+use crate::core::{
+    base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Res},
+    chord::{Chord, HasChord, HasInversion, HasIsCrunchy, HasRoot, HasScale, HasSlash},
+    named_pitch::HasNamedPitch,
+    note::Note,
+    octave::HasOctave,
+    pitch::HasFrequency,
+};
 
 // [`Note`] ABI.
 
@@ -23,9 +30,7 @@ impl KordNote {
     /// Creates a new [`Note`] from a frequency.
     #[wasm_bindgen]
     pub fn parse(name: String) -> Result<KordNote, JsValue> {
-        Ok(Self {
-            note: Note::parse(&name).to_js_error()?
-        })
+        Ok(Self { note: Note::parse(&name).to_js_error()? })
     }
 
     /// Returns [`Note`]s from audio data.
@@ -106,7 +111,7 @@ impl KordNotes {
 impl From<Vec<Note>> for KordNotes {
     fn from(notes: Vec<Note>) -> Self {
         Self {
-            notes: notes.into_iter().map(|note| KordNote { note }).collect()
+            notes: notes.into_iter().map(|note| KordNote { note }).collect(),
         }
     }
 }
@@ -127,19 +132,17 @@ impl KordChord {
     #[wasm_bindgen]
     pub fn parse(name: String) -> Result<KordChord, JsValue> {
         Ok(Self {
-            chord: Chord::parse(&name).to_js_error()?
+            chord: Chord::parse(&name).to_js_error()?,
         })
     }
 
     /// Creates a new [`Chord`] from a set of [`Note`]s.
-    /// 
+    ///
     /// The [`Note`]s should be represented as a space-separated string.
     /// E.g., `C E G`.
     #[wasm_bindgen]
     pub fn from_notes_string(notes: String) -> Result<KordChords, JsValue> {
-        let notes = notes.split_whitespace()
-            .map(|note| Note::parse(note).to_js_error())
-            .collect::<Result<Vec<Note>, JsValue>>()?;
+        let notes = notes.split_whitespace().map(|note| Note::parse(note).to_js_error()).collect::<Result<Vec<Note>, JsValue>>()?;
 
         let candidates = Chord::try_from_notes(&notes).to_js_error()?;
 
@@ -149,9 +152,7 @@ impl KordChord {
     /// Creates a new [`Chord`] from a set of [`Note`]s.
     #[wasm_bindgen]
     pub fn from_notes(notes: KordNotes) -> Result<KordChords, JsValue> {
-        let notes = notes.notes.into_iter()
-            .map(|note| note.note)
-            .collect::<Vec<Note>>();
+        let notes = notes.notes.into_iter().map(|note| note.note).collect::<Vec<Note>>();
 
         let candidates = Chord::try_from_notes(&notes).to_js_error()?;
 
@@ -234,9 +235,9 @@ impl KordChord {
     #[wasm_bindgen]
     #[cfg(feature = "audio")]
     pub async fn play(&self, delay: f32, length: f32, fade_in: f32) -> Result<(), JsValue> {
+        use crate::core::base::Playable;
         use futures_timer::Delay;
         use std::time::Duration;
-        use crate::core::base::Playable;
 
         let _handle = self.chord.play(delay, length, fade_in).context("Could not start the playback.").to_js_error()?;
 
@@ -280,7 +281,7 @@ impl KordChords {
 impl From<Vec<Chord>> for KordChords {
     fn from(chords: Vec<Chord>) -> Self {
         Self {
-            chords: chords.into_iter().map(|chord| KordChord { chord }).collect()
+            chords: chords.into_iter().map(|chord| KordChord { chord }).collect(),
         }
     }
 }
