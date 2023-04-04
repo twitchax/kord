@@ -9,7 +9,7 @@
 
 # kord
 
-A music theory binary and library for Rust ([capability playground](https://kord.twitchax.com/)).
+A music theory binary and library for Rust / JS (via WASM) ([capability playground](https://kord.twitchax.com/)).
 
 ## Binary Usage
 
@@ -42,6 +42,12 @@ Cargo:
 
 ```bash
 $ cargo install kord
+```
+
+NPM:
+
+```bash
+$ npm install --save kordweb
 ```
 
 ### Help Docs
@@ -191,6 +197,35 @@ use klib::chord::*;
 
 // From a note, create a chord, and look at the chord tones.
 assert_eq!(C.into_chord().augmented().major7().chord(), vec![C, E, GSharp, B]);
+```
+
+## JS Usage
+
+The npm package is available [here](https://www.npmjs.com/package/kordweb).
+
+First, load the module as you would any other ES module.
+
+```js
+import init, { KordNote, KordChord } from 'kordweb/klib.js';
+
+// Run `init` once.
+await init();
+```
+
+Then, you can use the library similarly as you would in Rust.
+
+```js
+// Create a note.
+const note = KordNote.parse('C4');
+
+note.name(); // C4
+note.octave(); // 4
+
+// Create a chord.
+const chord = KordChord.parse('C7#9');
+
+chord.name(); // C7(♯9)
+chord.chordString(); // C4 E4 G4 Bb5 D#5
 ```
 
 ## Feature Flags

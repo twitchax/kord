@@ -2,6 +2,9 @@
 
 use once_cell::sync::Lazy;
 
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
+
 use crate::core::base::HasStaticName;
 
 // Traits.
@@ -69,6 +72,7 @@ pub enum Modifier {
 /// and the chord is still interpreted as a major chord.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
 #[repr(u8)]
+#[cfg_attr(feature = "wasm", wasm_bindgen(js_name = KordExtension))]
 pub enum Extension {
     /// Sus2 extension.
     Sus2,
