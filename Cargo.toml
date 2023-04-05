@@ -1,6 +1,6 @@
 [package]
 name = "kord"
-version = "0.5.7"
+version = "0.5.8"
 edition = "2021"
 authors = ["Aaron Roney <twitchax@gmail.com>"]
 license = "MIT"
@@ -25,6 +25,9 @@ crate-type = ["cdylib", "rlib"]
 name = "kord"
 path = "src/bin.rs"
 required-features = ["cli"]
+
+[profile.release]
+debug = true
 
 [features]
 default = ["cli", "analyze", "audio"]
