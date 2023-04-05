@@ -2,20 +2,21 @@
 //!
 //! This module contains the WASM wrappers / bindings for the rest of the library.
 
-use std::{panic};
+use std::panic;
 
 use anyhow::Context;
 
-use js_sys::{Object, Array, Reflect};
-use wasm_bindgen::{prelude::*, convert::RefFromWasmAbi};
+use js_sys::{Array, Object, Reflect};
+use wasm_bindgen::{convert::RefFromWasmAbi, prelude::*};
 
 use crate::core::{
     base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Res},
-    chord::{Chord, HasChord, HasInversion, HasIsCrunchy, HasRoot, HasScale, HasSlash, HasModifiers, HasExtensions, Chordable},
+    chord::{Chord, Chordable, HasChord, HasExtensions, HasInversion, HasIsCrunchy, HasModifiers, HasRoot, HasScale, HasSlash},
+    interval::Interval,
     named_pitch::HasNamedPitch,
-    note::Note,
+    note::{HasPrimaryHarmonicSeries, Note},
     octave::{HasOctave, Octave},
-    pitch::HasFrequency, interval::Interval, modifier::{Modifier, Degree},
+    pitch::HasFrequency,
 };
 
 // Use `wee_alloc` as the global allocator.
@@ -77,10 +78,10 @@ impl KordNote {
     /// Returns [`Note`]s from audio data using the ML inference algorithm.
     #[cfg(all(feature = "ml_infer", feature = "analyze_base"))]
     #[wasm_bindgen(js_name = fromAudioMl)]
-    pub fn from_audio_ml(data: &[f32], length_in_seconds: u8) -> JsRes<KordNotes> {
-        let notes = Note::try_from_audio_ml(data, length_in_seconds).to_js_error()?;
+    pub fn from_audio_ml(data: &[f32], length_in_seconds: u8) -> JsRes<Array> {
+        let notes = Note::try_from_audio_ml(data, length_in_seconds).to_js_error()?.into_iter().map(KordNote::from);
 
-        Ok(notes.into())
+        Ok(notes.into_js_array())
     }
 
     /// Returns the [`Note`]'s friendly name.
@@ -115,13 +116,21 @@ impl KordNote {
     }
 
     /// Adds the given interval to the [`Note`].
-    /// 
+    ///
     /// Clones the underlying note before mutation, producing a _new_ [`KordNote`].
     #[wasm_bindgen(js_name = addInterval)]
     pub fn add_interval(&self, interval: Interval) -> JsRes<KordNote> {
         let note = self.inner + interval;
-        
+
         Ok(Self { inner: note })
+    }
+
+    /// Returns the primary (first 13) harmonic series of the [`Note`].
+    #[wasm_bindgen(js_name = harmonicSeries)]
+    pub fn harmonic_series(&self) -> Array {
+        let series = self.inner.primary_harmonic_series();
+
+        series.into_iter().map(KordNote::from).into_js_array()
     }
 
     /// Returns the clone of the [`Note`].
@@ -281,7 +290,7 @@ impl KordChord {
     #[wasm_bindgen(js_name = withInversion)]
     pub fn with_inversion(&self, inversion: u8) -> Self {
         KordChord {
-            inner: self.inner.clone().with_inversion(inversion)
+            inner: self.inner.clone().with_inversion(inversion),
         }
     }
 
@@ -289,7 +298,7 @@ impl KordChord {
     #[wasm_bindgen(js_name = withSlash)]
     pub fn with_slash(&self, slash: &KordNote) -> Self {
         KordChord {
-            inner: self.inner.clone().with_slash(slash.inner)
+            inner: self.inner.clone().with_slash(slash.inner),
         }
     }
 
@@ -297,15 +306,15 @@ impl KordChord {
     #[wasm_bindgen(js_name = withOctave)]
     pub fn with_octave(&self, octave: u8) -> JsRes<KordChord> {
         Ok(KordChord {
-            inner: self.inner.clone().with_octave(Octave::try_from(octave)?)
+            inner: self.inner.clone().with_octave(Octave::try_from(octave)?),
         })
     }
 
-    /// Returns a new [`Chord`] with the "crunchiness" to the provided value.
+    /// Returns a new [`Chord`] with the "crunchiness" set to the provided value.
     #[wasm_bindgen(js_name = withCrunchy)]
     pub fn with_crunchy(&self, is_crunchy: bool) -> Self {
         KordChord {
-            inner: self.inner.clone().with_crunchy(is_crunchy)
+            inner: self.inner.clone().with_crunchy(is_crunchy),
         }
     }
 
@@ -368,54 +377,6 @@ pub enum KordModifier {
     Diminished,
 }
 
-// impl From<KordModifier> for Modifier {
-//     fn from(modifier: KordModifier) -> Self {
-//         match modifier {
-//             KordModifier::Minor => Modifier::Minor,
-
-//             KordModifier::Flat5 => Modifier::Flat5,
-//             KordModifier::Augmented5 => Modifier::Augmented5,
-
-//             KordModifier::Major7 => Modifier::Major7,
-//             KordModifier::Dominant7 => Modifier::Dominant(Degree::Seven),
-//             KordModifier::Dominant9 => Modifier::Dominant(Degree::Nine),
-//             KordModifier::Dominant11 => Modifier::Dominant(Degree::Eleven),
-//             KordModifier::Dominant13 => Modifier::Dominant(Degree::Thirteen),
-
-//             KordModifier::Flat9 => Modifier::Flat9,
-//             KordModifier::Sharp9 => Modifier::Sharp9,
-
-//             KordModifier::Sharp11 => Modifier::Sharp11,
-
-//             KordModifier::Diminished => Modifier::Diminished,
-//         }
-//     }
-// }
-
-impl From<Modifier> for KordModifier {
-    fn from(modifier: Modifier) -> Self {
-        match modifier {
-            Modifier::Minor => KordModifier::Minor,
-
-            Modifier::Flat5 => KordModifier::Flat5,
-            Modifier::Augmented5 => KordModifier::Augmented5,
-
-            Modifier::Major7 => KordModifier::Major7,
-            Modifier::Dominant(Degree::Seven) => KordModifier::Dominant7,
-            Modifier::Dominant(Degree::Nine) => KordModifier::Dominant9,
-            Modifier::Dominant(Degree::Eleven) => KordModifier::Dominant11,
-            Modifier::Dominant(Degree::Thirteen) => KordModifier::Dominant13,
-
-            Modifier::Flat9 => KordModifier::Flat9,
-            Modifier::Sharp9 => KordModifier::Sharp9,
-
-            Modifier::Sharp11 => KordModifier::Sharp11,
-
-            Modifier::Diminished => KordModifier::Diminished,
-        }
-    }
-}
-
 // Helpers.
 
 /// Helper trait for converting errors to [`JsValue`]s.
@@ -437,9 +398,9 @@ trait IntoJsArray {
 }
 
 impl<I, T> IntoJsArray for I
-where 
+where
     I: IntoIterator<Item = T>,
-    T: Into<JsValue>
+    T: Into<JsValue>,
 {
     fn into_js_array(self) -> Array {
         Array::from_iter(self.into_iter().map(Into::into))
@@ -454,14 +415,13 @@ trait ClonedIntoVec {
         T: RefFromJsValue + RefFromWasmAbi + Clone;
 }
 
-impl ClonedIntoVec for Array
-{
+impl ClonedIntoVec for Array {
     fn cloned_into_vec<T>(self) -> JsRes<Vec<T>>
     where
-        T: RefFromJsValue + RefFromWasmAbi + Clone
+        T: RefFromJsValue + RefFromWasmAbi + Clone,
     {
         let mut result = Vec::with_capacity(self.length() as usize);
-        
+
         for k in 0..self.length() {
             let value = self.get(k);
             let value = T::ref_from_js_value(&value)?.clone();
@@ -482,15 +442,14 @@ trait ClonedIntoVecInner {
         I: From<T>;
 }
 
-impl ClonedIntoVecInner for Array
-{
+impl ClonedIntoVecInner for Array {
     fn cloned_into_vec_inner<T, I>(self) -> JsRes<Vec<I>>
     where
         T: RefFromJsValue + RefFromWasmAbi + Clone,
-        I: From<T>
+        I: From<T>,
     {
         let mut result = Vec::with_capacity(self.length() as usize);
-        
+
         for k in 0..self.length() {
             let value = self.get(k);
             let value = T::ref_from_js_value(&value)?.clone();
@@ -512,11 +471,10 @@ trait RefFromJsValue {
         Self: Sized + RefFromWasmAbi;
 }
 
-impl RefFromJsValue for KordNote
-{
+impl RefFromJsValue for KordNote {
     fn ref_from_js_value(abi: &JsValue) -> JsRes<<KordNote as RefFromWasmAbi>::Anchor>
     where
-        Self: Sized + RefFromWasmAbi
+        Self: Sized + RefFromWasmAbi,
     {
         let ptr = Reflect::get(abi, &JsValue::from_str("ptr"))?.as_f64().ok_or("Could not cast pointer to f64.")? as u32;
 
@@ -531,16 +489,15 @@ impl RefFromJsValue for KordNote
         // We have confirmed that the JsValue is, indeed, an Object, and that
         // it is of the proper type.
         let value = unsafe { KordNote::ref_from_abi(ptr) };
-        
+
         Ok(value)
     }
 }
 
-impl RefFromJsValue for KordChord
-{
+impl RefFromJsValue for KordChord {
     fn ref_from_js_value(abi: &JsValue) -> JsRes<<KordChord as RefFromWasmAbi>::Anchor>
     where
-        Self: Sized + RefFromWasmAbi
+        Self: Sized + RefFromWasmAbi,
     {
         let ptr = Reflect::get(abi, &JsValue::from_str("ptr"))?.as_f64().ok_or("Could not cast pointer to f64.")? as u32;
 
@@ -555,7 +512,155 @@ impl RefFromJsValue for KordChord
         // We have confirmed that the JsValue is, indeed, an Object, and that
         // it is of the proper type.
         let value = unsafe { KordChord::ref_from_abi(ptr) };
-        
+
         Ok(value)
+    }
+}
+
+// The [`Chord`] modifier / extension impl.
+#[wasm_bindgen]
+impl KordChord {
+    /// Returns a new [`Chord`] with the `minor` modifier.
+    #[wasm_bindgen]
+    pub fn minor(&self) -> Self {
+        KordChord { inner: self.inner.clone().minor() }
+    }
+
+    /// Returns a new [`Chord`] with the `flat5` modifier.
+    #[wasm_bindgen]
+    pub fn flat5(&self) -> Self {
+        KordChord { inner: self.inner.clone().flat5() }
+    }
+
+    /// Returns a new [`Chord`] with the `augmented` modifier.
+    #[wasm_bindgen]
+    pub fn aug(&self) -> Self {
+        KordChord { inner: self.inner.clone().aug() }
+    }
+
+    /// Returns a new [`Chord`] with the `maj7` modifier.
+    #[wasm_bindgen]
+    pub fn maj7(&self) -> Self {
+        KordChord { inner: self.inner.clone().maj7() }
+    }
+
+    /// Returns a new [`Chord`] with the `dom7` modifier.
+    #[wasm_bindgen]
+    pub fn seven(&self) -> Self {
+        KordChord { inner: self.inner.clone().dominant7() }
+    }
+
+    /// Returns a new [`Chord`] with the `dom9` modifier.
+    #[wasm_bindgen]
+    pub fn nine(&self) -> Self {
+        KordChord { inner: self.inner.clone().dominant9() }
+    }
+
+    /// Returns a new [`Chord`] with the `dom11` modifier.
+    #[wasm_bindgen]
+    pub fn eleven(&self) -> Self {
+        KordChord { inner: self.inner.clone().dominant11() }
+    }
+
+    /// Returns a new [`Chord`] with the `dom13` modifier.
+    #[wasm_bindgen]
+    pub fn thirteen(&self) -> Self {
+        KordChord { inner: self.inner.clone().dominant13() }
+    }
+
+    /// Returns a new [`Chord`] with the `flat9` modifier.
+    #[wasm_bindgen]
+    pub fn flat9(&self) -> Self {
+        KordChord { inner: self.inner.clone().flat9() }
+    }
+
+    /// Returns a new [`Chord`] with the `sharp9` modifier.
+    #[wasm_bindgen]
+    pub fn sharp9(&self) -> Self {
+        KordChord { inner: self.inner.clone().sharp9() }
+    }
+
+    /// Returns a new [`Chord`] with the `sharp11` modifier.
+    #[wasm_bindgen]
+    pub fn sharp11(&self) -> Self {
+        KordChord { inner: self.inner.clone().sharp11() }
+    }
+
+    /// Returns a new [`Chord`] with the `dim` modifier.
+    #[wasm_bindgen]
+    pub fn dim(&self) -> Self {
+        KordChord { inner: self.inner.clone().dim() }
+    }
+
+    /// Returns a new [`Chord`] with the `halfDim` modifier.
+    #[wasm_bindgen(js_name = halfDim)]
+    pub fn half_dim(&self) -> Self {
+        KordChord { inner: self.inner.clone().half_dim() }
+    }
+
+    /// Returns a new [`Chord`] with the `sus2` extension.
+    #[wasm_bindgen]
+    pub fn sus2(&self) -> Self {
+        KordChord { inner: self.inner.clone().sus2() }
+    }
+
+    /// Returns a new [`Chord`] with the `sus4` extension.
+    #[wasm_bindgen]
+    pub fn sus4(&self) -> Self {
+        KordChord { inner: self.inner.clone().sus4() }
+    }
+
+    /// Returns a new [`Chord`] with the `flat11` extension.
+    #[wasm_bindgen]
+    pub fn flat11(&self) -> Self {
+        KordChord { inner: self.inner.clone().flat11() }
+    }
+
+    /// Returns a new [`Chord`] with the `flat13` extension.
+    #[wasm_bindgen]
+    pub fn flat13(&self) -> Self {
+        KordChord { inner: self.inner.clone().flat13() }
+    }
+
+    /// Returns a new [`Chord`] with the `sharp13` extension.
+    #[wasm_bindgen]
+    pub fn sharp13(&self) -> Self {
+        KordChord { inner: self.inner.clone().sharp13() }
+    }
+
+    /// Returns a new [`Chord`] with the `add2` extension.
+    #[wasm_bindgen]
+    pub fn add2(&self) -> Self {
+        KordChord { inner: self.inner.clone().add2() }
+    }
+
+    /// Returns a new [`Chord`] with the `add4` extension.
+    #[wasm_bindgen]
+    pub fn add4(&self) -> Self {
+        KordChord { inner: self.inner.clone().add4() }
+    }
+
+    /// Returns a new [`Chord`] with the `add6` extension.
+    #[wasm_bindgen]
+    pub fn add6(&self) -> Self {
+        KordChord { inner: self.inner.clone().add6() }
+    }
+
+    /// Returns a new [`Chord`] with the `add9` extension.
+    #[wasm_bindgen]
+    pub fn add9(&self) -> Self {
+        KordChord { inner: self.inner.clone().add9() }
+    }
+
+    /// Returns a new [`Chord`] with the `add11` extension.
+    #[wasm_bindgen]
+    pub fn add11(&self) -> Self {
+        KordChord { inner: self.inner.clone().add11() }
+    }
+
+    /// Returns a new [`Chord`] with the `add13` extension.
+    #[wasm_bindgen]
+    pub fn add13(&self) -> Self {
+        KordChord { inner: self.inner.clone().add13() }
     }
 }
