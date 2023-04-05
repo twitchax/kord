@@ -68,7 +68,7 @@ clap = { version = "4.0.29", features = ["derive"], optional = true }
 futures = { version = "0.3.25", optional = true }
 
 # audio
-rodio = { version = "0.16.0", default-features = false, features = ["symphonia"],  optional = true }
+rodio = { version = "0.17.1", default-features = false, features = ["symphonia"],  optional = true }
 
 # analyze_base
 rustfft = { version = "6.1.0", optional = true }
