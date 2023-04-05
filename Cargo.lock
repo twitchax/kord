@@ -1516,7 +1516,7 @@ dependencies = [
 
 [[package]]
 name = "kord"
-version = "0.5.8"
+version = "0.5.10"
 dependencies = [
  "anyhow",
  "async-trait",

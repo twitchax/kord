@@ -1,6 +1,6 @@
 [package]
 name = "kord"
-version = "0.5.8"
+version = "0.5.11"
 edition = "2021"
 authors = ["Aaron Roney <twitchax@gmail.com>"]
 license = "MIT"
@@ -28,6 +28,9 @@ required-features = ["cli"]
 
 [profile.release]
 debug = true
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
 
 [features]
 default = ["cli", "analyze", "audio"]
