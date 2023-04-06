@@ -1,5 +1,7 @@
 //! A module for working with intervals.
 
+use std::fmt::{Display, Formatter, Error};
+
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
 
@@ -290,7 +292,130 @@ impl HasOctave for Interval {
     }
 }
 
+impl Display for Interval {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        match self {
+            Interval::PerfectUnison => write!(f, "PerfectUnison"),
+            Interval::DiminishedSecond => write!(f, "DiminishedSecond"),
+
+            Interval::AugmentedUnison => write!(f, "AugmentedUnison"),
+            Interval::MinorSecond => write!(f, "MinorSecond"),
+
+            Interval::MajorSecond => write!(f, "MajorSecond"),
+            Interval::DiminishedThird => write!(f, "DiminishedThird"),
+
+            Interval::AugmentedSecond => write!(f, "AugmentedSecond"),
+            Interval::MinorThird => write!(f, "MinorThird"),
+
+            Interval::MajorThird => write!(f, "MajorThird"),
+            Interval::DiminishedFourth => write!(f, "DiminishedFourth"),
+
+            Interval::AugmentedThird => write!(f, "AugmentedThird"),
+            Interval::PerfectFourth => write!(f, "PerfectFourth"),
+
+            Interval::AugmentedFourth => write!(f, "AugmentedFourth"),
+            Interval::DiminishedFifth => write!(f, "DiminishedFifth"),
+
+            Interval::PerfectFifth => write!(f, "PerfectFifth"),
+            Interval::DiminishedSixth => write!(f, "DiminishedSixth"),
+
+            Interval::AugmentedFifth => write!(f, "AugmentedFifth"),
+            Interval::MinorSixth => write!(f, "MinorSixth"),
+
+            Interval::MajorSixth => write!(f, "MajorSixth"),
+            Interval::DiminishedSeventh => write!(f, "DiminishedSeventh"),
+
+            Interval::AugmentedSixth => write!(f, "AugmentedSixth"),
+            Interval::MinorSeventh => write!(f, "MinorSeventh"),
+
+            Interval::MajorSeventh => write!(f, "MajorSeventh"),
+            Interval::DiminishedOctave => write!(f, "DiminishedOctave"),
+
+            Interval::AugmentedSeventh => write!(f, "AugmentedSeventh"),
+            Interval::PerfectOctave => write!(f, "PerfectOctave"),
+
+            Interval::MinorNinth => write!(f, "MinorNinth"),
+            Interval::MajorNinth => write!(f, "MajorNinth"),
+            Interval::AugmentedNinth => write!(f, "AugmentedNinth"),
+
+            Interval::DiminishedEleventh => write!(f, "DiminishedEleventh"),
+            Interval::PerfectEleventh => write!(f, "PerfectEleventh"),
+            Interval::AugmentedEleventh => write!(f, "AugmentedEleventh"),
+
+            Interval::MinorThirteenth => write!(f, "MinorThirteenth"),
+            Interval::MajorThirteenth => write!(f, "MajorThirteenth"),
+            Interval::AugmentedThirteenth => write!(f, "AugmentedThirteenth"),
+
+            Interval::PerfectOctaveAndPerfectFifth => write!(f, "PerfectOctaveAndPerfectFifth"),
+            Interval::TwoPerfectOctaves => write!(f, "TwoPerfectOctaves"),
+            Interval::TwoPerfectOctavesAndMajorThird => write!(f, "TwoPerfectOctavesAndMajorThird"),
+            Interval::TwoPerfectOctavesAndPerfectFifth => write!(f, "TwoPerfectOctavesAndPerfectFifth"),
+            Interval::TwoPerfectOctavesAndMinorSeventh => write!(f, "TwoPerfectOctavesAndMinorSeventh"),
+            Interval::ThreePerfectOctaves => write!(f, "ThreePerfectOctaves"),
+            Interval::ThreePerfectOctavesAndMajorSecond => write!(f, "ThreePerfectOctavesAndMajorSecond"),
+            Interval::ThreePerfectOctavesAndMajorThird => write!(f, "ThreePerfectOctavesAndMajorThird"),
+            Interval::ThreePerfectOctavesAndAugmentedFourth => write!(f, "ThreePerfectOctavesAndAugmentedFourth"),
+            Interval::ThreePerfectOctavesAndPerfectFifth => write!(f, "ThreePerfectOctavesAndPerfectFifth"),
+            Interval::ThreePerfectOctavesAndMinorSixth => write!(f, "ThreePerfectOctavesAndMinorSixth"),
+            Interval::ThreePerfectOctavesAndMinorSeventh => write!(f, "ThreePerfectOctavesAndMinorSeventh"),
+            Interval::ThreePerfectOctavesAndMajorSeventh => write!(f, "ThreePerfectOctavesAndMajorSeventh"),
+        }
+    }
+}
+
 // Statics.
+
+/// All known [`Interval`]s.
+pub static ALL_INTERVALS: [Interval; 48] = [
+    Interval::PerfectUnison,
+    Interval::DiminishedSecond,
+    Interval::AugmentedUnison,
+    Interval::MinorSecond,
+    Interval::MajorSecond,
+    Interval::DiminishedThird,
+    Interval::AugmentedSecond,
+    Interval::MinorThird,
+    Interval::MajorThird,
+    Interval::DiminishedFourth,
+    Interval::AugmentedThird,
+    Interval::PerfectFourth,
+    Interval::AugmentedFourth,
+    Interval::DiminishedFifth,
+    Interval::PerfectFifth,
+    Interval::DiminishedSixth,
+    Interval::AugmentedFifth,
+    Interval::MinorSixth,
+    Interval::MajorSixth,
+    Interval::DiminishedSeventh,
+    Interval::AugmentedSixth,
+    Interval::MinorSeventh,
+    Interval::MajorSeventh,
+    Interval::DiminishedOctave,
+    Interval::AugmentedSeventh,
+    Interval::PerfectOctave,
+    Interval::MinorNinth,
+    Interval::MajorNinth,
+    Interval::AugmentedNinth,
+    Interval::DiminishedEleventh,
+    Interval::PerfectEleventh,
+    Interval::AugmentedEleventh,
+    Interval::MinorThirteenth,
+    Interval::MajorThirteenth,
+    Interval::AugmentedThirteenth,
+    Interval::PerfectOctaveAndPerfectFifth,
+    Interval::TwoPerfectOctaves,
+    Interval::TwoPerfectOctavesAndMajorThird,
+    Interval::TwoPerfectOctavesAndPerfectFifth,
+    Interval::TwoPerfectOctavesAndMinorSeventh,
+    Interval::ThreePerfectOctaves,
+    Interval::ThreePerfectOctavesAndMajorSecond,
+    Interval::ThreePerfectOctavesAndMajorThird,
+    Interval::ThreePerfectOctavesAndAugmentedFourth,
+    Interval::ThreePerfectOctavesAndPerfectFifth,
+    Interval::ThreePerfectOctavesAndMinorSixth,
+    Interval::ThreePerfectOctavesAndMinorSeventh,
+    Interval::ThreePerfectOctavesAndMajorSeventh,
+];
 
 /// The primary (first 13) harmonic series expressed as [`Interval`]s.
 pub static PRIMARY_HARMONIC_SERIES: [Interval; 13] = [

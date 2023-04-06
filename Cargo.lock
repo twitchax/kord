@@ -1272,6 +1272,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
+name = "gloo-timers"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9b995a66bb87bebce9a0f4a95aed01daca4872c050bfcb21653361c03bc35e5c"
+dependencies = [
+ "futures-channel",
+ "futures-core",
+ "js-sys",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "half"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1516,7 +1528,7 @@ dependencies = [
 
 [[package]]
 name = "kord"
-version = "0.5.10"
+version = "0.5.16"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1531,6 +1543,7 @@ dependencies = [
  "cpal",
  "futures",
  "futures-timer",
+ "gloo-timers",
  "js-sys",
  "once_cell",
  "parse_duration0",

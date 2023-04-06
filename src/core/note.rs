@@ -8,7 +8,7 @@
 use std::{
     cmp::Ordering,
     fmt::{self, Display, Formatter},
-    ops::{Add, AddAssign},
+    ops::{Add, AddAssign, Sub},
 };
 
 use crate::core::{
@@ -23,6 +23,8 @@ use crate::core::{
 use once_cell::sync::Lazy;
 use paste::paste;
 use pest::Parser;
+
+use super::interval::ALL_INTERVALS;
 
 // Macros.
 
@@ -382,6 +384,22 @@ impl ToUniversal for Note {
     }
 }
 
+impl Sub for Note {
+    type Output = Interval;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let (low, high) = if self < rhs { (self, rhs) } else { (rhs, self) };
+
+        for interval in ALL_INTERVALS.iter() {
+            if low + *interval == high {
+                return *interval;
+            }
+        }
+
+        panic!("{} - {} is not a valid interval", high, low);
+    }
+}
+
 impl Add<Interval> for Note {
     type Output = Self;
 
@@ -394,23 +412,69 @@ impl Add<Interval> for Note {
         // There is a "special wrap" for `Cb`, and `Dbbb`, since they don't technically loop; and, for B#, etc., on the other side.
         // Basically, if we were already "on" the weird one (this is a perfect unision, or perfect octave, etc.), then we don't
         // do anything special.  Otherwise, if we landed on on of these edge cases, then we need to adjust the octave.
-        let special_octave = if (self.named_pitch != NamedPitch::CFlat && new_pitch == NamedPitch::CFlat) || (self.named_pitch != NamedPitch::DTripleFlat && new_pitch == NamedPitch::DTripleFlat) {
-            1
-        } else if (self.named_pitch != NamedPitch::BSharp && new_pitch == NamedPitch::BSharp)
-            || (self.named_pitch != NamedPitch::BDoubleSharp && new_pitch == NamedPitch::BDoubleSharp)
-            || (self.named_pitch != NamedPitch::BTripleSharp && new_pitch == NamedPitch::BTripleSharp)
-            || (self.named_pitch != NamedPitch::ATripleSharp && new_pitch == NamedPitch::ATripleSharp)
-        {
-            -1
-        } else {
-            0
-        };
+        let mut special_octave = 0;
+        
+        if self.named_pitch != new_pitch {
+            if new_pitch == NamedPitch::CFlat
+                || new_pitch == NamedPitch::CDoubleFlat
+                || new_pitch == NamedPitch::CTripleFlat
+                || new_pitch == NamedPitch::DTripleFlat
+            {
+                special_octave = 1;
+            } else if new_pitch == NamedPitch::BSharp
+                || new_pitch == NamedPitch::BDoubleSharp
+                || new_pitch == NamedPitch::BTripleSharp
+                || new_pitch == NamedPitch::ATripleSharp
+            {
+                special_octave = -1
+            }
+        }
 
         // Get whether or not the interval itself contains an octave.
         let interval_octave = rhs.octave();
 
         Note {
             octave: self.octave + wrapping_octave + special_octave + interval_octave,
+            named_pitch: new_pitch,
+        }
+    }
+}
+
+impl Sub<Interval> for Note {
+    type Output = Self;
+
+    fn sub(self, rhs: Interval) -> Self::Output {
+        let new_pitch = self.named_pitch() - rhs.enharmonic_distance();
+
+        // Compute whether or not we "crossed" an octave.
+        let wrapping_octave = if new_pitch.pitch() > self.pitch() { Octave::One } else { Octave::Zero };
+
+        // There is a "special wrap" for `Cb`, and `Dbbb`, since they don't technically loop; and, for B#, etc., on the other side.
+        // Basically, if we were already "on" the weird one (this is a perfect unision, or perfect octave, etc.), then we don't
+        // do anything special.  Otherwise, if we landed on on of these edge cases, then we need to adjust the octave.
+        let mut special_octave = 0;
+        
+        if self.named_pitch != new_pitch {
+            if new_pitch == NamedPitch::CFlat
+                || new_pitch == NamedPitch::CDoubleFlat
+                || new_pitch == NamedPitch::CTripleFlat
+                || new_pitch == NamedPitch::DTripleFlat
+            {
+                special_octave = -1;
+            } else if new_pitch == NamedPitch::BSharp
+                || new_pitch == NamedPitch::BDoubleSharp
+                || new_pitch == NamedPitch::BTripleSharp
+                || new_pitch == NamedPitch::ATripleSharp
+            {
+                special_octave = 1
+            }
+        }
+
+        // Get whether or not the interval itself contains an octave.
+        let interval_octave = rhs.octave();
+
+        Note {
+            octave: self.octave - wrapping_octave - special_octave - interval_octave,
             named_pitch: new_pitch,
         }
     }
@@ -599,6 +663,8 @@ mod tests {
 
     #[test]
     fn test_intervals() {
+        // Additions.
+
         assert_eq!(C + Interval::PerfectUnison, C);
         assert_eq!(C + Interval::DiminishedSecond, DDoubleFlat);
 
@@ -652,7 +718,19 @@ mod tests {
         assert_eq!(C + Interval::MajorThirteenth, AFive);
         assert_eq!(C + Interval::AugmentedThirteenth, ASharpFive);
 
+        // Subtractions.
+
+        assert_eq!(C - Interval::PerfectUnison, C);
+        assert_eq!(DFlat - Interval::MinorSecond, C);
+        assert_eq!(G - Interval::PerfectOctave, GThree);
+        assert_eq!(G - Interval::PerfectFifth, C);
+        assert_eq!(DFlat - Interval::DiminishedSecond, CSharp);
+        assert_eq!(ATripleSharpSix - Interval::TwoPerfectOctaves, ATripleSharp);
+        assert_eq!(GFlat - Interval::PerfectFifth, CFlat);
+        assert_eq!(GDoubleFlat - Interval::PerfectFifth, CDoubleFlat);
+
         // Special cases to check.
+
         assert_eq!(C + Interval::DiminishedOctave, CFlatFive);
         assert_eq!(BFlat + Interval::MinorNinth, CFlatSix);
         assert_eq!(BFlatThree + Interval::MinorNinth, CFlatFive);
@@ -666,6 +744,14 @@ mod tests {
         assert_eq!(BSharp + Interval::PerfectUnison, BSharp);
 
         assert_eq!(ATripleSharp + Interval::TwoPerfectOctaves, ATripleSharpSix);
+    }
+
+    #[test]
+    fn test_distances() {
+        assert_eq!(C - C, Interval::PerfectUnison);
+        assert_eq!(C - D, Interval::MajorSecond);
+        assert_eq!(D - C, Interval::MajorSecond);
+        assert_eq!(C - E, Interval::MajorThird);
     }
 
     #[test]

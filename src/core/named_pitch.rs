@@ -1,6 +1,6 @@
 //! A module for working with named pitches.
 
-use std::ops::Add;
+use std::ops::{Add, Sub};
 
 use crate::core::{
     base::HasStaticName,
@@ -347,6 +347,14 @@ impl Add<i8> for NamedPitch {
         }
 
         ALL_PITCHES[new_index as usize]
+    }
+}
+
+impl Sub<i8> for NamedPitch {
+    type Output = Self;
+
+    fn sub(self, rhs: i8) -> Self {
+        self + (-rhs)
     }
 }
 

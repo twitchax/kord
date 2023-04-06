@@ -1,6 +1,6 @@
 [package]
 name = "kord"
-version = "0.5.11"
+version = "0.5.16"
 edition = "2021"
 authors = ["Aaron Roney <twitchax@gmail.com>"]
 license = "MIT"
@@ -33,7 +33,7 @@ debug = true
 wasm-opt = false
 
 [features]
-default = ["cli", "analyze", "audio"]
+default = ["cli", "analyze", "audio", "wasm"]
 
 cli = ["clap", "futures"]
 
@@ -54,7 +54,7 @@ ml_train = ["ml_base", "rand", "rayon", "burn-autodiff", "burn/train", "burn/std
 ml_infer = ["ml_base", "burn", "burn-ndarray"]
 ml_gpu = ["ml_train", "burn-tch"]
 
-wasm = ["rodio/wasm-bindgen", "wasm-bindgen", "wasm-bindgen-futures", "js-sys", "console_error_panic_hook", "wee_alloc"]
+wasm = ["rodio/wasm-bindgen", "wasm-bindgen", "wasm-bindgen-futures", "js-sys", "console_error_panic_hook", "wee_alloc", "gloo-timers"]
 
 plot = ["plotters"]
 
@@ -103,6 +103,7 @@ wasm-bindgen-futures = { version = "0.4.34", optional = true }
 js-sys = { version = "0.3.61", optional = true }
 console_error_panic_hook = { version = "0.1.7", optional = true }
 wee_alloc = { version = "0.4.5", optional = true }
+gloo-timers = { version = "0.2.6", optional = true, features = ["futures"] }
 
 [dev-dependencies]
 pretty_assertions = "1.3.0"

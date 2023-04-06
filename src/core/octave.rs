@@ -87,10 +87,25 @@ impl Add for Octave {
         let new_octave = self as u8 + rhs as u8;
 
         if new_octave > 15 {
-            panic!("Octave overflow");
+            panic!("Octave overflow.");
         }
 
-        // SAFETY: The new octave is guaranteed to be less than or equal to 10.
+        // SAFETY: The new octave is guaranteed to be less than or equal to 15.
+        unsafe { std::mem::transmute(new_octave) }
+    }
+}
+
+impl Sub for Octave {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let new_octave = (self as u8).checked_sub(rhs as u8).expect("Octave underflow.");
+
+        if new_octave > 15 {
+            panic!("Octave overflow.");
+        }
+
+        // SAFETY: The new octave is guaranteed to be less than or equal to 15.
         unsafe { std::mem::transmute(new_octave) }
     }
 }
@@ -102,7 +117,7 @@ impl TryFrom<u8> for Octave {
         if value > 15 {
             Err("Octave overflow.")
         } else {
-            // SAFETY: The new octave is guaranteed to be less than or equal to 10.
+            // SAFETY: The new octave is guaranteed to be less than or equal to 15.
             Ok(unsafe { std::mem::transmute(value) })
         }
     }
@@ -120,7 +135,7 @@ impl Add<i8> for Octave {
             panic!("Octave underflow.");
         }
 
-        // SAFETY: The new octave is guaranteed to be less than or equal to 10.
+        // SAFETY: The new octave is guaranteed to be less than or equal to 15.
         unsafe { std::mem::transmute(new_octave) }
     }
 }
@@ -129,16 +144,7 @@ impl Sub<i8> for Octave {
     type Output = Self;
 
     fn sub(self, rhs: i8) -> Self::Output {
-        let new_octave = self as i8 - rhs;
-
-        if new_octave > 15 {
-            panic!("Octave overflow.");
-        } else if new_octave < 0 {
-            panic!("Octave underflow.");
-        }
-
-        // SAFETY: The new octave is guaranteed to be less than or equal to 10.
-        unsafe { std::mem::transmute(new_octave) }
+        self + (-rhs)
     }
 }
 

@@ -3,6 +3,8 @@
 [![Version](https://img.shields.io/crates/v/kord.svg)](https://crates.io/crates/kord)
 [![Downloads](https://img.shields.io/crates/d/kord.svg)](https://crates.io/crates/kord)
 [![GitHub all releases](https://img.shields.io/github/downloads/twitchax/kord/total?label=binary)](https://github.com/twitchax/kord/releases)
+[![Downloads](https://img.shields.io/crates/d/kord.svg)](https://crates.io/crates/kord)
+[![npm](https://img.shields.io/npm/dw/kordweb?label=npm)](https://www.npmjs.com/package/kordweb)
 [![Documentation](https://docs.rs/kord/badge.svg)](https://docs.rs/kord)
 [![Rust](https://img.shields.io/badge/rust-nightly-blue.svg?maxAge=3600)](https://github.com/twitchax/kord)
 [![License:MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -231,7 +233,7 @@ chord.chordString(); // C4 E4 G4 Bb5 D#5
 KordChord.parse('C7b9').withOctave(2).chord().map(n => n.name()); // [ 'C2', 'D♭2', 'E2', 'G2', 'B♭2' ]
 
 // Build chords.
-KordChord.parse('C').min().seven().chord().map(n => n.name()); // [ 'C4', 'Eb4', 'G4', 'Bb4' ]
+KordChord.parse('C').minor().seven().chord().map(n => n.name()); // [ 'C4', 'Eb4', 'G4', 'Bb4' ]
 ```
 
 ## Feature Flags

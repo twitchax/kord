@@ -10,7 +10,7 @@ use js_sys::{Array, Object, Reflect};
 use wasm_bindgen::{convert::RefFromWasmAbi, prelude::*};
 
 use crate::core::{
-    base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Res},
+    base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Res, PlaybackHandle},
     chord::{Chord, Chordable, HasChord, HasExtensions, HasInversion, HasIsCrunchy, HasModifiers, HasRoot, HasScale, HasSlash},
     interval::Interval,
     named_pitch::HasNamedPitch,
@@ -115,14 +115,26 @@ impl KordNote {
         self.inner.frequency()
     }
 
-    /// Adds the given interval to the [`Note`].
-    ///
-    /// Clones the underlying note before mutation, producing a _new_ [`KordNote`].
+    /// Adds the given interval to the [`Note`], producing a new [`Note`] instance.
     #[wasm_bindgen(js_name = addInterval)]
-    pub fn add_interval(&self, interval: Interval) -> JsRes<KordNote> {
+    pub fn add_interval(&self, interval: Interval) -> KordNote {
         let note = self.inner + interval;
 
-        Ok(Self { inner: note })
+        Self { inner: note }
+    }
+
+    /// Subtracts the given interval from the [`Note`], producing a new [`Note`] instance.
+    #[wasm_bindgen(js_name = subInterval)]
+    pub fn subtract_interval(&self, interval: Interval) -> KordNote {
+        let note = self.inner - interval;
+
+        Self { inner: note }
+    }
+
+    /// Computes the [`Interval`] distance between the [`Note`] and the given [`Note`].
+    #[wasm_bindgen(js_name = distanceTo)]
+    pub fn distance_to(&self, other: KordNote) -> Interval {
+        self.inner - other.inner
     }
 
     /// Returns the primary (first 13) harmonic series of the [`Note`].
@@ -322,13 +334,12 @@ impl KordChord {
     #[wasm_bindgen]
     #[cfg(feature = "audio")]
     pub async fn play(&self, delay: f32, length: f32, fade_in: f32) -> JsRes<()> {
+        use gloo_timers::future::TimeoutFuture;
         use crate::core::base::Playable;
-        use futures_timer::Delay;
-        use std::time::Duration;
 
         let _handle = self.inner.play(delay, length, fade_in).context("Could not start the playback.").to_js_error()?;
 
-        Delay::new(Duration::from_secs_f32(length)).await;
+        TimeoutFuture::new((length * 1_000.0) as u32).await;
 
         Ok(())
     }
@@ -338,6 +349,16 @@ impl KordChord {
     pub fn copy(&self) -> KordChord {
         self.clone()
     }
+}
+
+// Playback handle.
+
+/// A handle to a [`Chord`] playback.
+/// 
+/// Should be dropped to stop the playback, or after playback is finished.
+#[wasm_bindgen]
+pub struct KordPlaybackHandle {
+    _inner: PlaybackHandle,
 }
 
 // The modifiers.
@@ -516,6 +537,13 @@ impl RefFromJsValue for KordChord {
         Ok(value)
     }
 }
+
+// JS helpers.
+
+// #[wasm_bindgen(inline_js = "export function sleep(millis) { return new Promise(resolve => setTimeout(() => resolve(), millis)); }")]
+// extern "C" {
+//     fn sleep(millis: u32) -> Promise;
+// }
 
 // The [`Chord`] modifier / extension impl.
 #[wasm_bindgen]
