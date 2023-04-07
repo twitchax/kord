@@ -27,7 +27,7 @@ path = "src/bin.rs"
 required-features = ["cli"]
 
 [profile.release]
-debug = true
+debug = 1
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
