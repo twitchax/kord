@@ -26,9 +26,6 @@ name = "kord"
 path = "src/bin.rs"
 required-features = ["cli"]
 
-[profile.release]
-debug = 1
-
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
 
