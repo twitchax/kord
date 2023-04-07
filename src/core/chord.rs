@@ -1358,7 +1358,7 @@ mod tests {
 
         assert_eq!(Chord::new(DFlat).scale(), vec![DFlat, EFlat, F, GFlat, AFlat, BFlat, CFive]);
         assert_eq!(Chord::new(DFlat).seven().scale(), vec![DFlat, EFlat, F, GFlat, AFlat, BFlat, CFlatFive]);
-        assert_eq!(Chord::new(DFlat).dim().scale(), vec![DFlat, EFlat, FFlat, GFlat, ADoubleFlat, BDoubleFlat, CDoubleFlat, CFive]);
+        assert_eq!(Chord::new(DFlat).dim().scale(), vec![DFlat, EFlat, FFlat, GFlat, ADoubleFlat, BDoubleFlat, CDoubleFlatFive, CFive]);
     }
 
     #[test]
