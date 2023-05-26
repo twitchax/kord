@@ -5,6 +5,9 @@ use std::fmt::{Display, Formatter, Error};
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::core::octave::{HasOctave, Octave};
 
 // Traits.
@@ -31,6 +34,7 @@ pub trait CanReduceFrame {
 
 /// An enum representing the interval between two notes.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 #[cfg_attr(feature = "wasm", wasm_bindgen(js_name = KordInterval))]
 pub enum Interval {

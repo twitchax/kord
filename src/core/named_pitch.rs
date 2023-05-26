@@ -2,6 +2,9 @@
 
 use std::ops::{Add, Sub};
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::core::{
     base::HasStaticName,
     pitch::{HasPitch, Pitch},
@@ -29,6 +32,7 @@ pub trait HasLetter {
 /// While a [`Pitch`] is a pitch that has a frequency, a [`NamedPitch`] is a pitch that has an
 /// enharmonic name (could share the same pitch with another).
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum NamedPitch {
     /// The pitch F triple flat.

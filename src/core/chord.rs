@@ -2,6 +2,9 @@
 
 use std::{cmp::Ordering, collections::HashSet, fmt::Display};
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use pest::Parser;
 
 use crate::core::{
@@ -234,6 +237,7 @@ pub trait HasDomninantDegree {
 // Struct.
 
 /// The primary chord struct.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Chord {
     /// The root note of the chord.

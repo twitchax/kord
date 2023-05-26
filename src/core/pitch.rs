@@ -6,6 +6,9 @@ use once_cell::sync::Lazy;
 
 use super::helpers::mel;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 /// A trait for types that have a pitch property.
 pub trait HasPitch {
     /// Returns the pitch of the type (usually a [`Note`]).
@@ -38,6 +41,7 @@ pub trait HasMel: HasFrequency {
 ///
 /// The frequencies of the pitches are based on the [A4 frequency](https://en.wikipedia.org/wiki/A4_(pitch_standard)).
 /// There is no enharmonic representation here, so all of the sharps are represented.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, Clone, Copy, Hash, Debug, Ord, PartialOrd)]
 #[repr(u8)]
 pub enum Pitch {

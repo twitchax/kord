@@ -51,6 +51,8 @@ ml_train = ["ml_base", "rand", "rayon", "burn-autodiff", "burn/train", "burn/std
 ml_infer = ["ml_base", "burn", "burn-ndarray"]
 ml_gpu = ["ml_train", "burn-tch"]
 
+serde = ["dep:serde"]
+
 wasm = ["rodio/wasm-bindgen", "wasm-bindgen", "wasm-bindgen-futures", "js-sys", "console_error_panic_hook", "wee_alloc", "gloo-timers"]
 
 plot = ["plotters"]

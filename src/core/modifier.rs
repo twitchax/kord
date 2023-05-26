@@ -5,6 +5,9 @@ use once_cell::sync::Lazy;
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::core::base::HasStaticName;
 
 // Traits.
@@ -19,6 +22,7 @@ pub trait HasIsDominant {
 
 /// An enum representing the degree of a dominant chord.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum Degree {
     /// Seventh degree.
@@ -38,6 +42,7 @@ pub enum Degree {
 /// _just_ a dominant chord with a flat 9 extension, but rather a chord that is
 /// represented by an entirely specific scale (half/whole/half diminished).
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum Modifier {
     /// Minor modifier.
@@ -72,6 +77,7 @@ pub enum Modifier {
 /// and the chord is still interpreted as a major chord.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
 #[repr(u8)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "wasm", wasm_bindgen(js_name = KordExtension))]
 pub enum Extension {
     /// Sus2 extension.
