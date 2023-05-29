@@ -87,9 +87,7 @@ impl Add for Octave {
     fn add(self, rhs: Self) -> Self::Output {
         let new_octave = self as u8 + rhs as u8;
 
-        if new_octave > 15 {
-            panic!("Octave overflow.");
-        }
+        assert!(new_octave <= 15, "Octave overflow");
 
         // SAFETY: The new octave is guaranteed to be less than or equal to 15.
         unsafe { std::mem::transmute(new_octave) }
@@ -102,9 +100,7 @@ impl Sub for Octave {
     fn sub(self, rhs: Self) -> Self::Output {
         let new_octave = (self as u8).checked_sub(rhs as u8).expect("Octave underflow.");
 
-        if new_octave > 15 {
-            panic!("Octave overflow.");
-        }
+        assert!(new_octave <= 15, "Octave overflow");
 
         // SAFETY: The new octave is guaranteed to be less than or equal to 15.
         unsafe { std::mem::transmute(new_octave) }
