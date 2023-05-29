@@ -403,6 +403,7 @@ impl Sub for Note {
 impl Add<Interval> for Note {
     type Output = Self;
 
+    #[rustfmt::skip]
     fn add(self, rhs: Interval) -> Self::Output {
         let new_pitch = self.named_pitch() + rhs.enharmonic_distance();
 
@@ -443,6 +444,7 @@ impl Add<Interval> for Note {
 impl Sub<Interval> for Note {
     type Output = Self;
 
+    #[rustfmt::skip]
     fn sub(self, rhs: Interval) -> Self::Output {
         let new_pitch = self.named_pitch() - rhs.enharmonic_distance();
 

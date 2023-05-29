@@ -10,7 +10,7 @@ use js_sys::{Array, Object, Reflect};
 use wasm_bindgen::{convert::RefFromWasmAbi, prelude::*};
 
 use crate::core::{
-    base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Res, PlaybackHandle},
+    base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, PlaybackHandle, Res},
     chord::{Chord, Chordable, HasChord, HasExtensions, HasInversion, HasIsCrunchy, HasModifiers, HasRoot, HasScale, HasSlash},
     interval::Interval,
     named_pitch::HasNamedPitch,
@@ -334,8 +334,8 @@ impl KordChord {
     #[wasm_bindgen]
     #[cfg(feature = "audio")]
     pub async fn play(&self, delay: f32, length: f32, fade_in: f32) -> JsRes<()> {
-        use gloo_timers::future::TimeoutFuture;
         use crate::core::base::Playable;
+        use gloo_timers::future::TimeoutFuture;
 
         let _handle = self.inner.play(delay, length, fade_in).context("Could not start the playback.").to_js_error()?;
 
@@ -354,7 +354,7 @@ impl KordChord {
 // Playback handle.
 
 /// A handle to a [`Chord`] playback.
-/// 
+///
 /// Should be dropped to stop the playback, or after playback is finished.
 #[wasm_bindgen]
 pub struct KordPlaybackHandle {
