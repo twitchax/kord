@@ -44,7 +44,7 @@
 pub mod core;
 pub mod helpers;
 
-#[cfg(any(feature = "analyze_base"))]
+#[cfg(feature = "analyze_base")]
 pub mod analyze;
 
 #[cfg(feature = "ml_base")]

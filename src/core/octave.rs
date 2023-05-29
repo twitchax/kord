@@ -17,7 +17,7 @@ pub trait HasOctave {
 // Enum.
 
 /// An enum representing the octave of a note.
-#[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
+#[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Default, Ord, PartialOrd)]
 #[repr(u8)]
 pub enum Octave {
     /// The octave 0.
@@ -29,6 +29,7 @@ pub enum Octave {
     /// The octave 3.
     Three,
     /// The octave 4.
+    #[default]
     Four,
     /// The octave 5.
     Five,
@@ -169,12 +170,6 @@ impl SubAssign<i8> for Octave {
 impl HasOctave for Octave {
     fn octave(&self) -> Octave {
         *self
-    }
-}
-
-impl Default for Octave {
-    fn default() -> Self {
-        Octave::Four
     }
 }
 
