@@ -21,7 +21,7 @@ pub fn get_notes_from_audio_data(data: &[f32], length_in_seconds: u8) -> Res<Vec
 
     let num_nan = data.iter().filter(|n| n.is_nan()).count();
     if num_nan > 0 {
-        return Err(anyhow::Error::msg(format!("{} NaNs in audio data.", num_nan)));
+        return Err(anyhow::Error::msg(format!("{num_nan} NaNs in audio data.")));
     }
 
     let frequency_space = get_frequency_space(data, length_in_seconds);
@@ -229,7 +229,7 @@ fn get_likely_notes_from_peak_space(peak_space: &[(f32, f32)], cutoff: f32) -> V
 
     let mut candidates = HashMap::new();
 
-    for (frequency, magnitude) in peak_space.iter() {
+    for (frequency, magnitude) in &peak_space {
         if let Some(pair) = binary_search_closest(ALL_PITCH_NOTES_WITH_FREQUENCY.deref(), *frequency, |t| t.1) {
             let note = pair.0;
             let entry = candidates.entry(note).or_insert(*magnitude);

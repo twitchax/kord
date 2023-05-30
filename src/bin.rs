@@ -346,14 +346,14 @@ fn start(args: Args) -> Void {
 
                     let chord = Chord::parse(parts.next().unwrap()).unwrap();
 
-                    let length = parts.next().map(|l| l.parse::<u16>().unwrap()).unwrap_or(32);
+                    let length = parts.next().map_or(32, |l| l.parse::<u16>().unwrap());
 
                     (chord, length)
                 })
                 .collect::<Vec<_>>();
 
             loop {
-                for (chord, length) in chord_pairs.iter() {
+                for (chord, length) in &chord_pairs {
                     let length = (*length as f32) * 60f32 / bpm / 8f32;
                     play(chord, 0.0, length, 0.1)?;
                 }
@@ -596,7 +596,7 @@ fn start(args: Args) -> Void {
 }
 
 fn describe(chord: &Chord) {
-    println!("{}", chord);
+    println!("{chord}");
 }
 
 fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
@@ -615,7 +615,7 @@ fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
 }
 
 fn show_notes_and_chords(notes: &[Note]) -> Res<()> {
-    println!("Notes: {}", notes.iter().map(|n| n.to_string()).collect::<Vec<_>>().join(" "));
+    println!("Notes: {}", notes.iter().map(ToString::to_string).collect::<Vec<_>>().join(" "));
 
     let candidates = Chord::try_from_notes(notes)?;
 

@@ -408,7 +408,7 @@ impl Chord {
         }
 
         // Remove extensions and modifiers that are expressed elsewhere in the chord.
-        result.iter_mut().for_each(|c| {
+        for c in &mut result {
             let dominant_degree = c.dominant_degree();
 
             if let Some(degree) = dominant_degree {
@@ -425,7 +425,7 @@ impl Chord {
                         c.extensions.remove(&Extension::Add11);
                         c.extensions.remove(&Extension::Add13);
                     }
-                    _ => {}
+                    Degree::Seven => {}
                 }
             }
 
@@ -434,7 +434,7 @@ impl Chord {
                 c.modifiers.remove(&Modifier::Flat5);
                 c.modifiers.remove(&Modifier::Augmented5);
             }
-        });
+        }
 
         // Order the candidates by "simplicity" (i.e., least slashes, least extensions, least modifiers, and least inversion).
         result.sort();
@@ -480,7 +480,7 @@ impl HasName for Chord {
 
         // Add extensions.
         if !self.extensions.is_empty() {
-            for e in self.extensions.iter() {
+            for e in &self.extensions {
                 name.push_str(&format!("({})", e.static_name()));
             }
         }
@@ -559,8 +559,8 @@ impl HasIsCrunchy for Chord {
 
 impl Display for Chord {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let scale = self.scale().iter().map(|n| n.static_name()).collect::<Vec<_>>().join(", ");
-        let chord = self.chord().iter().map(|n| n.static_name()).collect::<Vec<_>>().join(", ");
+        let scale = self.scale().iter().map(HasStaticName::static_name).collect::<Vec<_>>().join(", ");
+        let chord = self.chord().iter().map(HasStaticName::static_name).collect::<Vec<_>>().join(", ");
 
         write!(f, "{}\n   {}\n   {}\n   {}", self.precise_name(), self.description(), scale, chord)
     }

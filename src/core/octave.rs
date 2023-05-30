@@ -17,7 +17,7 @@ pub trait HasOctave {
 // Enum.
 
 /// An enum representing the octave of a note.
-#[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
+#[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Default, Ord, PartialOrd)]
 #[repr(u8)]
 pub enum Octave {
     /// The octave 0.
@@ -29,6 +29,7 @@ pub enum Octave {
     /// The octave 3.
     Three,
     /// The octave 4.
+    #[default]
     Four,
     /// The octave 5.
     Five,
@@ -86,9 +87,7 @@ impl Add for Octave {
     fn add(self, rhs: Self) -> Self::Output {
         let new_octave = self as u8 + rhs as u8;
 
-        if new_octave > 15 {
-            panic!("Octave overflow.");
-        }
+        assert!(new_octave <= 15, "Octave overflow");
 
         // SAFETY: The new octave is guaranteed to be less than or equal to 15.
         unsafe { std::mem::transmute(new_octave) }
@@ -101,9 +100,7 @@ impl Sub for Octave {
     fn sub(self, rhs: Self) -> Self::Output {
         let new_octave = (self as u8).checked_sub(rhs as u8).expect("Octave underflow.");
 
-        if new_octave > 15 {
-            panic!("Octave overflow.");
-        }
+        assert!(new_octave <= 15, "Octave overflow");
 
         // SAFETY: The new octave is guaranteed to be less than or equal to 15.
         unsafe { std::mem::transmute(new_octave) }
@@ -169,12 +166,6 @@ impl SubAssign<i8> for Octave {
 impl HasOctave for Octave {
     fn octave(&self) -> Octave {
         *self
-    }
-}
-
-impl Default for Octave {
-    fn default() -> Self {
-        Octave::Four
     }
 }
 

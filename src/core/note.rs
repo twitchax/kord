@@ -396,7 +396,7 @@ impl Sub for Note {
             }
         }
 
-        panic!("{} - {} is not a valid interval", high, low);
+        panic!("{high} - {low} is not a valid interval");
     }
 }
 
