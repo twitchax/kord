@@ -1,6 +1,6 @@
 //! A module for working with intervals.
 
-use std::fmt::{Display, Formatter, Error};
+use std::fmt::{Display, Error, Formatter};
 
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;

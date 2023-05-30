@@ -346,9 +346,7 @@ impl Add<i8> for NamedPitch {
 
         let new_index = index as i8 + rhs;
 
-        if !(0..=49).contains(&new_index) {
-            panic!("NamedPitch out of range.");
-        }
+        assert!((0..=49).contains(&new_index), "NamedPitch out of range.");
 
         ALL_PITCHES[new_index as usize]
     }

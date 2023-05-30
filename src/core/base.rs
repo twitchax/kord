@@ -68,7 +68,6 @@ impl PlaybackHandle {
 /// A trait for types that can be "played" via the system's audio output.
 pub trait Playable {
     /// Plays the [`Playable`].
-    ///
-    /// Dropping the returned [`PlayableResult`] will stop the playback.
+    #[must_use = "Dropping the PlayableResult will stop the playback."]
     fn play(&self, delay: f32, length: f32, fade_in: f32) -> Res<PlaybackHandle>;
 }
