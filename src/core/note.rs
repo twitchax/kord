@@ -26,6 +26,9 @@ use pest::Parser;
 
 use super::interval::ALL_INTERVALS;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 // Macros.
 
 /// Defines a note from a [`NamedPitch`].
@@ -159,6 +162,7 @@ pub trait ToUniversal {
 ///
 /// This is a named pitch with an octave.  This type allows for correctly attributing octave changes
 /// across an interval from one [`Note`] to another.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug)]
 pub struct Note {
     /// The octave of the note.

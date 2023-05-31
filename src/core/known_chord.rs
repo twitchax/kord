@@ -6,6 +6,9 @@ use crate::core::{
     modifier::Degree,
 };
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 // Traits.
 
 /// A trait for types that have a relative scale.
@@ -32,6 +35,7 @@ pub trait HasRelativeChord {
 
 /// An enum representing a known chord.
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
 pub enum KnownChord {
     /// An unknown chord.

@@ -6,6 +6,9 @@ use once_cell::sync::Lazy;
 
 use crate::core::base::HasStaticName;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 // Traits.
 
 /// A trait for types that have an octave property.
@@ -17,6 +20,7 @@ pub trait HasOctave {
 // Enum.
 
 /// An enum representing the octave of a note.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Default, Ord, PartialOrd)]
 #[repr(u8)]
 pub enum Octave {
