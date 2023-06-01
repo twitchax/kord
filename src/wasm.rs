@@ -4,8 +4,6 @@
 
 use std::panic;
 
-use anyhow::Context;
-
 use js_sys::{Array, Object, Reflect};
 use wasm_bindgen::{convert::RefFromWasmAbi, prelude::*};
 
@@ -31,8 +29,15 @@ pub type JsRes<T> = Result<T, JsValue>;
 // Entrypoint setup.
 
 /// The main entrypoint which sets up global state.
+#[cfg(not(feature = "wasm_no_main"))]
 #[wasm_bindgen(start)]
 pub fn main() {
+    set_panic_hook();
+}
+
+/// Sets the panic hook to print to the console.
+#[wasm_bindgen]
+pub fn set_panic_hook() {
     panic::set_hook(Box::new(console_error_panic_hook::hook));
 }
 
@@ -335,6 +340,7 @@ impl KordChord {
     #[cfg(feature = "audio")]
     pub async fn play(&self, delay: f32, length: f32, fade_in: f32) -> JsRes<()> {
         use crate::core::base::Playable;
+        use anyhow::Context;
         use gloo_timers::future::TimeoutFuture;
 
         let _handle = self.inner.play(delay, length, fade_in).context("Could not start the playback.").to_js_error()?;
