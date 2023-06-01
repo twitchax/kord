@@ -418,7 +418,7 @@ impl Add<Interval> for Note {
         // Basically, if we were already "on" the weird one (this is a perfect unision, or perfect octave, etc.), then we don't
         // do anything special.  Otherwise, if we landed on on of these edge cases, then we need to adjust the octave.
         let mut special_octave = 0;
-        
+
         if self.named_pitch != new_pitch {
             if new_pitch == NamedPitch::CFlat
                 || new_pitch == NamedPitch::CDoubleFlat
@@ -459,7 +459,7 @@ impl Sub<Interval> for Note {
         // Basically, if we were already "on" the weird one (this is a perfect unision, or perfect octave, etc.), then we don't
         // do anything special.  Otherwise, if we landed on on of these edge cases, then we need to adjust the octave.
         let mut special_octave = 0;
-        
+
         if self.named_pitch != new_pitch {
             if new_pitch == NamedPitch::CFlat
                 || new_pitch == NamedPitch::CDoubleFlat
