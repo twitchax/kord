@@ -26,21 +26,6 @@ static ALLOC: wee_alloc::WeeAlloc<'_> = wee_alloc::WeeAlloc::INIT;
 /// The [`Result`] type for the WASM bindings.
 pub type JsRes<T> = Result<T, JsValue>;
 
-// Entrypoint setup.
-
-/// The main entrypoint which sets up global state.
-#[cfg(not(feature = "wasm_no_main"))]
-#[wasm_bindgen(start)]
-pub fn main() {
-    set_panic_hook();
-}
-
-/// Sets the panic hook to print to the console.
-#[wasm_bindgen]
-pub fn set_panic_hook() {
-    panic::set_hook(Box::new(console_error_panic_hook::hook));
-}
-
 // [`Note`] ABI.
 
 /// The [`Note`] wrapper.

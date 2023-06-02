@@ -53,8 +53,6 @@ ml_gpu = ["ml_train", "burn-tch"]
 
 wasm = ["rodio/wasm-bindgen", "wasm-bindgen", "wasm-bindgen-futures", "js-sys", "console_error_panic_hook", "wee_alloc", "gloo-timers"]
 
-wasm_no_main = []
-
 plot = ["plotters"]
 
 [dependencies]
