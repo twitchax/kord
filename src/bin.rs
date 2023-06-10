@@ -607,7 +607,7 @@ fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
         use klib::core::base::Playable;
         use std::time::Duration;
 
-        let _playable = chord.play(delay, length, fade_in)?;
+        let _playable = chord.play(Duration::from_secs_f32(delay), Duration::from_secs_f32(length), Duration::from_secs_f32(fade_in))?;
         std::thread::sleep(Duration::from_secs_f32(length));
     }
 

@@ -2,6 +2,8 @@
 
 // Helpers.
 
+use std::time::Duration;
+
 use rodio::{OutputStream, OutputStreamHandle, Sink};
 
 /// Global result type.
@@ -69,5 +71,5 @@ impl PlaybackHandle {
 pub trait Playable {
     /// Plays the [`Playable`].
     #[must_use = "Dropping the PlayableResult will stop the playback."]
-    fn play(&self, delay: f32, length: f32, fade_in: f32) -> Res<PlaybackHandle>;
+    fn play(&self, delay: Duration, length: Duration, fade_in: Duration) -> Res<PlaybackHandle>;
 }

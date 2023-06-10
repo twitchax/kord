@@ -1,6 +1,6 @@
 //! A module that contains the [`Chord`] struct and related traits.
 
-use std::{cmp::Ordering, collections::HashSet, fmt::Display};
+use std::{cmp::Ordering, collections::HashSet, fmt::Display, time::Duration};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -1231,13 +1231,12 @@ use super::base::{Playable, PlaybackHandle};
 #[cfg(feature = "audio")]
 impl Playable for Chord {
     #[no_coverage]
-    fn play(&self, delay: f32, length: f32, fade_in: f32) -> Res<PlaybackHandle> {
+    fn play(&self, delay: Duration, length: Duration, fade_in: Duration) -> Res<PlaybackHandle> {
         use rodio::{source::SineWave, OutputStream, Sink, Source};
-        use std::time::Duration;
 
         let chord_tones = self.chord();
 
-        if length <= chord_tones.len() as f32 * delay {
+        if length.as_secs_f32() <= chord_tones.len() as f32 * delay.as_secs_f32() {
             return Err(anyhow::Error::msg(
                 "The delay is too long for the length of play (i.e., the number of chord tones times the delay is longer than the length).",
             ));
@@ -1250,14 +1249,9 @@ impl Playable for Chord {
         for (k, n) in chord_tones.into_iter().enumerate() {
             let sink = Sink::try_new(&stream_handle)?;
 
-            let d = k as f32 * delay;
+            let d = delay * k as u32;
 
-            let source = SineWave::new(n.frequency())
-                .take_duration(Duration::from_secs_f32(length - d))
-                .buffered()
-                .delay(Duration::from_secs_f32(d))
-                .fade_in(Duration::from_secs_f32(fade_in))
-                .amplify(0.20);
+            let source = SineWave::new(n.frequency()).take_duration(length - d).buffered().delay(d).fade_in(fade_in).amplify(0.20);
 
             sink.append(source);
 
