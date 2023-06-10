@@ -6,10 +6,7 @@ use std::time::Duration;
 
 use once_cell::sync::Lazy;
 
-use super::{
-    base::{Playable, PlaybackHandle, Res},
-    helpers::mel,
-};
+use super::helpers::mel;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -40,6 +37,10 @@ pub trait HasMel: HasFrequency {
     }
 }
 
+#[cfg(feature = "audio")]
+use super::base::{Playable, PlaybackHandle, Res};
+
+#[cfg(feature = "audio")]
 impl<T: HasFrequency> Playable for T {
     fn play(&self, delay: Duration, length: Duration, fade_in: Duration) -> Res<PlaybackHandle> {
         use rodio::{source::SineWave, OutputStream, Sink, Source};
