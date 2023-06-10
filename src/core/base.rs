@@ -68,6 +68,19 @@ impl PlaybackHandle {
 }
 
 /// A trait for types that can be "played" via the system's audio output.
+/// ```rust, no_run
+/// use std::time::Duration;
+///
+/// use klib::core::base::Playable;
+/// use klib::core::{named_pitch::NamedPitch, note::Note, octave::Octave};
+///
+/// let handle = Note::new(NamedPitch::A, Octave::Four).play(
+///     Duration::ZERO,
+///     Duration::from_secs(1),
+///     Duration::ZERO,
+/// );
+/// std::thread::sleep(Duration::from_secs(1));
+/// ```
 pub trait Playable {
     /// Plays the [`Playable`].
     #[must_use = "Dropping the PlayableResult will stop the playback."]
