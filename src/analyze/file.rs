@@ -104,6 +104,6 @@ mod tests {
     fn test_get_notes_from_mp3_file() {
         let notes = get_notes_from_audio_file("tests/C7b9.mp3", None, None).unwrap();
 
-        assert_eq!(Chord::parse("C7b9").unwrap(), Chord::from_notes(&notes).unwrap()[0]);
+        assert_eq!(Chord::parse("C7b9").unwrap(), Chord::try_from_notes(&notes).unwrap()[0]);
     }
 }
