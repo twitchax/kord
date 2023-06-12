@@ -2,6 +2,8 @@
 
 // Traits.
 
+use std::time::Duration;
+
 use once_cell::sync::Lazy;
 
 use super::helpers::mel;
@@ -32,6 +34,23 @@ pub trait HasMel: HasFrequency {
     /// Returns the mel of the type (usually a [`Note`]).
     fn mel(&self) -> f32 {
         mel(self.frequency())
+    }
+}
+
+#[cfg(feature = "audio")]
+use super::base::{Playable, PlaybackHandle, Res};
+
+#[cfg(feature = "audio")]
+impl<T: HasFrequency> Playable for T {
+    fn play(&self, delay: Duration, length: Duration, fade_in: Duration) -> Res<PlaybackHandle> {
+        use rodio::{source::SineWave, OutputStream, Sink, Source};
+
+        let (stream, stream_handle) = OutputStream::try_default()?;
+        let sink = Sink::try_new(&stream_handle)?;
+        let source = SineWave::new(self.frequency()).take_duration(length - delay).buffered().delay(delay).fade_in(fade_in).amplify(0.20);
+        sink.append(source);
+
+        Ok(PlaybackHandle::new(stream, stream_handle, vec![sink]))
     }
 }
 
