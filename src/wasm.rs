@@ -327,10 +327,15 @@ impl KordChord {
         use crate::core::base::Playable;
         use anyhow::Context;
         use gloo_timers::future::TimeoutFuture;
+        use std::time::Duration;
+
+        let delay = Duration::from_secs_f32(delay);
+        let length = Duration::from_secs_f32(length);
+        let fade_in = Duration::from_secs_f32(fade_in);
 
         let _handle = self.inner.play(delay, length, fade_in).context("Could not start the playback.").to_js_error()?;
 
-        TimeoutFuture::new((length * 1_000.0) as u32).await;
+        TimeoutFuture::new(length.as_millis() as u32).await;
 
         Ok(())
     }
