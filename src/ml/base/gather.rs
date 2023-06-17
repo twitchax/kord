@@ -4,8 +4,7 @@ use std::path::Path;
 
 use crate::{
     analyze::{
-        base::{get_frequency_space, get_smoothed_frequency_space},
-        mic::get_audio_data_from_microphone,
+        base::{get_frequency_space, get_smoothed_frequency_space}
     },
     core::{
         base::{Parsable, Void},
@@ -13,6 +12,8 @@ use crate::{
     },
     ml::base::{KordItem, FREQUENCY_SPACE_SIZE},
 };
+
+use crate::analyze::mic::get_audio_data_from_microphone;
 
 use super::helpers::save_kord_item;
 

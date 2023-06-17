@@ -503,7 +503,7 @@ fn start(args: Args) -> Void {
                     // Show the results.
                     show_notes_and_chords(&notes)?;
                 }
-                None => {
+                _ => {
                     return Err(anyhow::Error::msg("Invalid inference command."));
                 }
             },

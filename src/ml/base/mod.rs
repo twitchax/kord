@@ -1,6 +1,7 @@
 //! Base types for machine learning.
 
 pub mod data;
+#[cfg(feature = "analyze_mic")]
 pub mod gather;
 pub mod helpers;
 pub mod mlp;

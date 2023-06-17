@@ -21,6 +21,6 @@ $ wasm-pack publish
 ## Publish to wasmer
 
 ```bash
-$ cargo wasix build --release --features ml_infer
+$ cargo wasi build --release --no-default-features --features cli --features ml_infer --features analyze_file
 $ cargo wasix publish
 ```

@@ -4,6 +4,7 @@
 
 use std::time::Duration;
 
+#[cfg(feature = "audio")]
 use rodio::{OutputStream, OutputStreamHandle, Sink};
 
 /// Global result type.
@@ -50,12 +51,14 @@ pub trait Parsable {
 }
 
 /// A struct for holding the types for a [`Playable`].
+#[cfg(feature = "audio")]
 pub struct PlaybackHandle {
     _stream: OutputStream,
     _stream_handle: OutputStreamHandle,
     _sinks: Vec<Sink>,
 }
 
+#[cfg(feature = "audio")]
 impl PlaybackHandle {
     /// Creates a new [`PlayableResult`].
     pub fn new(stream: OutputStream, stream_handle: OutputStreamHandle, sinks: Vec<Sink>) -> Self {
@@ -81,6 +84,7 @@ impl PlaybackHandle {
 /// );
 /// std::thread::sleep(Duration::from_secs(1));
 /// ```
+#[cfg(feature = "audio")]
 pub trait Playable {
     /// Plays the [`Playable`].
     #[must_use = "Dropping the PlayableResult will stop the playback."]

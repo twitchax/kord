@@ -1,0 +1,25 @@
+[package]
+name = 'twitchax/kord'
+version = '0.6.1'
+description = 'A tool to easily explore music theory principles.'
+license = 'MIT'
+readme = 'README.md'
+repository = 'https://github.com/twitchax/kord'
+homepage = 'https://github.com/twitchax/kord'
+
+# See more keys and definitions at https://docs.wasmer.io/ecosystem/wapm/manifest
+
+[dependencies]
+
+[[module]]
+name = 'kord'
+source = 'target/wasm32-wasi/release/kord.wasm'
+abi = 'wasi'
+
+[module.interfaces]
+wasi = '0.1.0-unstable'
+
+[[command]]
+name = 'kord'
+module = 'kord'
+runner = "https://webc.org/runner/wasi"
