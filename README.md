@@ -19,24 +19,24 @@ A music theory binary and library for Rust / JS (via WASM) ([capability playgrou
 Windows:
 
 ```powershell
-iwr https://github.com/twitchax/kord/releases/latest/download/kord_x86_64-pc-windows-gnu.zip
-Expand-Archive kord_x86_64-pc-windows-gnu.zip -DestinationPath C:\Users\%USERNAME%\AppData\Local\Programs\kord
+$ iwr https://github.com/twitchax/kord/releases/latest/download/kord_x86_64-pc-windows-gnu.zip
+$ Expand-Archive kord_x86_64-pc-windows-gnu.zip -DestinationPath C:\Users\%USERNAME%\AppData\Local\Programs\kord
 ```
 
 Mac OS (Apple Silicon):
 
 ```bash
-curl -LO https://github.com/twitchax/kord/releases/latest/download/kord_aarch64-apple-darwin.zip
-unzip kord_aarch64-apple-darwin.zip -d /usr/local/bin
-chmod a+x /usr/local/bin/kord
+$ curl -LO https://github.com/twitchax/kord/releases/latest/download/kord_aarch64-apple-darwin.zip
+$ unzip kord_aarch64-apple-darwin.zip -d /usr/local/bin
+$ chmod a+x /usr/local/bin/kord
 ```
 
 Linux:
 
 ```bash
-curl -LO https://github.com/twitchax/kord/releases/latest/download/kord_x86_64-unknown-linux-gnu.zip
-unzip kord_x86_64-unknown-linux-gnu.zip -d /usr/local/bin
-chmod a+x /usr/local/bin/kord
+$ curl -LO https://github.com/twitchax/kord/releases/latest/download/kord_x86_64-unknown-linux-gnu.zip
+$ unzip kord_x86_64-unknown-linux-gnu.zip -d /usr/local/bin
+$ chmod a+x /usr/local/bin/kord
 ```
 
 Cargo:
@@ -49,6 +49,20 @@ NPM:
 
 ```bash
 $ npm install --save kordweb
+```
+
+### Wasmer
+
+This has a reduced capability set (no audio input / output), but works well for some of the core use cases.
+
+```bash
+$ wasmer install twitchax/kord
+```
+
+Alternatively, you can use `wasmer run`.
+
+```bash
+$ wasmer run twitchax/kord -- describe Am7
 ```
 
 ### Help Docs
