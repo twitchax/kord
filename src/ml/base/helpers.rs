@@ -12,7 +12,7 @@ use burn::tensor::{backend::Backend, Tensor};
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 
 use crate::{
-    analyze::base::get_notes_from_smoothed_frequency_space,
+    analyze::base::{get_notes_from_smoothed_frequency_space},
     core::{
         base::Res,
         helpers::{inv_mel, mel},
@@ -111,7 +111,13 @@ pub fn mel_filter_banks_from(spectrum: &[f32]) -> [f32; MEL_SPACE_SIZE] {
 pub fn harmonic_convolution(spectrum: &[f32]) -> [f32; FREQUENCY_SPACE_SIZE] {
     let mut harmonic_convolution = [0f32; FREQUENCY_SPACE_SIZE];
 
-    let (peak, _) = spectrum.iter().enumerate().fold((0usize, 0f32), |(k, max), (j, x)| if *x > max { (j, *x) } else { (k, max) });
+    let (peak, _) = spectrum.iter().enumerate().fold((0usize, 0f32), |(k, max), (j, x)| {
+        if *x > max {
+            (j, *x)
+        } else {
+            (k, max)
+        }
+    });
 
     for center in (peak / 2)..4000 {
         let mut sum = spectrum[center];
@@ -171,9 +177,6 @@ pub fn binary_to_u128(binary: &[f32]) -> u128 {
     num
 }
 
-/// Folds a 128 element array of 0s and 1s into a 12 element array of 0s and 1s.
-///
-/// Essentially, this is useful if we want to do inference on the pitches without octaves.
 #[allow(dead_code)]
 pub fn fold_binary(binary: &[f32; 128]) -> [f32; 12] {
     let mut folded = [0f32; 12];
@@ -191,19 +194,16 @@ pub fn fold_binary(binary: &[f32; 128]) -> [f32; 12] {
 
 // Common tensor operations.
 
-/// A sigmoid activation function.
 #[derive(Debug, Clone)]
 pub struct Sigmoid {
     scale: f32,
 }
 
 impl Sigmoid {
-    /// Create a new sigmoid activation function.
     pub fn new(scale: f32) -> Self {
         Self { scale }
     }
 
-    /// Forward pass.
     pub fn forward<B: Backend, const D: usize>(&self, input: Tensor<B, D>) -> Tensor<B, D> {
         let scaled = input.mul_scalar(self.scale);
         scaled.clone().exp().div(scaled.exp().add_scalar(1.0))

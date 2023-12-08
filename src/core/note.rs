@@ -191,7 +191,7 @@ impl Note {
     /// to identify the notes in the recorded audio.
     ///
     /// Currently, this does not work with WASM.
-    #[no_coverage]
+    #[coverage(off)]
     #[cfg(feature = "analyze_mic")]
     pub async fn try_from_mic(length_in_seconds: u8) -> Res<Vec<Note>> {
         use crate::analyze::mic::get_notes_from_microphone;
@@ -211,7 +211,7 @@ impl Note {
     /// to identify the notes in the recorded audio using ML.
     ///
     /// Currently, this does not work with WASM.
-    #[no_coverage]
+    #[coverage(off)]
     #[cfg(all(feature = "ml_infer", feature = "analyze_mic"))]
     pub async fn try_from_mic_ml(length_in_seconds: u8) -> Res<Vec<Self>> {
         use crate::{analyze::mic::get_audio_data_from_microphone, ml::infer::infer};

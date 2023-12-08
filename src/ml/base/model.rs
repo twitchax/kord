@@ -16,7 +16,6 @@ use crate::ml::train::{
     helpers::{KordClassificationOutput, MeanSquareLoss},
 };
 
-/// The primary model type for identifying notes / chords.
 #[derive(Module, Debug)]
 pub struct KordModel<B: Backend> {
     input: Param<nn::Linear<B>>,
@@ -26,7 +25,6 @@ pub struct KordModel<B: Backend> {
 }
 
 impl<B: Backend> KordModel<B> {
-    /// Create a new model with the given parameters.
     pub fn new(mlp_layers: usize, mlp_size: usize, mlp_dropout: f64, sigmoid_strength: f32) -> Self {
         let input = nn::Linear::new(&nn::LinearConfig::new(INPUT_SPACE_SIZE, mlp_size));
         let mlp = Mlp::new(mlp_layers, mlp_size, mlp_dropout);
@@ -41,7 +39,6 @@ impl<B: Backend> KordModel<B> {
         }
     }
 
-    /// Forward pass through the model.
     pub fn forward(&self, input: Tensor<B, 2>) -> Tensor<B, 2> {
         let mut x = input;
 
@@ -54,8 +51,8 @@ impl<B: Backend> KordModel<B> {
     }
 
     #[cfg(feature = "ml_train")]
-    /// Forward pass through the model, with loss calculation.
     pub fn forward_classification(&self, item: KordBatch<B>) -> KordClassificationOutput<B> {
+
         let targets = item.targets;
         let output = self.forward(item.samples);
 
@@ -80,18 +77,17 @@ impl<B: Backend> KordModel<B> {
     }
 }
 
-/// A convolutional block.
 #[derive(Module, Debug)]
 pub struct ConvBlock<B: Backend> {
     conv: Param<nn::conv::Conv1d<B>>,
     activation: nn::ReLU,
 }
 
-/// A convolutional block.
 impl<B: Backend> ConvBlock<B> {
-    /// Create a new convolutional block.
     pub fn new(in_channels: usize, out_channels: usize, kernel_size: usize) -> Self {
-        let conv = nn::conv::Conv1d::new(&nn::conv::Conv1dConfig::new(in_channels, out_channels, kernel_size).with_bias(false));
+        let conv = nn::conv::Conv1d::new(
+            &nn::conv::Conv1dConfig::new(in_channels, out_channels, kernel_size).with_bias(false),
+        );
 
         Self {
             conv: Param::from(conv),
@@ -99,7 +95,6 @@ impl<B: Backend> ConvBlock<B> {
         }
     }
 
-    /// Forward pass through the block.
     pub fn forward(&self, input: Tensor<B, 3>) -> Tensor<B, 3> {
         let x = self.conv.forward(input);
         self.activation.forward(x)

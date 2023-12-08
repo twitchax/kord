@@ -150,7 +150,7 @@ impl HasNamedPitch for NamedPitch {
 }
 
 impl HasLetter for NamedPitch {
-    #[no_coverage]
+    #[coverage(off)]
     fn letter(&self) -> &'static str {
         match self {
             NamedPitch::FTripleFlat => "F",
@@ -213,7 +213,7 @@ impl HasLetter for NamedPitch {
 }
 
 impl HasStaticName for NamedPitch {
-    #[no_coverage]
+    #[coverage(off)]
     fn static_name(&self) -> &'static str {
         match self {
             NamedPitch::FTripleFlat => "F♭𝄫",
@@ -276,7 +276,7 @@ impl HasStaticName for NamedPitch {
 }
 
 impl HasPitch for NamedPitch {
-    #[no_coverage]
+    #[coverage(off)]
     fn pitch(&self) -> Pitch {
         match self {
             NamedPitch::FTripleFlat => Pitch::D,

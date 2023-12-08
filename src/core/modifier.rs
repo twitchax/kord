@@ -117,7 +117,7 @@ impl HasIsDominant for Modifier {
 }
 
 impl HasStaticName for Degree {
-    #[no_coverage]
+    #[coverage(off)]
     fn static_name(&self) -> &'static str {
         match self {
             Degree::Seven => "7",
@@ -129,7 +129,7 @@ impl HasStaticName for Degree {
 }
 
 impl HasStaticName for Modifier {
-    #[no_coverage]
+    #[coverage(off)]
     fn static_name(&self) -> &'static str {
         match self {
             Modifier::Minor => "m",
@@ -151,7 +151,7 @@ impl HasStaticName for Modifier {
 }
 
 impl HasStaticName for Extension {
-    #[no_coverage]
+    #[coverage(off)]
     fn static_name(&self) -> &'static str {
         match self {
             Extension::Sus2 => "sus2",

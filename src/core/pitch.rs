@@ -93,7 +93,7 @@ pub enum Pitch {
 // Pitch impls.
 
 impl HasBaseFrequency for Pitch {
-    #[no_coverage]
+    #[coverage(off)]
     fn base_frequency(&self) -> f32 {
         match self {
             Pitch::C => 16.35,

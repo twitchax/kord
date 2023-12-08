@@ -113,7 +113,7 @@ where
     Ok(accuracy)
 }
 
-#[no_coverage]
+#[coverage(off)]
 pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device: &B::Device) -> f32 {
     let dataset = KordDataset::from_folder_and_simulation("samples", 0, 0.0, 0.0, 0.0);
 
@@ -192,7 +192,7 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
     inference_accuracy
 }
 
-#[no_coverage]
+#[coverage(off)]
 pub fn hyper_parameter_tuning(source: String, destination: String, log: String, device: String) -> Void {
     let peak_radiuses = [1.0];
     let harmonic_decays = [0.1];
