@@ -18,7 +18,7 @@ use crate::analyze::mic::get_audio_data_from_microphone;
 use super::helpers::save_kord_item;
 
 /// Gather a sample from the microphone and save it to disk.
-#[no_coverage]
+#[coverage(off)]
 pub fn gather_sample(destination: impl AsRef<Path>, length_in_seconds: u8) -> Void {
     println!("Listening ...");
 

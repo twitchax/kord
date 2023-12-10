@@ -1230,7 +1230,7 @@ use super::base::{Playable, PlaybackHandle};
 
 #[cfg(feature = "audio")]
 impl Playable for Chord {
-    #[no_coverage]
+    #[coverage(off)]
     fn play(&self, delay: Duration, length: Duration, fade_in: Duration) -> Res<PlaybackHandle> {
         use rodio::{source::SineWave, OutputStream, Sink, Source};
 

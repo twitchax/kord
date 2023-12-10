@@ -18,7 +18,7 @@ pub struct ChordParser;
 // Helpers.
 
 /// Parses a [`Note`] [`str`] into a [`Note`].
-#[no_coverage]
+#[coverage(off)]
 pub fn note_str_to_note(note_str: &str) -> Res<Note> {
     let chord = match note_str {
         "A" => note::A,
@@ -63,7 +63,7 @@ pub fn note_str_to_note(note_str: &str) -> Res<Note> {
 }
 
 /// Parses an [`Octave`] [`str`] into an [`Octave`].
-#[no_coverage]
+#[coverage(off)]
 pub fn octave_str_to_octave(note_str: &str) -> Res<Octave> {
     let octave = match note_str {
         "0" => Octave::Zero,

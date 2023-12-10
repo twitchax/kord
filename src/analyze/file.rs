@@ -43,14 +43,14 @@ pub fn get_audio_data_from_file(file: impl AsRef<Path>, start: Option<Duration>,
 }
 
 /// Play the given segment of an audio file. Used to preview a clip before guessing notes from it.
-#[no_coverage]
+#[coverage(off)]
 pub fn preview_audio_file_clip(file: impl AsRef<Path>, start: Option<Duration>, end: Option<Duration>) -> Res<()> {
     let file = File::open(file)?;
     preview_audio_clip(file, start, end)
 }
 
 /// Play the given segment of an audio stream. Used to preview a clip before guessing notes from it.
-#[no_coverage]
+#[coverage(off)]
 pub fn preview_audio_clip(stream: impl Read + Seek + Send + Sync + 'static, start: Option<Duration>, end: Option<Duration>) -> Res<()> {
     let start = start.unwrap_or_default();
     let decoder = Decoder::new(stream)?.skip_duration(start).convert_samples();
