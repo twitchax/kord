@@ -8,7 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use burn::tensor::{backend::Backend, Tensor};
+use burn::{tensor::{backend::Backend, Tensor}, module::Module};
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 
 use crate::{
@@ -194,18 +194,19 @@ pub fn fold_binary(binary: &[f32; 128]) -> [f32; 12] {
 
 // Common tensor operations.
 
-#[derive(Debug, Clone)]
-pub struct Sigmoid {
-    scale: f32,
+#[derive(Module, Debug)]
+pub struct Sigmoid<B: Backend> {
+    scale: Tensor<B, 1>,
 }
 
-impl Sigmoid {
+impl<B: Backend> Sigmoid<B> {
     pub fn new(scale: f32) -> Self {
-        Self { scale }
+        Self { scale: Tensor::ones([1]) * scale }
     }
 
-    pub fn forward<B: Backend, const D: usize>(&self, input: Tensor<B, D>) -> Tensor<B, D> {
-        let scaled = input.mul_scalar(self.scale);
+    pub fn forward<const D: usize>(&self, input: Tensor<B, D>) -> Tensor<B, D> {
+        let scaled = input.mul_scalar(self.scale.clone().into_scalar());
+        //let scaled = input;
         scaled.clone().exp().div(scaled.exp().add_scalar(1.0))
     }
 }

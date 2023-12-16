@@ -9,7 +9,7 @@
   "mlp_layers": 3,
   "mlp_size": 1024,
   "mlp_dropout": 0.1,
-  "model_epochs": 32,
+  "model_epochs": 128,
   "model_batch_size": 100,
   "model_workers": 64,
   "model_seed": 76980,

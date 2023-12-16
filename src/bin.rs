@@ -156,7 +156,7 @@ enum MlCommand {
         #[arg(long, default_value = ".hidden/train_log")]
         log: String,
 
-        /// The device to use for training.
+        /// The device to use for training (`gpu`, `wgpu`, or `cpu`).
         #[arg(long, default_value = "gpu")]
         device: String,
 
@@ -414,7 +414,7 @@ fn start(args: Args) -> Void {
                 sigmoid_strength,
                 no_plots,
             }) => {
-                use burn_autodiff::ADBackendDecorator;
+                use burn::backend::Autodiff;
                 use klib::ml::base::TrainConfig;
 
                 let config = TrainConfig {
@@ -444,24 +444,32 @@ fn start(args: Args) -> Void {
                 match device.as_str() {
                     #[cfg(feature = "ml_gpu")]
                     "gpu" => {
-                        use burn_tch::{TchBackend, TchDevice};
+                        use burn_tch::{LibTorch, LibTorchDevice};
 
                         #[cfg(not(target_os = "macos"))]
-                        let device = TchDevice::Cuda(0);
+                        let device = LibTorchDevice::Cuda(0);
                         #[cfg(target_os = "macos")]
-                        let device = TchDevice::Mps;
+                        let device = LibTorchDevice::Mps;
 
-                        klib::ml::train::run_training::<ADBackendDecorator<TchBackend<f32>>>(device, &config, true, true)?;
+                        klib::ml::train::run_training::<Autodiff<LibTorch<f32>>>(device, &config, true, true)?;
+                    }
+                    #[cfg(feature = "ml_gpu")]
+                    "wgpu" => {
+                        use burn_wgpu::{AutoGraphicsApi, Dx12, Vulkan, OpenGl, Wgpu, WgpuDevice};
+
+                        let device = WgpuDevice::default();
+
+                        klib::ml::train::run_training::<Autodiff<Wgpu<Vulkan, f32, i32>>>(device, &config, true, true)?;
                     }
                     "cpu" => {
-                        use burn_ndarray::{NdArrayBackend, NdArrayDevice};
+                        use burn_ndarray::{NdArray, NdArrayDevice};
 
                         let device = NdArrayDevice::Cpu;
 
-                        klib::ml::train::run_training::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config, true, true)?;
+                        klib::ml::train::run_training::<Autodiff<NdArray<f32>>>(device, &config, true, true)?;
                     }
                     _ => {
-                        return Err(anyhow::Error::msg("Invalid device (must choose either `gpu` [requires `ml_gpu` feature] or `cpu`)."));
+                        return Err(anyhow::Error::msg("Invalid device (must choose either `gpu` [requires `ml_gpu` feature], `wgpu` [requires `ml_gpu` feature] or `cpu`)."));
                     }
                 }
             }

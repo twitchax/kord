@@ -3,10 +3,10 @@
 use anyhow::Context;
 use burn::{
     config::Config,
-    module::{Module, State},
-    tensor::backend::Backend,
+    module::{Module},
+    tensor::backend::Backend, record::{BinBytesRecorder, FullPrecisionSettings, Recorder},
 };
-use burn_ndarray::{NdArrayBackend, NdArrayDevice};
+use burn_ndarray::{NdArray, NdArrayDevice};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
@@ -15,7 +15,7 @@ use crate::{
         base::Res,
         note::{HasNoteId, Note},
     },
-    ml::base::{data::kord_item_to_sample_tensor, helpers::binary_to_u128, model::KordModel, KordItem, TrainConfig, FREQUENCY_SPACE_SIZE},
+    ml::base::{data::kord_item_to_sample_tensor, helpers::binary_to_u128, model::{KordModel, KordModelRecord}, KordItem, TrainConfig, FREQUENCY_SPACE_SIZE},
 };
 
 /// Run the inference on a sample to produce a [`Vec`] of [`Note`]s.
@@ -32,17 +32,10 @@ where
         }
     };
 
-    //let state = State::<B::Elem>::load_binary(STATE)?;
-    let (state, _len): (State<B::FloatElem>, usize) = bincode::serde::decode_from_slice(STATE_BINCODE, bincode::config::standard()).context("Failed to decode state.")?;
+    let recorder = BinBytesRecorder::<FullPrecisionSettings>::new().load(Vec::from_iter(STATE_BINCODE.iter().cloned()))?;
 
     // Define the model.
-    let mut model = KordModel::<B>::new(config.mlp_layers, config.mlp_size, config.mlp_dropout, config.sigmoid_strength);
-    model = match model.load(&state) {
-        Ok(model) => model,
-        Err(_) => {
-            return Err(anyhow::Error::msg("Could not load the model state from within the binary."));
-        }
-    };
+    let model = KordModel::<B>::new(config.mlp_layers, config.mlp_size, config.mlp_dropout, config.sigmoid_strength).load_record(recorder);
 
     // Prepare the sample.
     let sample = kord_item_to_sample_tensor(kord_item).to_device(device).detach();
@@ -75,7 +68,7 @@ pub fn infer(audio_data: &[f32], length_in_seconds: u8) -> Res<Vec<Note>> {
     let device = NdArrayDevice::Cpu;
 
     // Run the inference.
-    let notes = run_inference::<NdArrayBackend<f32>>(&device, &kord_item)?;
+    let notes = run_inference::<NdArray<f32>>(&device, &kord_item)?;
 
     Ok(notes)
 }
@@ -85,13 +78,13 @@ pub fn infer(audio_data: &[f32], length_in_seconds: u8) -> Res<Vec<Note>> {
 static CONFIG: &[u8] = include_bytes!("../../../model/model_config.json");
 #[cfg(host_family_unix)]
 //static STATE: &[u8] = include_bytes!("../../../model/state.json.gz");
-static STATE_BINCODE: &[u8] = include_bytes!("../../../model/state.bincode");
+static STATE_BINCODE: &[u8] = include_bytes!("../../../model/state.json.bin");
 
 #[cfg(host_family_windows)]
 static CONFIG: &[u8] = include_bytes!("..\\..\\..\\model\\model_config.json");
 #[cfg(host_family_windows)]
 //static STATE: &[u8] = include_bytes!("..\\..\\..\\model\\state.json.gz");
-static STATE_BINCODE: &[u8] = include_bytes!("..\\..\\..\\model\\state.bincode");
+static STATE_BINCODE: &[u8] = include_bytes!("..\\..\\..\\model\\state.json.bin");
 
 // Tests.
 

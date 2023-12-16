@@ -4,7 +4,7 @@ use core::f32;
 
 use burn::{
     module::{Module, Param},
-    nn::{self},
+    nn::{self, attention::{MultiHeadAttentionConfig, MultiHeadAttention, MhaInput}, gru::{GruConfig, Gru}, pool::AvgPool1d, EmbeddingConfig, LayerNorm},
     tensor::{backend::Backend, Tensor},
 };
 
@@ -18,23 +18,27 @@ use crate::ml::train::{
 
 #[derive(Module, Debug)]
 pub struct KordModel<B: Backend> {
-    input: Param<nn::Linear<B>>,
-    mlp: Param<Mlp<B>>,
-    output: Param<nn::Linear<B>>,
-    sigmoid: Sigmoid,
+    mha: MultiHeadAttention<B>,
+    input: nn::Linear<B>,
+    mlp: Mlp<B>,
+    output: nn::Linear<B>,
+    sigmoid: Sigmoid<B>,
 }
 
 impl<B: Backend> KordModel<B> {
     pub fn new(mlp_layers: usize, mlp_size: usize, mlp_dropout: f64, sigmoid_strength: f32) -> Self {
-        let input = nn::Linear::new(&nn::LinearConfig::new(INPUT_SPACE_SIZE, mlp_size));
+        let mha = MultiHeadAttentionConfig::new(INPUT_SPACE_SIZE, 128).init::<B>();
+        let input = nn::LinearConfig::new(INPUT_SPACE_SIZE, mlp_size).init::<B>();
         let mlp = Mlp::new(mlp_layers, mlp_size, mlp_dropout);
-        let output = nn::Linear::new(&nn::LinearConfig::new(mlp_size, NUM_CLASSES));
+        let output = nn::LinearConfig::new(mlp_size, NUM_CLASSES).init::<B>();
+        //let output = nn::LinearConfig::new(INPUT_SPACE_SIZE, NUM_CLASSES).init::<B>();
         let sigmoid = Sigmoid::new(sigmoid_strength);
 
         Self {
-            input: Param::from(input),
-            mlp: Param::from(mlp),
-            output: Param::from(output),
+            mha,
+            input,
+            mlp,
+            output,
             sigmoid,
         }
     }
@@ -42,22 +46,35 @@ impl<B: Backend> KordModel<B> {
     pub fn forward(&self, input: Tensor<B, 2>) -> Tensor<B, 2> {
         let mut x = input;
 
+        let [batch_size, input_size] = x.dims();
+
+        let attn_input = x.clone().reshape([batch_size, 1, input_size]);//.repeat(1, 3);
+        //let attn_key_value = attn_input.clone();
+
+        let attn = self.mha.forward(MhaInput::new(attn_input.clone(), attn_input.clone(), attn_input.clone()));
+
+        let mut x = attn.context.reshape([batch_size, input_size]);
+
         x = self.input.forward(x);
         x = self.mlp.forward(x);
         x = self.output.forward(x);
         x = self.sigmoid.forward(x);
 
-        x
+        x 
     }
 
     #[cfg(feature = "ml_train")]
     pub fn forward_classification(&self, item: KordBatch<B>) -> KordClassificationOutput<B> {
+        use burn::nn::loss::MSELoss;
 
         let targets = item.targets;
         let output = self.forward(item.samples);
 
-        let loss = MeanSquareLoss::default();
-        let loss = loss.forward(output.clone(), targets.clone());
+        let loss = MSELoss::default();
+        let loss = loss.forward(output.clone(), targets.clone(), nn::loss::Reduction::Sum);
+
+        // let loss = MeanSquareLoss::default();
+        // let loss = loss.forward(output.clone(), targets.clone());
 
         // let loss = BinaryCrossEntropyLoss::default();
         // let loss = loss.forward(output.clone(), targets.clone());
@@ -79,19 +96,18 @@ impl<B: Backend> KordModel<B> {
 
 #[derive(Module, Debug)]
 pub struct ConvBlock<B: Backend> {
-    conv: Param<nn::conv::Conv1d<B>>,
+    conv: nn::conv::Conv1d<B>,
     activation: nn::ReLU,
 }
 
 impl<B: Backend> ConvBlock<B> {
     pub fn new(in_channels: usize, out_channels: usize, kernel_size: usize) -> Self {
-        let conv = nn::conv::Conv1d::new(
-            &nn::conv::Conv1dConfig::new(in_channels, out_channels, kernel_size).with_bias(false),
-        );
+        let conv = nn::conv::Conv1dConfig::new(in_channels, out_channels, kernel_size).with_bias(false).init::<B>();
+        let activation = nn::ReLU::new();
 
         Self {
-            conv: Param::from(conv),
-            activation: nn::ReLU::new(),
+            conv,
+            activation
         }
     }
 

@@ -1,5 +1,15 @@
 # kord development
 
+## Get libtorch on windows
+
+You need to set the right environment variable so `tch-rs` can find the libtorch library.
+
+The one that works best right now is `11.8`.
+
+```bash
+export TORCH_CUDA_VERSION="cu118"
+```
+
 ## Publish to Cargo
 
 ```bash

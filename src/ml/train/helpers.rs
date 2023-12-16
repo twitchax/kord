@@ -2,12 +2,14 @@
 
 use burn::{
     module::{Module, ModuleVisitor, ParamId},
+    backend::Autodiff,
     tensor::{
-        backend::{ADBackend, Backend},
+        backend::{AutodiffBackend, Backend},
         Data, Tensor,
     },
     train::{
         metric::{
+            MetricMetadata,
             state::{FormatOptions, NumericMetricState},
             Adaptor, LossInput, Metric, MetricEntry, Numeric,
         },
@@ -50,7 +52,7 @@ impl L1Visitor {
 }
 
 impl<B: Backend> ModuleVisitor<B> for L1Visitor {
-    fn visit<const D: usize>(&mut self, _: &ParamId, tensor: &Tensor<B, D>) {
+    fn visit_float<const D: usize>(&mut self, _: &ParamId, tensor: &Tensor<B, D>) {
         let sum: f32 = tensor.clone().powf(2.0).sum().to_full_precision().into_data().convert().value[0];
         self.sum += sum;
     }
@@ -165,7 +167,7 @@ impl<B: Backend> Adaptor<LossInput<B>> for KordClassificationOutput<B> {
 
 // Classification adapters.
 
-impl<B: ADBackend> TrainStep<KordBatch<B>, KordClassificationOutput<B>> for KordModel<B> {
+impl<B: AutodiffBackend> TrainStep<KordBatch<B>, KordClassificationOutput<B>> for KordModel<B> {
     fn step(&self, item: KordBatch<B>) -> TrainOutput<KordClassificationOutput<B>> {
         let item = self.forward_classification(item);
         TrainOutput::new(self, item.loss.backward(), item)
@@ -202,7 +204,9 @@ impl<B: Backend> KordAccuracyMetric<B> {
 impl<B: Backend> Metric for KordAccuracyMetric<B> {
     type Input = KordAccuracyInput<B>;
 
-    fn update(&mut self, input: &KordAccuracyInput<B>) -> MetricEntry {
+    const NAME: &'static str = "Accuracy";
+
+    fn update(&mut self, input: &KordAccuracyInput<B>, metadata: &MetricMetadata) -> MetricEntry {
         let [batch_size, _n_classes] = input.targets.dims();
         let device = B::Device::default();
 
@@ -214,10 +218,10 @@ impl<B: Backend> Metric for KordAccuracyMetric<B> {
 
         // let accuracy = 100.0 * (1.0 - rmse);
 
-        let target_round = targets.greater_equal_elem(0.5).into_int();
-        let output_round = outputs.greater_equal_elem(0.5).into_int();
+        let target_round = targets.greater_equal_elem(0.5).int();
+        let output_round = outputs.greater_equal_elem(0.5).int();
 
-        let counts: Vec<u8> = target_round.equal(output_round).into_int().sum_dim(1).into_data().convert().value;
+        let counts: Vec<u8> = target_round.equal(output_round).int().sum_dim(1).into_data().convert().value;
 
         let accuracy = 100.0 * counts.iter().filter(|&&x| x == NUM_CLASSES as u8).count() as f64 / counts.len() as f64;
 

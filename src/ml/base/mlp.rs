@@ -2,14 +2,15 @@
 
 use burn::{
     module::{Module, Param},
-    nn,
+    nn::{self, BatchNormConfig, BatchNorm, LayerNormConfig, LayerNorm},
     tensor::{backend::Backend, Tensor},
 };
 
 /// Multilayer Perceptron module.
 #[derive(Module, Debug)]
 pub struct Mlp<B: Backend> {
-    linears: Param<Vec<nn::Linear<B>>>,
+    linears: Vec<nn::Linear<B>>,
+    norm: LayerNorm<B>,
     dropout: nn::Dropout,
     activation: nn::ReLU,
 }
@@ -20,14 +21,19 @@ impl<B: Backend> Mlp<B> {
         let mut linears = Vec::with_capacity(mlp_layers);
 
         for _ in 0..mlp_layers {
-            let linear = nn::Linear::new(&nn::LinearConfig::new(mlp_size, mlp_size));
+            let linear = nn::LinearConfig::new(mlp_size, mlp_size).init::<B>();
             linears.push(linear);
         }
 
+        let norm = LayerNormConfig::new(mlp_size).init::<B>();
+        let dropout = nn::DropoutConfig::new(mlp_dropout).init();
+        let activation = nn::ReLU::new();
+
         Self {
-            linears: Param::from(linears),
-            dropout: nn::Dropout::new(&nn::DropoutConfig::new(mlp_dropout)),
-            activation: nn::ReLU::new(),
+            linears,
+            norm,
+            dropout,
+            activation
         }
     }
 
@@ -41,6 +47,7 @@ impl<B: Backend> Mlp<B> {
         let mut x = input;
 
         for linear in self.linears.iter() {
+            //x = self.norm.forward(x);
             x = linear.forward(x);
             x = self.dropout.forward(x);
             x = self.activation.forward(x);

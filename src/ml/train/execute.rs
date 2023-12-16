@@ -5,10 +5,10 @@ use burn::{
     data::dataloader::DataLoaderBuilder,
     module::Module,
     optim::{decay::WeightDecayConfig, Adam, AdamConfig},
-    tensor::backend::{ADBackend, Backend},
-    train::{metric::LossMetric, LearnerBuilder},
+    backend::{Autodiff},
+    tensor::backend::{AutodiffBackend, Backend},
+    train::{metric::{LossMetric, LearningRateMetric, CUDAMetric}, LearnerBuilder}, lr_scheduler::constant::ConstantLr, record::{BinBytesRecorder, BinFileRecorder, FullPrecisionSettings, Recorder},
 };
-use burn_autodiff::ADBackendDecorator;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
@@ -28,13 +28,14 @@ use super::{
 
 use crate::ml::base::TrainConfig;
 
-pub fn run_training<B: ADBackend>(device: B::Device, config: &TrainConfig, print_accuracy_report: bool, save_model: bool) -> Res<f32>
+pub fn run_training<B: AutodiffBackend>(device: B::Device, config: &TrainConfig, print_accuracy_report: bool, save_model: bool) -> Res<f32>
 where
     B::FloatElem: Serialize + DeserializeOwned,
 {
     // Define the Adam config.
 
-    let adam_config = AdamConfig::new(config.adam_learning_rate)
+    let adam_config = AdamConfig::new()
+        //.with_learning_rate(config.adam_learning_rate)
         .with_weight_decay(Some(WeightDecayConfig::new(config.adam_weight_decay)))
         .with_beta_1(config.adam_beta1)
         .with_beta_2(config.adam_beta2)
@@ -52,8 +53,8 @@ where
 
     // Define the data loaders.
 
-    let batcher_train = Arc::new(KordBatcher::<B>::new(device.clone()));
-    let batcher_valid = Arc::new(KordBatcher::<B::InnerBackend>::new(device.clone()));
+    let batcher_train = KordBatcher::<B>::new(device.clone());
+    let batcher_valid = KordBatcher::<B::InnerBackend>::new(device.clone());
 
     let dataloader_train = DataLoaderBuilder::new(batcher_train)
         .batch_size(config.model_batch_size)
@@ -68,7 +69,7 @@ where
 
     // Define the model.
 
-    let optimizer = Adam::new(&adam_config);
+    let optimizer = adam_config.init();
     let model = KordModel::new(config.mlp_layers, config.mlp_size, config.mlp_dropout, config.sigmoid_strength);
 
     let mut learner_builder = LearnerBuilder::new(&config.log)
@@ -78,13 +79,13 @@ where
 
     if !config.no_plots {
         learner_builder = learner_builder
-            .metric_train_plot(KordAccuracyMetric::new())
-            .metric_valid_plot(KordAccuracyMetric::new())
-            .metric_train_plot(LossMetric::new())
-            .metric_valid_plot(LossMetric::new());
+            .metric_train_numeric(KordAccuracyMetric::new())
+            .metric_valid_numeric(KordAccuracyMetric::new())
+            .metric_train_numeric(LossMetric::new())
+            .metric_valid_numeric(LossMetric::new());
     }
 
-    let learner = learner_builder.build(model, optimizer);
+    let learner = learner_builder.build(model, optimizer, ConstantLr::new(config.adam_learning_rate));
 
     // Train the model.
 
@@ -102,8 +103,7 @@ where
         let _ = std::fs::remove_file(&state_bincode_path);
 
         config.save(&config_path)?;
-        model_trained.state().save(&state_path)?;
-        std::fs::write(&state_bincode_path, bincode::serde::encode_to_vec(&model_trained.state(), bincode::config::standard())?)?;
+        BinFileRecorder::<FullPrecisionSettings>::new().record(model_trained.clone().into_record(), state_path.into())?;
     }
 
     // Compute overall accuracy.
@@ -197,12 +197,12 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
     let peak_radiuses = [1.0];
     let harmonic_decays = [0.1];
     let frequency_wobbles = [0.4];
-    let mlp_layers = [3];
+    let mlp_layers = [2];
     let mlp_sizes = [4096];
-    let mlp_dropouts = [0.1, 0.3, 0.5];
-    let epochs = [256];
-    let learning_rates = [1e-5];
-    let weight_decays = [5e-4];
+    let mlp_dropouts = [0.1];
+    let epochs = [512];
+    let learning_rates = [1e-6];
+    let weight_decays = [5e-5];
 
     let mut count = 1;
     let total =
@@ -241,7 +241,7 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
                                             adam_beta2: 0.999,
                                             adam_epsilon: f32::EPSILON,
                                             sigmoid_strength: 1.0,
-                                            no_plots: true,
+                                            no_plots: false,
                                         };
 
                                         println!("Running training {}/{}:\n\n{}\n", count, total, config);
@@ -249,21 +249,21 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
                                         let accuracy = match device.as_str() {
                                             #[cfg(feature = "ml_gpu")]
                                             "gpu" => {
-                                                use burn_tch::{TchBackend, TchDevice};
+                                                use burn_tch::{LibTorch, LibTorchDevice};
 
                                                 #[cfg(not(target_os = "macos"))]
-                                                let device = TchDevice::Cuda(0);
+                                                let device = LibTorchDevice::Cuda(0);
                                                 #[cfg(target_os = "macos")]
                                                 let device = TchDevice::Mps;
 
-                                                run_training::<ADBackendDecorator<TchBackend<f32>>>(device, &config, true, false)?
+                                                run_training::<Autodiff<LibTorch<f32>>>(device, &config, true, false)?
                                             }
                                             "cpu" => {
-                                                use burn_ndarray::{NdArrayBackend, NdArrayDevice};
+                                                use burn_ndarray::{NdArray, NdArrayDevice};
 
                                                 let device = NdArrayDevice::Cpu;
 
-                                                run_training::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config, true, false)?
+                                                run_training::<Autodiff<NdArray<f32>>>(device, &config, true, false)?
                                             }
                                             _ => {
                                                 return Err(anyhow::Error::msg("Invalid device (must choose either `gpu` [requires `ml_gpu` feature] or `cpu`)."));
@@ -307,8 +307,8 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
 #[cfg(feature = "ml_train")]
 mod tests {
     use super::*;
-    use burn_autodiff::ADBackendDecorator;
-    use burn_ndarray::{NdArrayBackend, NdArrayDevice};
+    use burn::backend::Autodiff;
+    use burn_ndarray::{NdArray, NdArrayDevice};
 
     #[test]
     fn test_train() {
@@ -338,6 +338,6 @@ mod tests {
             no_plots: true,
         };
 
-        run_training::<ADBackendDecorator<NdArrayBackend<f32>>>(device, &config, false, false).unwrap();
+        run_training::<Autodiff<NdArray<f32>>>(device, &config, false, false).unwrap();
     }
 }
