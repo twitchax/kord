@@ -21,7 +21,6 @@ jobs:
           key: test
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
           override: true
       - uses: actions-rs/cargo@v1
         with:
@@ -46,7 +45,6 @@ jobs:
           key: codecov
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
           override: true
       - name: Install tarpaulin
         run: cargo install cargo-tarpaulin
@@ -72,7 +70,6 @@ jobs:
           key: windows
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-12-20
           target: x86_64-pc-windows-gnu
           override: true
       - uses: actions-rs/cargo@v1
@@ -102,7 +99,6 @@ jobs:
           key: linux
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-12-20
           target: x86_64-unknown-linux-gnu
           override: true
       - uses: actions-rs/cargo@v1
@@ -131,7 +127,6 @@ jobs:
           key: mac
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-12-20
           target: aarch64-apple-darwin
           override: true
       - uses: actions-rs/cargo@v1
