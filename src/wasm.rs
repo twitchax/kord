@@ -2,8 +2,6 @@
 //!
 //! This module contains the WASM wrappers / bindings for the rest of the library.
 
-use std::panic;
-
 use js_sys::{Array, Object, Reflect};
 use wasm_bindgen::{convert::RefFromWasmAbi, prelude::*};
 
