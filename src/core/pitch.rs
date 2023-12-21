@@ -27,6 +27,22 @@ pub trait HasBaseFrequency {
 pub trait HasFrequency {
     /// Returns the frequency of the type (usually a [`Note`]).
     fn frequency(&self) -> f32;
+
+    /// Returns the frequency range of the type (usually a [`Note`]).
+    /// Essentially, mid way between the frequency and the next frequency on either side.
+    fn frequency_range(&self) -> (f32, f32) {
+        let frequency = self.frequency();
+        
+        (frequency * (1.0 - 1.0 / 17.462 / 2.0), frequency * (1.0 + 1.0 / 16.8196 / 2.0))
+    }
+
+    /// Returns the tight frequency range of the type (usually a [`Note`]).
+    /// Essentially, 1/8 the way between the frequency and the next frequency on either side.
+    fn tight_frequency_range(&self) -> (f32, f32) {
+        let frequency = self.frequency();
+        
+        (frequency * (1.0 - 1.0 / 17.462 / 8.0), frequency * (1.0 + 1.0 / 16.8196 / 8.0))
+    }
 }
 
 /// A trait for types that have a mel property.

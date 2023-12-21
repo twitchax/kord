@@ -2,10 +2,9 @@
 
 use burn::{
     module::{Module, ModuleVisitor, ParamId},
-    backend::Autodiff,
     tensor::{
         backend::{AutodiffBackend, Backend},
-        Data, Tensor,
+        Tensor,
     },
     train::{
         metric::{
@@ -22,11 +21,11 @@ use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 use crate::{
     core::{
         interval::Interval,
-        note::{HasNoteId, HasPrimaryHarmonicSeries, Note, ALL_PITCH_NOTES},
+        note::{HasNoteId, Note, ALL_PITCH_NOTES},
         pitch::HasFrequency,
     },
     ml::base::{
-        helpers::{load_kord_item, u128_to_binary},
+        helpers::load_kord_item,
         model::KordModel,
         KordItem, FREQUENCY_SPACE_SIZE, NUM_CLASSES,
     },
@@ -58,6 +57,7 @@ impl<B: Backend> ModuleVisitor<B> for L1Visitor {
     }
 }
 
+/// Compute the L1 regularization penalty.
 pub fn l1_regularization<B: Backend>(model: &KordModel<B>, lambda: f32) -> f32 {
     let mut visitor = L1Visitor::new();
     model.visit(&mut visitor);
@@ -66,87 +66,15 @@ pub fn l1_regularization<B: Backend>(model: &KordModel<B>, lambda: f32) -> f32 {
     sum * lambda
 }
 
-// Loss function.
-
-#[derive(Debug, Clone, Default)]
-pub struct MeanSquareLoss<B: Backend> {
-    _b: B,
-}
-
-impl<B: Backend> MeanSquareLoss<B> {
-    pub fn forward(&self, outputs: Tensor<B, 2>, targets: Tensor<B, 2>) -> Tensor<B, 1> {
-        // Compute the mean square error loss.
-        outputs.sub(targets).powf(2.0).mean()
-    }
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct BinaryCrossEntropyLoss<B: Backend> {
-    _b: B,
-}
-
-impl<B: Backend> BinaryCrossEntropyLoss<B> {
-    pub fn forward(&self, outputs: Tensor<B, 2>, targets: Tensor<B, 2>) -> Tensor<B, 1> {
-        let result = (targets.clone().mul(outputs.clone().log()) + (targets.neg().add_scalar(1.000001f32)).mul((outputs.neg().add_scalar(1.000001f32)).log()))
-            .mean()
-            .neg();
-
-        let value: f32 = result.to_data().convert().value[0];
-
-        if value.is_nan() {
-            panic!("NaN loss");
-        }
-
-        result
-    }
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct FocalLoss<B: Backend> {
-    pub gamma: f32,
-    _b: B,
-}
-
-impl<B: Backend> FocalLoss<B> {
-    pub fn forward(&self, outputs: Tensor<B, 2>, targets: Tensor<B, 2>) -> Tensor<B, 1> {
-        let gamma = self.gamma;
-
-        let p = outputs;
-        let term1 = targets.clone().mul(p.clone().log()).mul((p.clone().neg().add_scalar(1.000001f32)).powf(gamma).neg());
-        let term2 = targets.neg().add_scalar(1.000001f32).mul((p.clone().neg().add_scalar(1.000001f32)).log()).mul(p.powf(gamma).neg());
-        let loss = (term1 + term2).mean();
-
-        let value: f32 = loss.to_data().convert().value[0];
-
-        if value.is_nan() {
-            panic!("NaN loss");
-        }
-
-        loss
-    }
-}
-
-// Harmonic loss penalty.
-
-pub fn get_harmonic_penalty_tensor<B: Backend>() -> Tensor<B, 2> {
-    let mut tensors = Vec::with_capacity(128);
-
-    for note in ALL_PITCH_NOTES.iter().take(128) {
-        let harmonic_mask = Note::id_mask(&note.primary_harmonic_series());
-        let harmonics_binary = u128_to_binary(harmonic_mask);
-        let harmonic_tensor = Tensor::<B, 1>::from_data(Data::<f32, 1>::from(harmonics_binary).convert()).reshape([NUM_CLASSES, 1]);
-
-        tensors.push(harmonic_tensor);
-    }
-
-    Tensor::cat(tensors, 1).detach()
-}
-
 // Classification.
 
+/// The [classification](TrainStep) input type.
 pub struct KordClassificationOutput<B: Backend> {
+    /// The loss tensor.
     pub loss: Tensor<B, 1>,
+    /// The output tensor.
     pub output: Tensor<B, 2>,
+    /// The target tensor.
     pub targets: Tensor<B, 2>,
 }
 
@@ -182,6 +110,7 @@ impl<B: Backend> ValidStep<KordBatch<B>, KordClassificationOutput<B>> for KordMo
 
 // Accuracy metrics.
 
+/// The [accuracy metric](Metric) for kord samples.
 #[derive(Default)]
 pub struct KordAccuracyMetric<B: Backend> {
     state: NumericMetricState,
@@ -206,17 +135,12 @@ impl<B: Backend> Metric for KordAccuracyMetric<B> {
 
     const NAME: &'static str = "Accuracy";
 
-    fn update(&mut self, input: &KordAccuracyInput<B>, metadata: &MetricMetadata) -> MetricEntry {
+    fn update(&mut self, input: &KordAccuracyInput<B>, _metadata: &MetricMetadata) -> MetricEntry {
         let [batch_size, _n_classes] = input.targets.dims();
         let device = B::Device::default();
 
         let targets = input.targets.clone().to_device(&device);
         let outputs = input.outputs.clone().to_device(&device);
-
-        // let mse: f64 = targets.sub(&outputs).powf(2.0).mean().to_data().convert().value[0];
-        // let rmse = mse.sqrt();
-
-        // let accuracy = 100.0 * (1.0 - rmse);
 
         let target_round = targets.greater_equal_elem(0.5).int();
         let output_round = outputs.greater_equal_elem(0.5).int();
@@ -224,9 +148,6 @@ impl<B: Backend> Metric for KordAccuracyMetric<B> {
         let counts: Vec<u8> = target_round.equal(output_round).int().sum_dim(1).into_data().convert().value;
 
         let accuracy = 100.0 * counts.iter().filter(|&&x| x == NUM_CLASSES as u8).count() as f64 / counts.len() as f64;
-
-        // let loss: f64 = (targets.mul(&outputs.log()) + (targets.neg().add_scalar(1.0)).mul(&outputs.neg().add_scalar(1.0).log())).mean().neg().to_data().convert().value[0];
-        // let accuracy = 100.0 * (1.0 - loss);
 
         self.state.update(accuracy, batch_size, FormatOptions::new("Accuracy").unit("%").precision(2))
     }
@@ -244,6 +165,7 @@ impl<B: Backend> Numeric for KordAccuracyMetric<B> {
 
 // Operations for simulating kord samples.
 
+/// Create a simulated kord sample item from a noise basis and a semi-random collection of notes.
 pub fn get_simulated_kord_item(notes: &[Note], peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> KordItem {
     let wobble_divisor = 35.0;
 
@@ -258,24 +180,14 @@ pub fn get_simulated_kord_item(notes: &[Note], peak_radius: f32, harmonic_decay:
     for note in notes {
         let mut harmonic_strength = 1.0;
 
-        let note_frequency = note.frequency() + (1.0 + 1.0 / wobble_divisor * get_random_between(-frequency_wobble, frequency_wobble));
+        let note_frequency = note.frequency() * (1.0 + 1.0 / wobble_divisor * get_random_between(-frequency_wobble, frequency_wobble));
 
         let true_harmonic_series = (1..14)
-            .into_iter()
             .map(|k| {
                 let f = k as f32 * note_frequency;
                 f * (1.0 + 1.0 / wobble_divisor * get_random_between(-frequency_wobble, frequency_wobble))
             })
             .collect::<Vec<_>>();
-
-        // let mut equal_temperament_harmonic_series = PRIMARY_HARMONIC_SERIES
-        //     .into_iter()
-        //     .map(|k| {
-        //         let f = (*note + k).frequency();
-        //         f * (1.0 + 1.0 / wobble_divisor * get_random_between(-frequency_wobble, frequency_wobble))
-        //     })
-        //     .collect::<Vec<_>>();
-        // equal_temperament_harmonic_series.insert(0, note_frequency);
 
         for harmonic_frequency in true_harmonic_series {
             if harmonic_frequency - peak_radius < 0.0 || harmonic_frequency + peak_radius > FREQUENCY_SPACE_SIZE as f32 {
@@ -297,6 +209,8 @@ pub fn get_simulated_kord_item(notes: &[Note], peak_radius: f32, harmonic_decay:
     result
 }
 
+/// Create simulated kord sample item by randomly selecting notes from a list of notes,
+/// and use the given configuration.
 pub fn get_simulated_kord_items(count: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> Vec<KordItem> {
     let results = (0..count).into_par_iter().map(|_| {
         let note_count = 60;

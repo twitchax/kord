@@ -165,7 +165,7 @@ enum MlCommand {
         simulation_size: usize,
 
         /// Simulation peak radius.
-        #[arg(long, default_value_t = 1.0)]
+        #[arg(long, default_value_t = 2.0)]
         simulation_peak_radius: f32,
 
         /// Simulation harmonic decay.
@@ -176,20 +176,16 @@ enum MlCommand {
         #[arg(long, default_value_t = 0.4)]
         simulation_frequency_wobble: f32,
 
-        /// The number of Multi Layer Perceptron (MLP) layers.
-        #[arg(long, default_value_t = 3)]
-        mlp_layers: usize,
+        /// The number of Multi Head Attention (MHA) heads.
+        #[arg(long, default_value_t = 8)]
+        mha_heads: usize,
 
-        /// The number of neurons in each Multi Layer Perceptron (MLP) layer.
-        #[arg(long, default_value_t = 1024)]
-        mlp_size: usize,
-
-        /// The Multi Layer Perceptron (MLP) dropout rate.
-        #[arg(long, default_value_t = 0.1)]
-        mlp_dropout: f64,
+        /// The Multi Head Attention (MHA) dropout rate.
+        #[arg(long, default_value_t = 0.3)]
+        mha_dropout: f64,
 
         /// The number of epochs to train for.
-        #[arg(long, default_value_t = 32)]
+        #[arg(long, default_value_t = 64)]
         model_epochs: usize,
 
         /// The number of samples to use per epoch.
@@ -387,7 +383,7 @@ fn start(args: Args) -> Void {
         Some(Command::Ml { ml_command }) => match ml_command {
             #[cfg(feature = "ml_train")]
             Some(MlCommand::Gather { destination, length }) => {
-                klib::ml::base::gather::gather_sample(&destination, length)?;
+                klib::ml::base::gather::gather_sample(destination, length)?;
             }
             #[cfg(feature = "ml_train")]
             Some(MlCommand::Train {
@@ -399,9 +395,8 @@ fn start(args: Args) -> Void {
                 simulation_peak_radius,
                 simulation_harmonic_decay,
                 simulation_frequency_wobble,
-                mlp_layers,
-                mlp_size,
-                mlp_dropout,
+                mha_heads,
+                mha_dropout,
                 model_epochs,
                 model_batch_size,
                 model_workers,
@@ -425,9 +420,8 @@ fn start(args: Args) -> Void {
                     simulation_peak_radius,
                     simulation_harmonic_decay,
                     simulation_frequency_wobble,
-                    mlp_layers,
-                    mlp_size,
-                    mlp_dropout,
+                    mha_heads,
+                    mha_dropout,
                     model_epochs,
                     model_batch_size,
                     model_workers,
@@ -455,11 +449,11 @@ fn start(args: Args) -> Void {
                     }
                     #[cfg(feature = "ml_gpu")]
                     "wgpu" => {
-                        use burn_wgpu::{AutoGraphicsApi, Dx12, Vulkan, OpenGl, Wgpu, WgpuDevice};
+                        use burn_wgpu::{AutoGraphicsApi, Wgpu, WgpuDevice};
 
                         let device = WgpuDevice::default();
 
-                        klib::ml::train::run_training::<Autodiff<Wgpu<Vulkan, f32, i32>>>(device, &config, true, true)?;
+                        klib::ml::train::run_training::<Autodiff<Wgpu<AutoGraphicsApi, f32, i32>>>(device, &config, true, true)?;
                     }
                     "cpu" => {
                         use burn_ndarray::{NdArray, NdArrayDevice};

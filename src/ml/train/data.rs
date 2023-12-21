@@ -20,6 +20,7 @@ use super::helpers::get_simulated_kord_items;
 
 /// A dataset of kord samples.
 pub struct KordDataset {
+    /// The items in the dataset.
     pub items: Vec<KordItem>,
 }
 
@@ -57,19 +58,24 @@ impl Dataset<KordItem> for KordDataset {
 
 // Batcher.
 
+/// A batcher for kord samples.
 pub struct KordBatcher<B: Backend> {
     device: B::Device,
 }
 
 impl<B: Backend> KordBatcher<B> {
+    /// Create a new kord batcher.
     pub fn new(device: B::Device) -> Self {
         Self { device }
     }
 }
 
+/// A batch of kord samples (samples and targets).
 #[derive(Clone, Debug)]
 pub struct KordBatch<B: Backend> {
+    /// The samples in the batch.
     pub samples: Tensor<B, 2>,
+    /// The targets in the batch.
     pub targets: Tensor<B, 2>,
 }
 

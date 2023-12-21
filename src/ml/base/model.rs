@@ -3,66 +3,64 @@
 use core::f32;
 
 use burn::{
-    module::{Module, Param},
-    nn::{self, attention::{MultiHeadAttentionConfig, MultiHeadAttention, MhaInput}, gru::{GruConfig, Gru}, pool::AvgPool1d, EmbeddingConfig, LayerNorm},
-    tensor::{backend::Backend, Tensor},
+    nn::{self, attention::{MultiHeadAttentionConfig, MultiHeadAttention, MhaInput}},
+    tensor::{backend::Backend, Tensor}, module::Module,
 };
 
-use super::{helpers::Sigmoid, mlp::Mlp, INPUT_SPACE_SIZE, NUM_CLASSES};
+use super::{helpers::Sigmoid, INPUT_SPACE_SIZE, NUM_CLASSES};
 
 #[cfg(feature = "ml_train")]
 use crate::ml::train::{
     data::KordBatch,
-    helpers::{KordClassificationOutput, MeanSquareLoss},
+    helpers::KordClassificationOutput,
 };
 
+/// The Kord model.
+/// 
+/// This model is a transformer model that uses multi-head attention to classify notes from a frequency space.
 #[derive(Module, Debug)]
 pub struct KordModel<B: Backend> {
     mha: MultiHeadAttention<B>,
-    input: nn::Linear<B>,
-    mlp: Mlp<B>,
     output: nn::Linear<B>,
     sigmoid: Sigmoid<B>,
 }
 
 impl<B: Backend> KordModel<B> {
-    pub fn new(mlp_layers: usize, mlp_size: usize, mlp_dropout: f64, sigmoid_strength: f32) -> Self {
-        let mha = MultiHeadAttentionConfig::new(INPUT_SPACE_SIZE, 128).init::<B>();
-        let input = nn::LinearConfig::new(INPUT_SPACE_SIZE, mlp_size).init::<B>();
-        let mlp = Mlp::new(mlp_layers, mlp_size, mlp_dropout);
-        let output = nn::LinearConfig::new(mlp_size, NUM_CLASSES).init::<B>();
-        //let output = nn::LinearConfig::new(INPUT_SPACE_SIZE, NUM_CLASSES).init::<B>();
+    /// Create the model from the given configuration.
+    pub fn new(mha_heads: usize, mha_dropout: f64, sigmoid_strength: f32) -> Self {
+        let mha = MultiHeadAttentionConfig::new(INPUT_SPACE_SIZE, mha_heads).with_dropout(mha_dropout).init::<B>();
+        let output = nn::LinearConfig::new(INPUT_SPACE_SIZE, NUM_CLASSES).init::<B>();
         let sigmoid = Sigmoid::new(sigmoid_strength);
 
         Self {
             mha,
-            input,
-            mlp,
             output,
             sigmoid,
         }
     }
 
+    /// Applies the forward pass on the input tensor.
     pub fn forward(&self, input: Tensor<B, 2>) -> Tensor<B, 2> {
-        let mut x = input;
+        let x = input;
 
+        // Perform the multi-head attention transformer forward pass.
         let [batch_size, input_size] = x.dims();
+        let attn_input = x.clone().reshape([batch_size, 1, input_size]);
+        let attn = self.mha.forward(MhaInput::new(attn_input.clone(), attn_input.clone(), attn_input));
 
-        let attn_input = x.clone().reshape([batch_size, 1, input_size]);//.repeat(1, 3);
-        //let attn_key_value = attn_input.clone();
-
-        let attn = self.mha.forward(MhaInput::new(attn_input.clone(), attn_input.clone(), attn_input.clone()));
-
+        // Reshape the output to remove the sequence dimension.
         let mut x = attn.context.reshape([batch_size, input_size]);
-
-        x = self.input.forward(x);
-        x = self.mlp.forward(x);
+        
+        // Perform the final linear layer to map to the output dimensions.
         x = self.output.forward(x);
+
+        // Apply the sigmoid function to the output to achieve multi-classification.
         x = self.sigmoid.forward(x);
 
         x 
     }
 
+    /// Applies the forward classification pass on the input tensor.
     #[cfg(feature = "ml_train")]
     pub fn forward_classification(&self, item: KordBatch<B>) -> KordClassificationOutput<B> {
         use burn::nn::loss::MSELoss;
@@ -91,28 +89,5 @@ impl<B: Backend> KordModel<B> {
         // let loss = loss + harmonic_loss;
 
         KordClassificationOutput { loss, output, targets }
-    }
-}
-
-#[derive(Module, Debug)]
-pub struct ConvBlock<B: Backend> {
-    conv: nn::conv::Conv1d<B>,
-    activation: nn::ReLU,
-}
-
-impl<B: Backend> ConvBlock<B> {
-    pub fn new(in_channels: usize, out_channels: usize, kernel_size: usize) -> Self {
-        let conv = nn::conv::Conv1dConfig::new(in_channels, out_channels, kernel_size).with_bias(false).init::<B>();
-        let activation = nn::ReLU::new();
-
-        Self {
-            conv,
-            activation
-        }
-    }
-
-    pub fn forward(&self, input: Tensor<B, 3>) -> Tensor<B, 3> {
-        let x = self.conv.forward(input);
-        self.activation.forward(x)
     }
 }

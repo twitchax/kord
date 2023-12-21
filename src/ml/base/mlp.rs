@@ -1,9 +1,8 @@
 //! Multilayer Perceptron module.
 
 use burn::{
-    module::{Module, Param},
-    nn::{self, BatchNormConfig, BatchNorm, LayerNormConfig, LayerNorm},
-    tensor::{backend::Backend, Tensor},
+    nn::{self, LayerNormConfig, LayerNorm},
+    tensor::{backend::Backend, Tensor}, module::Module,
 };
 
 /// Multilayer Perceptron module.
@@ -38,11 +37,6 @@ impl<B: Backend> Mlp<B> {
     }
 
     /// Applies the forward pass on the input tensor.
-    ///
-    /// # Shapes
-    ///
-    /// - input: `[batch_size, mlp_size]`
-    /// - output: `[batch_size, mlp_size]`
     pub fn forward(&self, input: Tensor<B, 2>) -> Tensor<B, 2> {
         let mut x = input;
 

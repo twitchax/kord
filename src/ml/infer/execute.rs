@@ -1,9 +1,8 @@
 //! Module for executing inference.
 
-use anyhow::Context;
 use burn::{
     config::Config,
-    module::{Module},
+    module::Module,
     tensor::backend::Backend, record::{BinBytesRecorder, FullPrecisionSettings, Recorder},
 };
 use burn_ndarray::{NdArray, NdArrayDevice};
@@ -15,7 +14,7 @@ use crate::{
         base::Res,
         note::{HasNoteId, Note},
     },
-    ml::base::{data::kord_item_to_sample_tensor, helpers::binary_to_u128, model::{KordModel, KordModelRecord}, KordItem, TrainConfig, FREQUENCY_SPACE_SIZE},
+    ml::base::{data::kord_item_to_sample_tensor, helpers::binary_to_u128, model::KordModel, KordItem, TrainConfig, FREQUENCY_SPACE_SIZE},
 };
 
 /// Run the inference on a sample to produce a [`Vec`] of [`Note`]s.
@@ -35,7 +34,7 @@ where
     let recorder = BinBytesRecorder::<FullPrecisionSettings>::new().load(Vec::from_iter(STATE_BINCODE.iter().cloned()))?;
 
     // Define the model.
-    let model = KordModel::<B>::new(config.mlp_layers, config.mlp_size, config.mlp_dropout, config.sigmoid_strength).load_record(recorder);
+    let model = KordModel::<B>::new(config.mha_heads, config.mha_dropout, config.sigmoid_strength).load_record(recorder);
 
     // Prepare the sample.
     let sample = kord_item_to_sample_tensor(kord_item).to_device(device).detach();

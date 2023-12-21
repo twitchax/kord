@@ -3,15 +3,13 @@
 use std::path::Path;
 
 use crate::{
-    analyze::{
-        base::{get_frequency_space, get_smoothed_frequency_space}
-    },
-    core::{
-        base::{Parsable, Void},
-        note::{HasNoteId, Note},
-    },
+    analyze::base::{get_frequency_space, get_smoothed_frequency_space},
     ml::base::{KordItem, FREQUENCY_SPACE_SIZE},
 };
+use crate::core::{
+        base::{Parsable, Void},
+        note::{HasNoteId, Note},
+    };
 
 use crate::analyze::mic::get_audio_data_from_microphone;
 
@@ -30,7 +28,7 @@ pub fn gather_sample(destination: impl AsRef<Path>, length_in_seconds: u8) -> Vo
     println!("Enter notes: ");
     let _ = std::io::stdin().read_line(&mut line).unwrap();
 
-    let notes = line.split(' ').into_iter().filter(|s| !s.is_empty()).map(Note::parse).collect::<Result<Vec<_>, _>>()?;
+    let notes = line.split(' ').filter(|s| !s.is_empty()).map(Note::parse).collect::<Result<Vec<_>, _>>()?;
     let note_names = notes.iter().map(|n| n.to_string()).collect::<Vec<_>>().join("_");
 
     let mut label: u128 = 0;

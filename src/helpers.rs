@@ -1,3 +1,5 @@
+//! Helper functions for the project.
+
 /// Plot the frequency space of the microphone input using plotters.
 #[cfg(feature = "plot")]
 pub fn plot_frequency_space(frequency_space: &[(f32, f32)], title: &str, file_name: &str, x_min: f32, x_max: f32) {

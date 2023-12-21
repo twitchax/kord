@@ -36,7 +36,9 @@
                     "--features",
                     "ml",
                     "--features",
-                    "ml_gpu"
+                    "ml_gpu",
+                    "--features",
+                    "plot"
                 ],
                 "filter": {
                     "name": "kord",

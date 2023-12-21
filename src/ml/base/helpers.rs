@@ -12,15 +12,15 @@ use burn::{tensor::{backend::Backend, Tensor}, module::Module};
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 
 use crate::{
-    analyze::base::{get_notes_from_smoothed_frequency_space},
+    analyze::base::get_notes_from_smoothed_frequency_space,
     core::{
         base::Res,
         helpers::{inv_mel, mel},
-        note::{HasNoteId, Note},
+        note::{HasNoteId, Note, ALL_PITCH_NOTES_WITH_FREQUENCY}, pitch::HasFrequency,
     },
 };
 
-use super::{KordItem, FREQUENCY_SPACE_SIZE, MEL_SPACE_SIZE};
+use super::{KordItem, FREQUENCY_SPACE_SIZE, MEL_SPACE_SIZE, NUM_CLASSES};
 
 // Operations for working with kord samples.
 
@@ -107,6 +107,32 @@ pub fn mel_filter_banks_from(spectrum: &[f32]) -> [f32; MEL_SPACE_SIZE] {
     filter_banks
 }
 
+/// Run a note-binned "harmonic convolution" over the frequency space data.
+pub fn note_binned_convolution(spectrum: &[f32]) -> [f32; NUM_CLASSES] {
+    let mut convolution = [0f32; NUM_CLASSES];
+
+    for (note, _) in ALL_PITCH_NOTES_WITH_FREQUENCY.iter().skip(7).take(90) {
+        let id_index = note.id_index();
+        
+        let (low, high) = note.tight_frequency_range();
+        let low = low.round() as usize;
+        let high = high.round() as usize;
+
+        if high >= FREQUENCY_SPACE_SIZE {
+            continue;
+        }
+
+        let mut sum = 0f32;
+        for k in low..high {
+            sum += spectrum[k];
+        }
+
+        convolution[id_index as usize] = sum;
+    }
+
+    convolution
+}
+
 /// Run a "harmonic convolution" over the frequency space data.
 pub fn harmonic_convolution(spectrum: &[f32]) -> [f32; FREQUENCY_SPACE_SIZE] {
     let mut harmonic_convolution = [0f32; FREQUENCY_SPACE_SIZE];
@@ -177,6 +203,7 @@ pub fn binary_to_u128(binary: &[f32]) -> u128 {
     num
 }
 
+/// Folds the 128-bit binary signature of the the notes into a 12-bit signature (which represent one octave)
 #[allow(dead_code)]
 pub fn fold_binary(binary: &[f32; 128]) -> [f32; 12] {
     let mut folded = [0f32; 12];
@@ -194,16 +221,19 @@ pub fn fold_binary(binary: &[f32; 128]) -> [f32; 12] {
 
 // Common tensor operations.
 
+/// Module which represents a Sigmoid operation of variable strength.
 #[derive(Module, Debug)]
 pub struct Sigmoid<B: Backend> {
     scale: Tensor<B, 1>,
 }
 
 impl<B: Backend> Sigmoid<B> {
+    /// Create a new Sigmoid module with the given scale.
     pub fn new(scale: f32) -> Self {
         Self { scale: Tensor::ones([1]) * scale }
     }
 
+    /// Forward pass of the Sigmoid module.
     pub fn forward<const D: usize>(&self, input: Tensor<B, D>) -> Tensor<B, D> {
         let scaled = input.mul_scalar(self.scale.clone().into_scalar());
         //let scaled = input;

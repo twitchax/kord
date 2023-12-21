@@ -1,5 +1,8 @@
 //! Base types for machine learning.
 
+// Add an allow for the [`Config`] derive on [`TrainConfig`].
+#![allow(clippy::too_many_arguments)]
+
 pub mod data;
 #[cfg(feature = "analyze_mic")]
 pub mod gather;
@@ -16,7 +19,7 @@ use std::path::PathBuf;
 pub const FREQUENCY_SPACE_SIZE: usize = 8192;
 
 /// The standard mel space size to use across all ML operations.
-pub const INPUT_SPACE_SIZE: usize = MEL_SPACE_SIZE + 128;
+pub const INPUT_SPACE_SIZE: usize = NUM_CLASSES + 128;
 
 /// The standard mel space size to use across all ML operations.
 pub const MEL_SPACE_SIZE: usize = 512;
@@ -45,12 +48,10 @@ pub struct TrainConfig {
     /// Simulation frequency wobble.
     pub simulation_frequency_wobble: f32,
 
-    /// The number of Multi Layer Perceptron (MLP) layers.
-    pub mlp_layers: usize,
-    /// The number of neurons in each Multi Layer Perceptron (MLP) layer.
-    pub mlp_size: usize,
-    /// The Multi Layer Perceptron (MLP) dropout rate.
-    pub mlp_dropout: f64,
+    /// The number of Multi Head Attention (MHA) heads.
+    pub mha_heads: usize,
+    /// The Multi Head Attention (MHA) dropout rate.
+    pub mha_dropout: f64,
 
     /// The number of epochs to train for.
     pub model_epochs: usize,

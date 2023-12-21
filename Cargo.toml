@@ -47,7 +47,7 @@ analyze_file_alac = ["symphonia/alac", "symphonia/isomp4"]
 
 ml = ["ml_train", "ml_infer"]
 ml_base = ["serde", "byteorder", "bincode"]
-ml_train = ["ml_base", "rand", "rayon", "burn-autodiff", "burn/train", "burn/std", "burn/wgpu", "burn/tui", "burn/metrics", "burn-ndarray/std"]
+ml_train = ["ml_base", "rand", "rayon", "burn-autodiff", "burn/train", "burn/std", "burn/wgpu", "burn/metrics", "burn-ndarray/std", "burn/tui"]
 ml_infer = ["ml_base", "burn", "burn-ndarray"]
 ml_gpu = ["ml_train", "burn-tch", "burn-wgpu"]
 
@@ -94,7 +94,7 @@ burn-wgpu = { version = "0.11.1", optional = true }
 burn-ndarray = { version = "0.11.1", default-features = false, optional = true }
 
 # plot
-plotters = { version = "0.3.4", optional = true }
+plotters = { version = "0.3.5", optional = true }
 
 # wasm
 wasm-bindgen = { version = "0.2.84", optional = true }

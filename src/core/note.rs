@@ -132,6 +132,9 @@ pub trait HasNoteId {
     /// Returns the ID of the note.
     fn id(self) -> u128;
 
+    /// Returns the position of the 1 for the ID of the note.
+    fn id_index(self) -> u8;
+
     /// Returns the note from the given ID.
     fn from_id(id: u128) -> Res<Self>
     where
@@ -332,12 +335,16 @@ impl HasPrimaryHarmonicSeries for Note {
 
 impl HasNoteId for Note {
     fn id(self) -> u128 {
+        1 << self.id_index()
+    }
+
+    fn id_index(self) -> u8 {
         let mut shift = 0u8;
 
         shift += 12 * self.octave as u8;
         shift += self.named_pitch.pitch() as u8;
 
-        1 << shift
+        shift
     }
 
     fn from_id(id: u128) -> Res<Self> {
@@ -494,7 +501,7 @@ impl AddAssign<Interval> for Note {
 
 impl PartialOrd for Note {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.frequency().partial_cmp(&other.frequency())
+        Some(self.cmp(other))
     }
 }
 
