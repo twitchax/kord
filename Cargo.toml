@@ -1,6 +1,6 @@
 [package]
 name = "kord"
-version = "0.7.0"
+version = "0.7.1"
 edition = "2021"
 authors = ["Aaron Roney <twitchax@gmail.com>"]
 license = "MIT"
@@ -47,10 +47,12 @@ analyze_file_alac = ["symphonia/alac", "symphonia/isomp4"]
 ml = ["ml_train", "ml_infer"]
 ml_base = ["serde", "byteorder", "bincode"]
 ml_train = ["ml_base", "rand", "rayon", "burn-autodiff", "burn/train", "burn/std", "burn/wgpu", "burn/metrics", "burn-ndarray/std", "burn/tui"]
-ml_infer = ["ml_base", "burn", "burn-ndarray"]
+ml_infer = ["ml_base", "burn", "burn-ndarray", "burn-ndarray/std"]
 ml_gpu = ["ml_train", "burn-tch", "burn-wgpu"]
 
 wasm = ["rodio/wasm-bindgen", "wasm-bindgen", "wasm-bindgen-futures", "js-sys", "console_error_panic_hook", "wee_alloc", "gloo-timers", "burn/wasm-sync"]
+
+wasi = ["burn/wasm-sync"]
 
 plot = ["plotters"]
 
