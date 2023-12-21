@@ -31,7 +31,12 @@ where
         }
     };
 
-    let recorder = BinBytesRecorder::<FullPrecisionSettings>::new().load(Vec::from_iter(STATE_BINCODE.iter().cloned()))?;
+    let recorder = match BinBytesRecorder::<FullPrecisionSettings>::new().load(Vec::from_iter(STATE_BINCODE.iter().cloned())) {
+        Ok(recorder) => recorder,
+        Err(_) => {
+            return Err(anyhow::Error::msg("Could not load the state from within the binary."));
+        }
+    };
 
     // Define the model.
     let model = KordModel::<B>::new(config.mha_heads, config.mha_dropout, config.sigmoid_strength).load_record(recorder);

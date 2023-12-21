@@ -1,6 +1,6 @@
 [package]
 name = "kord"
-version = "0.6.1"
+version = "0.7.0"
 edition = "2021"
 authors = ["Aaron Roney <twitchax@gmail.com>"]
 license = "MIT"
@@ -11,7 +11,6 @@ repository = "https://github.com/twitchax/kord"
 keywords = ["cli", "music", "theory", "jazz", "chords"]
 categories = ["command-line-utilities"]
 exclude = [
-    "model/**/*",
     "samples/**/*",
     "assets/**/*"
 ]
@@ -30,7 +29,7 @@ required-features = ["cli"]
 wasm-opt = false
 
 [features]
-default = ["cli", "analyze", "audio"]
+default = ["cli", "analyze", "audio", "ml_infer"]
 
 cli = ["clap", "futures"]
 
