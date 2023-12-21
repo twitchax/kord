@@ -20,8 +20,6 @@ jobs:
             target
           key: test
       - uses: actions-rs/toolchain@v1
-        with:
-          override: true
       - uses: actions-rs/cargo@v1
         with:
           command: test
@@ -44,8 +42,6 @@ jobs:
             target
           key: codecov
       - uses: actions-rs/toolchain@v1
-        with:
-          override: true
       - name: Install tarpaulin
         run: cargo install cargo-tarpaulin
         continue-on-error: true
@@ -71,7 +67,6 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           target: x86_64-pc-windows-gnu
-          override: true
       - uses: actions-rs/cargo@v1
         with:
           command: build
@@ -100,7 +95,6 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           target: x86_64-unknown-linux-gnu
-          override: true
       - uses: actions-rs/cargo@v1
         with:
           command: build
@@ -128,7 +122,6 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           target: aarch64-apple-darwin
-          override: true
       - uses: actions-rs/cargo@v1
         with:
           command: build
