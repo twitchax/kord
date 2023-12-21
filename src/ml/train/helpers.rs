@@ -8,9 +8,8 @@ use burn::{
     },
     train::{
         metric::{
-            MetricMetadata,
             state::{FormatOptions, NumericMetricState},
-            Adaptor, LossInput, Metric, MetricEntry, Numeric,
+            Adaptor, LossInput, Metric, MetricEntry, MetricMetadata, Numeric,
         },
         TrainOutput, TrainStep, ValidStep,
     },
@@ -24,11 +23,7 @@ use crate::{
         note::{HasNoteId, Note, ALL_PITCH_NOTES},
         pitch::HasFrequency,
     },
-    ml::base::{
-        helpers::load_kord_item,
-        model::KordModel,
-        KordItem, FREQUENCY_SPACE_SIZE, NUM_CLASSES,
-    },
+    ml::base::{helpers::load_kord_item, model::KordModel, KordItem, FREQUENCY_SPACE_SIZE, NUM_CLASSES},
 };
 
 use super::data::KordBatch;

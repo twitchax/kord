@@ -32,7 +32,7 @@ pub trait HasFrequency {
     /// Essentially, mid way between the frequency and the next frequency on either side.
     fn frequency_range(&self) -> (f32, f32) {
         let frequency = self.frequency();
-        
+
         (frequency * (1.0 - 1.0 / 17.462 / 2.0), frequency * (1.0 + 1.0 / 16.8196 / 2.0))
     }
 
@@ -40,7 +40,7 @@ pub trait HasFrequency {
     /// Essentially, 1/8 the way between the frequency and the next frequency on either side.
     fn tight_frequency_range(&self) -> (f32, f32) {
         let frequency = self.frequency();
-        
+
         (frequency * (1.0 - 1.0 / 17.462 / 8.0), frequency * (1.0 + 1.0 / 16.8196 / 8.0))
     }
 }

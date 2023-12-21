@@ -3,7 +3,8 @@
 use burn::{
     config::Config,
     module::Module,
-    tensor::backend::Backend, record::{BinBytesRecorder, FullPrecisionSettings, Recorder},
+    record::{BinBytesRecorder, FullPrecisionSettings, Recorder},
+    tensor::backend::Backend,
 };
 use burn_ndarray::{NdArray, NdArrayDevice};
 use serde::{de::DeserializeOwned, Serialize};

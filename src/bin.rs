@@ -463,7 +463,9 @@ fn start(args: Args) -> Void {
                         klib::ml::train::run_training::<Autodiff<NdArray<f32>>>(device, &config, true, true)?;
                     }
                     _ => {
-                        return Err(anyhow::Error::msg("Invalid device (must choose either `gpu` [requires `ml_gpu` feature], `wgpu` [requires `ml_gpu` feature] or `cpu`)."));
+                        return Err(anyhow::Error::msg(
+                            "Invalid device (must choose either `gpu` [requires `ml_gpu` feature], `wgpu` [requires `ml_gpu` feature] or `cpu`).",
+                        ));
                     }
                 }
             }

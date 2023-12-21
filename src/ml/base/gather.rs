@@ -2,14 +2,14 @@
 
 use std::path::Path;
 
+use crate::core::{
+    base::{Parsable, Void},
+    note::{HasNoteId, Note},
+};
 use crate::{
     analyze::base::{get_frequency_space, get_smoothed_frequency_space},
     ml::base::{KordItem, FREQUENCY_SPACE_SIZE},
 };
-use crate::core::{
-        base::{Parsable, Void},
-        note::{HasNoteId, Note},
-    };
 
 use crate::analyze::mic::get_audio_data_from_microphone;
 

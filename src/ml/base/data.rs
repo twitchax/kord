@@ -3,7 +3,7 @@
 use burn::tensor::{backend::Backend, Data, Tensor};
 
 use super::{
-    helpers::{get_deterministic_guess, mel_filter_banks_from, u128_to_binary, note_binned_convolution},
+    helpers::{get_deterministic_guess, mel_filter_banks_from, note_binned_convolution, u128_to_binary},
     KordItem, INPUT_SPACE_SIZE, NUM_CLASSES,
 };
 

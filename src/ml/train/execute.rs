@@ -3,13 +3,15 @@
 use std::sync::Arc;
 
 use burn::{
+    backend::Autodiff,
     config::Config,
     data::dataloader::DataLoaderBuilder,
+    lr_scheduler::constant::ConstantLr,
     module::Module,
     optim::{decay::WeightDecayConfig, AdamConfig},
-    backend::Autodiff,
+    record::{BinFileRecorder, FullPrecisionSettings, Recorder},
     tensor::backend::{AutodiffBackend, Backend},
-    train::{metric::LossMetric, LearnerBuilder}, lr_scheduler::constant::ConstantLr, record::{BinFileRecorder, FullPrecisionSettings, Recorder},
+    train::{metric::LossMetric, LearnerBuilder},
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -31,8 +33,8 @@ use super::{
 use crate::ml::base::TrainConfig;
 
 /// Run the training.
-/// 
-/// Given the [`TrainConfig`], this function will run the training and return the overall accuracy on 
+///
+/// Given the [`TrainConfig`], this function will run the training and return the overall accuracy on
 /// the validation / test set.
 pub fn run_training<B: AutodiffBackend>(device: B::Device, config: &TrainConfig, print_accuracy_report: bool, save_model: bool) -> Res<f32>
 where
@@ -157,7 +159,7 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
 }
 
 /// Run hyper parameter tuning.
-/// 
+///
 ///This method sweeps through the hyper parameters and runs training for each combination. The best
 /// hyper parameters are then printed at the end.
 #[coverage(off)]

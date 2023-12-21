@@ -8,7 +8,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use burn::{tensor::{backend::Backend, Tensor}, module::Module};
+use burn::{
+    module::Module,
+    tensor::{backend::Backend, Tensor},
+};
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 
 use crate::{
@@ -16,7 +19,8 @@ use crate::{
     core::{
         base::Res,
         helpers::{inv_mel, mel},
-        note::{HasNoteId, Note, ALL_PITCH_NOTES_WITH_FREQUENCY}, pitch::HasFrequency,
+        note::{HasNoteId, Note, ALL_PITCH_NOTES_WITH_FREQUENCY},
+        pitch::HasFrequency,
     },
 };
 
@@ -113,7 +117,7 @@ pub fn note_binned_convolution(spectrum: &[f32]) -> [f32; NUM_CLASSES] {
 
     for (note, _) in ALL_PITCH_NOTES_WITH_FREQUENCY.iter().skip(7).take(90) {
         let id_index = note.id_index();
-        
+
         let (low, high) = note.tight_frequency_range();
         let low = low.round() as usize;
         let high = high.round() as usize;
@@ -137,13 +141,7 @@ pub fn note_binned_convolution(spectrum: &[f32]) -> [f32; NUM_CLASSES] {
 pub fn harmonic_convolution(spectrum: &[f32]) -> [f32; FREQUENCY_SPACE_SIZE] {
     let mut harmonic_convolution = [0f32; FREQUENCY_SPACE_SIZE];
 
-    let (peak, _) = spectrum.iter().enumerate().fold((0usize, 0f32), |(k, max), (j, x)| {
-        if *x > max {
-            (j, *x)
-        } else {
-            (k, max)
-        }
-    });
+    let (peak, _) = spectrum.iter().enumerate().fold((0usize, 0f32), |(k, max), (j, x)| if *x > max { (j, *x) } else { (k, max) });
 
     for center in (peak / 2)..4000 {
         let mut sum = spectrum[center];

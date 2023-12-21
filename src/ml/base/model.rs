@@ -3,20 +3,21 @@
 use core::f32;
 
 use burn::{
-    nn::{self, attention::{MultiHeadAttentionConfig, MultiHeadAttention, MhaInput}},
-    tensor::{backend::Backend, Tensor}, module::Module,
+    module::Module,
+    nn::{
+        self,
+        attention::{MhaInput, MultiHeadAttention, MultiHeadAttentionConfig},
+    },
+    tensor::{backend::Backend, Tensor},
 };
 
 use super::{helpers::Sigmoid, INPUT_SPACE_SIZE, NUM_CLASSES};
 
 #[cfg(feature = "ml_train")]
-use crate::ml::train::{
-    data::KordBatch,
-    helpers::KordClassificationOutput,
-};
+use crate::ml::train::{data::KordBatch, helpers::KordClassificationOutput};
 
 /// The Kord model.
-/// 
+///
 /// This model is a transformer model that uses multi-head attention to classify notes from a frequency space.
 #[derive(Module, Debug)]
 pub struct KordModel<B: Backend> {
@@ -32,11 +33,7 @@ impl<B: Backend> KordModel<B> {
         let output = nn::LinearConfig::new(INPUT_SPACE_SIZE, NUM_CLASSES).init::<B>();
         let sigmoid = Sigmoid::new(sigmoid_strength);
 
-        Self {
-            mha,
-            output,
-            sigmoid,
-        }
+        Self { mha, output, sigmoid }
     }
 
     /// Applies the forward pass on the input tensor.
@@ -50,14 +47,14 @@ impl<B: Backend> KordModel<B> {
 
         // Reshape the output to remove the sequence dimension.
         let mut x = attn.context.reshape([batch_size, input_size]);
-        
+
         // Perform the final linear layer to map to the output dimensions.
         x = self.output.forward(x);
 
         // Apply the sigmoid function to the output to achieve multi-classification.
         x = self.sigmoid.forward(x);
 
-        x 
+        x
     }
 
     /// Applies the forward classification pass on the input tensor.

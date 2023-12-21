@@ -1,8 +1,9 @@
 //! Multilayer Perceptron module.
 
 use burn::{
-    nn::{self, LayerNormConfig, LayerNorm},
-    tensor::{backend::Backend, Tensor}, module::Module,
+    module::Module,
+    nn::{self, LayerNorm, LayerNormConfig},
+    tensor::{backend::Backend, Tensor},
 };
 
 /// Multilayer Perceptron module.
@@ -28,12 +29,7 @@ impl<B: Backend> Mlp<B> {
         let dropout = nn::DropoutConfig::new(mlp_dropout).init();
         let activation = nn::ReLU::new();
 
-        Self {
-            linears,
-            norm,
-            dropout,
-            activation
-        }
+        Self { linears, norm, dropout, activation }
     }
 
     /// Applies the forward pass on the input tensor.
