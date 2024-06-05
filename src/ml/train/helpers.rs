@@ -47,7 +47,7 @@ impl L1Visitor {
 
 impl<B: Backend> ModuleVisitor<B> for L1Visitor {
     fn visit_float<const D: usize>(&mut self, _: &ParamId, tensor: &Tensor<B, D>) {
-        let sum: f32 = tensor.clone().powf(2.0).sum().to_full_precision().into_data().convert().value[0];
+        let sum: f32 = tensor.clone().powf_scalar(2.0).sum().into_data().convert().value[0];
         self.sum += sum;
     }
 }

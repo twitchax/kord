@@ -227,8 +227,8 @@ pub struct Sigmoid<B: Backend> {
 
 impl<B: Backend> Sigmoid<B> {
     /// Create a new Sigmoid module with the given scale.
-    pub fn new(scale: f32) -> Self {
-        Self { scale: Tensor::ones([1]) * scale }
+    pub fn new(device: &B::Device, scale: f32) -> Self {
+        Self { scale: Tensor::ones([1], device) * scale }
     }
 
     /// Forward pass of the Sigmoid module.

@@ -8,16 +8,16 @@ use super::{
 };
 
 /// Takes a loaded kord item and converts it to a sample tensor that is ready for classification.
-pub fn kord_item_to_sample_tensor<B: Backend>(item: &KordItem) -> Tensor<B, 2> {
+pub fn kord_item_to_sample_tensor<B: Backend>(device: &B::Device, item: &KordItem) -> Tensor<B, 2> {
     //kord_item_to_large_sample_tensor(item)
-    kord_item_to_note_binned_convolution_tensor(item)
+    kord_item_to_note_binned_convolution_tensor(device, item)
     //kord_item_to_mel_sample_tensor(item)
     //kord_item_to_bins_sample_tensor(item)
 }
 
 /// Takes a loaded kord item and converts it to a sample tensor that is ready for classification.
 #[allow(dead_code)]
-fn kord_item_to_mel_sample_tensor<B: Backend>(item: &KordItem) -> Tensor<B, 2> {
+fn kord_item_to_mel_sample_tensor<B: Backend>(device: &B::Device, item: &KordItem) -> Tensor<B, 2> {
     let frequency_space = item.frequency_space;
     let mut mel_space = mel_filter_banks_from(&frequency_space);
 
@@ -35,14 +35,14 @@ fn kord_item_to_mel_sample_tensor<B: Backend>(item: &KordItem) -> Tensor<B, 2> {
     to_zero_mean_unit_variance(&mut result);
 
     let data = Data::<f32, 1>::from(result);
-    let tensor = Tensor::<B, 1>::from_data(data.convert());
+    let tensor = Tensor::<B, 1>::from_data(data.convert(), device);
 
     tensor.reshape([1, INPUT_SPACE_SIZE])
 }
 
 /// Takes a loaded kord item and converts it to a sample tensor that is ready for classification.
 #[allow(dead_code)]
-fn kord_item_to_large_sample_tensor<B: Backend>(item: &KordItem) -> Tensor<B, 2> {
+fn kord_item_to_large_sample_tensor<B: Backend>(device: &B::Device, item: &KordItem) -> Tensor<B, 2> {
     let mut frequency_space = item.frequency_space;
 
     // Normalize the mel space peaks.
@@ -59,12 +59,12 @@ fn kord_item_to_large_sample_tensor<B: Backend>(item: &KordItem) -> Tensor<B, 2>
     to_zero_mean_unit_variance(&mut result);
 
     let data = Data::<f32, 1>::from(result);
-    let tensor = Tensor::<B, 1>::from_data(data.convert());
+    let tensor = Tensor::<B, 1>::from_data(data.convert(), device);
 
     tensor.reshape([1, INPUT_SPACE_SIZE])
 }
 
-fn kord_item_to_note_binned_convolution_tensor<B: Backend>(item: &KordItem) -> Tensor<B, 2> {
+fn kord_item_to_note_binned_convolution_tensor<B: Backend>(device: &B::Device, item: &KordItem) -> Tensor<B, 2> {
     let frequency_space = item.frequency_space;
 
     let mut convolution = note_binned_convolution(&frequency_space);
@@ -83,19 +83,19 @@ fn kord_item_to_note_binned_convolution_tensor<B: Backend>(item: &KordItem) -> T
     to_zero_mean_unit_variance(&mut result);
 
     let data = Data::<f32, 1>::from(result);
-    let tensor = Tensor::<B, 1>::from_data(data.convert());
+    let tensor = Tensor::<B, 1>::from_data(data.convert(), device);
 
     tensor.reshape([1, INPUT_SPACE_SIZE])
 }
 
 /// Takes a loaded kord item and converts it to a target tensor that is ready for classification.
-pub fn kord_item_to_target_tensor<B: Backend>(item: &KordItem) -> Tensor<B, 2> {
+pub fn kord_item_to_target_tensor<B: Backend>(device: &B::Device, item: &KordItem) -> Tensor<B, 2> {
     let binary = u128_to_binary(item.label);
 
     //let binary = fold_binary(&binary);
 
     let data = Data::<f32, 1>::from(binary);
-    let tensor = Tensor::<B, 1>::from_data(data.convert());
+    let tensor = Tensor::<B, 1>::from_data(data.convert(), device);
 
     tensor.reshape([1, NUM_CLASSES])
 }

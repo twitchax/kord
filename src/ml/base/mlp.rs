@@ -12,22 +12,22 @@ pub struct Mlp<B: Backend> {
     linears: Vec<nn::Linear<B>>,
     norm: LayerNorm<B>,
     dropout: nn::Dropout,
-    activation: nn::ReLU,
+    activation: nn::Relu,
 }
 
 impl<B: Backend> Mlp<B> {
     /// Create the module from the given configuration.
-    pub fn new(mlp_layers: usize, mlp_size: usize, mlp_dropout: f64) -> Self {
+    pub fn new(device: &B::Device, mlp_layers: usize, mlp_size: usize, mlp_dropout: f64) -> Self {
         let mut linears = Vec::with_capacity(mlp_layers);
 
         for _ in 0..mlp_layers {
-            let linear = nn::LinearConfig::new(mlp_size, mlp_size).init::<B>();
+            let linear = nn::LinearConfig::new(mlp_size, mlp_size).init::<B>(device);
             linears.push(linear);
         }
 
-        let norm = LayerNormConfig::new(mlp_size).init::<B>();
+        let norm = LayerNormConfig::new(mlp_size).init::<B>(device);
         let dropout = nn::DropoutConfig::new(mlp_dropout).init();
-        let activation = nn::ReLU::new();
+        let activation = nn::Relu::new();
 
         Self { linears, norm, dropout, activation }
     }

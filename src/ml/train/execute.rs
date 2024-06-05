@@ -78,7 +78,7 @@ where
     // Define the model.
 
     let optimizer = adam_config.init();
-    let model = KordModel::new(config.mha_heads, config.mha_dropout, config.sigmoid_strength);
+    let model = KordModel::new(&device, config.mha_heads, config.mha_dropout, config.sigmoid_strength);
 
     let mut learner_builder = LearnerBuilder::new(&config.log)
         //.with_file_checkpointer::<f32>(2)
@@ -130,8 +130,8 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
     let mut inferrence_correct = 0;
 
     for kord_item in &kord_items {
-        let sample = kord_item_to_sample_tensor(kord_item).to_device(device).detach();
-        let target: Vec<f32> = kord_item_to_target_tensor::<B>(kord_item).into_data().convert().value;
+        let sample = kord_item_to_sample_tensor(device, kord_item).to_device(device).detach();
+        let target: Vec<f32> = kord_item_to_target_tensor::<B>(device, kord_item).into_data().convert().value;
         let target_array: [_; NUM_CLASSES] = target.clone().try_into().unwrap();
         let target_binary = binary_to_u128(&target_array);
 

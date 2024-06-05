@@ -2,13 +2,15 @@
 
 ## Get libtorch on windows
 
-You need to set the right environment variable so `tch-rs` can find the libtorch library.
+You need to set the right environment variable so `tch-rs` can find the libtorch library, and download it.
 
-The one that works best right now is `11.8`.
+The one that works best right now is `12.1`.
 
 ```bash
-export TORCH_CUDA_VERSION="cu118"
+export TORCH_CUDA_VERSION="cu121"
 ```
+
+This will automatically download the right binaries, but you may need to turn off any VPNs you are using.
 
 ## Publish to Cargo
 

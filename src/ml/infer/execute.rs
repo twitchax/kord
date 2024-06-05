@@ -32,7 +32,7 @@ where
         }
     };
 
-    let recorder = match BinBytesRecorder::<FullPrecisionSettings>::new().load(Vec::from_iter(STATE_BINCODE.iter().cloned())) {
+    let recorder = match BinBytesRecorder::<FullPrecisionSettings>::new().load(Vec::from_iter(STATE_BINCODE.iter().cloned()), device) {
         Ok(recorder) => recorder,
         Err(_) => {
             return Err(anyhow::Error::msg("Could not load the state from within the binary."));
@@ -40,10 +40,10 @@ where
     };
 
     // Define the model.
-    let model = KordModel::<B>::new(config.mha_heads, config.mha_dropout, config.sigmoid_strength).load_record(recorder);
+    let model = KordModel::<B>::new(device, config.mha_heads, config.mha_dropout, config.sigmoid_strength).load_record(recorder);
 
     // Prepare the sample.
-    let sample = kord_item_to_sample_tensor(kord_item).to_device(device).detach();
+    let sample = kord_item_to_sample_tensor(device, kord_item).detach();
 
     // Run the inference.
     let inferred = model.forward(sample).to_data().convert().value.into_iter().map(f32::round).collect::<Vec<_>>();

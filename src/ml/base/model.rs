@@ -28,10 +28,10 @@ pub struct KordModel<B: Backend> {
 
 impl<B: Backend> KordModel<B> {
     /// Create the model from the given configuration.
-    pub fn new(mha_heads: usize, mha_dropout: f64, sigmoid_strength: f32) -> Self {
-        let mha = MultiHeadAttentionConfig::new(INPUT_SPACE_SIZE, mha_heads).with_dropout(mha_dropout).init::<B>();
-        let output = nn::LinearConfig::new(INPUT_SPACE_SIZE, NUM_CLASSES).init::<B>();
-        let sigmoid = Sigmoid::new(sigmoid_strength);
+    pub fn new(device: &B::Device, mha_heads: usize, mha_dropout: f64, sigmoid_strength: f32) -> Self {
+        let mha = MultiHeadAttentionConfig::new(INPUT_SPACE_SIZE, mha_heads).with_dropout(mha_dropout).init::<B>(device);
+        let output = nn::LinearConfig::new(INPUT_SPACE_SIZE, NUM_CLASSES).init::<B>(device);
+        let sigmoid = Sigmoid::new(device, sigmoid_strength);
 
         Self { mha, output, sigmoid }
     }
@@ -60,12 +60,12 @@ impl<B: Backend> KordModel<B> {
     /// Applies the forward classification pass on the input tensor.
     #[cfg(feature = "ml_train")]
     pub fn forward_classification(&self, item: KordBatch<B>) -> KordClassificationOutput<B> {
-        use burn::nn::loss::MSELoss;
+        use burn::nn::loss::MseLoss;
 
         let targets = item.targets;
         let output = self.forward(item.samples);
 
-        let loss = MSELoss::default();
+        let loss = MseLoss::default();
         let loss = loss.forward(output.clone(), targets.clone(), nn::loss::Reduction::Sum);
 
         // let loss = MeanSquareLoss::default();

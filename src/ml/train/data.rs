@@ -59,6 +59,7 @@ impl Dataset<KordItem> for KordDataset {
 // Batcher.
 
 /// A batcher for kord samples.
+#[derive(Clone, Debug)]
 pub struct KordBatcher<B: Backend> {
     device: B::Device,
 }
@@ -81,9 +82,9 @@ pub struct KordBatch<B: Backend> {
 
 impl<B: Backend> Batcher<KordItem, KordBatch<B>> for KordBatcher<B> {
     fn batch(&self, items: Vec<KordItem>) -> KordBatch<B> {
-        let samples = items.iter().map(kord_item_to_sample_tensor).collect();
+        let samples = items.iter().map(|i| kord_item_to_sample_tensor(&self.device, i)).collect();
 
-        let targets = items.iter().map(kord_item_to_target_tensor).collect();
+        let targets = items.iter().map(|i| kord_item_to_target_tensor(&self.device, i)).collect();
 
         let frequency_spaces = Tensor::cat(samples, 0).to_device(&self.device).detach();
         let targets = Tensor::cat(targets, 0).to_device(&self.device).detach();

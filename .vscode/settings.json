@@ -1,9 +1,9 @@
 {
     "rust-analyzer.cargo.features": [
-        //"ml", 
-        //"ml_gpu", 
+        "ml", 
+        "ml_gpu", 
         //"plot",
         "ml_infer",
-        "wasm"
+        //"wasm"
     ]
 }
