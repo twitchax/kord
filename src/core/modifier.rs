@@ -1,6 +1,6 @@
 //! A module for working with chord modifiers.
 
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
@@ -192,7 +192,7 @@ pub fn likely_extension_sets() -> &'static [Vec<Extension>] {
 
 // Statics.
 
-static KNOWN_MODIFIER_SETS: Lazy<[Vec<Modifier>; 35]> = Lazy::new(|| {
+static KNOWN_MODIFIER_SETS: LazyLock<[Vec<Modifier>; 35]> = LazyLock::new(|| {
     [
         vec![],
         vec![Modifier::Minor],
@@ -232,7 +232,7 @@ static KNOWN_MODIFIER_SETS: Lazy<[Vec<Modifier>; 35]> = Lazy::new(|| {
     ]
 });
 
-static ONE_OFF_MODIFIER_SETS: Lazy<[Vec<Modifier>; 6]> = Lazy::new(|| {
+static ONE_OFF_MODIFIER_SETS: LazyLock<[Vec<Modifier>; 6]> = LazyLock::new(|| {
     [
         vec![],
         vec![Modifier::Sharp11],
@@ -243,7 +243,7 @@ static ONE_OFF_MODIFIER_SETS: Lazy<[Vec<Modifier>; 6]> = Lazy::new(|| {
     ]
 });
 
-static LIKELY_EXTENSION_SETS: Lazy<[Vec<Extension>; 12]> = Lazy::new(|| {
+static LIKELY_EXTENSION_SETS: LazyLock<[Vec<Extension>; 12]> = LazyLock::new(|| {
     [
         vec![],
         vec![Extension::Sus2],

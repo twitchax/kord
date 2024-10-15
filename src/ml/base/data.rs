@@ -1,6 +1,6 @@
 //! Generic data structures and functions for training or inference.
 
-use burn::tensor::{backend::Backend, Data, Tensor};
+use burn::tensor::{backend::Backend, Tensor, TensorData};
 
 use super::{
     helpers::{get_deterministic_guess, mel_filter_banks_from, note_binned_convolution, u128_to_binary},
@@ -34,8 +34,8 @@ fn kord_item_to_mel_sample_tensor<B: Backend>(device: &B::Device, item: &KordIte
     // Convert the result values to zero-mean and unit-variance.
     to_zero_mean_unit_variance(&mut result);
 
-    let data = Data::<f32, 1>::from(result);
-    let tensor = Tensor::<B, 1>::from_data(data.convert(), device);
+    let data = TensorData::from(result);
+    let tensor = Tensor::<B, 1>::from_data(data, device);
 
     tensor.reshape([1, INPUT_SPACE_SIZE])
 }
@@ -58,8 +58,8 @@ fn kord_item_to_large_sample_tensor<B: Backend>(device: &B::Device, item: &KordI
     // Convert the result values to zero-mean and unit-variance.
     to_zero_mean_unit_variance(&mut result);
 
-    let data = Data::<f32, 1>::from(result);
-    let tensor = Tensor::<B, 1>::from_data(data.convert(), device);
+    let data = TensorData::from(result);
+    let tensor = Tensor::<B, 1>::from_data(data, device);
 
     tensor.reshape([1, INPUT_SPACE_SIZE])
 }
@@ -82,8 +82,8 @@ fn kord_item_to_note_binned_convolution_tensor<B: Backend>(device: &B::Device, i
     // Convert the result values to zero-mean and unit-variance.
     to_zero_mean_unit_variance(&mut result);
 
-    let data = Data::<f32, 1>::from(result);
-    let tensor = Tensor::<B, 1>::from_data(data.convert(), device);
+    let data = TensorData::from(result);
+    let tensor = Tensor::<B, 1>::from_data(data, device);
 
     tensor.reshape([1, INPUT_SPACE_SIZE])
 }
@@ -94,8 +94,8 @@ pub fn kord_item_to_target_tensor<B: Backend>(device: &B::Device, item: &KordIte
 
     //let binary = fold_binary(&binary);
 
-    let data = Data::<f32, 1>::from(binary);
-    let tensor = Tensor::<B, 1>::from_data(data.convert(), device);
+    let data = TensorData::from(binary);
+    let tensor = Tensor::<B, 1>::from_data(data, device);
 
     tensor.reshape([1, NUM_CLASSES])
 }

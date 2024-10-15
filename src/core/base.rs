@@ -14,7 +14,6 @@ pub type Res<T> = anyhow::Result<T>;
 pub type Err = anyhow::Error;
 
 /// Global void type.
-
 pub type Void = Res<()>;
 // Traits.
 

@@ -46,7 +46,7 @@ where
     let sample = kord_item_to_sample_tensor(device, kord_item).detach();
 
     // Run the inference.
-    let inferred = model.forward(sample).to_data().convert().value.into_iter().map(f32::round).collect::<Vec<_>>();
+    let inferred = model.forward(sample).to_data().iter().map(f32::round).collect::<Vec<_>>();
     let inferred_array: [_; 128] = inferred.try_into().unwrap();
     let mut inferred_notes = Note::from_id_mask(binary_to_u128(&inferred_array)).unwrap();
     inferred_notes.sort();

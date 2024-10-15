@@ -1285,7 +1285,7 @@ mod tests {
 
         assert_eq!(
             format!("{}", Chord::new(C).minor().seven().flat_five()),
-            "Cm7(♭5)\n   half diminished, locrian, minor seven flat five, seventh mode of major scale, major scale starting one half step up\n   C, D, E♭, F, G♭, A♭, B♭\n   C, E♭, G♭, B♭"
+            "Cm7(♭5)\n   half diminished, locrian, minor seven flat five, seventh mode of major scale, major scale starting one half step up\n   C, D♭, E♭, F, G♭, A♭, B♭\n   C, E♭, G♭, B♭"
         );
     }
 
@@ -1344,7 +1344,7 @@ mod tests {
         assert_eq!(Chord::new(C).thirteen().scale(), vec![C, D, E, F, G, A, BFlat]);
         assert_eq!(Chord::new(C).diminished().scale(), vec![C, D, EFlat, F, GFlat, AFlat, BDoubleFlat, B]);
         assert_eq!(Chord::new(C).dim().scale(), vec![C, D, EFlat, F, GFlat, AFlat, BDoubleFlat, B]);
-        assert_eq!(Chord::new(C).minor().seven().flat5().scale(), vec![C, D, EFlat, F, GFlat, AFlat, BFlat]);
+        assert_eq!(Chord::new(C).minor().seven().flat5().scale(), vec![C, DFlat, EFlat, F, GFlat, AFlat, BFlat]);
         assert_eq!(Chord::new(C).augmented().scale(), vec![C, D, E, F, GSharp, A, B]);
         assert_eq!(Chord::new(C).augmented().major7().scale(), vec![C, D, E, FSharp, GSharp, A, B]);
         assert_eq!(Chord::new(C).augmented().seven().scale(), vec![C, D, E, FSharp, GSharp, ASharp]);

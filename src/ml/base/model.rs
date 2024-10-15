@@ -65,7 +65,7 @@ impl<B: Backend> KordModel<B> {
         let targets = item.targets;
         let output = self.forward(item.samples);
 
-        let loss = MseLoss::default();
+        let loss = MseLoss;
         let loss = loss.forward(output.clone(), targets.clone(), nn::loss::Reduction::Sum);
 
         // let loss = MeanSquareLoss::default();

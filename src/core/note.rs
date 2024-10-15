@@ -20,9 +20,9 @@ use crate::core::{
     parser::{note_str_to_note, octave_str_to_octave, ChordParser, Rule},
     pitch::{HasBaseFrequency, HasFrequency, HasPitch, Pitch, ALL_PITCHES},
 };
-use once_cell::sync::Lazy;
 use paste::paste;
 use pest::Parser;
+use std::sync::LazyLock;
 
 use super::interval::ALL_INTERVALS;
 
@@ -635,7 +635,7 @@ pub const BTripleSharp: Note = BTripleSharpFour;
 // Statics.
 
 /// All the notes in all octaves.
-pub static ALL_PITCH_NOTES: Lazy<[Note; 192]> = Lazy::new(|| {
+pub static ALL_PITCH_NOTES: LazyLock<[Note; 192]> = LazyLock::new(|| {
     let mut all_notes = Vec::with_capacity(132);
 
     for octave in ALL_OCTAVES.iter() {
@@ -651,7 +651,7 @@ pub static ALL_PITCH_NOTES: Lazy<[Note; 192]> = Lazy::new(|| {
 });
 
 /// All the notes in all octaves with their frequency.
-pub static ALL_PITCH_NOTES_WITH_FREQUENCY: Lazy<[(Note, f32); 192]> = Lazy::new(|| {
+pub static ALL_PITCH_NOTES_WITH_FREQUENCY: LazyLock<[(Note, f32); 192]> = LazyLock::new(|| {
     let mut all_notes = Vec::with_capacity(132);
 
     for note in ALL_PITCH_NOTES.iter() {

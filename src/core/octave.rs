@@ -2,7 +2,7 @@
 
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 use crate::core::base::HasStaticName;
 
@@ -119,7 +119,7 @@ impl TryFrom<u8> for Octave {
             Err("Octave overflow.")
         } else {
             // SAFETY: The new octave is guaranteed to be less than or equal to 15.
-            Ok(unsafe { std::mem::transmute(value) })
+            Ok(unsafe { std::mem::transmute::<u8, Octave>(value) })
         }
     }
 }
@@ -176,7 +176,7 @@ impl HasOctave for Octave {
 // Statics.
 
 /// An array of all octaves.
-pub static ALL_OCTAVES: Lazy<[Octave; 16]> = Lazy::new(|| {
+pub static ALL_OCTAVES: LazyLock<[Octave; 16]> = LazyLock::new(|| {
     [
         Octave::Zero,
         Octave::One,

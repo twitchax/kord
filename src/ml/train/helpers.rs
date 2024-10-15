@@ -47,7 +47,7 @@ impl L1Visitor {
 
 impl<B: Backend> ModuleVisitor<B> for L1Visitor {
     fn visit_float<const D: usize>(&mut self, _: &ParamId, tensor: &Tensor<B, D>) {
-        let sum: f32 = tensor.clone().powf_scalar(2.0).sum().into_data().convert().value[0];
+        let sum: f32 = tensor.clone().powf_scalar(2.0).sum().into_data().as_slice().unwrap_or_default()[0];
         self.sum += sum;
     }
 }
@@ -140,7 +140,7 @@ impl<B: Backend> Metric for KordAccuracyMetric<B> {
         let target_round = targets.greater_equal_elem(0.5).int();
         let output_round = outputs.greater_equal_elem(0.5).int();
 
-        let counts: Vec<u8> = target_round.equal(output_round).int().sum_dim(1).into_data().convert().value;
+        let counts: Vec<u8> = target_round.equal(output_round).int().sum_dim(1).into_data().to_vec().unwrap_or_default();
 
         let accuracy = 100.0 * counts.iter().filter(|&&x| x == NUM_CLASSES as u8).count() as f64 / counts.len() as f64;
 

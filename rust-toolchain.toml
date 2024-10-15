@@ -1,0 +1,5 @@
+[toolchain]
+channel = "nightly-2024-10-12"
+# components = [ "rustfmt", "rustc-dev", "clippy" ]
+# targets = [ "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "wasm32-unknown-unknown" ]
+# profile = "minimal"

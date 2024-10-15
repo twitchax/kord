@@ -4,7 +4,7 @@
 
 use std::time::Duration;
 
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 use super::helpers::mel;
 
@@ -159,7 +159,7 @@ impl TryFrom<u8> for Pitch {
 // Statics.
 
 /// An array of all the pitches.
-pub static ALL_PITCHES: Lazy<[Pitch; 12]> = Lazy::new(|| {
+pub static ALL_PITCHES: LazyLock<[Pitch; 12]> = LazyLock::new(|| {
     [
         Pitch::C,
         Pitch::DFlat,

@@ -449,11 +449,11 @@ fn start(args: Args) -> Void {
                     }
                     #[cfg(feature = "ml_gpu")]
                     "wgpu" => {
-                        use burn_wgpu::{AutoGraphicsApi, Wgpu, WgpuDevice};
+                        use burn_wgpu::{Wgpu, WgpuDevice};
 
                         let device = WgpuDevice::default();
 
-                        klib::ml::train::run_training::<Autodiff<Wgpu<AutoGraphicsApi, f32, i32>>>(device, &config, true, true)?;
+                        klib::ml::train::run_training::<Autodiff<Wgpu>>(device, &config, true, true)?;
                     }
                     "cpu" => {
                         use burn_ndarray::{NdArray, NdArrayDevice};

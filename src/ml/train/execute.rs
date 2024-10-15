@@ -131,13 +131,13 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
 
     for kord_item in &kord_items {
         let sample = kord_item_to_sample_tensor(device, kord_item).to_device(device).detach();
-        let target: Vec<f32> = kord_item_to_target_tensor::<B>(device, kord_item).into_data().convert().value;
+        let target: Vec<f32> = kord_item_to_target_tensor::<B>(device, kord_item).into_data().to_vec().unwrap_or_default();
         let target_array: [_; NUM_CLASSES] = target.clone().try_into().unwrap();
         let target_binary = binary_to_u128(&target_array);
 
         let deterministic = get_deterministic_guess(kord_item);
 
-        let inference = model_trained.forward(sample).to_data().convert().value.into_iter().collect::<Vec<f32>>();
+        let inference = model_trained.forward(sample).to_data().to_vec().unwrap_or_default();
         let inferred = inference.iter().cloned().map(f32::round).collect::<Vec<_>>();
 
         if target_binary == deterministic {
