@@ -66,6 +66,9 @@ pub enum Modifier {
     /// Sharp 11 modifier.
     Sharp11,
 
+    /// Flat 13 modifier.
+    Flat13,
+
     /// Diminished modifier.
     Diminished,
 }
@@ -88,8 +91,6 @@ pub enum Extension {
     /// Flat 11 extension.
     Flat11,
 
-    /// Flat 13 extension.
-    Flat13,
     /// Sharp 13 extension.
     Sharp13,
 
@@ -145,6 +146,8 @@ impl HasStaticName for Modifier {
 
             Modifier::Sharp11 => "♯11",
 
+            Modifier::Flat13 => "♭13",
+
             Modifier::Diminished => "°",
         }
     }
@@ -159,7 +162,6 @@ impl HasStaticName for Extension {
 
             Extension::Flat11 => "♭11",
 
-            Extension::Flat13 => "♭13",
             Extension::Sharp13 => "♯13",
 
             Extension::Add2 => "add2",
@@ -192,7 +194,7 @@ pub fn likely_extension_sets() -> &'static [Vec<Extension>] {
 
 // Statics.
 
-static KNOWN_MODIFIER_SETS: LazyLock<[Vec<Modifier>; 35]> = LazyLock::new(|| {
+static KNOWN_MODIFIER_SETS: LazyLock<[Vec<Modifier>; 43]> = LazyLock::new(|| {
     [
         vec![],
         vec![Modifier::Minor],
@@ -229,21 +231,30 @@ static KNOWN_MODIFIER_SETS: LazyLock<[Vec<Modifier>; 35]> = LazyLock::new(|| {
         vec![Modifier::Sharp9, Modifier::Dominant(Degree::Nine)],
         vec![Modifier::Sharp9, Modifier::Dominant(Degree::Eleven)],
         vec![Modifier::Sharp9, Modifier::Dominant(Degree::Thirteen)],
+        vec![Modifier::Minor, Modifier::Flat13, Modifier::Dominant(Degree::Seven)],
+        vec![Modifier::Minor, Modifier::Flat13, Modifier::Dominant(Degree::Nine)],
+        vec![Modifier::Minor, Modifier::Flat13, Modifier::Dominant(Degree::Eleven)],
+        vec![Modifier::Minor, Modifier::Flat13, Modifier::Dominant(Degree::Thirteen)],
+        vec![Modifier::Minor, Modifier::Flat9, Modifier::Flat13, Modifier::Dominant(Degree::Seven)],
+        vec![Modifier::Minor, Modifier::Flat9, Modifier::Flat13, Modifier::Dominant(Degree::Nine)],
+        vec![Modifier::Minor, Modifier::Flat9, Modifier::Flat13, Modifier::Dominant(Degree::Eleven)],
+        vec![Modifier::Minor, Modifier::Flat9, Modifier::Flat13, Modifier::Dominant(Degree::Thirteen)],
     ]
 });
 
-static ONE_OFF_MODIFIER_SETS: LazyLock<[Vec<Modifier>; 6]> = LazyLock::new(|| {
+static ONE_OFF_MODIFIER_SETS: LazyLock<[Vec<Modifier>; 7]> = LazyLock::new(|| {
     [
         vec![],
-        vec![Modifier::Sharp11],
         vec![Modifier::Augmented5],
         vec![Modifier::Flat5],
         vec![Modifier::Flat9],
         vec![Modifier::Sharp9],
+        vec![Modifier::Sharp11],
+        vec![Modifier::Flat13],
     ]
 });
 
-static LIKELY_EXTENSION_SETS: LazyLock<[Vec<Extension>; 12]> = LazyLock::new(|| {
+static LIKELY_EXTENSION_SETS: LazyLock<[Vec<Extension>; 11]> = LazyLock::new(|| {
     [
         vec![],
         vec![Extension::Sus2],
@@ -255,7 +266,6 @@ static LIKELY_EXTENSION_SETS: LazyLock<[Vec<Extension>; 12]> = LazyLock::new(|| 
         vec![Extension::Add11],
         vec![Extension::Add13],
         vec![Extension::Flat11],
-        vec![Extension::Flat13],
         vec![Extension::Sharp13],
     ]
 });

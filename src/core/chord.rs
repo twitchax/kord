@@ -154,6 +154,11 @@ pub trait Chordable {
     /// Returns a new chord with a sharp 11 modifier on the implementor (most likely a [`Chord`]).
     fn sharp_eleven(self) -> Chord;
 
+    /// Returns a new chord with a flat 13 modifier on the implementor (most likely a [`Chord`]).
+    fn flat13(self) -> Chord;
+    /// Returns a new chord with a flat 13 modifier on the implementor (most likely a [`Chord`]).
+    fn flat_thirteen(self) -> Chord;
+
     // Special.
 
     /// Returns a new chord with a diminished modifier on the implementor (most likely a [`Chord`]).
@@ -186,11 +191,6 @@ pub trait Chordable {
     fn flat11(self) -> Chord;
     /// Returns a new chord with a flat 11 extension on the implementor (most likely a [`Chord`]).
     fn flat_eleven(self) -> Chord;
-
-    /// Returns a new chord with a flat 13 extension on the implementor (most likely a [`Chord`]).
-    fn flat13(self) -> Chord;
-    /// Returns a new chord with a flat 13 extension on the implementor (most likely a [`Chord`]).
-    fn flat_thirteen(self) -> Chord;
 
     /// Returns a new chord with a sharp 13 extension on the implementor (most likely a [`Chord`]).
     fn sharp13(self) -> Chord;
@@ -480,6 +480,10 @@ impl HasName for Chord {
 
         if self.modifiers.contains(&Modifier::Sharp11) && !known_name.contains("(♯11)") {
             name.push_str("(♯11)");
+        }
+
+        if self.modifiers.contains(&Modifier::Flat13) && !known_name.contains("(♭13)") {
+            name.push_str("(♭13)");
         }
 
         // Add extensions.
@@ -782,7 +786,7 @@ impl Chordable for Chord {
     }
 
     fn flat13(self) -> Chord {
-        self.with_extension(Extension::Flat13)
+        self.with_modifier(Modifier::Flat13)
     }
 
     fn flat_thirteen(self) -> Chord {
@@ -866,6 +870,14 @@ impl HasKnownChord for Chord {
                     return KnownChord::HalfDiminished(degree);
                 }
 
+                if modifiers.contains(&Modifier::Flat13) {
+                    if modifiers.contains(&Modifier::Flat9) {
+                        return KnownChord::MinorDominantFlat9Flat13(degree);
+                    }
+
+                    return KnownChord::MinorDominantFlat13(degree);
+                }
+
                 return KnownChord::MinorDominant(degree);
             }
 
@@ -901,6 +913,11 @@ impl HasKnownChord for Chord {
                 }
 
                 return KnownChord::Dominant(degree);
+            }
+
+            // This is a special case where the sharp 11 has to be "alone".
+            if self.modifiers.contains(&Modifier::Sharp11) && modifiers.len() == 1 {
+                return KnownChord::Sharp11;
             }
 
             return KnownChord::Major;
@@ -963,6 +980,10 @@ impl HasRelativeChord for Chord {
             result.push(Interval::AugmentedEleventh);
         }
 
+        if modifiers.contains(&Modifier::Flat13) {
+            result.push(Interval::MinorThirteenth);
+        }
+
         // Extensions.
 
         if extensions.contains(&Extension::Sus2) {
@@ -977,10 +998,6 @@ impl HasRelativeChord for Chord {
 
         if extensions.contains(&Extension::Flat11) {
             result.push(Interval::DiminishedEleventh);
-        }
-
-        if extensions.contains(&Extension::Flat13) {
-            result.push(Interval::MinorThirteenth);
         }
 
         if extensions.contains(&Extension::Sharp13) {
