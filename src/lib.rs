@@ -23,7 +23,7 @@
 //! // Parse a chord from a string, and inspect the scale.
 //! assert_eq!(
 //!     Chord::parse("Cm7b5").unwrap().scale(),
-//!     vec![C, D, EFlat, F, GFlat, AFlat, BFlat]
+//!     vec![C, DFlat, EFlat, F, GFlat, AFlat, BFlat]
 //! );
 //! ```
 //!

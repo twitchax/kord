@@ -140,9 +140,9 @@ impl<B: Backend> Metric for KordAccuracyMetric<B> {
         let target_round = targets.greater_equal_elem(0.5).int();
         let output_round = outputs.greater_equal_elem(0.5).int();
 
-        let counts: Vec<u8> = target_round.equal(output_round).int().sum_dim(1).into_data().to_vec().unwrap_or_default();
+        let counts: Vec<i64> = target_round.equal(output_round).int().sum_dim(1).into_data().to_vec().unwrap();
 
-        let accuracy = 100.0 * counts.iter().filter(|&&x| x == NUM_CLASSES as u8).count() as f64 / counts.len() as f64;
+        let accuracy = 100.0 * counts.iter().filter(|&&x| x == NUM_CLASSES as i64).count() as f64 / counts.len() as f64;
 
         self.state.update(accuracy, batch_size, FormatOptions::new("Accuracy").unit("%").precision(2))
     }
