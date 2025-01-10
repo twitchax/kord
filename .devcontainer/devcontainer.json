@@ -1,36 +1,46 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/rust
 {
-	"name": "Rust",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/rust:0-1-bullseye",
-	"features": {
-		"ghcr.io/devcontainers/features/docker-in-docker:2": {},
-		"ghcr.io/devcontainers/features/nvidia-cuda:1": {},
-		"ghcr.io/dhoeric/features/flyctl:1": {}
-	}
-
-	// Use 'mounts' to make the cargo cache persistent in a Docker Volume.
-	// "mounts": [
-	// 	{
-	// 		"source": "devcontainer-cargo-cache-${devcontainerId}",
-	// 		"target": "/usr/local/cargo",
-	// 		"type": "volume"
-	// 	}
-	// ]
-
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "rustc --version",
-
-	// Configure tool-specific properties.
-	// "customizations": {},
-
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+    "name": "Rust Development Container",
+    "image": "mcr.microsoft.com/devcontainers/rust:bookworm",
+    "init": true,
+    //"capAdd": ["SYS_PTRACE"],
+    //"securityOpt": ["seccomp=unconfined"]
+    "customizations": {
+        "vscode": {
+			"settings": {
+                
+            },
+            "extensions": [
+                "rust-lang.rust-analyzer",
+                "vadimcn.vscode-lldb",
+                "mutantdino.resourcemonitor",
+                "tamasfe.even-better-toml",
+				"fill-labs.dependi",
+				"ms-azuretools.vscode-docker",
+				"usernamehw.errorlens",
+				"GitHub.copilot",
+				"GitHub.copilot-chat",
+				"GitHub.vscode-pull-request-github",
+				"eamodio.gitlens",
+				"tamasfe.even-better-toml",
+				"bierner.lit-html",
+				"qiaojie.binary-viewer",
+				"naumovs.color-highlight",
+				"GitHub.vscode-github-actions"
+            ]
+        }
+    },
+    "remoteUser": "vscode",
+    "features": {
+        "git": "latest",
+        "node": "latest",
+        "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+        "ghcr.io/devcontainers/features/nvidia-cuda:1": {}
+    },
+    "mounts": [
+		{
+			"source": "devcontainer-cargo-cache-${devcontainerId}",
+			"target": "/usr/local/cargo",
+			"type": "volume"
+		}
+	]
 }
