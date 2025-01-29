@@ -32,6 +32,8 @@ pub const NUM_CLASSES: usize = 128;
 /// The training configuration used for all training, inference, and hyper parameter tuning.
 #[derive(Debug, Config)]
 pub struct TrainConfig {
+    /// The source directory for the noise assets used to generate simulated items.
+    pub noise_asset_root: String,
     /// The source directory for the gathered samples.
     pub source: String,
     /// The destination directory for the trained model.

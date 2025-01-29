@@ -1,5 +1,7 @@
 //! Helpers for training models.
 
+use std::path::Path;
+
 use burn::{
     module::{Module, ModuleVisitor, ParamId},
     tensor::{
@@ -161,14 +163,15 @@ impl<B: Backend> Numeric for KordAccuracyMetric<B> {
 // Operations for simulating kord samples.
 
 /// Create a simulated kord sample item from a noise basis and a semi-random collection of notes.
-pub fn get_simulated_kord_item(notes: &[Note], peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> KordItem {
+pub fn get_simulated_kord_item(noise_asset_root: impl AsRef<Path>, notes: &[Note], peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> KordItem {
+    let noise_asset_root = noise_asset_root.as_ref().to_str().unwrap();
     let wobble_divisor = 35.0;
 
     let mut result = match get_random_between(0.0, 4.0).round() as u32 {
-        0 | 4 => load_kord_item("assets/no_noise.bin"),
-        1 => load_kord_item("assets/pink_noise.bin"),
-        2 => load_kord_item("assets/white_noise.bin"),
-        3 => load_kord_item("assets/brown_noise.bin"),
+        0 | 4 => load_kord_item(format!("{noise_asset_root}/no_noise.bin")),
+        1 => load_kord_item(format!("{noise_asset_root}/pink_noise.bin")),
+        2 => load_kord_item(format!("{noise_asset_root}/white_noise.bin")),
+        3 => load_kord_item(format!("{noise_asset_root}/brown_noise.bin")),
         _ => unreachable!(),
     };
 
@@ -206,8 +209,11 @@ pub fn get_simulated_kord_item(notes: &[Note], peak_radius: f32, harmonic_decay:
 
 /// Create simulated kord sample item by randomly selecting notes from a list of notes,
 /// and use the given configuration.
-pub fn get_simulated_kord_items(count: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> Vec<KordItem> {
-    let results = (0..count).into_par_iter().map(|_| {
+pub fn get_simulated_kord_items<R>(noise_asset_root: R, count: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> Vec<KordItem>
+where 
+    R: AsRef<Path> + Clone + Send + Sync,
+{
+    let results = (0..count).into_par_iter().map(move |_| {
         let note_count = 60;
         let chord_count = 5;
         let mut inner_result = Vec::with_capacity(note_count * chord_count);
@@ -260,7 +266,7 @@ pub fn get_simulated_kord_items(count: usize, peak_radius: f32, harmonic_decay: 
                 notes.sort();
 
                 // Generate the sample.
-                let kord_item = get_simulated_kord_item(&notes, peak_radius, harmonic_decay, frequency_wobble);
+                let kord_item = get_simulated_kord_item(noise_asset_root.clone(), &notes, peak_radius, harmonic_decay, frequency_wobble);
 
                 inner_result.push(kord_item);
             }

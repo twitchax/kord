@@ -27,8 +27,8 @@ where
 
     let config = match TrainConfig::load_binary(CONFIG) {
         Ok(config) => config,
-        Err(_) => {
-            return Err(anyhow::Error::msg("Could not load the config from within the binary."));
+        Err(e) => {
+            return Err(anyhow::Error::msg(format!("Could not load the config from within the binary: {e}.")));
         }
     };
 

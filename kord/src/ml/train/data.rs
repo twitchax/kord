@@ -26,7 +26,10 @@ pub struct KordDataset {
 
 impl KordDataset {
     /// Load the kord dataset from the given folder.
-    pub fn from_folder_and_simulation(name: impl AsRef<Path>, count: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> (Self, Self) {
+    pub fn from_folder_and_simulation<R>(noise_asset_root: R, name: impl AsRef<Path>, count: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> (Self, Self)
+    where 
+        R: AsRef<Path> + Clone + Send + Sync,
+    {
         // First, get all of the *.bin files in the folder.
         let test_files = std::fs::read_dir(name)
             .unwrap()
@@ -36,7 +39,7 @@ impl KordDataset {
             .collect::<Vec<_>>();
 
         let test_items: Vec<_> = test_files.par_iter().map(load_kord_item).collect();
-        let train_items = get_simulated_kord_items(count, peak_radius, harmonic_decay, frequency_wobble);
+        let train_items = get_simulated_kord_items(noise_asset_root, count, peak_radius, harmonic_decay, frequency_wobble);
 
         // Return the train and test datasets.
         let train = Self { items: train_items };

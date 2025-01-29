@@ -144,12 +144,16 @@ enum MlCommand {
     /// Runs the ML trainer using burn-rs, tch-rs, and CUDA as defaults.
     #[cfg(feature = "ml_train")]
     Train {
+        /// The noise asset root for the simulated data.
+        #[arg(long, default_value = "kord/noise")]
+        noise_asset_root: String,
+
         /// The source directory for the gathered samples.
-        #[arg(long, default_value = "samples")]
+        #[arg(long, default_value = "kord/samples")]
         source: String,
 
         /// The destination directory for the trained model.
-        #[arg(long, default_value = "model")]
+        #[arg(long, default_value = "kord/model")]
         destination: String,
 
         /// The log directory for training.
@@ -255,7 +259,7 @@ enum MlCommand {
     #[cfg(feature = "ml_train")]
     Hpt {
         /// The source directory for the gathered samples.
-        #[arg(long, default_value = "samples")]
+        #[arg(long, default_value = "kord/samples")]
         source: String,
 
         /// The destination directory for the trained model.
@@ -387,6 +391,7 @@ fn start(args: Args) -> Void {
             }
             #[cfg(feature = "ml_train")]
             Some(MlCommand::Train {
+                noise_asset_root,
                 source,
                 destination,
                 log,
@@ -413,6 +418,7 @@ fn start(args: Args) -> Void {
                 use klib::ml::base::TrainConfig;
 
                 let config = TrainConfig {
+                    noise_asset_root,
                     source,
                     destination,
                     log,

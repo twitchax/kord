@@ -34,7 +34,7 @@ pub fn get_audio_data_from_file(file: impl AsRef<Path>, start: Option<Duration>,
 
     let num_samples = samples.len();
 
-    let length_in_seconds = dbg!(num_samples as f32 / (sample_rate as f32 * num_channels as f32)) as u8;
+    let length_in_seconds = ((num_samples as f32) / (sample_rate as f32 * num_channels as f32)) as u8;
 
     // Cut the samples to the nearest second.
     let data = samples[..(length_in_seconds as f32 * sample_rate as f32 * num_channels as f32) as usize].to_vec();

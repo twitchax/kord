@@ -52,6 +52,7 @@ where
     // Define the datasets.
 
     let (train_dataset, test_dataset) = KordDataset::from_folder_and_simulation(
+        &config.noise_asset_root,
         &config.source,
         config.simulation_size,
         config.simulation_peak_radius,
@@ -122,7 +123,7 @@ where
 /// Compute the overall accuracy of the model.
 #[coverage(off)]
 pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device: &B::Device) -> f32 {
-    let dataset = KordDataset::from_folder_and_simulation("samples", 0, 0.0, 0.0, 0.0);
+    let dataset = KordDataset::from_folder_and_simulation("kord/asstes", "kord/samples", 0, 0.0, 0.0, 0.0);
 
     let kord_items = dataset.1.items;
 
@@ -189,6 +190,7 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
                             for learning_rate in &learning_rates {
                                 for weight_decay in &weight_decays {
                                     let config = TrainConfig {
+                                        noise_asset_root: "kord/noise".to_string(),
                                         source: source.clone(),
                                         destination: destination.clone(),
                                         log: log.clone(),
@@ -281,6 +283,7 @@ mod tests {
         let device = NdArrayDevice::Cpu;
 
         let config = TrainConfig {
+            noise_asset_root: "noise".to_string(),
             source: "tests/samples".to_string(),
             destination: ".hidden/test_model".to_string(),
             log: ".hidden/test_log".to_string(),

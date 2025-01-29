@@ -1,6 +1,7 @@
 {
-  "source": "samples",
-  "destination": "model",
+  "noise_asset_root": "kord/noise",
+  "source": "kord/samples",
+  "destination": "kord/model",
   "log": ".hidden/train_log",
   "simulation_size": 100,
   "simulation_peak_radius": 2.0,
