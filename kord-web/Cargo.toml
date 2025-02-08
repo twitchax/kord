@@ -13,6 +13,8 @@ leptos = { version = "0.7.0", features = ["nightly"] }
 leptos_router = { version = "0.7.0", features = ["nightly"] }
 # Scoped down due to https://github.com/rust-lang/rust/issues/130323.
 axum = { version = "0.7", default-features = false, features = ["json", "matched-path", "original-uri", "tower-log", "tracing", "form", "query"], optional = true }
+# This can be bumped to 0.6.2+ when axum bumps (waiting on leptos_axum). 
+axum-insights = { version = "0.5.2", optional = true, default-features = false }
 console_error_panic_hook = { version = "0.1", optional = true}
 # Tell leptos_axum to use a wasm-friendly executor.
 leptos_axum = { version = "0.7.0", default-features = false, features = ["wasm"], optional = true }
@@ -33,6 +35,7 @@ hydrate = [
 ]
 ssr = [
     "dep:axum",
+    "dep:axum-insights",
     "dep:tokio",
     "dep:leptos_axum",
     "dep:tower",

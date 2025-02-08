@@ -1,6 +1,7 @@
 use std::io::Read;
 
 use axum::{response::IntoResponse, routing::get, Router};
+use axum_insights::AppInsights;
 use futures::TryStreamExt;
 use leptos::config::get_configuration;
 use leptos_axum::{generate_route_list, LeptosRoutes};
@@ -15,6 +16,8 @@ use wasi::{
 
 use crate::{api::hello, app::{shell, App}};
 
+// Only export if compiling against WASI.
+#[cfg(target_arch = "wasm32")]
 export!(LeptosServer with_types_in wasi);
 
 struct LeptosServer;
@@ -41,6 +44,14 @@ async fn handle(wasi_request: IncomingRequest, wasi_response_outparam: ResponseO
     let conf = get_configuration(None).unwrap();
     let leptos_options = conf.leptos_options;
     let routes = generate_route_list(App);
+    
+    let telemetry_layer = AppInsights::default()
+        .with_connection_string(None)
+        .with_service_config("twitchax", "kord", "server1")
+        .with_live_metrics(true)
+        .build_and_set_global_default()
+        .unwrap()
+        .layer();
 
     let app = Router::new()
         .leptos_routes(&leptos_options, routes, {
@@ -58,6 +69,7 @@ async fn handle(wasi_request: IncomingRequest, wasi_response_outparam: ResponseO
                     (axum::http::StatusCode::NOT_FOUND, "Not Found".to_string()).into_response()
                 })
         })
+        .layer(telemetry_layer)
         .with_state(leptos_options);
 
     let axum_request = prepare_request(wasi_request)?;

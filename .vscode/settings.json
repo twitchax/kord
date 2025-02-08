@@ -4,6 +4,7 @@
         "ml_gpu", 
         //"plot",
         "ml_infer",
-        //"wasm"
+        //"wasm",
+        "ssr"
     ]
 }

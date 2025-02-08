@@ -1,0 +1,5 @@
+# .dockerignore
+
+**/target/
+**/kord/samples/
+**/.git/
