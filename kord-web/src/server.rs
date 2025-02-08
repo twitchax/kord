@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use axum::{response::IntoResponse, routing::get, Router};
+use axum::{http::Uri, response::IntoResponse, routing::get, Router};
 use axum_insights::AppInsights;
 use futures::TryStreamExt;
 use leptos::config::get_configuration;
@@ -59,16 +59,7 @@ async fn handle(wasi_request: IncomingRequest, wasi_response_outparam: ResponseO
             move || shell(leptos_options.clone())
         })
         .route("/api/hello/:name", get(hello))
-        .fallback(|uri: axum::http::Uri| async move {
-            let path = uri.path().split_at(1).1;
-
-            StaticAssets::get(path)
-                .map(|file| (axum::http::StatusCode::OK, [(axum::http::header::CONTENT_TYPE, file.metadata.mimetype())], file.data).into_response())
-                .unwrap_or_else(|| {
-                    println!("No route matched, returning 404!: {uri}.");
-                    (axum::http::StatusCode::NOT_FOUND, "Not Found".to_string()).into_response()
-                })
-        })
+        .fallback(static_fallback)
         .layer(telemetry_layer)
         .with_state(leptos_options);
 
@@ -77,6 +68,17 @@ async fn handle(wasi_request: IncomingRequest, wasi_response_outparam: ResponseO
     set_and_stream_response(axum_response, wasi_response_outparam).await?;
 
     Ok(())
+}
+
+async fn static_fallback(uri: Uri) -> impl IntoResponse {
+    let path = uri.path().split_at(1).1;
+
+    StaticAssets::get(path)
+        .map(|file| (axum::http::StatusCode::OK, [(axum::http::header::CONTENT_TYPE, file.metadata.mimetype())], file.data).into_response())
+        .unwrap_or_else(|| {
+            println!("No route matched, returning 404!: {uri}.");
+            (axum::http::StatusCode::NOT_FOUND, "Not Found".to_string()).into_response()
+        })
 }
 
 fn prepare_request(wasi_request: IncomingRequest) -> Result<axum::http::Request<axum::body::Body>, String> {
