@@ -12,25 +12,38 @@ crate-type = ["cdylib", "rlib"]
 leptos = { version = "0.7.0", features = ["nightly"] }
 leptos_router = { version = "0.7.0", features = ["nightly"] }
 # Scoped down due to https://github.com/rust-lang/rust/issues/130323.
-axum = { version = "0.7", default-features = false, features = ["json", "matched-path", "original-uri", "tower-log", "tracing", "form", "query"], optional = true }
-console_error_panic_hook = { version = "0.1", optional = true}
+axum = { version = "0.7", default-features = false, features = [
+    "json",
+    "matched-path",
+    "original-uri",
+    "tower-log",
+    "tracing",
+    "form",
+    "query",
+], optional = true }
+console_error_panic_hook = { version = "0.1", optional = true }
 # Tell leptos_axum to use a wasm-friendly executor.
-leptos_axum = { version = "0.7.0", default-features = false, features = ["wasm"], optional = true }
+leptos_axum = { version = "0.7.0", default-features = false, features = [
+    "wasm",
+], optional = true }
 leptos_meta = { version = "0.7.0" }
 # Scoped down to minimal set.
-tokio = { version = "1", default-features = false, features = ["sync", "rt", "time"], optional = true }
+tokio = { version = "1", default-features = false, features = [
+    "sync",
+    "rt",
+    "time",
+], optional = true }
 wasm-bindgen = { version = "=0.2.100", optional = true }
-wasi = { version = "0.14.0+wasi-0.2.3", optional = true }
+wasi = { version = "0.14.2+wasi-0.2.4", optional = true }
 tower = { version = "0.5.2", optional = true }
 futures = { version = "0.3.31", optional = true }
-rust-embed = { version = "8.5.0", features = ["debug-embed", "mime-guess"], optional = true }
+rust-embed = { version = "8.5.0", features = [
+    "debug-embed",
+    "mime-guess",
+], optional = true }
 
 [features]
-hydrate = [
-    "dep:console_error_panic_hook",
-    "dep:wasm-bindgen",
-    "leptos/hydrate",
-]
+hydrate = ["dep:console_error_panic_hook", "dep:wasm-bindgen", "leptos/hydrate"]
 ssr = [
     "dep:axum",
     "dep:tokio",

@@ -2744,7 +2744,7 @@ dependencies = [
  "rust-embed",
  "tokio",
  "tower",
- "wasi 0.14.0+wasi-0.2.3",
+ "wasi 0.14.2+wasi-0.2.4",
  "wasm-bindgen",
 ]
 
@@ -5572,11 +5572,11 @@ dependencies = [
 
 [[package]]
 name = "wasi"
-version = "0.14.0+wasi-0.2.3"
+version = "0.14.2+wasi-0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3d67b0bdfec72b9fbaba698033291c327ef19ce3b34efbdcd7dc402a53850d9"
+checksum = "9683f9a5a998d873c0d21fcbe3c083009670149a8fab228644b8bd36b2c48cb3"
 dependencies = [
- "wit-bindgen-rt 0.37.0",
+ "wit-bindgen-rt 0.39.0",
 ]
 
 [[package]]
@@ -6144,9 +6144,9 @@ dependencies = [
 
 [[package]]
 name = "wit-bindgen-rt"
-version = "0.37.0"
+version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc801b991c56492f87ab3086e786468f75c285a4d73017ab0ebc2fa1aed5d82c"
+checksum = "6f42320e61fe2cfd34354ecb597f86f413484a798ba44a8ca1165c58d42da6c1"
 dependencies = [
  "bitflags 2.8.0",
 ]
