@@ -103,11 +103,11 @@ rustfft = { version = "6", optional = true }
 
 # analyze
 futures-timer = { version = "3", optional = true }
-cpal = { version = "0.15.3", optional = true }
+cpal = { version = "0.16", optional = true }
 
 # ml
 serde = { version = "1", features = ["derive"], optional = true }
-rand = { version = "0.8.4", optional = true }
+rand = { version = "0.9", optional = true }
 byteorder = { version = "1", optional = true }
 bincode = { version = "2.0.0-rc.3", git = "https://github.com/bincode-org/bincode.git", default-features = false, optional = true, features = [
     "alloc",
