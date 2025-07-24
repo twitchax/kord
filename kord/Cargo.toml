@@ -90,11 +90,12 @@ parse_duration0 = { version = "3", optional = true }
 
 # cli
 clap = { version = "4", features = ["derive"], optional = true }
-futures = { version = "0.3.31", optional = true }
+futures = { version = "0.3", optional = true }
 
 # audio
-rodio = { version = "0.19.0", default-features = false, features = [
+rodio = { version = "0.21", default-features = false, features = [
     "symphonia",
+    "playback",
 ], optional = true }
 
 # analyze_base

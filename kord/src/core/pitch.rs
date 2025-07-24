@@ -59,14 +59,14 @@ use super::base::{Playable, PlaybackHandle, Res};
 #[cfg(feature = "audio")]
 impl<T: HasFrequency> Playable for T {
     fn play(&self, delay: Duration, length: Duration, fade_in: Duration) -> Res<PlaybackHandle> {
-        use rodio::{source::SineWave, OutputStream, Sink, Source};
+        use rodio::{source::SineWave, OutputStreamBuilder, Sink, Source};
 
-        let (stream, stream_handle) = OutputStream::try_default()?;
-        let sink = Sink::try_new(&stream_handle)?;
+        let stream = OutputStreamBuilder::open_default_stream()?;
+        let sink = Sink::connect_new(stream.mixer());
         let source = SineWave::new(self.frequency()).take_duration(length - delay).buffered().delay(delay).fade_in(fade_in).amplify(0.20);
         sink.append(source);
 
-        Ok(PlaybackHandle::new(stream, stream_handle, vec![sink]))
+        Ok(PlaybackHandle::new(stream, vec![sink]))
     }
 }
 

@@ -151,10 +151,10 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
     }
 
     let deterministic_accuracy = 100.0 * (deterministic_correct as f32 / kord_items.len() as f32);
-    println!("Deterministic accuracy: {}%", deterministic_accuracy);
+    println!("Deterministic accuracy: {deterministic_accuracy}%");
 
     let inference_accuracy = 100.0 * (inferrence_correct as f32 / kord_items.len() as f32);
-    println!("Inference accuracy: {}%", inference_accuracy);
+    println!("Inference accuracy: {inference_accuracy}%");
 
     inference_accuracy
 }
@@ -213,7 +213,7 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
                                         no_plots: false,
                                     };
 
-                                    println!("Running training {}/{}:\n\n{}\n", count, total, config);
+                                    println!("Running training {count}/{total}:\n\n{config}\n");
 
                                     let accuracy = match device.as_str() {
                                         #[cfg(feature = "ml_gpu")]
@@ -240,7 +240,7 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
                                     };
 
                                     if accuracy > max_accuracy {
-                                        println!("New max accuracy: {}%", accuracy);
+                                        println!("New max accuracy: {accuracy}%");
 
                                         max_accuracy = accuracy;
                                         best_config = Some(config);
@@ -262,8 +262,8 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
         println!();
         println!();
         println!();
-        println!("Best config: {}", best_config);
-        println!("Best accuracy: {}%", max_accuracy);
+        println!("Best config: {best_config}");
+        println!("Best accuracy: {max_accuracy}%");
     }
 
     Ok(())
