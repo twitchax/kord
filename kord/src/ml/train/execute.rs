@@ -11,7 +11,10 @@ use burn::{
     optim::{decay::WeightDecayConfig, AdamConfig},
     record::{BinFileRecorder, FullPrecisionSettings, Recorder},
     tensor::backend::{AutodiffBackend, Backend},
-    train::{metric::LossMetric, LearnerBuilder},
+    train::{
+        metric::{HammingScore, LossMetric},
+        LearnerBuilder,
+    },
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -25,10 +28,7 @@ use crate::{
     },
 };
 
-use super::{
-    data::{KordBatcher, KordDataset},
-    helpers::KordAccuracyMetric,
-};
+use super::data::{KordBatcher, KordDataset};
 
 use crate::ml::base::TrainConfig;
 
@@ -88,8 +88,8 @@ where
 
     if !config.no_plots {
         learner_builder = learner_builder
-            .metric_train_numeric(KordAccuracyMetric::new())
-            .metric_valid_numeric(KordAccuracyMetric::new())
+            .metric_train_numeric(HammingScore::new())
+            .metric_valid_numeric(HammingScore::new())
             .metric_train_numeric(LossMetric::new())
             .metric_valid_numeric(LossMetric::new());
     }

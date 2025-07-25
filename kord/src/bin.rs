@@ -210,7 +210,7 @@ enum MlCommand {
 
         /// The Adam optimizer weight decay.
         #[arg(long, default_value_t = 5e-4)]
-        adam_weight_decay: f64,
+        adam_weight_decay: f32,
 
         /// The Adam optimizer beta1.
         #[arg(long, default_value_t = 0.9)]

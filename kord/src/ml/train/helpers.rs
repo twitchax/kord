@@ -3,18 +3,8 @@
 use std::path::Path;
 
 use burn::{
-    module::{Module, ModuleVisitor, ParamId},
-    tensor::{
-        backend::{AutodiffBackend, Backend},
-        Tensor,
-    },
-    train::{
-        metric::{
-            state::{FormatOptions, NumericMetricState},
-            Adaptor, LossInput, Metric, MetricEntry, MetricMetadata, Numeric,
-        },
-        TrainOutput, TrainStep, ValidStep,
-    },
+    tensor::backend::{AutodiffBackend, Backend},
+    train::{MultiLabelClassificationOutput, TrainOutput, TrainStep, ValidStep},
 };
 use rand::Rng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
@@ -25,138 +15,23 @@ use crate::{
         note::{HasNoteId, Note, ALL_PITCH_NOTES},
         pitch::HasFrequency,
     },
-    ml::base::{helpers::load_kord_item, model::KordModel, KordItem, FREQUENCY_SPACE_SIZE, NUM_CLASSES},
+    ml::base::{helpers::load_kord_item, model::KordModel, KordItem, FREQUENCY_SPACE_SIZE},
 };
 
 use super::data::KordBatch;
 
-// Regularization.
-
-#[derive(Debug, Clone, Default)]
-struct L1Visitor {
-    sum: f32,
-}
-
-impl L1Visitor {
-    pub fn new() -> Self {
-        Self { sum: 0.0 }
-    }
-
-    pub fn sum(&self) -> f32 {
-        self.sum
-    }
-}
-
-impl<B: Backend> ModuleVisitor<B> for L1Visitor {
-    fn visit_float<const D: usize>(&mut self, _: &ParamId, tensor: &Tensor<B, D>) {
-        let sum: f32 = tensor.clone().powf_scalar(2.0).sum().into_data().as_slice().unwrap_or_default()[0];
-        self.sum += sum;
-    }
-}
-
-/// Compute the L1 regularization penalty.
-pub fn l1_regularization<B: Backend>(model: &KordModel<B>, lambda: f32) -> f32 {
-    let mut visitor = L1Visitor::new();
-    model.visit(&mut visitor);
-    let sum = visitor.sum();
-
-    sum * lambda
-}
-
-// Classification.
-
-/// The [classification](TrainStep) input type.
-pub struct KordClassificationOutput<B: Backend> {
-    /// The loss tensor.
-    pub loss: Tensor<B, 1>,
-    /// The output tensor.
-    pub output: Tensor<B, 2>,
-    /// The target tensor.
-    pub targets: Tensor<B, 2>,
-}
-
-impl<B: Backend> Adaptor<KordAccuracyInput<B>> for KordClassificationOutput<B> {
-    fn adapt(&self) -> KordAccuracyInput<B> {
-        KordAccuracyInput {
-            outputs: self.output.clone(),
-            targets: self.targets.clone(),
-        }
-    }
-}
-
-impl<B: Backend> Adaptor<LossInput<B>> for KordClassificationOutput<B> {
-    fn adapt(&self) -> LossInput<B> {
-        LossInput::new(self.loss.clone())
-    }
-}
-
 // Classification adapters.
 
-impl<B: AutodiffBackend> TrainStep<KordBatch<B>, KordClassificationOutput<B>> for KordModel<B> {
-    fn step(&self, item: KordBatch<B>) -> TrainOutput<KordClassificationOutput<B>> {
+impl<B: AutodiffBackend> TrainStep<KordBatch<B>, MultiLabelClassificationOutput<B>> for KordModel<B> {
+    fn step(&self, item: KordBatch<B>) -> TrainOutput<MultiLabelClassificationOutput<B>> {
         let item = self.forward_classification(item);
         TrainOutput::new(self, item.loss.backward(), item)
     }
 }
 
-impl<B: Backend> ValidStep<KordBatch<B>, KordClassificationOutput<B>> for KordModel<B> {
-    fn step(&self, item: KordBatch<B>) -> KordClassificationOutput<B> {
+impl<B: Backend> ValidStep<KordBatch<B>, MultiLabelClassificationOutput<B>> for KordModel<B> {
+    fn step(&self, item: KordBatch<B>) -> MultiLabelClassificationOutput<B> {
         self.forward_classification(item)
-    }
-}
-
-// Accuracy metrics.
-
-/// The [accuracy metric](Metric) for kord samples.
-#[derive(Default)]
-pub struct KordAccuracyMetric<B: Backend> {
-    state: NumericMetricState,
-    _b: B,
-}
-
-/// The [accuracy metric](AccuracyMetric) input type.
-pub struct KordAccuracyInput<B: Backend> {
-    outputs: Tensor<B, 2>,
-    targets: Tensor<B, 2>,
-}
-
-impl<B: Backend> KordAccuracyMetric<B> {
-    /// Create the metric.
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-
-impl<B: Backend> Metric for KordAccuracyMetric<B> {
-    type Input = KordAccuracyInput<B>;
-
-    const NAME: &'static str = "Accuracy";
-
-    fn update(&mut self, input: &KordAccuracyInput<B>, _metadata: &MetricMetadata) -> MetricEntry {
-        let [batch_size, _n_classes] = input.targets.dims();
-        let device = B::Device::default();
-
-        let targets = input.targets.clone().to_device(&device);
-        let outputs = input.outputs.clone().to_device(&device);
-
-        let target_round = targets.greater_equal_elem(0.5).int();
-        let output_round = outputs.greater_equal_elem(0.5).int();
-
-        let counts: Vec<i64> = target_round.equal(output_round).int().sum_dim(1).into_data().to_vec().unwrap();
-
-        let accuracy = 100.0 * counts.iter().filter(|&&x| x == NUM_CLASSES as i64).count() as f64 / counts.len() as f64;
-
-        self.state.update(accuracy, batch_size, FormatOptions::new("Accuracy").unit("%").precision(2))
-    }
-
-    fn clear(&mut self) {
-        self.state.reset()
-    }
-}
-
-impl<B: Backend> Numeric for KordAccuracyMetric<B> {
-    fn value(&self) -> f64 {
-        self.state.value()
     }
 }
 
@@ -210,7 +85,7 @@ pub fn get_simulated_kord_item(noise_asset_root: impl AsRef<Path>, notes: &[Note
 /// Create simulated kord sample item by randomly selecting notes from a list of notes,
 /// and use the given configuration.
 pub fn get_simulated_kord_items<R>(noise_asset_root: R, count: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> Vec<KordItem>
-where 
+where
     R: AsRef<Path> + Clone + Send + Sync,
 {
     let results = (0..count).into_par_iter().map(move |_| {
@@ -280,21 +155,21 @@ where
 
 /// Get a random item from a list of items.
 pub fn get_random_item<T: Copy>(items: &[T]) -> T {
-    let mut rng = rand::thread_rng();
-    let index = rng.gen_range(0..items.len());
+    let mut rng = rand::rng();
+    let index = rng.random_range(0..items.len());
     items[index]
 }
 
 /// Get a random number between 0 and 1.
 pub fn get_random() -> f32 {
-    let mut rng = rand::thread_rng();
-    rng.gen()
+    let mut rng = rand::rng();
+    rng.random()
 }
 
 /// Get a random number between two numbers.
 pub fn get_random_between(min: f32, max: f32) -> f32 {
-    let mut rng = rand::thread_rng();
-    rng.gen_range(min..max)
+    let mut rng = rand::rng();
+    rng.random_range(min..max)
 }
 
 // Tests.
