@@ -84,7 +84,8 @@ where
     let mut learner_builder = LearnerBuilder::new(&config.log)
         //.with_file_checkpointer::<f32>(2)
         .devices(vec![device.clone()])
-        .num_epochs(config.model_epochs);
+        .num_epochs(config.model_epochs)
+        .summary();
 
     if !config.no_plots {
         learner_builder = learner_builder

@@ -57,12 +57,13 @@ ml_train = [
     "burn-autodiff",
     "burn/train",
     "burn/std",
+    "burn/tui",
     "burn/wgpu",
     "burn/metrics",
     "burn-ndarray/std",
 ]
 ml_infer = ["ml_base", "burn", "burn-ndarray", "burn-ndarray/std"]
-ml_gpu = ["ml_train", "burn-tch", "burn-wgpu", "burn/tui"]
+ml_gpu = ["ml_train", "burn-tch", "burn-wgpu"]
 
 wasm = [
     "rodio/wasm-bindgen",
