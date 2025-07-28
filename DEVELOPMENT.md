@@ -2,15 +2,15 @@
 
 ## Get libtorch on windows
 
-You need to set the right environment variable so `tch-rs` can find the libtorch library, and download it.
+Download libtorch from https://pytorch.org/get-started/locally/, and make sure to set correct variables: https://github.com/LaurentMazare/tch-rs?tab=readme-ov-file#libtorch-manual-install.
 
-The one that works best right now is `12.8`.
+Extract to a directory, e.g. `C:\libtorch`.
 
-```bash
-export TORCH_CUDA_VERSION="cu128"
+```powershell
+# Set environment variable for libtorch
+# This is required for the build process to find libtorch
+$Env:LIBTORCH = "C:\libtorch"
 ```
-
-This will automatically download the right binaries, but you may need to turn off any VPNs you are using.
 
 ## Publish to Cargo
 
