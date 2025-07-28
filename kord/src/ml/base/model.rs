@@ -68,24 +68,12 @@ impl<B: Backend> KordModel<B> {
         let output = self.forward(item.samples);
 
         let loss = BinaryCrossEntropyLossConfig::new().with_logits(false).init(&output.device());
-        let loss = loss.forward(output.clone(), targets.clone());
+        let mut loss = loss.forward(output.clone(), targets.clone());
 
-        // let loss = MeanSquareLoss::default();
-        // let loss = loss.forward(output.clone(), targets.clone());
-
-        // let loss = BinaryCrossEntropyLoss::default();
-        // let loss = loss.forward(output.clone(), targets.clone());
-
-        // let mut loss = FocalLoss::default();
-        // loss.gamma = 2.0;
-        // let loss = loss.forward(output.clone(), targets.clone());
-
-        //let loss = loss + l1_regularization(self, 1e-4);
-
-        // let harmonic_penalty_tensor = get_harmonic_penalty_tensor().to_device(&output.device());
-        // let harmonic_loss = output.clone().matmul(harmonic_penalty_tensor).sum_dim(0).mean().mul_scalar(0.0001);
-
-        // let loss = loss + harmonic_loss;
+        // Add L1 regularization
+        // let l1_reg_strength = 1e-4;
+        // let l1_penalty = self.output.weight.val().abs().sum() * l1_reg_strength;
+        // loss = loss + l1_penalty;
 
         MultiLabelClassificationOutput { loss, output, targets }
     }

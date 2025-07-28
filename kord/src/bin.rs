@@ -453,7 +453,7 @@ fn start(args: Args) -> Void {
 
                         klib::ml::train::run_training::<Autodiff<LibTorch<f32>>>(device, &config, true, true)?;
                     }
-                    #[cfg(feature = "ml_gpu")]
+                    #[cfg(feature = "ml_wgpu")]
                     "wgpu" => {
                         use burn_wgpu::{Wgpu, WgpuDevice};
 
