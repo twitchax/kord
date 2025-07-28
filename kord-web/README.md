@@ -22,6 +22,8 @@ rustup target add wasm32-wasip2
 cargo leptos build --release && LEPTOS_OUTPUT_NAME=kord-web cargo build --lib --release --target wasm32-wasip2 --no-default-features --features ssr
 ```
 
+> NOTE: The first command may throw any error because the right flags are not set for the backend.  This is expected, and the second command will build the backend correctly.
+
 The first command (`cargo leptos build`) builds the frontend _and_ backed, with the frontend in `front` + `site`, and the backend in `release` as a native executable.  Really, we could _just_ build the frontend, but this is easier for now.
 
 However, we want the backend to be built with WASI, hence the second command (`cargo build --target wasm32-wasip2`).  This will create a `wasm32-wasip2` binary in `target/wasm32-wasip2/release`.

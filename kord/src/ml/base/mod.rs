@@ -67,7 +67,7 @@ pub struct TrainConfig {
     /// The Adam optimizer learning rate.
     pub adam_learning_rate: f64,
     /// The Adam optimizer weight decay.
-    pub adam_weight_decay: f64,
+    pub adam_weight_decay: f32,
     /// The Adam optimizer beta1.
     pub adam_beta1: f32,
     /// The Adam optimizer beta2.

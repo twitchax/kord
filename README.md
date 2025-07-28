@@ -12,6 +12,8 @@
 
 A music theory binary and library for Rust / JS (via WASM) ([capability playground](https://kord.twitchax.com/)).
 
+> **Note**: The [`kord-web`](kord-web/) directory contains a web application that serves as a demonstration and example of how to integrate the Kord library with modern web frameworks. It is not part of the core library but showcases the library's WASM capabilities in a real-world web application (and it us the example website linked in this README).
+
 ## Binary Usage
 
 ### Install

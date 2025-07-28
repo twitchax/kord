@@ -2,6 +2,8 @@
 
 use core::f32;
 
+#[cfg(feature = "ml_train")]
+use burn::train::MultiLabelClassificationOutput;
 use burn::{
     module::Module,
     nn::{
@@ -14,7 +16,7 @@ use burn::{
 use super::{helpers::Sigmoid, INPUT_SPACE_SIZE, NUM_CLASSES};
 
 #[cfg(feature = "ml_train")]
-use crate::ml::train::{data::KordBatch, helpers::KordClassificationOutput};
+use crate::ml::train::data::KordBatch;
 
 /// The Kord model.
 ///
@@ -59,32 +61,20 @@ impl<B: Backend> KordModel<B> {
 
     /// Applies the forward classification pass on the input tensor.
     #[cfg(feature = "ml_train")]
-    pub fn forward_classification(&self, item: KordBatch<B>) -> KordClassificationOutput<B> {
-        use burn::nn::loss::MseLoss;
+    pub fn forward_classification(&self, item: KordBatch<B>) -> MultiLabelClassificationOutput<B> {
+        use burn::nn::loss::BinaryCrossEntropyLossConfig;
 
         let targets = item.targets;
         let output = self.forward(item.samples);
 
-        let loss = MseLoss;
-        let loss = loss.forward(output.clone(), targets.clone(), nn::loss::Reduction::Sum);
+        let loss = BinaryCrossEntropyLossConfig::new().with_logits(false).init(&output.device());
+        let mut loss = loss.forward(output.clone(), targets.clone());
 
-        // let loss = MeanSquareLoss::default();
-        // let loss = loss.forward(output.clone(), targets.clone());
+        // Add L1 regularization
+        // let l1_reg_strength = 1e-4;
+        // let l1_penalty = self.output.weight.val().abs().sum() * l1_reg_strength;
+        // loss = loss + l1_penalty;
 
-        // let loss = BinaryCrossEntropyLoss::default();
-        // let loss = loss.forward(output.clone(), targets.clone());
-
-        // let mut loss = FocalLoss::default();
-        // loss.gamma = 2.0;
-        // let loss = loss.forward(output.clone(), targets.clone());
-
-        //let loss = loss + l1_regularization(self, 1e-4);
-
-        // let harmonic_penalty_tensor = get_harmonic_penalty_tensor().to_device(&output.device());
-        // let harmonic_loss = output.clone().matmul(harmonic_penalty_tensor).sum_dim(0).mean().mul_scalar(0.0001);
-
-        // let loss = loss + harmonic_loss;
-
-        KordClassificationOutput { loss, output, targets }
+        MultiLabelClassificationOutput { loss, output, targets }
     }
 }

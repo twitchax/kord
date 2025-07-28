@@ -8,7 +8,7 @@ use std::{
     time::Duration,
 };
 
-use rodio::{buffer::SamplesBuffer, Decoder, OutputStream, Source};
+use rodio::{buffer::SamplesBuffer, Decoder, OutputStreamBuilder, Sink, Source};
 
 use crate::core::{base::Res, note::Note};
 
@@ -26,7 +26,7 @@ pub fn get_audio_data_from_file(file: impl AsRef<Path>, start: Option<Duration>,
     let path = file.as_ref();
     let start = start.unwrap_or_default();
 
-    let decoder = Decoder::new(File::open(path)?)?.skip_duration(start).convert_samples();
+    let decoder = Decoder::new(File::open(path)?)?.skip_duration(start);
 
     let num_channels = decoder.channels();
     let sample_rate = decoder.sample_rate();
@@ -53,15 +53,18 @@ pub fn preview_audio_file_clip(file: impl AsRef<Path>, start: Option<Duration>, 
 #[coverage(off)]
 pub fn preview_audio_clip(stream: impl Read + Seek + Send + Sync + 'static, start: Option<Duration>, end: Option<Duration>) -> Res<()> {
     let start = start.unwrap_or_default();
-    let decoder = Decoder::new(stream)?.skip_duration(start).convert_samples();
+    let decoder = Decoder::new(stream)?.skip_duration(start);
 
-    let (_stream, stream_handle) = OutputStream::try_default()?;
+    let stream = OutputStreamBuilder::open_default_stream()?;
+    let sink = Sink::connect_new(stream.mixer());
 
     if let Some(end) = end {
-        stream_handle.play_raw(decoder.take_duration(end - start))?;
+        stream.mixer().add(decoder.take_duration(end - start));
+        sink.play();
         sleep(end - start);
     } else if let Some(duration) = decoder.total_duration() {
-        stream_handle.play_raw(decoder)?;
+        stream.mixer().add(decoder);
+        sink.play();
         sleep(duration);
     } else {
         let channels = decoder.channels();
@@ -70,7 +73,8 @@ pub fn preview_audio_clip(stream: impl Read + Seek + Send + Sync + 'static, star
 
         let time = Duration::from_secs((samples.len() as f32 / sample_rate).ceil() as u64);
 
-        stream_handle.play_raw(SamplesBuffer::new(channels, sample_rate as u32, samples))?;
+        stream.mixer().add(SamplesBuffer::new(channels, sample_rate as u32, samples));
+        sink.play();
 
         sleep(time);
     }

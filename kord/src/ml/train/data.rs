@@ -4,7 +4,7 @@ use std::path::Path;
 
 use burn::{
     data::{dataloader::batcher::Batcher, dataset::Dataset},
-    tensor::{backend::Backend, Tensor},
+    tensor::{backend::Backend, Int, Tensor},
 };
 use rayon::prelude::*;
 
@@ -27,7 +27,7 @@ pub struct KordDataset {
 impl KordDataset {
     /// Load the kord dataset from the given folder.
     pub fn from_folder_and_simulation<R>(noise_asset_root: R, name: impl AsRef<Path>, count: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> (Self, Self)
-    where 
+    where
         R: AsRef<Path> + Clone + Send + Sync,
     {
         // First, get all of the *.bin files in the folder.
@@ -80,17 +80,17 @@ pub struct KordBatch<B: Backend> {
     /// The samples in the batch.
     pub samples: Tensor<B, 2>,
     /// The targets in the batch.
-    pub targets: Tensor<B, 2>,
+    pub targets: Tensor<B, 2, Int>,
 }
 
-impl<B: Backend> Batcher<KordItem, KordBatch<B>> for KordBatcher<B> {
-    fn batch(&self, items: Vec<KordItem>) -> KordBatch<B> {
+impl<B: Backend> Batcher<B, KordItem, KordBatch<B>> for KordBatcher<B> {
+    fn batch(&self, items: Vec<KordItem>, _device: &B::Device) -> KordBatch<B> {
         let samples = items.iter().map(|i| kord_item_to_sample_tensor(&self.device, i)).collect();
 
         let targets = items.iter().map(|i| kord_item_to_target_tensor(&self.device, i)).collect();
 
         let frequency_spaces = Tensor::cat(samples, 0).to_device(&self.device).detach();
-        let targets = Tensor::cat(targets, 0).to_device(&self.device).detach();
+        let targets = Tensor::cat(targets, 0).int().to_device(&self.device); // No need to detach targets because `int()` essentially creates a new tensor.
 
         KordBatch { samples: frequency_spaces, targets }
     }

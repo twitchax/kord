@@ -68,7 +68,7 @@ pub fn save_kord_item(destination: impl AsRef<Path>, prefix: &str, note_names: &
     let hash = hasher.finish();
 
     // Write the file.
-    let path = destination.as_ref().join(format!("{}{}_{}.bin", prefix, note_names, hash));
+    let path = destination.as_ref().join(format!("{prefix}{note_names}_{hash}.bin"));
     let mut f = File::create(&path)?;
     f.write_all(&output_data)?;
 

@@ -11,7 +11,10 @@ use burn::{
     optim::{decay::WeightDecayConfig, AdamConfig},
     record::{BinFileRecorder, FullPrecisionSettings, Recorder},
     tensor::backend::{AutodiffBackend, Backend},
-    train::{metric::LossMetric, LearnerBuilder},
+    train::{
+        metric::{HammingScore, LossMetric},
+        LearnerBuilder,
+    },
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -25,10 +28,7 @@ use crate::{
     },
 };
 
-use super::{
-    data::{KordBatcher, KordDataset},
-    helpers::KordAccuracyMetric,
-};
+use super::data::{KordBatcher, KordDataset};
 
 use crate::ml::base::TrainConfig;
 
@@ -84,12 +84,13 @@ where
     let mut learner_builder = LearnerBuilder::new(&config.log)
         //.with_file_checkpointer::<f32>(2)
         .devices(vec![device.clone()])
-        .num_epochs(config.model_epochs);
+        .num_epochs(config.model_epochs)
+        .summary();
 
     if !config.no_plots {
         learner_builder = learner_builder
-            .metric_train_numeric(KordAccuracyMetric::new())
-            .metric_valid_numeric(KordAccuracyMetric::new())
+            .metric_train_numeric(HammingScore::new())
+            .metric_valid_numeric(HammingScore::new())
             .metric_train_numeric(LossMetric::new())
             .metric_valid_numeric(LossMetric::new());
     }
@@ -151,10 +152,10 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
     }
 
     let deterministic_accuracy = 100.0 * (deterministic_correct as f32 / kord_items.len() as f32);
-    println!("Deterministic accuracy: {}%", deterministic_accuracy);
+    println!("Deterministic accuracy: {deterministic_accuracy}%");
 
     let inference_accuracy = 100.0 * (inferrence_correct as f32 / kord_items.len() as f32);
-    println!("Inference accuracy: {}%", inference_accuracy);
+    println!("Inference accuracy: {inference_accuracy}%");
 
     inference_accuracy
 }
@@ -213,7 +214,7 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
                                         no_plots: false,
                                     };
 
-                                    println!("Running training {}/{}:\n\n{}\n", count, total, config);
+                                    println!("Running training {count}/{total}:\n\n{config}\n");
 
                                     let accuracy = match device.as_str() {
                                         #[cfg(feature = "ml_gpu")]
@@ -240,7 +241,7 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
                                     };
 
                                     if accuracy > max_accuracy {
-                                        println!("New max accuracy: {}%", accuracy);
+                                        println!("New max accuracy: {accuracy}%");
 
                                         max_accuracy = accuracy;
                                         best_config = Some(config);
@@ -262,8 +263,8 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
         println!();
         println!();
         println!();
-        println!("Best config: {}", best_config);
-        println!("Best accuracy: {}%", max_accuracy);
+        println!("Best config: {best_config}");
+        println!("Best accuracy: {max_accuracy}%");
     }
 
     Ok(())

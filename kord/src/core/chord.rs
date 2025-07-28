@@ -881,7 +881,7 @@ impl HasKnownChord for Chord {
                 return KnownChord::MinorDominant(degree);
             }
 
-            return KnownChord::Minor;
+            KnownChord::Minor
         } else {
             if modifiers.contains(&Modifier::Augmented5) {
                 if modifiers.contains(&Modifier::Major7) {
@@ -920,7 +920,7 @@ impl HasKnownChord for Chord {
                 return KnownChord::Sharp11;
             }
 
-            return KnownChord::Major;
+            KnownChord::Major
         }
     }
 }
@@ -1249,7 +1249,7 @@ use super::base::{Playable, PlaybackHandle};
 impl Playable for Chord {
     #[coverage(off)]
     fn play(&self, delay: Duration, length: Duration, fade_in: Duration) -> Res<PlaybackHandle> {
-        use rodio::{source::SineWave, OutputStream, Sink, Source};
+        use rodio::{source::SineWave, OutputStreamBuilder, Sink, Source};
 
         let chord_tones = self.chord();
 
@@ -1259,12 +1259,12 @@ impl Playable for Chord {
             ));
         }
 
-        let (stream, stream_handle) = OutputStream::try_default()?;
+        let stream = OutputStreamBuilder::open_default_stream()?;
 
         let mut sinks = vec![];
 
         for (k, n) in chord_tones.into_iter().enumerate() {
-            let sink = Sink::try_new(&stream_handle)?;
+            let sink = Sink::connect_new(stream.mixer());
 
             let d = delay * k as u32;
 
@@ -1275,7 +1275,7 @@ impl Playable for Chord {
             sinks.push(sink);
         }
 
-        Ok(PlaybackHandle::new(stream, stream_handle, sinks))
+        Ok(PlaybackHandle::new(stream, sinks))
     }
 }
 
