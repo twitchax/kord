@@ -22,7 +22,7 @@ use crate::{
     core::base::{Res, Void},
     ml::base::{
         data::{kord_item_to_sample_tensor, kord_item_to_target_tensor},
-        helpers::{binary_to_u128, get_deterministic_guess},
+        helpers::{binary_to_u128, get_deterministic_guess, logits_to_binary_predictions},
         model::KordModel,
         NUM_CLASSES,
     },
@@ -43,7 +43,6 @@ where
     // Define the Adam config.
 
     let adam_config = AdamConfig::new()
-        //.with_learning_rate(config.adam_learning_rate)
         .with_weight_decay(Some(WeightDecayConfig::new(config.adam_weight_decay)))
         .with_beta_1(config.adam_beta1)
         .with_beta_2(config.adam_beta2)
@@ -95,7 +94,11 @@ where
             .metric_valid_numeric(LossMetric::new());
     }
 
-    let learner = learner_builder.build(model, optimizer, ConstantLr::new(config.adam_learning_rate));
+    // let cosine_lr = CosineAnnealingLrSchedulerConfig::new(config.adam_learning_rate, config.model_epochs)
+    //    .init()
+    //    .map_err(|s| anyhow::Error::msg(format!("Failed to initialize cosine LR scheduler: {s}")))?;
+    let constant_lr = ConstantLr::new(config.adam_learning_rate);
+    let learner = learner_builder.build(model, optimizer, constant_lr);
 
     // Train the model.
 
@@ -129,7 +132,7 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
     let kord_items = dataset.1.items;
 
     let mut deterministic_correct = 0;
-    let mut inferrence_correct = 0;
+    let mut inference_correct = 0;
 
     for kord_item in &kord_items {
         let sample = kord_item_to_sample_tensor(device, kord_item).to_device(device).detach();
@@ -139,22 +142,26 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
 
         let deterministic = get_deterministic_guess(kord_item);
 
-        let inference = model_trained.forward(sample).to_data().to_vec().unwrap_or_default();
-        let inferred = inference.iter().cloned().map(f32::round).collect::<Vec<_>>();
+        // Forward pass outputs logits, apply sigmoid and threshold for inference
+        let logits = model_trained.forward(sample).detach();
+        let logits_vec: Vec<f32> = logits.into_data().to_vec().unwrap_or_default();
+
+        // Apply sigmoid and 0.5 threshold
+        let inferred = logits_to_binary_predictions(&logits_vec);
 
         if target_binary == deterministic {
             deterministic_correct += 1;
         }
 
         if target == inferred {
-            inferrence_correct += 1;
+            inference_correct += 1;
         }
     }
 
     let deterministic_accuracy = 100.0 * (deterministic_correct as f32 / kord_items.len() as f32);
     println!("Deterministic accuracy: {deterministic_accuracy}%");
 
-    let inference_accuracy = 100.0 * (inferrence_correct as f32 / kord_items.len() as f32);
+    let inference_accuracy = 100.0 * (inference_correct as f32 / kord_items.len() as f32);
     println!("Inference accuracy: {inference_accuracy}%");
 
     inference_accuracy
@@ -169,11 +176,11 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
     let peak_radiuses = [2.0];
     let harmonic_decays = [0.1];
     let frequency_wobbles = [0.4];
-    let mha_heads = [8];
-    let mha_dropouts = [0.3];
+    let mha_heads = [16]; // Reduced to 4 heads for better per-head capacity
+    let mha_dropouts = [0.3]; // Reduced dropout for better learning
     let epochs = [64];
-    let learning_rates = [1e-5];
-    let weight_decays = [5e-4];
+    let learning_rates = [1e-3];
+    let weight_decays = [1e-4];
 
     let mut count = 1;
     let total =
@@ -292,14 +299,14 @@ mod tests {
             simulation_peak_radius: 1.0,
             simulation_harmonic_decay: 0.5,
             simulation_frequency_wobble: 0.5,
-            mha_heads: 1,
+            mha_heads: 16,
             mha_dropout: 0.3,
             model_epochs: 1,
             model_batch_size: 10,
             model_workers: 1,
             model_seed: 42,
-            adam_learning_rate: 1e-4,
-            adam_weight_decay: 5e-5,
+            adam_learning_rate: 1e-3,
+            adam_weight_decay: 1e-4,
             adam_beta1: 0.9,
             adam_beta2: 0.999,
             adam_epsilon: 1e-5,

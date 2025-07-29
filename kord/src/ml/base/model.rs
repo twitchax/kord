@@ -13,7 +13,7 @@ use burn::{
     tensor::{backend::Backend, Tensor},
 };
 
-use super::{helpers::Sigmoid, INPUT_SPACE_SIZE, NUM_CLASSES};
+use super::{INPUT_SPACE_SIZE, NUM_CLASSES};
 
 #[cfg(feature = "ml_train")]
 use crate::ml::train::data::KordBatch;
@@ -25,38 +25,32 @@ use crate::ml::train::data::KordBatch;
 pub struct KordModel<B: Backend> {
     mha: MultiHeadAttention<B>,
     output: nn::Linear<B>,
-    sigmoid: Sigmoid<B>,
 }
 
 impl<B: Backend> KordModel<B> {
     /// Create the model from the given configuration.
-    pub fn new(device: &B::Device, mha_heads: usize, mha_dropout: f64, sigmoid_strength: f32) -> Self {
+    pub fn new(device: &B::Device, mha_heads: usize, mha_dropout: f64, _sigmoid_strength: f32) -> Self {
         let mha = MultiHeadAttentionConfig::new(INPUT_SPACE_SIZE, mha_heads).with_dropout(mha_dropout).init::<B>(device);
         let output = nn::LinearConfig::new(INPUT_SPACE_SIZE, NUM_CLASSES).init::<B>(device);
-        let sigmoid = Sigmoid::new(device, sigmoid_strength);
 
-        Self { mha, output, sigmoid }
+        Self { mha, output }
     }
 
     /// Applies the forward pass on the input tensor.
     pub fn forward(&self, input: Tensor<B, 2>) -> Tensor<B, 2> {
-        let x = input;
+        let [batch_size, input_size] = input.dims();
 
-        // Perform the multi-head attention transformer forward pass.
-        let [batch_size, input_size] = x.dims();
-        let attn_input = x.clone().reshape([batch_size, 1, input_size]);
-        let attn = self.mha.forward(MhaInput::new(attn_input.clone(), attn_input.clone(), attn_input));
+        // Reshape to sequence format for attention
+        let x = input.reshape([batch_size, 1, input_size]);
 
-        // Reshape the output to remove the sequence dimension.
-        let mut x = attn.context.reshape([batch_size, input_size]);
+        // Apply multi-head attention
+        let attn_output = self.mha.forward(MhaInput::new(x.clone(), x.clone(), x));
 
-        // Perform the final linear layer to map to the output dimensions.
-        x = self.output.forward(x);
+        // Flatten back to [batch_size, input_size]
+        let x = attn_output.context.reshape([batch_size, input_size]);
 
-        // Apply the sigmoid function to the output to achieve multi-classification.
-        x = self.sigmoid.forward(x);
-
-        x
+        // Final linear layer to produce logits
+        self.output.forward(x)
     }
 
     /// Applies the forward classification pass on the input tensor.
@@ -67,8 +61,8 @@ impl<B: Backend> KordModel<B> {
         let targets = item.targets;
         let output = self.forward(item.samples);
 
-        let loss = BinaryCrossEntropyLossConfig::new().with_logits(false).init(&output.device());
-        let mut loss = loss.forward(output.clone(), targets.clone());
+        let loss = BinaryCrossEntropyLossConfig::new().with_logits(true).init(&output.device());
+        let loss = loss.forward(output.clone(), targets.clone());
 
         // Add L1 regularization
         // let l1_reg_strength = 1e-4;

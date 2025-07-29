@@ -181,11 +181,11 @@ enum MlCommand {
         simulation_frequency_wobble: f32,
 
         /// The number of Multi Head Attention (MHA) heads.
-        #[arg(long, default_value_t = 8)]
+        #[arg(long, default_value_t = 16)]
         mha_heads: usize,
 
         /// The Multi Head Attention (MHA) dropout rate.
-        #[arg(long, default_value_t = 0.3)]
+        #[arg(long, default_value_t = 0.5)]
         mha_dropout: f64,
 
         /// The number of epochs to train for.
@@ -205,11 +205,11 @@ enum MlCommand {
         model_seed: u64,
 
         /// The Adam optimizer learning rate.
-        #[arg(long, default_value_t = 1e-5)]
+        #[arg(long, default_value_t = 1e-3)]
         adam_learning_rate: f64,
 
         /// The Adam optimizer weight decay.
-        #[arg(long, default_value_t = 5e-4)]
+        #[arg(long, default_value_t = 1e-4)]
         adam_weight_decay: f32,
 
         /// The Adam optimizer beta1.

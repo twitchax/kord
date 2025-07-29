@@ -217,6 +217,17 @@ pub fn fold_binary(binary: &[f32; 128]) -> [f32; 12] {
     folded
 }
 
+/// Applies sigmoid activation and 0.5 threshold to convert logits to binary predictions.
+pub fn logits_to_binary_predictions(logits: &[f32]) -> Vec<f32> {
+    logits
+        .iter()
+        .map(|&logit| {
+            let prob = 1.0 / (1.0 + (-logit).exp()); // sigmoid
+            if prob > 0.5 { 1.0 } else { 0.0 }
+        })
+        .collect()
+}
+
 // Common tensor operations.
 
 /// Module which represents a Sigmoid operation of variable strength.

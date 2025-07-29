@@ -7,7 +7,6 @@ pub mod data;
 #[cfg(feature = "analyze_mic")]
 pub mod gather;
 pub mod helpers;
-pub mod mlp;
 pub mod model;
 
 use burn::config::Config;
