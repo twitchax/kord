@@ -66,8 +66,11 @@ ml_train = [
 ml_tch = ["ml_train", "burn/tch"]
 ml_candle = ["ml_train", "burn/candle"]
 ml_ndarray = ["ml_train", "burn/ndarray"]
-ml_wgpu = ["ml_train", "burn/wgpu", "burn/fusion"]
-ml_cuda = ["ml_train", "burn/cuda", "burn/fusion"]
+ml_wgpu = ["ml_train", "burn/wgpu"]
+ml_cuda = ["ml_train", "burn/cuda"]
+
+# This flag is for wgpu and cuda fusion.
+ml_fusion = ["ml_train", "burn/fusion"]
 
 ml_candle_cuda = ["ml_candle", "burn/candle-cuda"]
 ml_candle_metal = ["ml_candle", "burn/candle-metal"]
