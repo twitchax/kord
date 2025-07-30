@@ -1,12 +1,12 @@
 //! Module for executing inference.
 
 use burn::{
+    backend::{ndarray::NdArrayDevice, NdArray},
     config::Config,
     module::Module,
     record::{BinBytesRecorder, FullPrecisionSettings, Recorder},
     tensor::backend::Backend,
 };
-use burn_ndarray::{NdArray, NdArrayDevice};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
@@ -15,7 +15,12 @@ use crate::{
         base::Res,
         note::{HasNoteId, Note},
     },
-    ml::base::{data::kord_item_to_sample_tensor, helpers::{binary_to_u128, logits_to_binary_predictions}, model::KordModel, KordItem, TrainConfig, FREQUENCY_SPACE_SIZE},
+    ml::base::{
+        data::kord_item_to_sample_tensor,
+        helpers::{binary_to_u128, logits_to_binary_predictions},
+        model::KordModel,
+        KordItem, TrainConfig, FREQUENCY_SPACE_SIZE,
+    },
 };
 
 /// Run the inference on a sample to produce a [`Vec`] of [`Note`]s.
@@ -49,10 +54,10 @@ where
     // Forward pass outputs logits, apply sigmoid and threshold for inference
     let logits = model.forward(sample).detach();
     let logits_vec: Vec<f32> = logits.into_data().to_vec().unwrap_or_default();
-    
+
     // Apply sigmoid and 0.5 threshold
     let inferred = logits_to_binary_predictions(&logits_vec);
-        
+
     let inferred_array: [_; 128] = inferred.try_into().unwrap();
     let mut inferred_notes = Note::from_id_mask(binary_to_u128(&inferred_array)).unwrap();
     inferred_notes.sort();

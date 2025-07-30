@@ -88,6 +88,7 @@ where
 
     if !config.no_plots {
         learner_builder = learner_builder
+            .metric_valid(burn::train::metric::CudaMetric::new())
             .metric_train_numeric(HammingScore::new())
             .metric_valid_numeric(HammingScore::new())
             .metric_train_numeric(LossMetric::new())
@@ -172,7 +173,7 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
 ///This method sweeps through the hyper parameters and runs training for each combination. The best
 /// hyper parameters are then printed at the end.
 #[coverage(off)]
-pub fn hyper_parameter_tuning(source: String, destination: String, log: String, device: String) -> Void {
+pub fn hyper_parameter_tuning(source: String, destination: String, log: String, backend: String) -> Void {
     let peak_radiuses = [2.0];
     let harmonic_decays = [0.1];
     let frequency_wobbles = [0.4];
@@ -223,10 +224,12 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
 
                                     println!("Running training {count}/{total}:\n\n{config}\n");
 
-                                    let accuracy = match device.as_str() {
+                                    let accuracy = match backend.as_str() {
                                         #[cfg(feature = "ml_tch")]
-                                        "gpu" => {
-                                            use burn_tch::{LibTorch, LibTorchDevice};
+                                        "tch" => {
+                                            #[cfg(not(target_os = "macos"))]
+                                            use burn::backend::libtorch::LibTorchDevice;
+                                            use burn::backend::LibTorch;
 
                                             #[cfg(not(target_os = "macos"))]
                                             let device = LibTorchDevice::Cuda(0);
@@ -235,8 +238,9 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
 
                                             run_training::<Autodiff<LibTorch<f32>>>(device, &config, true, false)?
                                         }
-                                        "cpu" => {
-                                            use burn_ndarray::{NdArray, NdArrayDevice};
+                                        #[cfg(feature = "ml_ndarray")]
+                                        "ndarray" => {
+                                            use burn::backend::{ndarray::NdArrayDevice, NdArray};
 
                                             let device = NdArrayDevice::Cpu;
 
@@ -283,8 +287,7 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
 #[cfg(feature = "ml_train")]
 mod tests {
     use super::*;
-    use burn::backend::Autodiff;
-    use burn_ndarray::{NdArray, NdArrayDevice};
+    use burn::backend::{ndarray::NdArrayDevice, Autodiff, NdArray};
 
     #[test]
     fn test_train() {

@@ -223,7 +223,11 @@ pub fn logits_to_binary_predictions(logits: &[f32]) -> Vec<f32> {
         .iter()
         .map(|&logit| {
             let prob = 1.0 / (1.0 + (-logit).exp()); // sigmoid
-            if prob > 0.5 { 1.0 } else { 0.0 }
+            if prob > 0.5 {
+                1.0
+            } else {
+                0.0
+            }
         })
         .collect()
 }

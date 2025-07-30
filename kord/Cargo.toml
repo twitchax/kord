@@ -50,29 +50,32 @@ analyze_file_alac = ["symphonia/alac", "symphonia/isomp4"]
 
 ml = ["ml_train", "ml_infer"]
 ml_base = ["serde", "byteorder", "bincode"]
+
 ml_train = [
     "ml_base",
     "rand",
     "rayon",
-    "burn-autodiff",
-    "burn-fusion",
+    "burn/autodiff",
     "burn/autotune",
-    "burn/fusion",
     "burn/train",
     "burn/std",
     "burn/tui",
     "burn/metrics",
 ]
-ml_infer = ["ml_base", "burn", "burn-ndarray", "burn-ndarray/std"]
-ml_tch = ["ml_train", "burn-tch"]
-ml_wgpu = ["ml_train", "burn-wgpu", "burn/wgpu"]
-ml_candle = ["ml_train", "burn-candle", "burn/candle"]
-ml_ndarray = ["ml_train", "burn-ndarray", "burn/ndarray", "burn-ndarray/std"]
 
-ml_remote = ["burn-remote", "burn/server"]
+ml_tch = ["ml_train", "burn/tch"]
+ml_candle = ["ml_train", "burn/candle"]
+ml_ndarray = ["ml_train", "burn/ndarray"]
+ml_wgpu = ["ml_train", "burn/wgpu", "burn/fusion"]
+ml_cuda = ["ml_train", "burn/cuda", "burn/fusion"]
 
-ml_candle_cuda = ["ml_candle", "burn-candle/cuda"]
-ml_candle_metal = ["ml_candle", "burn-candle/metal"]
+ml_candle_cuda = ["ml_candle", "burn/candle-cuda"]
+ml_candle_metal = ["ml_candle", "burn/candle-metal"]
+
+ml_remote = ["burn/remote"]
+ml_server = ["burn/server"]
+
+ml_infer = ["ml_base", "burn", "burn/ndarray"]
 
 wasm = [
     "rodio/wasm-bindgen",
@@ -125,13 +128,6 @@ bincode = { version = "2", default-features = false, optional = true, features =
 ] }
 rayon = { version = "1", optional = true }
 burn = { version = "0.18", default-features = false, optional = true }
-burn-autodiff = { version = "0.18", optional = true }
-burn-tch = { version = "0.18", optional = true }
-burn-wgpu = { version = "0.18", optional = true }
-burn-fusion = { version = "0.18", optional = true }
-burn-ndarray = { version = "0.18", default-features = false, optional = true }
-burn-candle = { version = "0.18", default-features = false, optional = true }
-burn-remote = { version = "0.18", optional = true }
 
 # plot
 plotters = { version = "0.3.7", optional = true }

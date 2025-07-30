@@ -162,8 +162,10 @@ enum MlCommand {
         #[arg(long, default_value = ".hidden/train_log")]
         log: String,
 
-        /// The backend to use for training (`tch`, `wgpu`, `candle`, or `ndarray`).
+        /// The backend to use for training (`tch`, `cuda`, `wgpu`, `candle`, or `ndarray`).
         /// This usually requires that one of the backend compilation flags was set.
+        ///
+        /// You can also use a "remote" backend, such as `ws://localhost:3000` to connect to a remote server.
         #[arg(long, default_value = "tch")]
         backend: String,
 
@@ -279,8 +281,8 @@ enum MlCommand {
     },
 
     /// Runs a "training server" that can be used by an `ml train` command remotely.
-    #[cfg(feature = "ml_remote")]
-    Server {
+    #[cfg(feature = "ml_server")]
+    Serve {
         /// The port to bind the server to.
         #[arg(long, default_value_t = 3000)]
         port: u16,
@@ -460,7 +462,9 @@ fn start(args: Args) -> Void {
                 match backend.as_str() {
                     #[cfg(feature = "ml_tch")]
                     "tch" => {
-                        use burn_tch::{LibTorch, LibTorchDevice};
+                        #[cfg(not(target_os = "macos"))]
+                        use burn::backend::libtorch::LibTorchDevice;
+                        use burn::backend::LibTorch;
 
                         #[cfg(not(target_os = "macos"))]
                         let device = LibTorchDevice::Cuda(0);
@@ -469,18 +473,27 @@ fn start(args: Args) -> Void {
 
                         klib::ml::train::run_training::<Autodiff<LibTorch<f32>>>(device, &config, true, true)?;
                     }
+                    #[cfg(feature = "ml_cuda")]
+                    "cuda" => {
+                        use burn::backend::{cuda::CudaDevice, Cuda};
+
+                        let device = CudaDevice::default();
+
+                        klib::ml::train::run_training::<Autodiff<Cuda<f32>>>(device, &config, true, true)?;
+                    }
                     #[cfg(feature = "ml_wgpu")]
                     "wgpu" => {
-                        use burn_wgpu::{Wgpu, WgpuDevice};
+                        use burn::backend::{wgpu::WgpuDevice, Wgpu};
 
                         let device = WgpuDevice::default();
 
-                        klib::ml::train::run_training::<Autodiff<Wgpu>>(device, &config, true, true)?;
+                        klib::ml::train::run_training::<Autodiff<Wgpu<f32>>>(device, &config, true, true)?;
                     }
                     #[cfg(feature = "ml_candle")]
                     "candle" => {
-                        use burn_candle::{Candle, CandleDevice};
-                        use burn_fusion::Fusion;
+                        #[cfg(not(target_os = "macos"))]
+                        use burn::backend::candle::CandleDevice;
+                        use burn::backend::Candle;
 
                         #[cfg(not(target_os = "macos"))]
                         let device = CandleDevice::cuda(0);
@@ -491,15 +504,23 @@ fn start(args: Args) -> Void {
                     }
                     #[cfg(feature = "ml_ndarray")]
                     "ndarray" => {
-                        use burn_ndarray::{NdArray, NdArrayDevice};
+                        use burn::backend::{ndarray::NdArrayDevice, NdArray};
 
                         let device = NdArrayDevice::default();
 
                         klib::ml::train::run_training::<Autodiff<NdArray<f32>>>(device, &config, true, true)?;
                     }
                     _ => {
+                        #[cfg(feature = "ml_remote")]
+                        if backend.starts_with("ws://") {
+                            use burn::backend::{remote::RemoteDevice, RemoteBackend};
+
+                            let device = RemoteDevice::new(&backend);
+                            klib::ml::train::run_training::<Autodiff<RemoteBackend>>(device, &config, true, true)?;
+                        }
+
                         return Err(anyhow::Error::msg(
-                            "Invalid backend (must choose either `tch` [requires `ml_tch` feature], `wgpu` [requires `ml_wgpu` feature], `candle` [requires `ml_candle` feature], or `ndarray` [requires `ml_ndarray` feature]).",
+                            "Invalid backend (must choose either `tch` [requires `ml_tch` feature], `cuda` [requires `ml_cuda` feature], `wgpu` [requires `ml_wgpu` feature], `candle` [requires `ml_candle` feature], or `ndarray` [requires `ml_ndarray` feature]).",
                         ));
                     }
                 };
@@ -623,28 +644,24 @@ fn start(args: Args) -> Void {
 
                 hyper_parameter_tuning(source, destination, log, device)?;
             }
-            #[cfg(feature = "ml_remote")]
-            Some(MlCommand::Server { port, backend }) => {
+            #[cfg(feature = "ml_server")]
+            Some(MlCommand::Serve { port, backend }) => {
                 match backend.as_str() {
-                    #[cfg(feature = "ml_tch")]
-                    "tch" => {
-                        
+                    #[cfg(feature = "ml_cuda")]
+                    "cuda" => {
+                        burn::server::start::<burn::backend::Cuda>(Default::default(), port);
                     }
                     #[cfg(feature = "ml_wgpu")]
                     "wgpu" => {
-                        
-                    }
-                    #[cfg(feature = "ml_candle")]
-                    "candle" => {
-                        
+                        burn::server::start::<burn::backend::Wgpu>(Default::default(), port);
                     }
                     #[cfg(feature = "ml_ndarray")]
                     "ndarray" => {
-
+                        burn::server::start::<burn::backend::NdArray>(Default::default(), port);
                     }
                     _ => {
                         return Err(anyhow::Error::msg(
-                            "Invalid backend (must choose either `tch` [requires `ml_tch` feature], `wgpu` [requires `ml_wgpu` feature], `candle` [requires `ml_candle` feature], or `ndarray` [requires `ml_ndarray` feature]).",
+                            "Invalid backend (must choose either `cuda` [requires `ml_cuda` feature], `wgpu` [requires `ml_wgpu` feature], or `ndarray` [requires `ml_ndarray` feature]).",
                         ));
                     }
                 };
