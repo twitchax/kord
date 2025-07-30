@@ -520,7 +520,7 @@ fn start(args: Args) -> Void {
                         }
 
                         return Err(anyhow::Error::msg(
-                            "Invalid backend (must choose either `tch` [requires `ml_tch` feature], `cuda` [requires `ml_cuda` feature], `wgpu` [requires `ml_wgpu` feature], `candle` [requires `ml_candle` feature], or `ndarray` [requires `ml_ndarray` feature]).",
+                            "Invalid backend (must choose either `tch` [requires `ml_tch` feature], `cuda` [requires `ml_cuda` feature], `wgpu` [requires `ml_wgpu` feature], `candle` [requires `ml_candle` feature], `ndarray` [requires `ml_ndarray` feature]), or a remote backend (requires `ml_remote` feature).",
                         ));
                     }
                 };
