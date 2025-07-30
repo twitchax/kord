@@ -1,14 +1,14 @@
 {
     "rust-analyzer.cargo.features": [
         "ml_train",
-        "ml_infer",
-        "ml_cuda",
-        "ml_ndarray",
+        //"ml_infer",
+        //"ml_cuda",
+        //"ml_ndarray",
         "ml_tch",
-        "ml_wgpu",
-        "ml_candle",
-        "ml_server",
-        "ml_remote",
+        //"ml_wgpu",
+        //"ml_candle",
+        //"ml_server",
+        //"ml_remote",
         //"wasm",
         //"ssr"
     ],
