@@ -68,6 +68,9 @@ ml_tch = ["ml_train", "burn-tch"]
 ml_wgpu = ["ml_train", "burn-wgpu", "burn/wgpu"]
 ml_candle = ["ml_train", "burn-candle", "burn/candle"]
 ml_ndarray = ["ml_train", "burn-ndarray", "burn/ndarray", "burn-ndarray/std"]
+
+ml_remote = ["burn-remote", "burn/server"]
+
 ml_candle_cuda = ["ml_candle", "burn-candle/cuda"]
 ml_candle_metal = ["ml_candle", "burn-candle/metal"]
 
@@ -128,6 +131,7 @@ burn-wgpu = { version = "0.18", optional = true }
 burn-fusion = { version = "0.18", optional = true }
 burn-ndarray = { version = "0.18", default-features = false, optional = true }
 burn-candle = { version = "0.18", default-features = false, optional = true }
+burn-remote = { version = "0.18", optional = true }
 
 # plot
 plotters = { version = "0.3.7", optional = true }

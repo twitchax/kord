@@ -163,6 +163,7 @@ enum MlCommand {
         log: String,
 
         /// The backend to use for training (`tch`, `wgpu`, `candle`, or `ndarray`).
+        /// This usually requires that one of the backend compilation flags was set.
         #[arg(long, default_value = "tch")]
         backend: String,
 
@@ -275,6 +276,19 @@ enum MlCommand {
         /// The device to use for training.
         #[arg(long, default_value = "gpu")]
         device: String,
+    },
+
+    /// Runs a "training server" that can be used by an `ml train` command remotely.
+    #[cfg(feature = "ml_remote")]
+    Server {
+        /// The port to bind the server to.
+        #[arg(long, default_value_t = 3000)]
+        port: u16,
+
+        /// The backend to use for training (`tch`, `wgpu`, `candle`, or `ndarray`).
+        /// This usually requires that one of the backend compilation flags was set.
+        #[arg(long, default_value = "tch")]
+        backend: String,
     },
 }
 
@@ -608,6 +622,32 @@ fn start(args: Args) -> Void {
                 use klib::ml::train::execute::hyper_parameter_tuning;
 
                 hyper_parameter_tuning(source, destination, log, device)?;
+            }
+            #[cfg(feature = "ml_remote")]
+            Some(MlCommand::Server { port, backend }) => {
+                match backend.as_str() {
+                    #[cfg(feature = "ml_tch")]
+                    "tch" => {
+                        
+                    }
+                    #[cfg(feature = "ml_wgpu")]
+                    "wgpu" => {
+                        
+                    }
+                    #[cfg(feature = "ml_candle")]
+                    "candle" => {
+                        
+                    }
+                    #[cfg(feature = "ml_ndarray")]
+                    "ndarray" => {
+
+                    }
+                    _ => {
+                        return Err(anyhow::Error::msg(
+                            "Invalid backend (must choose either `tch` [requires `ml_tch` feature], `wgpu` [requires `ml_wgpu` feature], `candle` [requires `ml_candle` feature], or `ndarray` [requires `ml_ndarray` feature]).",
+                        ));
+                    }
+                };
             }
             None => {
                 return Err(anyhow::Error::msg("No subcommand given for `ml`."));
