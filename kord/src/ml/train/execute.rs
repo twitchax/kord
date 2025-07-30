@@ -224,7 +224,7 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
                                     println!("Running training {count}/{total}:\n\n{config}\n");
 
                                     let accuracy = match device.as_str() {
-                                        #[cfg(feature = "ml_gpu")]
+                                        #[cfg(feature = "ml_tch")]
                                         "gpu" => {
                                             use burn_tch::{LibTorch, LibTorchDevice};
 

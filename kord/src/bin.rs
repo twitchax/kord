@@ -1,3 +1,5 @@
+#![recursion_limit = "256"]
+
 use std::path::PathBuf;
 
 use clap::{ArgAction, Parser, Subcommand};
@@ -160,9 +162,9 @@ enum MlCommand {
         #[arg(long, default_value = ".hidden/train_log")]
         log: String,
 
-        /// The device to use for training (`gpu`, `wgpu`, or `cpu`).
-        #[arg(long, default_value = "gpu")]
-        device: String,
+        /// The backend to use for training (`tch`, `wgpu`, `candle`, or `ndarray`).
+        #[arg(long, default_value = "tch")]
+        backend: String,
 
         /// Simulation data set size.
         #[arg(long, default_value_t = 100)]
@@ -396,7 +398,7 @@ fn start(args: Args) -> Void {
                 destination,
                 log,
                 simulation_size,
-                device,
+                backend,
                 simulation_peak_radius,
                 simulation_harmonic_decay,
                 simulation_frequency_wobble,
@@ -441,9 +443,9 @@ fn start(args: Args) -> Void {
                     no_plots,
                 };
 
-                match device.as_str() {
-                    #[cfg(feature = "ml_gpu")]
-                    "gpu" => {
+                match backend.as_str() {
+                    #[cfg(feature = "ml_tch")]
+                    "tch" => {
                         use burn_tch::{LibTorch, LibTorchDevice};
 
                         #[cfg(not(target_os = "macos"))]
@@ -461,19 +463,32 @@ fn start(args: Args) -> Void {
 
                         klib::ml::train::run_training::<Autodiff<Wgpu>>(device, &config, true, true)?;
                     }
-                    "cpu" => {
+                    #[cfg(feature = "ml_candle")]
+                    "candle" => {
+                        use burn_candle::{Candle, CandleDevice};
+                        use burn_fusion::Fusion;
+
+                        #[cfg(not(target_os = "macos"))]
+                        let device = CandleDevice::cuda(0);
+                        #[cfg(target_os = "macos")]
+                        let device = CandleDevice::Cpu;
+
+                        klib::ml::train::run_training::<Autodiff<Candle<f32>>>(device, &config, true, true)?;
+                    }
+                    #[cfg(feature = "ml_ndarray")]
+                    "ndarray" => {
                         use burn_ndarray::{NdArray, NdArrayDevice};
 
-                        let device = NdArrayDevice::Cpu;
+                        let device = NdArrayDevice::default();
 
                         klib::ml::train::run_training::<Autodiff<NdArray<f32>>>(device, &config, true, true)?;
                     }
                     _ => {
                         return Err(anyhow::Error::msg(
-                            "Invalid device (must choose either `gpu` [requires `ml_gpu` feature], `wgpu` [requires `ml_gpu` feature] or `cpu`).",
+                            "Invalid backend (must choose either `tch` [requires `ml_tch` feature], `wgpu` [requires `ml_wgpu` feature], `candle` [requires `ml_candle` feature], or `ndarray` [requires `ml_ndarray` feature]).",
                         ));
                     }
-                }
+                };
             }
             #[cfg(feature = "ml_infer")]
             Some(MlCommand::Infer { infer_command }) => match infer_command {

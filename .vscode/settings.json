@@ -1,10 +1,8 @@
 {
     "rust-analyzer.cargo.features": [
-        "ml",
-        //"ml_gpu",
         "ml_train",
-        //"plot",
         "ml_infer",
+        "ml_candle",
         //"wasm",
         "ssr"
     ]

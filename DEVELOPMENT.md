@@ -66,3 +66,7 @@ docker build -f ./docker/Dockerfile -t twitchax/kord-web .
 ```bash
 docker run -it --rm -p 8080:8080 twitchax/kord-web
 ```
+
+## TODO
+
+- Hyperparameter tuning should allow all backends.
