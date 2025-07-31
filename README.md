@@ -5,7 +5,6 @@
 [![GitHub all releases](https://img.shields.io/github/downloads/twitchax/kord/total?label=binary)](https://github.com/twitchax/kord/releases)
 [![npm](https://img.shields.io/npm/dt/kordweb?label=npm)](https://www.npmjs.com/package/kordweb)
 [![Documentation](https://docs.rs/kord/badge.svg)](https://docs.rs/kord)
-[![Rust](https://img.shields.io/badge/rust-nightly-blue.svg?maxAge=3600)](https://github.com/twitchax/kord)
 [![License:MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # kord
