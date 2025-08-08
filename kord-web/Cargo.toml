@@ -1,5 +1,5 @@
 [package]
-name = "kord-web-native"
+name = "kord-web"
 version = "0.1.0"
 edition = "2021"
 
@@ -39,7 +39,7 @@ panic = "abort"
 
 [package.metadata.leptos]
 # The name used by wasm-bindgen/cargo-leptos for the JS/WASM bundle. Defaults to the crate name
-output-name = "kord-web-native"
+output-name = "kord-web"
 
 # The site root folder is where cargo-leptos generate all output. WARNING: all content of this folder will be erased on a rebuild. Use it in your server setup.
 site-root = "target/site"

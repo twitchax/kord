@@ -1,9 +1,5 @@
 [workspace]
-members = [
-    "kord",
-    #"kord-web",
-    "kord-web-native",
-]
+members = ["kord", "kord-web"]
 resolver = "2"
 
 [profile.wasm-release]

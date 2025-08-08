@@ -3,7 +3,7 @@
 async fn main() {
     use axum::Router;
     use axum_insights::AppInsights;
-    use kord_web_native::app::*;
+    use kord_web::app::*;
     use leptos::logging::log;
     use leptos::prelude::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
