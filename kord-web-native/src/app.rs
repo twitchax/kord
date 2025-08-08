@@ -1,9 +1,11 @@
-use leptos::prelude::*;
+use leptos::{logging::log, prelude::*, task::spawn_local};
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
     components::{Route, Router, Routes},
     StaticSegment,
 };
+
+use crate::api::hello;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -52,10 +54,21 @@ pub fn App() -> impl IntoView {
 fn HomePage() -> impl IntoView {
     // Creates a reactive value to update the button
     let count = RwSignal::new(0);
-    let on_click = move |_| *count.write() += 1;
+    let on_click_me = move |_| *count.write() += 1;
+    let on_click_hello = move |_| {
+        let name = "Leptos".to_string();
+
+        spawn_local(async move {
+            match hello(name).await {
+                Ok(hello_result) => log!("{hello_result}"),
+                Err(e) => log!("{e}"),
+            }
+        });
+    };
 
     view! {
         <h1>"Welcome to Leptos!"</h1>
-        <button on:click=on_click>"Click Me: " {count}</button>
+        <button on:click=on_click_me>"Click Me: " {count}</button>
+        <button on:click=on_click_hello>"Click Me for a server call"</button>
     }
 }

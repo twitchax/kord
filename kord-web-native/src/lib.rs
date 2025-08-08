@@ -1,3 +1,4 @@
+pub mod api;
 pub mod app;
 
 #[cfg(feature = "hydrate")]
