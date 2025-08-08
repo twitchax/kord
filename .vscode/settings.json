@@ -1,16 +1,16 @@
 {
-    "rust-analyzer.cargo.features": [
-        // "ml_train",
-        // "ml_infer",
-        // "ml_cuda",
-        // "ml_ndarray",
-        // "ml_tch",
-        // "ml_wgpu",
-        // "ml_candle",
-        // "ml_server",
-        // "ml_remote",
-        //"wasm",
-        "ssr"
-    ],
-    "cSpell.enabled": false
+        "rust-analyzer.cargo.features": [
+                // "ml_train",
+                // "ml_infer",
+                // "ml_cuda",
+                // "ml_ndarray",
+                // "ml_tch",
+                // "ml_wgpu",
+                // "ml_candle",
+                // "ml_server",
+                // "ml_remote",
+                //"wasm",
+                "ssr"
+        ],
+        "cSpell.enabled": false
 }
