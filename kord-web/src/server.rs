@@ -14,7 +14,10 @@ use wasi::{
     },
 };
 
-use crate::{api::hello, app::{shell, App}};
+use crate::{
+    api::hello,
+    app::{shell, App},
+};
 
 // Only export if compiling against WASI.
 #[cfg(target_arch = "wasm32")]
@@ -25,7 +28,7 @@ struct LeptosServer;
 impl IncomingHandlerGuest for LeptosServer {
     fn handle(request: IncomingRequest, response_out: ResponseOutparam) {
         println!("Handling request: `{:?}` => `{:?}`.", request.method(), request.path_with_query());
-        
+
         match tokio::runtime::Builder::new_current_thread().enable_all().build() {
             Ok(rt) => {
                 rt.block_on(async move {
@@ -44,7 +47,7 @@ async fn handle(wasi_request: IncomingRequest, wasi_response_outparam: ResponseO
     let conf = get_configuration(None).unwrap();
     let leptos_options = conf.leptos_options;
     let routes = generate_route_list(App);
-    
+
     let telemetry_layer = AppInsights::default()
         .with_connection_string(None)
         .with_service_config("twitchax", "kord", "server1")
@@ -58,7 +61,7 @@ async fn handle(wasi_request: IncomingRequest, wasi_response_outparam: ResponseO
             let leptos_options = leptos_options.clone();
             move || shell(leptos_options.clone())
         })
-        .route("/api/hello/:name", get(hello))
+        .route("/api/hello/{name}", get(hello))
         .fallback(static_fallback)
         .layer(telemetry_layer)
         .with_state(leptos_options);

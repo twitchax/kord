@@ -287,9 +287,9 @@ enum MlCommand {
         #[arg(long, default_value_t = 3000)]
         port: u16,
 
-        /// The backend to use for training (`tch`, `wgpu`, `candle`, or `ndarray`).
+        /// The backend to use for training (`cuda`, `wgpu`, `ndarray`).
         /// This usually requires that one of the backend compilation flags was set.
-        #[arg(long, default_value = "tch")]
+        #[arg(long, default_value = "wgpu")]
         backend: String,
     },
 }

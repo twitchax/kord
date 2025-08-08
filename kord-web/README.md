@@ -31,7 +31,7 @@ However, we want the backend to be built with WASI, hence the second command (`c
 ## Run
 
 ```bash
-wasmtime serve ./target/wasm32-wasip2/release/kord_web.wasm -S cli
+wasmtime serve ../target/wasm32-wasip2/release/kord_web.wasm -S cli
 ```
 
 Or,

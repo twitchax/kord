@@ -1,10 +1,14 @@
 [workspace]
-members = ["kord", "kord-web"]
+members = [
+    "kord",
+    #"kord-web",
+    "kord-web-native",
+]
 resolver = "2"
 
 [profile.wasm-release]
-inherits = "release"
-opt-level = 'z'
+opt-level = "z"
 lto = true
 codegen-units = 1
 panic = "abort"
+inherits = "release"
