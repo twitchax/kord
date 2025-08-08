@@ -1,7 +1,7 @@
 use leptos::{logging::log, prelude::*, task::spawn_local};
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
-    components::{Route, Router, Routes},
+    components::{Route, Router, Routes, A},
     StaticSegment,
 };
 
@@ -36,13 +36,25 @@ pub fn App() -> impl IntoView {
         <Stylesheet id="leptos" href="/pkg/kord-web.css"/>
 
         // sets the document title
-        <Title text="Welcome to Leptos"/>
+        <Title text="Kord - Music Theory Library"/>
 
         // content for this welcome page
         <Router>
+            <nav class="navbar">
+                <div class="navbar-brand">
+                    <A href="/">"Kord"</A>
+                </div>
+                <div class="navbar-nav">
+                    <A href="/" class:nav-link=true>"Home"</A>
+                    <A href="/about" class:nav-link=true>"About"</A>
+                    <A href="/contact" class:nav-link=true>"Contact"</A>
+                </div>
+            </nav>
             <main>
                 <Routes fallback=|| "Page not found.".into_view()>
                     <Route path=StaticSegment("") view=HomePage/>
+                    <Route path=StaticSegment("about") view=AboutPage/>
+                    <Route path=StaticSegment("contact") view=ContactPage/>
                 </Routes>
             </main>
         </Router>
@@ -67,8 +79,73 @@ fn HomePage() -> impl IntoView {
     };
 
     view! {
-        <h1>"Welcome to Leptos!"</h1>
-        <button on:click=on_click_me>"Click Me: " {count}</button>
-        <button on:click=on_click_hello>"Click Me for a server call"</button>
+        <div class="page-content">
+            <h1>"Welcome to Kord!"</h1>
+            <p>"A music theory library and CLI tool with ML capabilities."</p>
+            <div class="demo-section">
+                <h2>"Interactive Demo"</h2>
+                <button on:click=on_click_me class="demo-button">"Click Me: " {count}</button>
+                <button on:click=on_click_hello class="demo-button">"Click Me for a server call"</button>
+            </div>
+        </div>
+    }
+}
+
+/// Renders the about page.
+#[component]
+fn AboutPage() -> impl IntoView {
+    view! {
+        <div class="page-content">
+            <h1>"About Kord"</h1>
+            <p>"Kord is a comprehensive music theory library and CLI tool built in Rust with machine learning capabilities."</p>
+            
+            <h2>"Features"</h2>
+            <ul>
+                <li>"Music theory primitives (Note, Chord, Modifier)"</li>
+                <li>"Audio analysis with FFT/spectrum processing"</li>
+                <li>"Machine learning with Burn framework"</li>
+                <li>"Multi-platform support (native, WASM, WASI)"</li>
+                <li>"CLI tools for music analysis"</li>
+            </ul>
+
+            <h2>"Architecture"</h2>
+            <p>"Built as a Cargo workspace with feature flags for different deployment targets:"</p>
+            <ul>
+                <li><code>"cli"</code>" - Command line interface"</li>
+                <li><code>"analyze"</code>" - Audio processing capabilities"</li>
+                <li><code>"ml"</code>" - Machine learning features"</li>
+                <li><code>"wasm/wasi"</code>" - WebAssembly compilation targets"</li>
+            </ul>
+        </div>
+    }
+}
+
+/// Renders the contact page.
+#[component]
+fn ContactPage() -> impl IntoView {
+    view! {
+        <div class="page-content">
+            <h1>"Contact & Resources"</h1>
+            
+            <h2>"GitHub Repository"</h2>
+            <p>"Find the source code, report issues, and contribute:"</p>
+            <a href="https://github.com/twitchax/kord" target="_blank" class="link">"github.com/twitchax/kord"</a>
+
+            <h2>"Documentation"</h2>
+            <p>"Learn more about using Kord:"</p>
+            <ul>
+                <li><a href="https://docs.rs/kord" target="_blank" class="link">"API Documentation"</a></li>
+                <li>"README.md in the repository"</li>
+                <li>"DEVELOPMENT.md for contribution guidelines"</li>
+            </ul>
+
+            <h2>"Getting Started"</h2>
+            <p>"To start using Kord, you can:"</p>
+            <ol>
+                <li>"Install via cargo: " <code>"cargo install kord"</code></li>
+                <li>"Clone the repository and build from source"</li>
+                <li>"Use the WASM version for web applications"</li>
+            </ol>
+        </div>
     }
 }
