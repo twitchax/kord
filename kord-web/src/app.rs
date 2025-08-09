@@ -99,8 +99,8 @@ fn DocsPage() -> impl IntoView {
     view! {
         <div class="docs-container">
             <header class="text-center mb-12">
-                <h1 class="text-4xl font-bold text-sage-800 mb-4">"Kord Documentation"</h1>
-                <p class="text-xl text-sage-600 max-w-3xl mx-auto">
+                <h1>"Kord Documentation"</h1>
+                <p class="docs-subtitle">
                     "A powerful music theory library and CLI tool for Rust and JavaScript with ML-powered inference capabilities."
                 </p>
             </header>
