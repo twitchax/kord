@@ -1,6 +1,18 @@
 use leptos::prelude::*;
 
 #[component]
+fn Badge(
+    #[prop(optional, into)] class: Option<String>,
+    children: Children,
+) -> impl IntoView {
+    let base = "px-3 py-1 bg-sage-100 text-sage-800 rounded-full text-sm font-medium select-none";
+    let cls = class
+        .map(|c| format!("{base} {c}"))
+        .unwrap_or_else(|| base.to_string());
+    view! { <span class=cls>{children()}</span> }
+}
+
+#[component]
 pub fn DocsPage() -> impl IntoView {
     view! {
         <div class="docs-container">
@@ -18,11 +30,11 @@ pub fn DocsPage() -> impl IntoView {
                     "It features machine learning-powered chord recognition, audio analysis, and extensive music theory utilities."
                 </p>
                 <div class="flex flex-wrap gap-4 mt-6">
-                    <span class="px-3 py-1 bg-sage-100 text-sage-800 rounded-full text-sm font-medium">"Chord Analysis"</span>
-                    <span class="px-3 py-1 bg-sage-100 text-sage-800 rounded-full text-sm font-medium">"Audio Processing"</span>
-                    <span class="px-3 py-1 bg-sage-100 text-sage-800 rounded-full text-sm font-medium">"ML Inference"</span>
-                    <span class="px-3 py-1 bg-sage-100 text-sage-800 rounded-full text-sm font-medium">"Cross-Platform"</span>
-                    <span class="px-3 py-1 bg-sage-100 text-sage-800 rounded-full text-sm font-medium">"WebAssembly"</span>
+                    <Badge>"Chord Analysis"</Badge>
+                    <Badge>"Audio Processing"</Badge>
+                    <Badge>"ML Inference"</Badge>
+                    <Badge>"Cross-Platform"</Badge>
+                    <Badge>"WebAssembly"</Badge>
                 </div>
             </div>
 

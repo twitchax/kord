@@ -5,9 +5,9 @@ use leptos_router::{
     StaticSegment,
 };
 
-mod about;
-mod docs;
-mod home;
+pub mod about;
+pub mod docs;
+pub mod home;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -65,7 +65,7 @@ pub fn NavBar() -> impl IntoView {
     view! {
     <nav class="w-full fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-emerald-900 to-emerald-800 text-emerald-50 shadow-sm">
             <div class="max-w-5xl mx-auto flex items-center justify-between px-4 py-3">
-                <div class="flex items-left gap-3 ml-0 pl-4">
+                <div class="flex items-left gap-3 ml-0 pl-4 select-none">
                     <div class="h-6 w-6 rounded-md bg-emerald-600/80 ring-1 ring-white/10 flex items-center justify-center text-white text-xs font-bold shadow-sm">"♪"</div>
                     <strong class="tracking-tight">"Kord"</strong>
                 </div>
