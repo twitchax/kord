@@ -34,7 +34,12 @@ body {
 }
 
 // Typography improvements
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
 	font-weight: 600;
 	color: var(--sage-800);
 	line-height: 1.3;
@@ -70,7 +75,8 @@ p {
 }
 
 // Code styling
-code, pre {
+code,
+pre {
 	font-family: 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
 	font-feature-settings: 'liga' 1, 'calt' 1;
 }
@@ -102,7 +108,8 @@ pre code {
 }
 
 // Lists
-ul, ol {
+ul,
+ol {
 	margin: 0 0 1rem 0;
 	padding-left: 1.5rem;
 }
@@ -116,7 +123,7 @@ a {
 	color: var(--sage-600);
 	text-decoration: none;
 	transition: color 0.2s ease;
-	
+
 	&:hover {
 		color: var(--sage-700);
 		text-decoration: underline;
@@ -177,11 +184,11 @@ a {
 	align-items: center;
 }
 
-.space-y-1 > * + * {
+.space-y-1>*+* {
 	margin-top: 0.25rem;
 }
 
-.space-y-4 > * + * {
+.space-y-4>*+* {
 	margin-top: 1rem;
 }
 
@@ -215,7 +222,7 @@ a {
 	margin-bottom: 2rem;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 	transition: all 0.3s ease;
-	
+
 	&:hover {
 		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
 		transform: translateY(-2px);
@@ -235,7 +242,7 @@ a {
 	margin-bottom: 0.5rem;
 	border: 1px solid var(--sage-200);
 	transition: all 0.2s ease;
-	
+
 	&:hover {
 		background: linear-gradient(135deg, var(--sage-200), var(--sage-100));
 		transform: translateY(-1px);
@@ -244,30 +251,30 @@ a {
 }
 
 // Grid items for feature flags
-.docs-section .grid > div {
+.docs-section .grid>div {
 	background: linear-gradient(135deg, var(--sage-50), #ffffff);
 	padding: 1.25rem;
 	border-radius: 10px;
 	border: 1px solid var(--sage-200);
 	transition: all 0.2s ease;
-	
+
 	&:hover {
 		background: linear-gradient(135deg, var(--sage-100), var(--sage-50));
 		border-color: var(--sage-300);
 		transform: translateY(-2px);
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 	}
-	
+
 	h4 {
 		margin-top: 0;
 		color: var(--sage-800);
 		font-weight: 600;
 		margin-bottom: 0.75rem;
 	}
-	
+
 	ul {
 		margin: 0;
-		
+
 		li {
 			color: var(--sage-700);
 			font-size: 0.9rem;
@@ -288,7 +295,7 @@ a {
 	color: inherit;
 	position: relative;
 	overflow: hidden;
-	
+
 	&::before {
 		content: '';
 		position: absolute;
@@ -299,18 +306,18 @@ a {
 		background: linear-gradient(90deg, transparent, rgba(122, 143, 122, 0.1), transparent);
 		transition: left 0.5s ease;
 	}
-	
+
 	&:hover {
 		border-color: var(--sage-400);
 		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
 		transform: translateY(-3px);
 		text-decoration: none;
-		
+
 		&::before {
 			left: 100%;
 		}
 	}
-	
+
 	h3 {
 		margin-top: 0;
 		margin-bottom: 0.75rem;
@@ -318,7 +325,7 @@ a {
 		font-weight: 600;
 		font-size: 1.125rem;
 	}
-	
+
 	p {
 		margin: 0;
 		font-size: 0.9rem;
@@ -335,7 +342,7 @@ a {
 	border-left: 4px solid var(--sage-400);
 	margin: 0.75rem 0;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-	
+
 	code {
 		background: none;
 		padding: 0;
@@ -351,28 +358,27 @@ nav {
 	background-color: var(--sage-800);
 	color: white;
 	border-bottom: 1px solid var(--sage-700);
-	
+
 	div {
 		max-width: 1024px;
 		margin: 0 auto;
 		display: flex;
 		align-items: center;
 		gap: 1rem;
-		padding: 0.75rem 1rem;
 	}
-	
+
 	strong {
 		color: var(--sage-100);
 		font-weight: 600;
 		margin-right: 0.5rem;
 	}
-	
+
 	a {
 		font-size: 0.875rem;
 		color: var(--sage-300);
 		transition: color 0.2s ease;
 		text-decoration: none;
-		
+
 		&:hover {
 			color: var(--sage-100);
 		}
@@ -385,7 +391,7 @@ footer {
 	margin-top: 3rem;
 	padding-top: 2rem;
 	border-top: 1px solid var(--sage-200);
-	
+
 	p {
 		color: var(--sage-600);
 		margin: 0;
@@ -397,20 +403,20 @@ footer {
 	.docs-container {
 		padding: 0.5rem;
 	}
-	
+
 	.docs-section {
 		padding: 1.5rem;
 		margin-bottom: 1.5rem;
 	}
-	
+
 	h1 {
 		font-size: 2rem;
 	}
-	
+
 	h2 {
 		font-size: 1.5rem;
 	}
-	
+
 	nav div {
 		flex-wrap: wrap;
 		gap: 0.75rem;
@@ -434,7 +440,7 @@ header {
 	border: 1px solid var(--sage-200);
 	position: relative;
 	overflow: hidden;
-	
+
 	&::before {
 		content: '';
 		position: absolute;
@@ -445,14 +451,24 @@ header {
 		background: radial-gradient(circle, rgba(122, 143, 122, 0.03) 0%, transparent 70%);
 		animation: gentle-pulse 6s ease-in-out infinite;
 	}
-	
-	h1, p {
+
+	h1,
+	p {
 		position: relative;
 		z-index: 1;
 	}
 }
 
 @keyframes gentle-pulse {
-	0%, 100% { transform: scale(1); opacity: 0.5; }
-	50% { transform: scale(1.1); opacity: 0.3; }
+
+	0%,
+	100% {
+		transform: scale(1);
+		opacity: 0.5;
+	}
+
+	50% {
+		transform: scale(1.1);
+		opacity: 0.3;
+	}
 }
