@@ -412,7 +412,9 @@ KordChord.parse('C7b9')
 
             <footer class="text-center mt-12 pt-8 border-t border-sage-200">
                 <p class="text-sage-600">
-                    "Built with ♪ by the Kord team. Licensed under MIT."
+                    "Built with ♪ by the Kord team. Licensed under "
+                    <a href="https://github.com/twitchax/kord/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" class="underline hover:text-sage-800 transition-colors duration-200">"MIT"</a>
+                    "."
                 </p>
             </footer>
         </div>
