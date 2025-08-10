@@ -13,6 +13,73 @@ fn Badge(
 }
 
 #[component]
+fn Section(
+    #[prop(into)] title: String,
+    children: Children,
+) -> impl IntoView {
+    view! {
+        <div class="docs-section">
+            <h2 class="text-3xl font-semibold text-sage-800 mb-6">{title}</h2>
+            {children()}
+        </div>
+    }
+}
+
+#[component]
+fn Subheading(#[prop(into)] text: String) -> impl IntoView {
+    view! { <h3 class="text-xl font-semibold text-sage-700 mb-3">{text}</h3> }
+}
+
+#[component]
+fn CodeBlock(
+    #[prop(into)] code: String,
+    #[prop(optional, into)] class: Option<String>,
+) -> impl IntoView {
+    let base = "bg-sage-100 p-4 rounded-lg border border-sage-200";
+    let cls = class
+        .map(|c| format!("{base} {c}"))
+        .unwrap_or_else(|| base.to_string());
+    view! { <pre class=cls><code>{code}</code></pre> }
+}
+
+#[component]
+fn CardLink(
+    #[prop(into)] href: String,
+    #[prop(into)] title: String,
+    #[prop(into)] desc: String,
+) -> impl IntoView {
+    view! {
+        <a
+            href=href
+            target="_blank"
+            rel="noreferrer"
+            class="block p-4 bg-white border border-sage-200 rounded-lg hover:border-sage-300 transition-all duration-200 hover:shadow-md"
+        >
+            <h3 class="text-lg font-semibold text-sage-800 mb-2">{title}</h3>
+            <p class="text-sage-600 text-sm">{desc}</p>
+        </a>
+    }
+}
+
+#[component]
+fn Callout(children: Children) -> impl IntoView {
+    view! { <div class="bg-sage-50 p-3 rounded border-l-4 border-sage-400"><code class="text-sage-700">{children()}</code></div> }
+}
+
+#[component]
+fn Panel(
+    #[prop(into)] title: String,
+    children: Children,
+) -> impl IntoView {
+    view! {
+        <div class="bg-sage-50 p-4 rounded-lg border border-sage-200">
+            <h4 class="font-semibold text-sage-800 mb-2">{title}</h4>
+            {children()}
+        </div>
+    }
+}
+
+#[component]
 pub fn DocsPage() -> impl IntoView {
     view! {
         <div class="docs-container">
@@ -23,8 +90,7 @@ pub fn DocsPage() -> impl IntoView {
                 </p>
             </header>
 
-            <div class="docs-section">
-                <h2 class="text-3xl font-semibold text-sage-800 mb-6">"Overview"</h2>
+            <Section title="Overview">
                 <p class="text-sage-700 mb-4">
                     "Kord is a comprehensive music theory library that provides both a command-line interface and programmatic APIs for Rust and JavaScript. "
                     "It features machine learning-powered chord recognition, audio analysis, and extensive music theory utilities."
@@ -36,26 +102,25 @@ pub fn DocsPage() -> impl IntoView {
                     <Badge>"Cross-Platform"</Badge>
                     <Badge>"WebAssembly"</Badge>
                 </div>
-            </div>
+            </Section>
 
-            <div class="docs-section">
-                <h2 class="text-3xl font-semibold text-sage-800 mb-6">"Installation"</h2>
+            <Section title="Installation">
 
-                <h3 class="text-xl font-semibold text-sage-700 mb-3">"Binary Installation"</h3>
+                <Subheading text="Binary Installation" />
 
                 <div class="mb-6">
                     <h4 class="text-lg font-medium text-sage-700 mb-2">"Cargo (Recommended)"</h4>
-                    <pre class="bg-sage-100 p-4 rounded-lg border border-sage-200"><code>"$ cargo install kord"</code></pre>
+                    <CodeBlock code="$ cargo install kord" />
                 </div>
 
                 <div class="mb-6">
                     <h4 class="text-lg font-medium text-sage-700 mb-2">"NPM"</h4>
-                    <pre class="bg-sage-100 p-4 rounded-lg border border-sage-200"><code>"$ npm install --save kordweb"</code></pre>
+                    <CodeBlock code="$ npm install --save kordweb" />
                 </div>
 
                 <div class="mb-6">
                     <h4 class="text-lg font-medium text-sage-700 mb-2">"Wasmer"</h4>
-                    <pre class="bg-sage-100 p-4 rounded-lg border border-sage-200"><code>"$ wasmer install twitchax/kord"</code></pre>
+                    <CodeBlock code="$ wasmer install twitchax/kord" />
                 </div>
 
                 <div class="mb-6">
@@ -72,14 +137,13 @@ pub fn DocsPage() -> impl IntoView {
                         " page."
                     </p>
                 </div>
-            </div>
+            </Section>
 
-            <div class="docs-section">
-                <h2 class="text-3xl font-semibold text-sage-800 mb-6">"CLI Usage"</h2>
+            <Section title="CLI Usage">
 
                 <div class="mb-6">
-                    <h3 class="text-xl font-semibold text-sage-700 mb-3">"Basic Commands"</h3>
-                    <pre class="bg-sage-100 p-4 rounded-lg border border-sage-200 mb-4"><code>"$ kord -h
+                    <Subheading text="Basic Commands" />
+                    <CodeBlock class="mb-4" code="$ kord -h
 
 A tool to easily explore music theory principles.
 
@@ -89,69 +153,62 @@ Commands:
   loop      Loops on a set of chord changes
   guess     Attempt to guess the chord from notes
   analyze   Analyze audio data
-  ml        Train and infer with ML"</code></pre>
+  ml        Train and infer with ML" />
                 </div>
 
                 <div class="mb-6">
-                    <h3 class="text-xl font-semibold text-sage-700 mb-3">"Examples"</h3>
+                    <Subheading text="Examples" />
 
                     <div class="mb-4">
                         <h4 class="text-lg font-medium text-sage-700 mb-2">"Describe a Chord"</h4>
-                        <pre class="bg-sage-100 p-4 rounded-lg border border-sage-200 mb-2"><code>"$ kord describe Cmaj7"</code></pre>
-                        <div class="bg-sage-50 p-3 rounded border-l-4 border-sage-400">
-                            <code class="text-sage-700">
-                                "Cmaj7" <br/>
-                                "   major 7, ionian, first mode of major scale" <br/>
-                                "   C, D, E, F, G, A, B" <br/>
-                                "   C, E, G, B"
-                            </code>
-                        </div>
+                        <CodeBlock class="mb-2" code="$ kord describe Cmaj7" />
+                        <Callout>
+                            "Cmaj7" <br/>
+                            "   major 7, ionian, first mode of major scale" <br/>
+                            "   C, D, E, F, G, A, B" <br/>
+                            "   C, E, G, B"
+                        </Callout>
                     </div>
 
                     <div class="mb-4">
                         <h4 class="text-lg font-medium text-sage-700 mb-2">"Guess Chord from Notes"</h4>
-                        <pre class="bg-sage-100 p-4 rounded-lg border border-sage-200 mb-2"><code>"$ kord guess C F# D# A"</code></pre>
-                        <div class="bg-sage-50 p-3 rounded border-l-4 border-sage-400">
-                            <code class="text-sage-700">
-                                "Cdim" <br/>
-                                "   fully diminished, diminished seventh" <br/>
-                                "   C, D, E♭, F, G♭, A♭, B𝄫, B" <br/>
-                                "   C, E♭, G♭, B𝄫"
-                            </code>
-                        </div>
+                        <CodeBlock class="mb-2" code="$ kord guess C F# D# A" />
+                        <Callout>
+                            "Cdim" <br/>
+                            "   fully diminished, diminished seventh" <br/>
+                            "   C, D, E♭, F, G♭, A♭, B𝄫, B" <br/>
+                            "   C, E♭, G♭, B𝄫"
+                        </Callout>
                     </div>
 
                     <div class="mb-4">
                         <h4 class="text-lg font-medium text-sage-700 mb-2">"Audio Analysis"</h4>
-                        <pre class="bg-sage-100 p-4 rounded-lg border border-sage-200 mb-2"><code>"$ kord analyze mic"</code></pre>
-                        <div class="bg-sage-50 p-3 rounded border-l-4 border-sage-400">
-                            <code class="text-sage-700">
-                                "Notes: C3 E3 G3" <br/>
-                                "C@3" <br/>
-                                "   major" <br/>
-                                "   C, D, E, F, G, A, B" <br/>
-                                "   C, E, G"
-                            </code>
-                        </div>
+                        <CodeBlock class="mb-2" code="$ kord analyze mic" />
+                        <Callout>
+                            "Notes: C3 E3 G3" <br/>
+                            "C@3" <br/>
+                            "   major" <br/>
+                            "   C, D, E, F, G, A, B" <br/>
+                            "   C, E, G"
+                        </Callout>
                     </div>
                 </div>
-            </div>
+            </Section>
 
-            <div class="docs-section">
-                <h2 class="text-3xl font-semibold text-sage-800 mb-6">"Library Usage (Rust)"</h2>
+            <Section title="Library Usage (Rust)">
 
                 <div class="mb-6">
-                    <h3 class="text-xl font-semibold text-sage-700 mb-3">"Add to Cargo.toml"</h3>
-                    <pre class="bg-sage-100 p-4 rounded-lg border border-sage-200"><code>"[dependencies]
-    kord = \"*\"  # choose a version"</code></pre>
+                    <Subheading text="Add to Cargo.toml" />
+                    <CodeBlock code="[dependencies]
+    kord = \"*\"  # choose a version" />
                 </div>
 
                 <div class="mb-6">
-                    <h3 class="text-xl font-semibold text-sage-700 mb-3">"Basic Examples"</h3>
+                    <Subheading text="Basic Examples" />
 
                     <div class="mb-4">
                         <h4 class="text-lg font-medium text-sage-700 mb-2">"Create and Analyze Chords"</h4>
-                        <pre class="bg-sage-100 p-4 rounded-lg border border-sage-200"><code>"use klib::known_chord::KnownChord;
+                        <CodeBlock code="use klib::known_chord::KnownChord;
 use klib::modifier::Degree;
 use klib::note::*;
 use klib::chord::*;
@@ -160,12 +217,12 @@ use klib::chord::*;
 assert_eq!(
     Chord::new(C).augmented().seven().known_chord(), 
     KnownChord::AugmentedDominant(Degree::Seven)
-);"</code></pre>
+);" />
                     </div>
 
                     <div class="mb-4">
                         <h4 class="text-lg font-medium text-sage-700 mb-2">"Parse Chords from Strings"</h4>
-                        <pre class="bg-sage-100 p-4 rounded-lg border border-sage-200"><code>"use klib::base::Parsable;
+                        <CodeBlock code="use klib::base::Parsable;
 use klib::note::*;
 use klib::chord::*;
 
@@ -174,12 +231,12 @@ let chord = Chord::parse(\"Cm7b5\").unwrap();
 assert_eq!(
     chord.scale(), 
     vec![C, D, EFlat, F, GFlat, AFlat, BFlat]
-);"</code></pre>
+);" />
                     </div>
 
                     <div class="mb-4">
                         <h4 class="text-lg font-medium text-sage-700 mb-2">"Build Chords Fluently"</h4>
-                        <pre class="bg-sage-100 p-4 rounded-lg border border-sage-200"><code>"use klib::note::*;
+                        <CodeBlock code="use klib::note::*;
 use klib::chord::*;
 
 // Fluid chord building
@@ -188,39 +245,38 @@ let chord_tones = C.into_chord()
     .major7()
     .chord();
     
-assert_eq!(chord_tones, vec![C, E, GSharp, B]);"</code></pre>
+assert_eq!(chord_tones, vec![C, E, GSharp, B]);" />
                     </div>
                 </div>
-            </div>
+            </Section>
 
-            <div class="docs-section">
-                <h2 class="text-3xl font-semibold text-sage-800 mb-6">"JavaScript Usage"</h2>
+            <Section title="JavaScript Usage">
 
                 <div class="mb-6">
-                    <h3 class="text-xl font-semibold text-sage-700 mb-3">"Installation & Setup"</h3>
-                    <pre class="bg-sage-100 p-4 rounded-lg border border-sage-200 mb-4"><code>"npm install --save kordweb"</code></pre>
+                    <Subheading text="Installation & Setup" />
+                    <CodeBlock class="mb-4" code="npm install --save kordweb" />
 
-                    <pre class="bg-sage-100 p-4 rounded-lg border border-sage-200"><code>"import init, { KordNote, KordChord } from 'kordweb/klib.js';
+                    <CodeBlock code="import init, { KordNote, KordChord } from 'kordweb/klib.js';
 
 // Initialize the WASM module once
-await init();"</code></pre>
+await init();" />
                 </div>
 
                 <div class="mb-6">
-                    <h3 class="text-xl font-semibold text-sage-700 mb-3">"Examples"</h3>
+                    <Subheading text="Examples" />
 
                     <div class="mb-4">
                         <h4 class="text-lg font-medium text-sage-700 mb-2">"Working with Notes"</h4>
-                        <pre class="bg-sage-100 p-4 rounded-lg border border-sage-200"><code>"// Create notes
+                        <CodeBlock code="// Create notes
 const note = KordNote.parse('C4');
 
 note.name();    // \"C4\"
-note.octave();  // 4"</code></pre>
+note.octave();  // 4" />
                     </div>
 
                     <div class="mb-4">
                         <h4 class="text-lg font-medium text-sage-700 mb-2">"Building Chords"</h4>
-                        <pre class="bg-sage-100 p-4 rounded-lg border border-sage-200"><code>"// Parse and build chords
+                        <CodeBlock code="// Parse and build chords
 const chord = KordChord.parse('C7#9');
 
 chord.name();        // \"C7(♯9)\"
@@ -232,40 +288,37 @@ const notes = KordChord.parse('C')
     .seven()
     .chord()
     .map(n => n.name()); 
-// [\"C4\", \"Eb4\", \"G4\", \"Bb4\"]"</code></pre>
+// [\"C4\", \"Eb4\", \"G4\", \"Bb4\"]" />
                     </div>
 
                     <div class="mb-4">
                         <h4 class="text-lg font-medium text-sage-700 mb-2">"Chord Transformations"</h4>
-                        <pre class="bg-sage-100 p-4 rounded-lg border border-sage-200"><code>"// Transform existing chords
+                        <CodeBlock code="// Transform existing chords
 KordChord.parse('C7b9')
     .withOctave(2)
     .chord()
     .map(n => n.name()); 
-// [\"C2\", \"D♭2\", \"E2\", \"G2\", \"B♭2\"]"</code></pre>
+// [\"C2\", \"D♭2\", \"E2\", \"G2\", \"B♭2\"]" />
                     </div>
                 </div>
-            </div>
+            </Section>
 
-            <div class="docs-section">
-                <h2 class="text-3xl font-semibold text-sage-800 mb-6">"Feature Flags"</h2>
+            <Section title="Feature Flags">
                 <p class="text-sage-700 mb-4">
                     "Kord supports various feature flags for different use cases and deployment targets:"
                 </p>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div class="bg-sage-50 p-4 rounded-lg border border-sage-200">
-                        <h4 class="font-semibold text-sage-800 mb-2">"Core Features"</h4>
+                    <Panel title="Core Features">
                         <ul class="text-sm text-sage-700 space-y-1">
                             <li><code>"cli"</code> - Command-line interface</li>
                             <li><code>"audio"</code> - Audio playback support</li>
                             <li><code>"wasm"</code> - WebAssembly compilation</li>
                             <li><code>"wasi"</code> - WebAssembly System Interface</li>
                         </ul>
-                    </div>
+                    </Panel>
 
-                    <div class="bg-sage-50 p-4 rounded-lg border border-sage-200">
-                        <h4 class="font-semibold text-sage-800 mb-2">"Analysis & ML"</h4>
+                    <Panel title="Analysis & ML">
                         <ul class="text-sm text-sage-700 space-y-1">
                             <li><code>"analyze"</code> - Audio analysis</li>
                             <li><code>"analyze_mic"</code> - Microphone input</li>
@@ -275,58 +328,23 @@ KordChord.parse('C7b9')
                             <li><code>"ml_infer"</code> - Inference</li>
                             <li><code>"ml_gpu"</code> - GPU acceleration</li>
                         </ul>
-                    </div>
+                    </Panel>
                 </div>
-            </div>
+            </Section>
 
-            <div class="docs-section">
-                <h2 class="text-3xl font-semibold text-sage-800 mb-6">"API Reference"</h2>
+            <Section title="API Reference">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-4">
-                        <a
-                            href="https://docs.rs/kord/latest/klib/"
-                            target="_blank"
-                            rel="noreferrer"
-                            class="block p-4 bg-white border border-sage-200 rounded-lg hover:border-sage-300 transition-all duration-200 hover:shadow-md"
-                        >
-                            <h3 class="text-lg font-semibold text-sage-800 mb-2">"Rust Documentation"</h3>
-                            <p class="text-sage-600 text-sm">"Complete API reference for the Rust library"</p>
-                        </a>
-
-                        <a
-                            href="https://www.npmjs.com/package/kordweb"
-                            target="_blank"
-                            rel="noreferrer"
-                            class="block p-4 bg-white border border-sage-200 rounded-lg hover:border-sage-300 transition-all duration-200 hover:shadow-md"
-                        >
-                            <h3 class="text-lg font-semibold text-sage-800 mb-2">"NPM Package"</h3>
-                            <p class="text-sage-600 text-sm">"JavaScript/TypeScript package information"</p>
-                        </a>
+                        <CardLink href="https://docs.rs/kord/latest/klib/" title="Rust Documentation" desc="Complete API reference for the Rust library" />
+                        <CardLink href="https://www.npmjs.com/package/kordweb" title="NPM Package" desc="JavaScript/TypeScript package information" />
                     </div>
 
                     <div class="space-y-4">
-                        <a
-                            href="https://github.com/twitchax/kord"
-                            target="_blank"
-                            rel="noreferrer"
-                            class="block p-4 bg-white border border-sage-200 rounded-lg hover:border-sage-300 transition-all duration-200 hover:shadow-md"
-                        >
-                            <h3 class="text-lg font-semibold text-sage-800 mb-2">"Source Code"</h3>
-                            <p class="text-sage-600 text-sm">"View the source code on GitHub"</p>
-                        </a>
-
-                        <a
-                            href="https://github.com/twitchax/kord/releases"
-                            target="_blank"
-                            rel="noreferrer"
-                            class="block p-4 bg-white border border-sage-200 rounded-lg hover:border-sage-300 transition-all duration-200 hover:shadow-md"
-                        >
-                            <h3 class="text-lg font-semibold text-sage-800 mb-2">"Releases"</h3>
-                            <p class="text-sage-600 text-sm">"Download pre-built binaries"</p>
-                        </a>
+                        <CardLink href="https://github.com/twitchax/kord" title="Source Code" desc="View the source code on GitHub" />
+                        <CardLink href="https://github.com/twitchax/kord/releases" title="Releases" desc="Download pre-built binaries" />
                     </div>
                 </div>
-            </div>
+            </Section>
 
             <footer class="text-center mt-12 pt-8 border-t border-sage-200">
                 <p class="text-sage-600">
