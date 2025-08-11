@@ -22,7 +22,7 @@ pub fn HomePage() -> impl IntoView {
     };
 
     view! {
-        <PageTitle>"Welcome to Leptos!"</PageTitle>
+        <PageTitle>"Welcome to Kord!"</PageTitle>
         <div class="mt-4 flex gap-3">
             <PrimaryButton on_click=on_click_me>
                 "Click Me: " {count}
