@@ -1,3 +1,4 @@
+use crate::app::shared::NavLink;
 use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
@@ -70,9 +71,9 @@ pub fn NavBar() -> impl IntoView {
                     <strong class="tracking-tight">"Kord"</strong>
                 </div>
                 <div class="flex items-center gap-2 mr-0 pr-4">
-                    <shared::NavLink href="/">"Home"</shared::NavLink>
-                    <shared::NavLink href="/about">"About"</shared::NavLink>
-                    <shared::NavLink href="/docs">"Docs"</shared::NavLink>
+                    <NavLink href="/">"Home"</NavLink>
+                    <NavLink href="/about">"About"</NavLink>
+                    <NavLink href="/docs">"Docs"</NavLink>
                 </div>
             </div>
         </nav>

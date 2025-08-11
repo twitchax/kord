@@ -1,12 +1,13 @@
 use leptos::ev::MouseEvent;
 use leptos::prelude::*;
+use leptos_router::components::A;
 
 // Navigation link used in the navbar
 #[component]
 pub fn NavLink(href: &'static str, #[prop(optional, into)] class: Option<String>, children: Children) -> impl IntoView {
     let base = "relative px-3 py-1.5 rounded-md text-sm text-emerald-100/90 hover:text-white hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-900 transition-colors duration-200 after:absolute after:left-3 after:-bottom-0.5 after:h-0.5 after:w-0 after:bg-emerald-300 after:transition-all after:duration-300 hover:after:w-[calc(100%-1.5rem)]";
     let cls = class.map(|c| format!("{base} {c}")).unwrap_or_else(|| base.to_string());
-    view! { <leptos_router::components::A href=href attr:class=cls>{children()}</leptos_router::components::A> }
+    view! { <A href=href attr:class=cls>{children()}</A> }
 }
 
 // Small pill badge
@@ -55,7 +56,7 @@ pub fn CardLink(#[prop(into)] href: String, #[prop(into)] title: String, #[prop(
         <a
             href=href
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             class="block p-4 bg-white border border-sage-200 rounded-lg hover:border-sage-300 transition-all duration-200 hover:shadow-md"
         >
             <h3 class="text-lg font-semibold text-sage-800 mb-2">{title}</h3>
