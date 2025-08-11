@@ -1,4 +1,4 @@
-use super::shared::{Badge, Callout, CardLink, CodeBlock, Panel, Section, Subheading};
+use super::shared::{Badge, Callout, CardLink, CodeBlock, Panel, Section, Subheading, TertiaryHeading};
 use leptos::prelude::*;
 
 #[component]
@@ -31,22 +31,22 @@ pub fn DocsPage() -> impl IntoView {
                 <Subheading text="Binary Installation" />
 
                 <div class="mb-6">
-                    <h4 class="text-lg font-medium text-sage-700 mb-2">"Cargo (Recommended)"</h4>
+                    <TertiaryHeading text="Cargo (Recommended)" />
                     <CodeBlock code="$ cargo install kord" />
                 </div>
 
                 <div class="mb-6">
-                    <h4 class="text-lg font-medium text-sage-700 mb-2">"NPM"</h4>
+                    <TertiaryHeading text="NPM" />
                     <CodeBlock code="$ npm install --save kordweb" />
                 </div>
 
                 <div class="mb-6">
-                    <h4 class="text-lg font-medium text-sage-700 mb-2">"Wasmer"</h4>
+                    <TertiaryHeading text="Wasmer" />
                     <CodeBlock code="$ wasmer install twitchax/kord" />
                 </div>
 
                 <div class="mb-6">
-                    <h4 class="text-lg font-medium text-sage-700 mb-2">"Direct Download"</h4>
+                    <TertiaryHeading text="Direct Download" />
                     <p class="text-sage-600 mb-3">"Pre-built binaries are available for:"</p>
                     <ul class="list-disc list-inside text-sage-600 space-y-1">
                         <li>"Windows (x86_64)"</li>
@@ -82,7 +82,7 @@ Commands:
                     <Subheading text="Examples" />
 
                     <div class="mb-4">
-                        <h4 class="text-lg font-medium text-sage-700 mb-2">"Describe a Chord"</h4>
+                        <TertiaryHeading text="Describe a Chord" />
                         <CodeBlock class="mb-2" code="$ kord describe Cmaj7" />
                         <Callout>
                             "Cmaj7" <br/>
@@ -93,7 +93,7 @@ Commands:
                     </div>
 
                     <div class="mb-4">
-                        <h4 class="text-lg font-medium text-sage-700 mb-2">"Guess Chord from Notes"</h4>
+                        <TertiaryHeading text="Guess Chord from Notes" />
                         <CodeBlock class="mb-2" code="$ kord guess C F# D# A" />
                         <Callout>
                             "Cdim" <br/>
@@ -104,7 +104,7 @@ Commands:
                     </div>
 
                     <div class="mb-4">
-                        <h4 class="text-lg font-medium text-sage-700 mb-2">"Audio Analysis"</h4>
+                        <TertiaryHeading text="Audio Analysis" />
                         <CodeBlock class="mb-2" code="$ kord analyze mic" />
                         <Callout>
                             "Notes: C3 E3 G3" <br/>
@@ -129,7 +129,7 @@ Commands:
                     <Subheading text="Basic Examples" />
 
                     <div class="mb-4">
-                        <h4 class="text-lg font-medium text-sage-700 mb-2">"Create and Analyze Chords"</h4>
+                        <TertiaryHeading text="Create and Analyze Chords" />
                         <CodeBlock code="use klib::known_chord::KnownChord;
 use klib::modifier::Degree;
 use klib::note::*;
@@ -143,7 +143,7 @@ assert_eq!(
                     </div>
 
                     <div class="mb-4">
-                        <h4 class="text-lg font-medium text-sage-700 mb-2">"Parse Chords from Strings"</h4>
+                        <TertiaryHeading text="Parse Chords from Strings" />
                         <CodeBlock code="use klib::base::Parsable;
 use klib::note::*;
 use klib::chord::*;
@@ -157,7 +157,7 @@ assert_eq!(
                     </div>
 
                     <div class="mb-4">
-                        <h4 class="text-lg font-medium text-sage-700 mb-2">"Build Chords Fluently"</h4>
+                        <TertiaryHeading text="Build Chords Fluently" />
                         <CodeBlock code="use klib::note::*;
 use klib::chord::*;
 
@@ -188,7 +188,7 @@ await init();" />
                     <Subheading text="Examples" />
 
                     <div class="mb-4">
-                        <h4 class="text-lg font-medium text-sage-700 mb-2">"Working with Notes"</h4>
+                        <TertiaryHeading text="Working with Notes" />
                         <CodeBlock code="// Create notes
 const note = KordNote.parse('C4');
 
@@ -197,7 +197,7 @@ note.octave();  // 4" />
                     </div>
 
                     <div class="mb-4">
-                        <h4 class="text-lg font-medium text-sage-700 mb-2">"Building Chords"</h4>
+                        <TertiaryHeading text="Building Chords" />
                         <CodeBlock code="// Parse and build chords
 const chord = KordChord.parse('C7#9');
 
@@ -214,7 +214,7 @@ const notes = KordChord.parse('C')
                     </div>
 
                     <div class="mb-4">
-                        <h4 class="text-lg font-medium text-sage-700 mb-2">"Chord Transformations"</h4>
+                        <TertiaryHeading text="Chord Transformations" />
                         <CodeBlock code="// Transform existing chords
 KordChord.parse('C7b9')
     .withOctave(2)
