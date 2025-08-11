@@ -1,3 +1,4 @@
+// Shared UI components for Kord Web
 use leptos::ev::MouseEvent;
 use leptos::prelude::*;
 use leptos_router::components::A;
@@ -18,6 +19,7 @@ pub fn Badge(#[prop(optional, into)] class: Option<String>, children: Children) 
     view! { <span class=cls>{children()}</span> }
 }
 
+// Typography components ------------------------------------------------------
 // Section wrapper with H2
 #[component]
 pub fn Section(#[prop(into)] title: String, children: Children) -> impl IntoView {
@@ -41,6 +43,13 @@ pub fn TertiaryHeading(#[prop(into)] text: String) -> impl IntoView {
     view! { <h4 class="text-lg font-medium text-sage-700 mb-2">{text}</h4> }
 }
 
+// Page title (H1) used on main/home
+#[component]
+pub fn PageTitle(children: Children) -> impl IntoView {
+    view! { <h1 class="text-2xl font-semibold tracking-tight">{children()}</h1> }
+}
+
+// Content blocks -------------------------------------------------------------
 // Code block wrapper
 #[component]
 pub fn CodeBlock(#[prop(into)] code: String, #[prop(optional, into)] class: Option<String>) -> impl IntoView {
@@ -82,13 +91,7 @@ pub fn Panel(#[prop(into)] title: String, children: Children) -> impl IntoView {
     }
 }
 
-// Page title (H1) used on main/home
-#[component]
-pub fn PageTitle(children: Children) -> impl IntoView {
-    view! { <h1 class="text-2xl font-semibold tracking-tight">{children()}</h1> }
-}
-
-// Buttons with FnMut handlers
+// Buttons -------------------------------------------------------------------
 #[component]
 pub fn PrimaryButton<F>(#[prop(optional, into)] class: Option<String>, on_click: F, children: Children) -> impl IntoView
 where

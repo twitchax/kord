@@ -25,7 +25,7 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
                 <HydrationScripts options/>
                 <MetaTags/>
             </head>
-            <body style="font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;">
+            <body>
                 <App/>
             </body>
         </html>

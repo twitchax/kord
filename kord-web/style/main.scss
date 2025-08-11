@@ -207,7 +207,7 @@ a {
 	}
 }
 
-// Cards and sections
+// Cards and sections ---------------------------------------------------------
 .docs-container {
 	max-width: 1024px;
 	margin: 0 auto;
@@ -352,7 +352,7 @@ a {
 	}
 }
 
-// Navigation improvements
+// Navigation improvements ----------------------------------------------------
 nav {
 	width: 100%;
 	background-color: var(--sage-800);
@@ -385,7 +385,7 @@ nav {
 	}
 }
 
-// Footer
+// Footer --------------------------------------------------------------------
 footer {
 	text-align: center;
 	margin-top: 3rem;
@@ -398,7 +398,7 @@ footer {
 	}
 }
 
-// Responsive adjustments
+// Responsive adjustments -----------------------------------------------------
 @media (max-width: 768px) {
 	.docs-container {
 		padding: 0.5rem;
@@ -423,15 +423,7 @@ footer {
 	}
 }
 
-// Additional utility classes for header
-.docs-subtitle {
-	font-size: 1.25rem;
-	color: var(--sage-600);
-	max-width: 48rem;
-	margin: 0 auto;
-}
-
-// Header styling
+// Header styling -------------------------------------------------------------
 header {
 	background: linear-gradient(135deg, var(--sage-50), #ffffff);
 	border-radius: 16px;
@@ -471,4 +463,12 @@ header {
 		transform: scale(1.1);
 		opacity: 0.3;
 	}
+}
+
+// Additional utility classes for header -------------------------------------
+.docs-subtitle {
+	font-size: 1.25rem;
+	color: var(--sage-600);
+	max-width: 48rem;
+	margin: 0 auto;
 }
