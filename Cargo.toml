@@ -2,9 +2,10 @@
 members = ["kord", "kord-web"]
 resolver = "2"
 
+# Defines a size-optimized profile for the WASM bundle in release mode
 [profile.wasm-release]
-opt-level = "z"
+inherits = "release"
+opt-level = 'z'
 lto = true
 codegen-units = 1
 panic = "abort"
-inherits = "release"

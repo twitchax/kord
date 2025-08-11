@@ -278,3 +278,15 @@ KordChord.parse('C7b9')
         </div>
     }
 }
+
+// Tests.
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_docs_page_renders() {
+        let _ = DocsPage();
+    }
+}
