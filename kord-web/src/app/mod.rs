@@ -1,12 +1,13 @@
 use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
-    components::{Route, Router, Routes, A},
+    components::{Route, Router, Routes},
     StaticSegment,
 };
 pub mod about;
 pub mod docs;
 pub mod home;
+pub mod shared;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -59,18 +60,6 @@ pub fn App() -> impl IntoView {
     }
 }
 
-#[component]
-fn NavLink(
-    href: &'static str,
-    #[prop(optional, into)] class: Option<String>,
-    children: Children,
-) -> impl IntoView {
-    let base = "relative px-3 py-1.5 rounded-md text-sm text-emerald-100/90 hover:text-white hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-900 transition-colors duration-200 after:absolute after:left-3 after:-bottom-0.5 after:h-0.5 after:w-0 after:bg-emerald-300 after:transition-all after:duration-300 hover:after:w-[calc(100%-1.5rem)]";
-    let cls = class
-        .map(|c| format!("{base} {c}"))
-        .unwrap_or_else(|| base.to_string());
-    view! { <A href=href attr:class=cls>{children()}</A> }
-}
 
 #[component]
 pub fn NavBar() -> impl IntoView {
@@ -82,9 +71,9 @@ pub fn NavBar() -> impl IntoView {
                     <strong class="tracking-tight">"Kord"</strong>
                 </div>
                 <div class="flex items-center gap-2 mr-0 pr-4">
-                    <NavLink href="/">"Home"</NavLink>
-                    <NavLink href="/about">"About"</NavLink>
-                    <NavLink href="/docs">"Docs"</NavLink>
+                    <shared::NavLink href="/">"Home"</shared::NavLink>
+                    <shared::NavLink href="/about">"About"</shared::NavLink>
+                    <shared::NavLink href="/docs">"Docs"</shared::NavLink>
                 </div>
             </div>
         </nav>
