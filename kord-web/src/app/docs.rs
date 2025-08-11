@@ -1,5 +1,5 @@
+use super::shared::{Badge, Callout, CardLink, CodeBlock, Panel, Section, Subheading};
 use leptos::prelude::*;
-use super::shared::{Badge, Section, Subheading, CodeBlock, CardLink, Callout, Panel};
 
 #[component]
 pub fn DocsPage() -> impl IntoView {

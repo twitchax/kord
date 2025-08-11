@@ -60,7 +60,6 @@ pub fn App() -> impl IntoView {
     }
 }
 
-
 #[component]
 pub fn NavBar() -> impl IntoView {
     view! {
