@@ -91,7 +91,7 @@ pub fn PageTitle(children: Children) -> impl IntoView {
 #[component]
 pub fn PrimaryButton<F>(#[prop(optional, into)] class: Option<String>, on_click: F, children: Children) -> impl IntoView
 where
-    F: FnMut(MouseEvent) + 'static,
+    F: Fn(MouseEvent) + 'static,
 {
     let base = "px-3 py-1.5 rounded bg-indigo-600 text-white hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 transition-colors";
     let cls = class.map(|c| format!("{base} {c}")).unwrap_or_else(|| base.to_string());
@@ -101,7 +101,7 @@ where
 #[component]
 pub fn SecondaryButton<F>(#[prop(optional, into)] class: Option<String>, on_click: F, children: Children) -> impl IntoView
 where
-    F: FnMut(MouseEvent) + 'static,
+    F: Fn(MouseEvent) + 'static,
 {
     let base = "px-3 py-1.5 rounded bg-slate-200 hover:bg-slate-300 text-slate-900 transition-colors";
     let cls = class.map(|c| format!("{base} {c}")).unwrap_or_else(|| base.to_string());

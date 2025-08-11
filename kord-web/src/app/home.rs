@@ -6,8 +6,9 @@ use crate::api::hello;
 /// Renders the home page of your application.
 #[component]
 pub fn HomePage() -> impl IntoView {
-    // Creates a reactive value to update the button
+    // Creates a reactive value to update the button.
     let count = RwSignal::new(0);
+
     let on_click_me = move |_| *count.write() += 1;
     let on_click_hello = move |_| {
         let name = "Leptos".to_string();
