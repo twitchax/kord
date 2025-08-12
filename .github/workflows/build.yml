@@ -18,6 +18,7 @@ jobs:
           cache-all-crates: "true"
       - run: cargo install cargo-nextest
       - run: cargo nextest run --features ml
+      - run: cd kord-web && wasm-pack test --firefox --headless --features hydrate
 
   codecov:
     needs: test

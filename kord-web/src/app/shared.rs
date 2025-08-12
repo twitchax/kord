@@ -93,13 +93,13 @@ pub fn Panel(#[prop(into)] title: String, children: Children) -> impl IntoView {
 
 /// Primary button
 #[component]
-pub fn PrimaryButton<F>(#[prop(optional, into)] class: Option<String>, on_click: F, children: Children) -> impl IntoView
+pub fn PrimaryButton<F>(#[prop(optional, into)] id: Option<String>, #[prop(optional, into)] class: Option<String>, on_click: F, children: Children) -> impl IntoView
 where
     F: Fn(MouseEvent) + 'static,
 {
     let base = "px-3 py-1.5 rounded bg-indigo-600 text-white hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 transition-colors";
     let cls = class.map(|c| format!("{base} {c}")).unwrap_or_else(|| base.to_string());
-    view! { <button class=cls on:click=on_click>{children()}</button> }
+    view! { <button id=id class=cls on:click=on_click>{children()}</button> }
 }
 
 /// Secondary button

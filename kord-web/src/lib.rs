@@ -1,3 +1,7 @@
+// Turn off coverage in the web app, since it is merely the "showcase".
+#![feature(coverage_attribute)]
+#![coverage(off)]
+
 pub mod api;
 pub mod app;
 
