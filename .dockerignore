@@ -1,5 +1,59 @@
-# .dockerignore
+# ---- Docker build context pruning for Kord ----
+# Keep this lean: everything excluded here is NOT sent to the Docker daemon.
 
+# Rust / Cargo build artifacts
+target/
 **/target/
-**/kord/samples/
-**/.git/
+
+# Incremental & profiling caches
+.cargo/
+
+# Git metadata (not needed inside image)
+.git
+.gitignore
+.gitattributes
+
+# Editor / IDE / tooling
+.vscode/
+.idea/
+*.iml
+
+# Node / JS (future web tooling)
+node_modules/
+npm-debug.log*
+yarn.lock
+pnpm-lock.yaml
+
+# Logs & temp
+*.log
+*.tmp
+*.swp
+*.swo
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Test output, coverage, reports
+coverage/
+reports/
+
+# Generic web build / bundler outputs (cargo-leptos will rebuild these)
+dist/
+pkg/
+site/
+
+# Wasm artifacts (rebuilt as needed)
+*.wasm
+
+# Docker local cache dirs (if any)
+.docker/
+
+# Exclude large sample/audio assets if not required in build context (uncomment as desired)
+# kord/samples/
+# kord/noise/
+
+# NOTE: Intentionally NOT ignoring:
+# - Cargo.lock (improves deterministic caching)
+# - model/ (needed for inference)
+# Adjust above if you build a minimal runtime image that downloads model assets separately.
