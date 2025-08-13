@@ -89,6 +89,12 @@ pub fn Panel(#[prop(into)] title: String, children: Children) -> impl IntoView {
     }
 }
 
+/// Shared analysis / result output wrapper (uses Panel internally)
+#[component]
+pub fn AnalysisOutput(children: Children) -> impl IntoView {
+    view! { <div class="mt-4"><Panel title="Result">{children()}</Panel></div> }
+}
+
 // Buttons
 
 /// Primary button

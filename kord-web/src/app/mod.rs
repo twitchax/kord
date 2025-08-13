@@ -5,9 +5,11 @@ use leptos_router::{
     components::{Route, Router, Routes},
     StaticSegment,
 };
-pub mod about;
+pub mod describe;
 pub mod docs;
+pub mod guess;
 pub mod home;
+pub mod listen;
 pub mod shared;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
@@ -52,8 +54,10 @@ pub fn App() -> impl IntoView {
                 <div class="mt-6">
                     <Routes fallback=|| view! { <p class="text-sm text-red-600">"Page not found."</p> }>
                         <Route path=StaticSegment("") view=home::HomePage/>
-                        <Route path=StaticSegment("about") view=about::AboutPage/>
                         <Route path=StaticSegment("docs") view=docs::DocsPage/>
+                        <Route path=StaticSegment("describe") view=describe::DescribePage/>
+                        <Route path=StaticSegment("guess") view=guess::GuessPage/>
+                        <Route path=StaticSegment("listen") view=listen::ListenPage/>
                     </Routes>
                 </div>
             </main>
@@ -72,8 +76,10 @@ pub fn NavBar() -> impl IntoView {
                 </div>
                 <div class="flex items-center gap-2 mr-0 pr-4">
                     <NavLink href="/">"Home"</NavLink>
-                    <NavLink href="/about">"About"</NavLink>
                     <NavLink href="/docs">"Docs"</NavLink>
+                    <NavLink href="/describe">"Describe"</NavLink>
+                    <NavLink href="/guess">"Guess"</NavLink>
+                    <NavLink href="/listen">"Listen"</NavLink>
                 </div>
             </div>
         </nav>
