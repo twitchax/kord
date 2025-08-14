@@ -1,4 +1,8 @@
 // Shared UI components for Kord Web
+use klib::core::{
+    base::{HasDescription, HasName, HasPreciseName},
+    chord::{Chord, HasChord, HasScale},
+};
 use leptos::ev::MouseEvent;
 use leptos::prelude::*;
 use leptos_router::hooks::use_navigate;
@@ -83,16 +87,35 @@ pub fn Callout(children: Children) -> impl IntoView {
 pub fn Panel(#[prop(into)] title: String, children: Children) -> impl IntoView {
     view! {
         <div class="bg-sage-50 p-4 rounded-lg border border-sage-200">
-            <h4 class="font-semibold text-sage-800 mb-2">{title}</h4>
+            <h2 class="font-semibold text-sage-800 mb-2">{title}</h2>
             {children()}
         </div>
     }
 }
 
-/// Shared analysis / result output wrapper (uses Panel internally)
+/// Shared analysis / result output wrapper. If a chord is provided, renders its details. Always renders panel so it can wrap arbitrary children.
 #[component]
-pub fn AnalysisOutput(children: Children) -> impl IntoView {
-    view! { <div class="mt-4"><Panel title="Result">{children()}</Panel></div> }
+pub fn ChordAnalysis(#[prop(optional)] chord: Option<Chord>) -> impl IntoView {
+    let chord_section = chord.map(|c| {
+        let precise = c.precise_name();
+        let description = c.description().to_string();
+        let scale = c.scale().into_iter().map(|n| n.name()).collect::<Vec<_>>().join(", ");
+        let chord_tones = c.chord().into_iter().map(|n| n.name()).collect::<Vec<_>>().join(", ");
+
+        view! {
+            <Panel title=precise>
+                <div class="text-sage-700 text-sm leading-relaxed">{description}</div>
+                <div class="text-sm"><span class="font-medium">"Scale: "</span>{scale}</div>
+                <div class="text-sm"><span class="font-medium">"Chord: "</span>{chord_tones}</div>
+            </Panel>
+        }
+    });
+
+    view! {
+        <div class="mt-4">
+            {chord_section}
+        </div>
+    }
 }
 
 // Buttons

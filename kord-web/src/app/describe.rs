@@ -1,19 +1,23 @@
+use crate::app::shared::{ChordAnalysis, PageTitle, PrimaryButton};
+use klib::core::{base::Parsable, chord::Chord};
 use leptos::prelude::*;
-use crate::app::shared::{PageTitle, PrimaryButton, AnalysisOutput};
 
 #[component]
 pub fn DescribePage() -> impl IntoView {
     // Placeholder reactive inputs
     let chord_input = RwSignal::new(String::new());
-    let result = RwSignal::new(Option::<String>::None);
+    let result = RwSignal::new(Option::<Chord>::None);
 
     let on_describe = move |_| {
         // TODO: integrate with core describe logic
         let val = chord_input.get();
         if val.trim().is_empty() {
             result.set(None);
-        } else {
-            result.set(Some(format!("(placeholder) Description for '{val}'")));
+            return;
+        }
+        match Chord::parse(&val) {
+            Ok(c) => result.set(Some(c)),
+            Err(_) => result.set(None),
         }
     };
 
@@ -32,6 +36,8 @@ pub fn DescribePage() -> impl IntoView {
             </div>
             <PrimaryButton on_click=on_describe>"Describe"</PrimaryButton>
         </div>
-        {move || result.get().map(|text| view! { <AnalysisOutput>{text}</AnalysisOutput> })}
+        {move || result.get().map(|c| view! {
+            <ChordAnalysis chord=c></ChordAnalysis>
+        })}
     }
 }

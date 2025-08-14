@@ -3340,6 +3340,7 @@ dependencies = [
  "axum",
  "axum-insights",
  "console_error_panic_hook",
+ "kord",
  "leptos",
  "leptos_axum",
  "leptos_meta",

@@ -1,5 +1,5 @@
+use crate::app::shared::{ChordAnalysis, PageTitle, PrimaryButton};
 use leptos::prelude::*;
-use crate::app::shared::{PageTitle, PrimaryButton, AnalysisOutput};
 
 #[component]
 pub fn GuessPage() -> impl IntoView {
@@ -9,7 +9,10 @@ pub fn GuessPage() -> impl IntoView {
     let on_guess = move |_| {
         let raw = notes_input.get();
         let tokens: Vec<_> = raw.split_whitespace().collect();
-        if tokens.is_empty() { guesses.set(vec![]); return; }
+        if tokens.is_empty() {
+            guesses.set(vec![]);
+            return;
+        }
         // Placeholder dummy guesses
         guesses.set(vec![
             format!("(placeholder) Guess 1 for {:?}", tokens),
@@ -33,8 +36,8 @@ pub fn GuessPage() -> impl IntoView {
             </div>
             <PrimaryButton on_click=on_guess>"Guess"</PrimaryButton>
         </div>
-        {move || if guesses.get().is_empty() { None } else { Some(view! { <AnalysisOutput>
-            <ul class="list-disc ml-5 space-y-1">{guesses.get().into_iter().map(|g| view! { <li>{g}</li> }).collect_view()}</ul>
-        </AnalysisOutput> })}}
+        {move || if guesses.get().is_empty() { None } else { Some(view! {
+            <ChordAnalysis></ChordAnalysis>
+        })}}
     }
 }

@@ -1,5 +1,5 @@
+use crate::app::shared::{ChordAnalysis, PageTitle, PrimaryButton, SecondaryButton};
 use leptos::prelude::*;
-use crate::app::shared::{PageTitle, PrimaryButton, AnalysisOutput, SecondaryButton};
 
 #[component]
 pub fn ListenPage() -> impl IntoView {
@@ -8,21 +8,21 @@ pub fn ListenPage() -> impl IntoView {
     let detected = RwSignal::new(Vec::<String>::new());
 
     let start_listening = move |_| {
-        if is_listening.get() { return; }
+        if is_listening.get() {
+            return;
+        }
         is_listening.set(true);
         status.set("(placeholder) Listening...".into());
         // TODO: integrate mic capture + ML inference
     };
 
     let stop_listening = move |_| {
-        if !is_listening.get() { return; }
+        if !is_listening.get() {
+            return;
+        }
         is_listening.set(false);
         status.set("(placeholder) Stopped.".into());
-        detected.set(vec![
-            "(placeholder) C".into(),
-            "(placeholder) E".into(),
-            "(placeholder) G".into(),
-        ]);
+        detected.set(vec!["(placeholder) C".into(), "(placeholder) E".into(), "(placeholder) G".into()]);
     };
 
     view! {
@@ -32,8 +32,8 @@ pub fn ListenPage() -> impl IntoView {
             <SecondaryButton on_click=stop_listening>"Stop"</SecondaryButton>
         </div>
         <div class="mt-4 text-sm text-sage-700">{move || status.get()}</div>
-        {move || if detected.get().is_empty() { None } else { Some(view! { <AnalysisOutput>
-            <div class="flex flex-wrap gap-2">{detected.get().into_iter().map(|n| view! { <span class="px-2 py-1 bg-sage-100 rounded text-sage-700 text-sm">{n}</span> }).collect_view()}</div>
-        </AnalysisOutput> })}}
+        {move || if detected.get().is_empty() { None } else { Some(view! {
+            <ChordAnalysis></ChordAnalysis>
+        })}}
     }
 }

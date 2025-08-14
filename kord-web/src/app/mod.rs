@@ -76,10 +76,10 @@ pub fn NavBar() -> impl IntoView {
                 </div>
                 <div class="flex items-center gap-2 mr-0 pr-4">
                     <NavLink href="/">"Home"</NavLink>
-                    <NavLink href="/docs">"Docs"</NavLink>
                     <NavLink href="/describe">"Describe"</NavLink>
                     <NavLink href="/guess">"Guess"</NavLink>
                     <NavLink href="/listen">"Listen"</NavLink>
+                    <NavLink href="/docs">"Docs"</NavLink>
                 </div>
             </div>
         </nav>
