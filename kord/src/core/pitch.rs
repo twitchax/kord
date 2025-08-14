@@ -2,8 +2,6 @@
 
 // Traits.
 
-use std::time::Duration;
-
 use std::sync::LazyLock;
 
 use super::helpers::mel;
@@ -58,7 +56,7 @@ use super::base::{Playable, PlaybackHandle, Res};
 
 #[cfg(feature = "audio")]
 impl<T: HasFrequency> Playable for T {
-    fn play(&self, delay: Duration, length: Duration, fade_in: Duration) -> Res<PlaybackHandle> {
+    fn play(&self, delay: std::time::Duration, length: std::time::Duration, fade_in: std::time::Duration) -> Res<PlaybackHandle> {
         use rodio::{source::SineWave, OutputStreamBuilder, Sink, Source};
 
         let stream = OutputStreamBuilder::open_default_stream()?;

@@ -1,6 +1,6 @@
 //! A module that contains the [`Chord`] struct and related traits.
 
-use std::{cmp::Ordering, collections::HashSet, fmt::Display, time::Duration};
+use std::{cmp::Ordering, collections::HashSet, fmt::Display};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -1248,7 +1248,7 @@ use super::base::{Playable, PlaybackHandle};
 #[cfg(feature = "audio")]
 impl Playable for Chord {
     #[coverage(off)]
-    fn play(&self, delay: Duration, length: Duration, fade_in: Duration) -> Res<PlaybackHandle> {
+    fn play(&self, delay: std::time::Duration, length: std::time::Duration, fade_in: std::time::Duration) -> Res<PlaybackHandle> {
         use rodio::{source::SineWave, OutputStreamBuilder, Sink, Source};
 
         let chord_tones = self.chord();

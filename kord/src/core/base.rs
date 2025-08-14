@@ -2,8 +2,6 @@
 
 // Helpers.
 
-use std::time::Duration;
-
 #[cfg(feature = "audio")]
 use rodio::{OutputStream, Sink};
 
@@ -82,5 +80,5 @@ impl PlaybackHandle {
 pub trait Playable {
     /// Plays the [`Playable`].
     #[must_use = "Dropping the PlayableResult will stop the playback."]
-    fn play(&self, delay: Duration, length: Duration, fade_in: Duration) -> Res<PlaybackHandle>;
+    fn play(&self, delay: std::time::Duration, length: std::time::Duration, fade_in: std::time::Duration) -> Res<PlaybackHandle>;
 }
