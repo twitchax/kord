@@ -1,5 +1,5 @@
 use crate::app::shared::{ChordAnalysis, PageTitle};
-use klib::core::{base::Parsable, chord::Chord, note::Note, parser::note_str_to_note};
+use klib::core::{base::Parsable, chord::Chord, note::Note};
 use leptos::prelude::*;
 
 const DEBOUNCE_MS: u64 = 300;
