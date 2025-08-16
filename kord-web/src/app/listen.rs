@@ -36,7 +36,7 @@ pub fn ListenPage() -> impl IntoView {
 
             // If we _just_ started recording, clear values.
             if *is_recording && !*was_recording {
-                start_time.set(Some(timestamp.get()));
+                start_time.set(Some(*current_timestamp));
                 progress_percent.set(0.0);
             }
 
@@ -81,27 +81,30 @@ pub fn ListenPage() -> impl IntoView {
 
     view! {
         <PageTitle>"Listen"</PageTitle>
-        <div class="flex flex-col gap-4 mt-4 max-w-sm">
-            <label class="text-sm font-medium">"Seconds"</label>
-            <input
-                type="number"
-                min="1"
-                max="120"
-                class="border rounded px-2 py-1"
-                prop:value=move || seconds.get().to_string()
-                on:input=move |ev| {
-                    if let Ok(v) = event_target_value(&ev).parse::<u32>() { seconds.set(v.max(1)); }
-                }
-            />
-            <button
-                class="px-3 py-2 rounded bg-emerald-600 text-white disabled:opacity-50"
-                disabled=recording
-                on:click=start
-            >{move || if recording.get() { "Recording..." } else { "Start" }}</button>
+        <div class="flex flex-row gap-4 mt-4 max-w-sm">
+            <div class="flex flex-col gap-4 mt-4 w-full">
+                <label class="text-sm font-medium">"Seconds"</label>
+                <input
+                    type="number"
+                    min="1"
+                    max="120"
+                    class="border rounded px-2 py-1"
+                    prop:value=move || seconds.get().to_string()
+                    on:input=move |ev| {
+                        if let Ok(v) = event_target_value(&ev).parse::<u32>() { seconds.set(v.max(1)); }
+                    }
+                />
+                <button
+                    class="px-3 py-2 rounded bg-emerald-600 text-white disabled:opacity-50"
+                    disabled=recording
+                    on:click=start
+                >{move || if recording.get() { "Recording..." } else { "Start" }}</button>
+                {move || error.get().map(|e| view!{ <p class="text-xs text-red-600">{e}</p> })}
+            </div>
             <div class="flex items-center gap-2">
                 <ProgressCircle value=progress_percent />
             </div>
-            {move || error.get().map(|e| view!{ <p class="text-xs text-red-600">{e}</p> })}
         </div>
+
     }
 }
