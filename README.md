@@ -11,7 +11,7 @@
 
 A music theory binary and library for Rust / JS (via WASM) ([capability playground](https://kord.twitchax.com/)).
 
-> **Note**: The [`kord-web`](kord-web/) directory contains a web application that serves as a demonstration and example of how to integrate the Kord library with modern web frameworks. It is not part of the core library but showcases the library's WASM capabilities in a real-world web application (and it us the example website linked in this README).
+> **Note**: The [`kord-web`](kord-web/) directory contains a web application that serves as a demonstration and example of how to integrate the Kord library with modern web frameworks. It is not part of the core library but showcases the library's WASM capabilities in a real-world web application (and it is the example website linked above).
 
 ## Binary Usage
 
@@ -189,27 +189,27 @@ kord = "*" #choose a version
 ### Examples
 
 ```rust
-use klib::known_chord::KnownChord;
-use klib::modifier::Degree;
-use klib::note::*;
-use klib::chord::*;
+use klib::core::known_chord::KnownChord;
+use klib::core::modifier::Degree;
+use klib::core::note::*;
+use klib::core::chord::*;
 
 // Check to see what _kind_ of chord this is.
 assert_eq!(Chord::new(C).augmented().seven().known_chord(), KnownChord::AugmentedDominant(Degree::Seven));
 ```
 
 ```rust
-use crate::klib::base::Parsable;
-use klib::note::*;
-use klib::chord::*;
+use klib::core::base::Parsable;
+use klib::core::note::*;
+use klib::core::chord::*;
 
 // Parse a chord from a string, and inspect the scale.
 assert_eq!(Chord::parse("Cm7b5").unwrap().scale(), vec![C, D, EFlat, F, GFlat, AFlat, BFlat]);
 ```
 
 ```rust
-use klib::note::*;
-use klib::chord::*;
+use klib::core::note::*;
+use klib::core::chord::*;
 
 // From a note, create a chord, and look at the chord tones.
 assert_eq!(C.into_chord().augmented().major7().chord(), vec![C, E, GSharp, B]);

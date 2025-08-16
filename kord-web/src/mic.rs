@@ -12,16 +12,16 @@ use wasm_bindgen::JsValue;
 #[wasm_bindgen(module = "/src/ffi.js")]
 extern "C" {
     #[wasm_bindgen(catch, js_name = recordMicrophone)]
-    async fn js_record_microphone(seconds: u32, frame_size: u32) -> Result<JsValue, JsValue>;
+    async fn js_record_microphone(seconds: u32) -> Result<JsValue, JsValue>;
 }
 
 // Records mono PCM for `seconds`, frame_size controls internal JS processing buffer.
 // Returns Vec<u8> containing little-endian f32 samples concatenated.
 #[cfg(feature = "hydrate")]
-pub async fn record_microphone(seconds: u32, frame_size: u32) -> Result<Vec<u8>, String> {
+pub async fn record_microphone(seconds: u32) -> Result<Vec<u8>, String> {
     // Call the ffi layer.
 
-    let js_val = js_record_microphone(seconds, frame_size).await.map_err(|e| format!("js error: {e:?}"))?;
+    let js_val = js_record_microphone(seconds).await.map_err(|e| format!("js error: {e:?}"))?;
 
     // Get the data from the object.
 
@@ -43,6 +43,6 @@ pub async fn record_microphone(seconds: u32, frame_size: u32) -> Result<Vec<u8>,
 }
 
 #[cfg(not(feature = "hydrate"))]
-pub async fn record_microphone(_seconds: u32, _frame_size: u32) -> Result<Vec<u8>, String> {
+pub async fn record_microphone(_seconds: u32) -> Result<Vec<u8>, String> {
     Err("microphone only available in browser".into())
 }

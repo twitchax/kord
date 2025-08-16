@@ -5,8 +5,8 @@ use wasm_bindgen_test::*;
 
 wasm_bindgen_test_configure!(run_in_browser);
 use kord_web::app::home::HomePage;
+use leptos::web_sys::HtmlButtonElement;
 use leptos::{prelude::*, task::tick};
-use web_sys::HtmlButtonElement;
 
 #[wasm_bindgen_test]
 async fn test_integration_home() {
