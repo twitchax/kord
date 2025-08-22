@@ -4,13 +4,15 @@ use leptos::logging::{error, log};
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_use::use_timestamp;
-use thaw::ProgressCircle;
+use thaw::{Button, ButtonAppearance, Flex, FlexGap, Input, InputSuffix, InputType, ProgressCircle};
 
 #[component]
 pub fn ListenPage() -> impl IntoView {
     // Signals.
 
-    let seconds = RwSignal::new(10u32);
+    let seconds_text = RwSignal::new("10".to_string());
+    let seconds = Signal::derive(move || seconds_text.get().parse::<u32>().unwrap_or(10));
+
     let recording = RwSignal::new(false);
 
     let error = RwSignal::new(Option::<String>::None);
@@ -81,30 +83,24 @@ pub fn ListenPage() -> impl IntoView {
 
     view! {
         <PageTitle>"Listen"</PageTitle>
-        <div class="flex flex-row gap-4 mt-4 max-w-sm">
-            <div class="flex flex-col gap-4 mt-4 w-full">
-                <label class="text-sm font-medium">"Seconds"</label>
-                <input
-                    type="number"
-                    min="1"
-                    max="120"
-                    class="border rounded px-2 py-1"
-                    prop:value=move || seconds.get().to_string()
-                    on:input=move |ev| {
-                        if let Ok(v) = event_target_value(&ev).parse::<u32>() { seconds.set(v.max(1)); }
-                    }
-                />
-                <button
-                    class="px-3 py-2 rounded bg-emerald-600 text-white disabled:opacity-50"
+        <Flex gap=FlexGap::Large>
+            <Flex vertical=true gap=FlexGap::Large>
+                <Input input_type=InputType::Number value=seconds_text>
+                    <InputSuffix slot>
+                        "seconds"
+                    </InputSuffix>
+                </Input>
+                <Button
                     disabled=recording
-                    on:click=start
-                >{move || if recording.get() { "Recording..." } else { "Start" }}</button>
+                    appearance=Signal::derive(move || if recording.get() { ButtonAppearance::Subtle } else { ButtonAppearance::Primary })
+                    on_click=start
+                >{move || if recording.get() { "Recording..." } else { "Start" }}</Button>
                 {move || error.get().map(|e| view!{ <p class="text-xs text-red-600">{e}</p> })}
-            </div>
+            </Flex>
             <div class="flex items-center gap-2">
                 <ProgressCircle value=progress_percent />
             </div>
-        </div>
+        </Flex>
 
     }
 }
