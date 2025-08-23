@@ -21,6 +21,7 @@ klib = { package = "kord", path = "../kord", default-features = false }
 js-sys = { version = "0.3", optional = true }
 thaw = { version = "0.5.0-beta", features = ["nightly"] }
 leptos-use = { version = "0.16" }
+thaw_utils = { version = "0.2.0-beta" }
 
 [dev-dependencies]
 wasm-bindgen = { version = "=0.2.100" }

@@ -3419,6 +3419,7 @@ dependencies = [
  "leptos_meta",
  "leptos_router",
  "thaw",
+ "thaw_utils",
  "tokio",
  "wasm-bindgen",
  "wasm-bindgen-futures",

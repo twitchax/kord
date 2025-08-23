@@ -6,6 +6,8 @@ use klib::core::{
 use leptos::ev::MouseEvent;
 use leptos::prelude::*;
 use leptos_router::hooks::use_navigate;
+use thaw::{Button, ButtonAppearance, Text, TextTag};
+use thaw_utils::BoxOneCallback;
 
 // Nav.
 
@@ -47,7 +49,7 @@ pub fn TertiaryHeading(#[prop(into)] text: String) -> impl IntoView {
 /// Page title (H1) used on main/home
 #[component]
 pub fn PageTitle(children: Children) -> impl IntoView {
-    view! { <h1 class="text-2xl font-semibold tracking-tight">{children()}</h1> }
+    view! { <Text tag=TextTag::H1 class="tracking-tight">{children()}</Text> }
 }
 
 // Content blocks.
@@ -122,24 +124,36 @@ pub fn ChordAnalysis(#[prop(optional)] chord: Option<Chord>) -> impl IntoView {
 
 /// Primary button
 #[component]
-pub fn PrimaryButton<F>(#[prop(optional, into)] id: Option<String>, #[prop(optional, into)] class: Option<String>, on_click: F, children: Children) -> impl IntoView
+pub fn PrimaryButton<OC>(#[prop(optional, into)] id: Option<String>, #[prop(optional, into)] class: Option<String>, on_click: OC, children: Children) -> impl IntoView
 where
-    F: Fn(MouseEvent) + 'static,
+    OC: Into<BoxOneCallback<MouseEvent>>,
 {
-    let base = "px-3 py-1.5 rounded bg-indigo-600 text-white hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 transition-colors";
-    let cls = class.map(|c| format!("{base} {c}")).unwrap_or_else(|| base.to_string());
-    view! { <button id=id class=cls on:click=on_click>{children()}</button> }
+    let cls = class.unwrap_or_default();
+    view! {
+        <span id=id>
+            <Button
+                class=cls
+                appearance=ButtonAppearance::Primary
+                on_click=on_click.into()
+            >{children()}</Button>
+        </span>
+    }
 }
 
 /// Secondary button
 #[component]
-pub fn SecondaryButton<F>(#[prop(optional, into)] class: Option<String>, on_click: F, children: Children) -> impl IntoView
+pub fn SecondaryButton<OC>(#[prop(optional, into)] class: Option<String>, on_click: OC, children: Children) -> impl IntoView
 where
-    F: Fn(MouseEvent) + 'static,
+    OC: Into<BoxOneCallback<MouseEvent>>,
 {
-    let base = "px-3 py-1.5 rounded bg-slate-200 hover:bg-slate-300 text-slate-900 transition-colors";
-    let cls = class.map(|c| format!("{base} {c}")).unwrap_or_else(|| base.to_string());
-    view! { <button class=cls on:click=on_click>{children()}</button> }
+    let cls = class.unwrap_or_default();
+    view! {
+        <Button
+            class=cls
+            appearance=ButtonAppearance::Secondary
+            on_click=on_click.into()
+        >{children()}</Button>
+    }
 }
 
 // Other.
