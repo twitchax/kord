@@ -83,7 +83,7 @@ pub fn ListenPage() -> impl IntoView {
 
     view! {
         <PageTitle>"Listen"</PageTitle>
-        <Flex gap=FlexGap::Large>
+        <Flex gap=FlexGap::Large class="mt-4">
             <Flex vertical=true gap=FlexGap::Large>
                 <Input input_type=InputType::Number value=seconds_text>
                     <InputSuffix slot>

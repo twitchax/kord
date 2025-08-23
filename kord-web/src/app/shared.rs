@@ -70,7 +70,7 @@ pub fn CardLink(#[prop(into)] href: String, #[prop(into)] title: String, #[prop(
             href=href
             target="_blank"
             rel="noopener noreferrer"
-            class="block p-4 bg-white border border-sage-200 rounded-lg hover:border-sage-300 transition-all duration-200 hover:shadow-md"
+            class="block p-4 border border-sage-200 rounded-lg hover:border-sage-300 transition-all duration-200 hover:shadow-md"
         >
             <h3 class="text-lg font-semibold text-sage-800 mb-2">{title}</h3>
             <p class="text-sage-600 text-sm">{desc}</p>

@@ -1,5 +1,6 @@
 use super::shared::{Badge, Callout, CardLink, CodeBlock, Panel, Section, Subheading, TertiaryHeading};
 use leptos::prelude::*;
+use thaw::{Flex, FlexGap};
 
 #[component]
 pub fn DocsPage() -> impl IntoView {
@@ -17,13 +18,13 @@ pub fn DocsPage() -> impl IntoView {
                     "Kord is a comprehensive music theory library that provides both a command-line interface and programmatic APIs for Rust and JavaScript. "
                     "It features machine learning-powered chord recognition, audio analysis, and extensive music theory utilities."
                 </p>
-                <div class="flex flex-wrap gap-4 mt-6">
+                <Flex class="flex-wrap mt-6" gap=FlexGap::Large>
                     <Badge>"Chord Analysis"</Badge>
                     <Badge>"Audio Processing"</Badge>
                     <Badge>"ML Inference"</Badge>
                     <Badge>"Cross-Platform"</Badge>
                     <Badge>"WebAssembly"</Badge>
-                </div>
+                </Flex>
             </Section>
 
             <Section title="Installation">
@@ -256,15 +257,15 @@ KordChord.parse('C7b9')
 
             <Section title="API Reference">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-4">
+                    <Flex vertical=true gap=FlexGap::Medium>
                         <CardLink href="https://docs.rs/kord/latest/klib/" title="Rust Documentation" desc="Complete API reference for the Rust library" />
                         <CardLink href="https://www.npmjs.com/package/kordweb" title="NPM Package" desc="JavaScript/TypeScript package information" />
-                    </div>
+                    </Flex>
 
-                    <div class="space-y-4">
+                    <Flex vertical=true gap=FlexGap::Medium>
                         <CardLink href="https://github.com/twitchax/kord" title="Source Code" desc="View the source code on GitHub" />
                         <CardLink href="https://github.com/twitchax/kord/releases" title="Releases" desc="Download pre-built binaries" />
-                    </div>
+                    </Flex>
                 </div>
             </Section>
 
