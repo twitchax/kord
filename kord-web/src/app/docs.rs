@@ -4,20 +4,20 @@ use leptos::prelude::*;
 #[component]
 pub fn DocsPage() -> impl IntoView {
     view! {
-        <div class="docs-container">
-            <header class="text-center mb-12">
-                <h1>"Kord Documentation"</h1>
-                <p class="docs-subtitle">
-                    "A powerful music theory library and CLI tool for Rust and JavaScript with ML-powered inference capabilities."
+        <div class="kord-docs">
+            <header class="kord-docs__header">
+                <h1>Kord Documentation</h1>
+                <p class="kord-docs__subtitle">
+                    A powerful music theory library and CLI tool for Rust and JavaScript with ML-powered inference capabilities.
                 </p>
             </header>
 
             <Section title="Overview">
-                <p class="text-sage-700 mb-4">
-                    "Kord is a comprehensive music theory library that provides both a command-line interface and programmatic APIs for Rust and JavaScript. "
-                    "It features machine learning-powered chord recognition, audio analysis, and extensive music theory utilities."
+                <p class="kord-docs__description">
+                    Kord is a comprehensive music theory library that provides both a command-line interface and programmatic APIs for Rust and JavaScript. 
+                    It features machine learning-powered chord recognition, audio analysis, and extensive music theory utilities.
                 </p>
-                <div class="flex flex-wrap gap-4 mt-6">
+                <div class="kord-docs__badges">
                     <Badge>"Chord Analysis"</Badge>
                     <Badge>"Audio Processing"</Badge>
                     <Badge>"ML Inference"</Badge>
