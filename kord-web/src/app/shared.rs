@@ -6,7 +6,7 @@ use klib::core::{
 use leptos::ev::MouseEvent;
 use leptos::prelude::*;
 use leptos_router::hooks::use_navigate;
-use thaw::{Button, ButtonAppearance, Text, TextTag};
+use thaw::{Button, ButtonAppearance, Card, Flex, FlexGap, Text, TextTag};
 use thaw_utils::BoxOneCallback;
 
 // Nav.
@@ -105,11 +105,20 @@ pub fn ChordAnalysis(#[prop(optional)] chord: Option<Chord>) -> impl IntoView {
         let chord_tones = c.chord().into_iter().map(|n| n.name()).collect::<Vec<_>>().join(", ");
 
         view! {
-            <Panel title=precise>
-                <div class="text-sage-700 text-sm leading-relaxed">{description}</div>
-                <div class="text-sm"><span class="font-medium">"Scale: "</span>{scale}</div>
-                <div class="text-sm"><span class="font-medium">"Chord: "</span>{chord_tones}</div>
-            </Panel>
+            <Card>
+                <Flex vertical=true gap=FlexGap::Medium>
+                    <Text tag=TextTag::H3>{precise}</Text>
+                    <Text tag=TextTag::P>{description}</Text>
+                    <Flex gap=FlexGap::Small>
+                        <Text tag=TextTag::Span>"Scale: "</Text>
+                        <Text tag=TextTag::Span>{scale}</Text>
+                    </Flex>
+                    <Flex gap=FlexGap::Small>
+                        <Text tag=TextTag::Span>"Chord: "</Text>
+                        <Text tag=TextTag::Span>{chord_tones}</Text>
+                    </Flex>
+                </Flex>
+            </Card>
         }
     });
 

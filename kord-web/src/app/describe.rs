@@ -1,6 +1,7 @@
 use crate::app::shared::{ChordAnalysis, PageTitle};
 use klib::core::{base::Parsable, chord::Chord};
 use leptos::prelude::*;
+use thaw::{Field, FieldValidationState, Flex, FlexGap, Input, InputRule};
 
 const DEBOUNCE_MS: u64 = 300;
 
@@ -19,27 +20,41 @@ pub fn DescribePage() -> impl IntoView {
         })
     };
 
-    let input_keyup = move |ev| {
-        let val = event_target_value(&ev);
-        chord_input.set(val.clone());
+    // Watch input changes and trigger debounced parsing.
+    Effect::watch(
+        move || chord_input.get(),
+        move |val, _, _| {
+            debounced_parse(val.clone());
+        },
+        false,
+    );
 
-        debounced_parse(val);
-    };
+    // Validation rules for the chord input.
+    let required_rule = InputRule::required_with_message(Signal::derive(|| true), "Required".into());
+    let chord_parse_rule = InputRule::validator(|v: &String, _| {
+        if v.trim().is_empty() {
+            return Ok(());
+        }
+        if Chord::parse(v).is_ok() {
+            Ok(())
+        } else {
+            Err(FieldValidationState::Error("Unrecognized chord".to_string()))
+        }
+    });
+    let rules = vec![required_rule, chord_parse_rule];
 
     view! {
         <PageTitle>"Describe a Chord"</PageTitle>
-
-        <div class="mt-4 flex flex-col gap-2">
-            <label for="describe-chord" class="text-sm font-medium text-sage-700">"Chord Symbol"</label>
-            <input
-                id="describe-chord"
-                class="w-full px-3 py-2 rounded border border-sage-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white"
-                placeholder="e.g. Cm7"
-                prop:value=move || chord_input.get()
-                on:keyup=input_keyup
-            />
-            <p class="text-xs text-slate-500">"Typing parses after "{DEBOUNCE_MS}"ms of inactivity."</p>
-        </div>
+        <Flex vertical=true gap=FlexGap::Large>
+            <Field label="Chord Symbol">
+                <Input
+                    id="describe-chord"
+                    placeholder="e.g. Cm7"
+                    value=chord_input
+                    rules=rules
+                />
+            </Field>
+        </Flex>
 
         {move || chord_result.get().map(|c| view! {
             <ChordAnalysis chord=c></ChordAnalysis>

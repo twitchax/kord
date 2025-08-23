@@ -1,5 +1,5 @@
 use leptos::{logging::log, prelude::*, task::spawn_local};
-use thaw::{Space, SpaceGap};
+use thaw::{Flex, FlexGap};
 
 use super::shared::{PageTitle, PrimaryButton, SecondaryButton};
 use crate::api::hello;
@@ -24,14 +24,14 @@ pub fn HomePage() -> impl IntoView {
 
     view! {
         <PageTitle>"Welcome to Kord!"</PageTitle>
-        <Space gap=SpaceGap::Large>
+        <Flex gap=FlexGap::Large>
             <PrimaryButton id="click-me" on_click=on_click_me>
                 "Click Me: " {count}
             </PrimaryButton>
             <SecondaryButton on_click=on_click_hello>
                 "Click Me for a server call"
             </SecondaryButton>
-        </Space>
+        </Flex>
     }
 }
 

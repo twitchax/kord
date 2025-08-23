@@ -4,7 +4,7 @@ use leptos::logging::{error, log};
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_use::use_timestamp;
-use thaw::{Button, ButtonAppearance, Flex, FlexGap, Input, InputSuffix, InputType, ProgressCircle};
+use thaw::{Button, ButtonAppearance, Flex, FlexGap, FlexJustify, Input, InputSuffix, InputType, ProgressCircle};
 
 #[component]
 pub fn ListenPage() -> impl IntoView {
@@ -97,9 +97,9 @@ pub fn ListenPage() -> impl IntoView {
                 >{move || if recording.get() { "Recording..." } else { "Start" }}</Button>
                 {move || error.get().map(|e| view!{ <p class="text-xs text-red-600">{e}</p> })}
             </Flex>
-            <div class="flex items-center gap-2">
+            <Flex justify=FlexJustify::Center gap=FlexGap::Small>
                 <ProgressCircle value=progress_percent />
-            </div>
+            </Flex>
         </Flex>
 
     }

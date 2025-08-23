@@ -1,70 +1,59 @@
 # Kord AI Coding Agent Instructions
 
-Kord is a music theory library and CLI tool with ML capabilities, built in Rust with multi-platform support (native, WASM, WASI).
+Kord is a Rust workspace with a music theory/ML core and a Leptos web app. This guide captures the minimum you need to be productive here.
 
-## Architecture Overview
+## Workspace Overview
+- `kord/` (aka `klib`): core library + CLI (music theory, audio analysis, ML). Pest grammar in `kord/chord.pest`; parser in `kord/src/core/parser.rs`.
+- `kord-web/`: Leptos 0.8 SSR app (Axum for SSR) + client hydrate; also builds to WASI/WASM. UI uses Thaw (pre-release) components.
+- Feature flags (core): `cli`, `analyze=[analyze_mic,analyze_file]`, `ml=[ml_train,ml_infer]`, `ml_gpu`, `wasm`/`wasi`, `audio`.
 
-**Workspace Structure**: Cargo workspace with two main crates:
-- `kord/`: Core library (`klib`) + CLI binary with music theory, audio analysis, and ML training
-- `kord-web/`: Leptos + Axum web app running as WASI service with embedded frontend
+## Build & Run
+- Core/CLI dev: `cargo build` | tests: `cargo test`. On Linux, install `libasound2-dev` for audio.
+- Web dev (SSR + hydrate):
+	- `cd kord-web`
+	- Dev: `cargo leptos watch`
+	- Release: `cargo leptos build --release`
+- WASI SSR lib (for Wasmer):
+	- `LEPTOS_OUTPUT_NAME=kord-web cargo build --lib --release --target wasm32-wasip2 --no-default-features --features ssr`
+- NPM WASM (library): `wasm-pack build --features ml_infer --features wasm`
+- Wasmer binary (reduced capabilities): `cargo wasi build --release --no-default-features --features wasi --features cli --features ml_infer --features analyze_file`
 
-**Core Library Design**: Music theory primitives built around `Note`, `Chord`, `Modifier` traits with extensive parsing via Pest grammar (`chord.pest`). The `Chordable` trait provides builder pattern for chord construction.
+## Core Library Patterns (kord)
+- Types/traits: `Note`, `Chord`, `Modifier`, builder pattern via `Chordable`. Parsing via `Parsable` and Pest grammar.
+- Error/result: `anyhow::Result` aliased to `Res<T>`; `Void` for `Result<(), Error>`.
+- Statics: `LazyLock` for computed tables (see `kord/src/core/modifier.rs`).
+- ML: constants in `kord/src/ml/base/mod.rs` (e.g., `FREQUENCY_SPACE_SIZE`), training configured by `TrainConfig`.
+- Audio analysis: FFT with normalized frequency space (8192 bins up to C9).
 
-**Feature Flag Architecture**: Heavily feature-gated for different deployment targets:
-- `cli`: CLI functionality (required for binary)  
-- `analyze = ["analyze_mic", "analyze_file"]`: Audio processing with FFT/spectrum analysis
-- `ml = ["ml_train", "ml_infer"]`: Machine learning with Burn framework  
-- `ml_gpu`: GPU acceleration via burn-tch/burn-wgpu
-- `wasm`/`wasi`: WebAssembly compilation targets
-- `audio`: Audio playback via rodio
+## Web App Patterns (kord-web)
+- Features: lib builds with `hydrate`; bin with `ssr`. See `[package.metadata.leptos]` for default features/profile.
+- App shell: wrap with `thaw::ssr::SSRMountStyleProvider` and `thaw::ConfigProvider` (custom theme) in `kord-web/src/app/mod.rs`.
+- UI library: Thaw components. Important specifics:
+	- `Input`: bind `value` to `RwSignal<String>` (Model<String>). Use `InputSuffix`/`InputPrefix` slots for adornments.
+	- Callbacks: Thaw expects `on_click: Option<BoxOneCallback<MouseEvent>>`. Use `thaw_utils::BoxOneCallback` and accept `impl Into<BoxOneCallback<_>>` in wrappers.
+	- Layout/typography: use `Space`/`Flex` for spacing; `Text` with `TextTag` for headings.
+	- Forms: prefer `Field label="…"` wrapping `Input` instead of raw labels.
+	- Timing: use `leptos-use` (e.g., `use_timestamp`) instead of manual intervals for progress.
+- JS interop: `kord-web/src/mic.rs` bridges to a JS `recordMicrophone(seconds)` function via `wasm-bindgen`, returns mono Float32 PCM converted to little-endian `Vec<u8>`.
+- Shared UI: `kord-web/src/app/shared.rs` exposes `PageTitle`, `PrimaryButton`, `SecondaryButton`, etc., wrapping Thaw primitives for consistency.
 
-## Key Development Workflows
+## Conventions & Organization
+- Heavy use of `#[cfg(feature = "…")]` across crates; follow existing feature gating patterns (base → specific).
+- Use `#[coverage(off)]` for code that can’t be tested (UI, long training loops).
+- Data/ML artifacts: `kord/model/`, `kord/noise/`, `kord/samples/` contain binaries used by analysis/ML; don’t rename without adjusting code.
+- Adversarial pass: always self-review changes for missed abstractions and edge cases; verify SSR/hydrate parity, feature flags, Thaw callback types (`thaw_utils::BoxOneCallback`), and `Input` model binding (`RwSignal<String>`).
 
-**Platform-Specific Builds**:
-```bash
-# Native CLI (default features)
-cargo build
+## Where to Change Things (examples)
+- Extend chord grammar: edit `kord/chord.pest` and parser in `kord/src/core/parser.rs` (mirror existing rule patterns and tests).
+- Add a web page: place a component in `kord-web/src/app/*.rs`, add to routes in `mod.rs`, use Thaw `PageTitle`, `Field` + `Input` and Thaw buttons.
+- Wrap a Thaw button in shared UI:
+	```rust
+	use thaw_utils::BoxOneCallback;
+	#[component]
+	fn PrimaryButton<OC>(on_click: OC, children: Children) -> impl IntoView
+	where OC: Into<BoxOneCallback<leptos::ev::MouseEvent>> {
+			thaw::Button(appearance=thaw::ButtonAppearance::Primary, on_click=on_click.into())(children)
+	}
+	```
 
-# Web frontend + backend
-cd kord-web && cargo leptos build --release
-LEPTOS_OUTPUT_NAME=kord-web cargo build --lib --release --target wasm32-wasip2 --no-default-features --features ssr
-
-# WASI binary for Wasmer
-cargo wasi build --release --no-default-features --features wasi --features cli --features ml_infer --features analyze_file
-
-# WASM for NPM
-wasm-pack build --features ml_infer --features wasm
-```
-
-**Linux Dependencies**: Always install `libasound2-dev` for ALSA support before building (see CI workflow).
-
-**ML Training Pipeline**: Uses Burn framework with configurable backends (CPU/GPU). Training config in `TrainConfig` struct controls hyperparameters, data simulation, and model architecture.
-
-## Project-Specific Patterns
-
-**Error Handling**: Uses `anyhow::Result` aliased as `Res<T>` and `Void` for `Result<(), Error>` throughout.
-
-**Static Data**: Extensive use of `LazyLock` for computed static arrays (e.g., `ALL_PITCHES`, `KNOWN_MODIFIER_SETS`). See `kord/src/core/modifier.rs` for patterns.
-
-**Parser Architecture**: Pest grammar in `chord.pest` with hand-written parser logic in `core/parser.rs`. Follow existing patterns for extending chord notation.
-
-**Multi-Target Compilation**: Heavy use of `#[cfg(feature = "...")]` guards. New features should follow the hierarchical feature flag pattern (base → specific implementations).
-
-**Audio Processing**: FFT-based analysis in `analyze/` module. Frequency space standardized at 8192 bins covering up to C9.
-
-## Integration Points
-
-**Frontend-Backend**: Leptos SSR with rust-embed for static assets. Backend runs as WASI service with custom request/response translation layer.
-
-**ML Pipeline**: Binary samples stored in `samples/` and `noise/` directories. Training uses `KordItem` structs with frequency space + label format.
-
-**Build System**: Custom `build.rs` sets platform-specific cfg flags. Uses workspace profiles including `wasm-release` for optimized WASM builds.
-
-**External Dependencies**: Rodio for audio, Symphonia for file formats, Burn for ML, Leptos for web, Pest for parsing.
-
-## Critical Conventions
-
-- Use `#[coverage(off)]` for non-testable code (UI, training loops)
-- ML constants in `ml/base/mod.rs` (FREQUENCY_SPACE_SIZE, NUM_CLASSES, etc.)
-- Follow existing trait patterns for music theory types (HasStaticName, Parsable, etc.)
-- Feature flags control compilation - always check dependencies when adding new functionality
+If any section feels incomplete or you need deeper examples (e.g., Thaw SSR setup, ML training flows), let me know and I’ll expand it.
