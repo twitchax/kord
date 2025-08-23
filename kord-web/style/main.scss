@@ -707,6 +707,41 @@ header {
 	margin-top: 1.5rem;
 }
 
+.kord-docs__install-section {
+	margin-bottom: 1.5rem;
+}
+
+.kord-docs__install-text {
+	color: var(--sage-600);
+	margin-bottom: 0.75rem;
+}
+
+.kord-docs__platform-list {
+	list-style-type: disc;
+	list-style-position: inside;
+	color: var(--sage-600);
+	margin: 0 0 1rem 0;
+	padding-left: 1.5rem;
+}
+
+.kord-docs__platform-list li {
+	margin-bottom: 0.25rem;
+}
+
+.kord-docs__link {
+	color: var(--sage-600);
+	text-decoration: underline;
+	transition: color 0.2s ease;
+}
+
+.kord-docs__link:hover {
+	color: var(--sage-700);
+}
+
+.kord-docs__code-example {
+	margin-bottom: 1rem;
+}
+
 // Chord analysis
 .kord-chord-analysis {
 	margin-top: 1rem;
