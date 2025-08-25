@@ -1,5 +1,5 @@
 use leptos::{logging::log, prelude::*, task::spawn_local};
-use thaw::{Flex, FlexGap};
+use thaw::Flex;
 
 use super::shared::{PageTitle, PrimaryButton, SecondaryButton};
 use crate::api::hello;
@@ -24,7 +24,7 @@ pub fn HomePage() -> impl IntoView {
 
     view! {
         <PageTitle>"Welcome to Kord!"</PageTitle>
-        <Flex gap=FlexGap::Large>
+        <Flex class="kord-home__actions">
             <PrimaryButton id="click-me" on_click=on_click_me>
                 "Click Me: " {count}
             </PrimaryButton>
