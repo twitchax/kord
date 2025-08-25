@@ -23,12 +23,18 @@ pub fn NavLink(href: &'static str, #[prop(optional, into)] class: Option<String>
 
 // Typography.
 
+/// Page title (H1) used on main/home
+#[component]
+pub fn PageTitle(children: Children) -> impl IntoView {
+    view! { <Text tag=TextTag::H1 class="kord-page-title">{children()}</Text> }
+}
+
 /// Section wrapper with H2
 #[component]
 pub fn Section(#[prop(into)] title: String, children: Children) -> impl IntoView {
     view! {
         <div class="kord-section">
-            <h2 class="kord-section__title">{title}</h2>
+            <Text tag=TextTag::H2 class="kord-section__title">{title}</Text>
             {children()}
         </div>
     }
@@ -37,19 +43,13 @@ pub fn Section(#[prop(into)] title: String, children: Children) -> impl IntoView
 /// H3 subheading
 #[component]
 pub fn Subheading(#[prop(into)] text: String) -> impl IntoView {
-    view! { <h3 class="kord-subheading">{text}</h3> }
+    view! { <Text tag=TextTag::H3 class="kord-subheading">{text}</Text> }
 }
 
 /// H4 heading used in examples blocks
 #[component]
 pub fn TertiaryHeading(#[prop(into)] text: String) -> impl IntoView {
-    view! { <h4 class="kord-tertiary-heading">{text}</h4> }
-}
-
-/// Page title (H1) used on main/home
-#[component]
-pub fn PageTitle(children: Children) -> impl IntoView {
-    view! { <Text tag=TextTag::H1 class="kord-page-title">{children()}</Text> }
+    view! { <Text tag=TextTag::H4 class="kord-tertiary-heading">{text}</Text> }
 }
 
 // Content blocks.
@@ -89,7 +89,7 @@ pub fn Callout(children: Children) -> impl IntoView {
 pub fn Panel(#[prop(into)] title: String, children: Children) -> impl IntoView {
     view! {
         <div class="kord-panel">
-            <h2 class="kord-panel__title">{title}</h2>
+            <Text tag=TextTag::H2 class="kord-panel__title">{title}</Text>
             {children()}
         </div>
     }
@@ -128,6 +128,7 @@ pub fn PrimaryButton<OC>(#[prop(optional, into)] id: Option<String>, #[prop(opti
 where
     OC: Into<BoxOneCallback<MouseEvent>>,
 {
+    // These base classes are for selection purposes only (no style at the moment).
     let base = "kord-button kord-button--primary";
     let cls = class.map(|c| format!("{base} {c}")).unwrap_or_else(|| base.to_string());
 
@@ -140,6 +141,7 @@ pub fn SecondaryButton<OC>(#[prop(optional, into)] class: Option<String>, on_cli
 where
     OC: Into<BoxOneCallback<MouseEvent>>,
 {
+    // These base classes are for selection purposes only (no style at the moment).
     let base = "kord-button kord-button--secondary";
     let cls = class.map(|c| format!("{base} {c}")).unwrap_or_else(|| base.to_string());
 
