@@ -4,20 +4,20 @@ use leptos::prelude::*;
 #[component]
 pub fn DocsPage() -> impl IntoView {
     view! {
-        <div class="docs-container">
-            <header class="text-center mb-12">
-                <h1>"Kord Documentation"</h1>
-                <p class="docs-subtitle">
-                    "A powerful music theory library and CLI tool for Rust and JavaScript with ML-powered inference capabilities."
+        <div class="kord-docs">
+            <header class="kord-docs__header">
+                <h1>Kord Documentation</h1>
+                <p class="kord-docs__subtitle">
+                    A powerful music theory library and CLI tool for Rust and JavaScript with ML-powered inference capabilities.
                 </p>
             </header>
 
             <Section title="Overview">
-                <p class="text-sage-700 mb-4">
-                    "Kord is a comprehensive music theory library that provides both a command-line interface and programmatic APIs for Rust and JavaScript. "
-                    "It features machine learning-powered chord recognition, audio analysis, and extensive music theory utilities."
+                <p class="kord-docs__description">
+                    Kord is a comprehensive music theory library that provides both a command-line interface and programmatic APIs for Rust and JavaScript. 
+                    It features machine learning-powered chord recognition, audio analysis, and extensive music theory utilities.
                 </p>
-                <div class="flex flex-wrap gap-4 mt-6">
+                <div class="kord-docs__badges">
                     <Badge>"Chord Analysis"</Badge>
                     <Badge>"Audio Processing"</Badge>
                     <Badge>"ML Inference"</Badge>
@@ -30,32 +30,32 @@ pub fn DocsPage() -> impl IntoView {
 
                 <Subheading text="Binary Installation" />
 
-                <div class="mb-6">
+                <div class="kord-docs__install-section">
                     <TertiaryHeading text="Cargo (Recommended)" />
                     <CodeBlock code="$ cargo install kord" />
                 </div>
 
-                <div class="mb-6">
+                <div class="kord-docs__install-section">
                     <TertiaryHeading text="NPM" />
                     <CodeBlock code="$ npm install --save kordweb" />
                 </div>
 
-                <div class="mb-6">
+                <div class="kord-docs__install-section">
                     <TertiaryHeading text="Wasmer" />
                     <CodeBlock code="$ wasmer install twitchax/kord" />
                 </div>
 
-                <div class="mb-6">
+                <div class="kord-docs__install-section">
                     <TertiaryHeading text="Direct Download" />
-                    <p class="text-sage-600 mb-3">"Pre-built binaries are available for:"</p>
-                    <ul class="list-disc list-inside text-sage-600 space-y-1">
+                    <p class="kord-docs__install-text">"Pre-built binaries are available for:"</p>
+                    <ul class="kord-docs__platform-list">
                         <li>"Windows (x86_64)"</li>
                         <li>"macOS (Apple Silicon & Intel)"</li>
                         <li>"Linux (x86_64)"</li>
                     </ul>
-                    <p class="text-sage-600 mt-3">
+                    <p class="kord-docs__install-text">
                         "Download from the "
-                        <a href="https://github.com/twitchax/kord/releases/latest" class="text-sage-600 hover:text-sage-700 underline" target="_blank" rel="noreferrer">"latest release"</a>
+                        <a href="https://github.com/twitchax/kord/releases/latest" class="kord-docs__link" target="_blank" rel="noreferrer">"latest release"</a>
                         " page."
                     </p>
                 </div>
@@ -63,9 +63,9 @@ pub fn DocsPage() -> impl IntoView {
 
             <Section title="CLI Usage">
 
-                <div class="mb-6">
+                <div class="kord-docs__install-section">
                     <Subheading text="Basic Commands" />
-                    <CodeBlock class="mb-4" code="$ kord -h
+                    <CodeBlock class="kord-docs__code-example" code="$ kord -h
 
 A tool to easily explore music theory principles.
 

@@ -23,7 +23,7 @@ pub fn HomePage() -> impl IntoView {
 
     view! {
         <PageTitle>"Welcome to Kord!"</PageTitle>
-        <div class="mt-4 flex gap-3">
+        <div class="kord-home__actions">
             <PrimaryButton id="click-me" on_click=on_click_me>
                 "Click Me: " {count}
             </PrimaryButton>

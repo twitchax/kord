@@ -50,9 +50,9 @@ pub fn App() -> impl IntoView {
         // Router and layout
         <Router>
             <NavBar/>
-            <main class="max-w-5xl mx-auto px-4 pb-4 pt-16">
-                <div class="mt-6">
-                    <Routes fallback=|| view! { <p class="text-sm text-red-600">"Page not found."</p> }>
+            <main class="kord-main">
+                <div class="kord-content">
+                    <Routes fallback=|| view! { <p class="kord-error">Page not found.</p> }>
                         <Route path=StaticSegment("") view=home::HomePage/>
                         <Route path=StaticSegment("docs") view=docs::DocsPage/>
                         <Route path=StaticSegment("describe") view=describe::DescribePage/>
@@ -68,13 +68,13 @@ pub fn App() -> impl IntoView {
 #[component]
 pub fn NavBar() -> impl IntoView {
     view! {
-        <nav class="w-full fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-emerald-900 to-emerald-800 text-emerald-50 shadow-sm">
-            <div class="max-w-5xl mx-auto flex items-center justify-between px-4 py-3">
-                <div class="flex items-left gap-3 ml-0 pl-4 select-none">
-                    <div class="h-6 w-6 rounded-md bg-emerald-600/80 ring-1 ring-white/10 flex items-center justify-center text-white text-xs font-bold shadow-sm">"♪"</div>
-                    <strong class="tracking-tight">"Kord"</strong>
+        <nav class="kord-navbar">
+            <div class="kord-navbar__container">
+                <div class="kord-navbar__brand">
+                    <div class="kord-navbar__icon">"♪"</div>
+                    <strong class="kord-navbar__title">"Kord"</strong>
                 </div>
-                <div class="flex items-center gap-2 mr-0 pr-4">
+                <div class="kord-navbar__links">
                     <NavLink href="/">"Home"</NavLink>
                     <NavLink href="/describe">"Describe"</NavLink>
                     <NavLink href="/guess">"Guess"</NavLink>
