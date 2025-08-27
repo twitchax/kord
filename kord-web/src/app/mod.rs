@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::app::shared::NavLink;
 use leptos::prelude::*;
-use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
+use leptos_meta::{provide_meta_context, MetaTags, Script, Stylesheet, Title};
 use leptos_router::{
     components::{Route, Router, Routes},
     StaticSegment,
@@ -26,6 +26,12 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
                     <link rel="preconnect" href="https://fonts.googleapis.com" />
                     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
                     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+                    <link href="https://cdn.rawgit.com/Killercodes/281792c423a4fe5544d9a8d36a4430f2/raw/36c2eb3e0c44133880485a143717bda9d180f2c1/GistDarkCode.css" rel="stylesheet" type="text/css" />
+
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark-dimmed.min.css" />
+                    <Script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></Script>
+                    <Script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/rust.min.js"></Script>
+
                     <AutoReload options=options.clone() />
                     <HydrationScripts options/>
                     <MetaTags/>
@@ -46,22 +52,22 @@ pub fn App() -> impl IntoView {
     // Brand config.
 
     let brand_colors = HashMap::from([
-        (10, "#050201"),
-        (20, "#231310"),
-        (30, "#3B1C19"),
-        (40, "#4F231F"),
-        (50, "#642A26"),
-        (60, "#7A322C"),
-        (70, "#903A32"),
-        (80, "#A64139"),
-        (90, "#BD4A3F"),
-        (100, "#D45246"),
-        (110, "#EC5B4D"),
-        (120, "#FB6D5B"),
-        (130, "#FF8571"),
-        (140, "#FF9E8B"),
-        (150, "#FFB5A4"),
-        (160, "#FFCABE"),
+        (10, "#0f1917"),
+        (20, "#132421"),
+        (30, "#163129"),
+        (40, "#1b3c34"),
+        (50, "#23493b"),
+        (60, "#2b5a49"),
+        (70, "#31705d"),
+        (80, "#3b8170"),
+        (90, "#4a9b7d"),
+        (100, "#5bb88f"),
+        (110, "#71d9a2"),
+        (120, "#8beec0"),
+        (130, "#a6f3d0"),
+        (140, "#c6fff0"),
+        (150, "#eafff3"),
+        (160, "#f7fff9"),
     ]);
 
     // Theme config.

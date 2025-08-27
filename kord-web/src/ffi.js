@@ -58,3 +58,12 @@ export async function recordMicrophone(seconds, frameSize = 1024) {
         }, (seconds * 1000) + 250);
     });
 }
+
+// Apply code highlighting to a code block using highlight.js
+export function highlightCodeBlock(codeBlock) {
+    if (!window.hljs) {
+        console.warn('highlight.js is not loaded');
+        return;
+    }
+    window.hljs.highlightElement(codeBlock);
+}

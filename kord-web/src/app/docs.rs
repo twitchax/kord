@@ -1,23 +1,25 @@
+use crate::app::shared::PageTitle;
+
 use super::shared::{Badge, Callout, CardLink, CodeBlock, Panel, Section, Subheading, TertiaryHeading};
 use leptos::prelude::*;
-use thaw::{Flex, FlexGap};
+use thaw::{Flex, FlexGap, Text, TextTag};
 
 #[component]
 pub fn DocsPage() -> impl IntoView {
     view! {
         <div class="kord-docs">
             <header class="kord-docs__header">
-                <h1>Kord Documentation</h1>
-                <p class="kord-docs__subtitle">
-                    A powerful music theory library and CLI tool for Rust and JavaScript with ML-powered inference capabilities.
-                </p>
+                <PageTitle attr:style="text-align: center;">"Kord Documentation"</PageTitle>
+                <Text tag=TextTag::P>
+                    "A powerful music theory library and CLI tool for Rust and JavaScript with ML-powered inference capabilities."
+                </Text>
             </header>
 
             <Section title="Overview">
-                <p class="kord-docs__description">
+                <Text tag=TextTag::P>
                     Kord is a comprehensive music theory library that provides both a command-line interface and programmatic APIs for Rust and JavaScript.
                     It features machine learning-powered chord recognition, audio analysis, and extensive music theory utilities.
-                </p>
+                </Text>
                 <Flex class="kord-docs__badges">
                     <Badge>"Chord Analysis"</Badge>
                     <Badge>"Audio Processing"</Badge>
@@ -33,17 +35,17 @@ pub fn DocsPage() -> impl IntoView {
 
                 <div class="kord-docs__install-section">
                     <TertiaryHeading text="Cargo (Recommended)" />
-                    <CodeBlock code="$ cargo install kord" />
+                    <CodeBlock class="lang-bash" code="$ cargo install kord" />
                 </div>
 
                 <div class="kord-docs__install-section">
                     <TertiaryHeading text="NPM" />
-                    <CodeBlock code="$ npm install --save kordweb" />
+                    <CodeBlock class="lang-bash" code="$ npm install --save kordweb" />
                 </div>
 
                 <div class="kord-docs__install-section">
                     <TertiaryHeading text="Wasmer" />
-                    <CodeBlock code="$ wasmer install twitchax/kord" />
+                    <CodeBlock class="lang-bash" code="$ wasmer install twitchax/kord" />
                 </div>
 
                 <div class="kord-docs__install-section">

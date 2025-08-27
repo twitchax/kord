@@ -1,5 +1,5 @@
 use crate::app::shared::PageTitle;
-use crate::mic::record_microphone;
+use crate::ffi::record_microphone;
 use leptos::logging::{error, log};
 use leptos::prelude::*;
 use leptos::task::spawn_local;

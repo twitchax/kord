@@ -3406,7 +3406,7 @@ dependencies = [
 
 [[package]]
 name = "kord-web"
-version = "0.5.0-beta"
+version = "0.6.0"
 dependencies = [
  "axum",
  "axum-insights",
@@ -3424,6 +3424,7 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "wasm-bindgen-test",
+ "web-sys",
 ]
 
 [[package]]

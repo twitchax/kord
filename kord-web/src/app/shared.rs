@@ -4,10 +4,12 @@ use klib::core::{
     chord::{Chord, HasChord, HasScale},
 };
 use leptos::ev::MouseEvent;
-use leptos::prelude::*;
+use leptos::{logging::error, prelude::*};
 use leptos_router::hooks::use_navigate;
 use thaw::{Button, ButtonAppearance, Text, TextTag};
 use thaw_utils::BoxOneCallback;
+
+use crate::ffi::highlight_code_block;
 
 // Nav.
 
@@ -57,9 +59,16 @@ pub fn TertiaryHeading(#[prop(into)] text: String) -> impl IntoView {
 /// Code block wrapper
 #[component]
 pub fn CodeBlock(#[prop(into)] code: String, #[prop(optional, into)] class: Option<String>) -> impl IntoView {
+    let code_block = NodeRef::new();
+
     let base = "kord-code-block";
     let cls = class.map(|c| format!("{base} {c}")).unwrap_or_else(|| base.to_string());
-    view! { <pre class=cls><code>{code}</code></pre> }
+
+    Effect::new(move |_| {
+        highlight_code_block(&code_block).unwrap_or_else(|e| error!("Highlight error: {e}"));
+    });
+
+    view! { <pre class=cls><code node_ref=code_block>{code}</code></pre> }
 }
 
 /// Card-styled external link
@@ -156,7 +165,7 @@ where
 
 // Other.
 
-// Small pill badge.
+/// Small pill badge.
 #[component]
 pub fn Badge(#[prop(optional, into)] class: Option<String>, children: Children) -> impl IntoView {
     let base = "kord-badge";
