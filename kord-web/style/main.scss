@@ -47,11 +47,9 @@ pre {
 code {
 	background-color: #202020;
 	color: #ddd;
-	padding: 1rem;
 	border-radius: 3px;
 	font-size: 0.9em;
 	font-weight: 400;
-	padding: 1rem;
 }
 
 pre {
@@ -439,7 +437,7 @@ header {
 .kord-card-link {
 	display: block;
 	padding: 1rem;
-	background: white;
+	background: #202020;
 	border: 1px solid var(--sage-200);
 	border-radius: 0.5rem;
 	transition: all 0.2s ease;
@@ -486,7 +484,7 @@ header {
 
 // Panels
 .kord-panel {
-	background-color: var(--sage-50);
+	background-color: #202020;
 	padding: 1rem;
 	border-radius: 0.5rem;
 	border: 1px solid var(--sage-200);
@@ -494,7 +492,7 @@ header {
 
 .kord-panel__title {
 	font-weight: 600;
-	color: var(--sage-800);
+	color: white;
 	margin-bottom: 0.5rem;
 }
 
