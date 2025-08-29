@@ -4,8 +4,7 @@
 
 pub mod api;
 pub mod app;
-pub mod ffi;
-pub mod audio;
+pub mod client;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]

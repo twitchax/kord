@@ -13,7 +13,7 @@ use wasm_bindgen::JsValue;
 
 // Bind to external JS module at /ffi.js (placed at crate root; ensure served as static asset).
 #[cfg(feature = "hydrate")]
-#[wasm_bindgen(module = "/src/ffi.js")]
+#[wasm_bindgen(module = "/src/client/ffi.js")]
 extern "C" {
     #[wasm_bindgen(catch, js_name = recordMicrophone)]
     async fn js_record_microphone(seconds: u32) -> Result<JsValue, JsValue>;

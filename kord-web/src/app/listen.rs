@@ -1,6 +1,10 @@
-use crate::app::shared::{ChordAnalysis, PageTitle};
-use crate::audio::{infer_chords_from_samples, le_bytes_to_f32_samples};
-use crate::ffi::record_microphone;
+use crate::{
+    app::shared::{ChordAnalysis, PageTitle},
+    client::{
+        audio::{infer_chords_from_samples, le_bytes_to_f32_samples},
+        ffi::record_microphone,
+    },
+};
 use klib::core::chord::Chord;
 use leptos::logging::{error, log};
 use leptos::prelude::*;
@@ -81,8 +85,6 @@ pub fn ListenPage() -> impl IntoView {
                 }
             };
 
-            log!("Recorded {len} bytes", len = bytes.len());
-
             let samples = match le_bytes_to_f32_samples(&bytes) {
                 Ok(s) => s,
                 Err(e) => {
@@ -92,8 +94,6 @@ pub fn ListenPage() -> impl IntoView {
                     return;
                 }
             };
-
-            log!("Recorded {len} samples", len = samples.len());
 
             match infer_chords_from_samples(&samples, secs as u8) {
                 Ok(candidates) => {

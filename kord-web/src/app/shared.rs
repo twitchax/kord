@@ -9,7 +9,7 @@ use leptos_router::hooks::use_navigate;
 use thaw::{Button, ButtonAppearance, Text, TextTag};
 use thaw_utils::BoxOneCallback;
 
-use crate::ffi::highlight_code_block;
+use crate::client::ffi::highlight_code_block;
 
 // Nav.
 
