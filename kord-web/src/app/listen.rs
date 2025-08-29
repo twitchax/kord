@@ -1,5 +1,7 @@
-use crate::app::shared::PageTitle;
+use crate::app::shared::{ChordAnalysis, PageTitle};
+use crate::audio::{infer_chords_from_samples, le_bytes_to_f32_samples};
 use crate::ffi::record_microphone;
+use klib::core::chord::Chord;
 use leptos::logging::{error, log};
 use leptos::prelude::*;
 use leptos::task::spawn_local;
@@ -16,6 +18,7 @@ pub fn ListenPage() -> impl IntoView {
     let recording = RwSignal::new(false);
 
     let error = RwSignal::new(Option::<String>::None);
+    let chords = RwSignal::new(Vec::<Chord>::new());
 
     let timestamp = use_timestamp();
     let start_time = RwSignal::new(None::<f64>);
@@ -68,15 +71,41 @@ pub fn ListenPage() -> impl IntoView {
         let secs = seconds.get();
 
         spawn_local(async move {
-            match record_microphone(secs).await {
-                Ok(bytes) => {
-                    log!("Recorded {} bytes ({} seconds)", bytes.len(), secs);
-                }
+            let bytes = match record_microphone(secs).await {
+                Ok(b) => b,
                 Err(e) => {
                     error!("Mic error: {e}");
                     error.set(Some(e));
+                    recording.set(false);
+                    return;
+                }
+            };
+
+            log!("Recorded {len} bytes", len = bytes.len());
+
+            let samples = match le_bytes_to_f32_samples(&bytes) {
+                Ok(s) => s,
+                Err(e) => {
+                    error!("{e}");
+                    error.set(Some(e.to_string()));
+                    recording.set(false);
+                    return;
+                }
+            };
+
+            log!("Recorded {len} samples", len = samples.len());
+
+            match infer_chords_from_samples(&samples, secs as u8) {
+                Ok(candidates) => {
+                    chords.set(candidates);
+                }
+                Err(e) => {
+                    log!("Inference failed: {e}");
+                    error.set(Some(e));
+                    chords.set(vec![]);
                 }
             }
+
             recording.set(false);
         });
     };
@@ -101,6 +130,10 @@ pub fn ListenPage() -> impl IntoView {
                 <ProgressCircle value=progress_percent />
             </Flex>
         </Flex>
+
+        <div class="mt-4">
+            {move || chords.get().into_iter().map(|c| view! { <ChordAnalysis chord=c /> }).collect_view()}
+        </div>
 
     }
 }

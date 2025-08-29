@@ -60,5 +60,5 @@ pub mod ml;
 #[cfg(feature = "wasm")]
 pub mod wasm;
 
-#[cfg(feature = "analyze_base")]
+#[cfg(feature = "audio")]
 pub use rodio;
