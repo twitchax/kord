@@ -1,6 +1,6 @@
 [package]
 name = "kord-web"
-version = "0.6.0"
+version = "0.8.0"
 edition = "2021"
 
 [lib]
@@ -20,12 +20,14 @@ axum-insights = { version = "0.6", optional = true, default-features = false }
 klib = { package = "kord", path = "../kord", default-features = false, features = [
     "ml_infer",
     "analyze_base",
+    "audio",
 ] }
 js-sys = { version = "0.3", optional = true }
 web-sys = { version = "0.3", optional = true }
 thaw = { version = "0.5.0-beta", features = ["nightly"] }
 leptos-use = { version = "0.16" }
 thaw_utils = { version = "0.2.0-beta" }
+cpal = { version = "0.16", features = ["wasm-bindgen"], optional = true }
 
 [dev-dependencies]
 wasm-bindgen = { version = "=0.2.100" }
@@ -38,6 +40,7 @@ hydrate = [
     "dep:js-sys",
     "dep:web-sys",
     "dep:wasm-bindgen-futures",
+    "dep:cpal",
     "leptos/hydrate",
     "thaw/hydrate",
 ]

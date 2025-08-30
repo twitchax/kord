@@ -4,12 +4,12 @@ use klib::core::{
     chord::{Chord, HasChord, HasScale},
 };
 use leptos::ev::MouseEvent;
-use leptos::{logging::error, prelude::*};
+use leptos::prelude::*;
 use leptos_router::hooks::use_navigate;
-use thaw::{Button, ButtonAppearance, Text, TextTag};
+use thaw::{Button, ButtonAppearance, Flex, FlexAlign, FlexJustify, Text, TextTag};
 use thaw_utils::BoxOneCallback;
 
-use crate::client::ffi::highlight_code_block;
+use crate::client::{audio::play_chord, ffi::highlight_code_block};
 
 // Nav.
 
@@ -19,8 +19,8 @@ pub fn NavLink(href: &'static str, #[prop(optional, into)] class: Option<String>
     let base = "kord-nav-link";
     let cls = class.map(|c| format!("{base} {c}")).unwrap_or_else(|| base.to_string());
     let navigate = use_navigate();
-    let to = href;
-    view! { <button type="button" class=cls on:click=move |_| { navigate(to, Default::default()); }>{children()}</button> }
+
+    view! { <button type="button" class=cls on:click=move |_| { navigate(href, Default::default()); }>{children()}</button> }
 }
 
 // Typography.
@@ -65,7 +65,8 @@ pub fn CodeBlock(#[prop(into)] code: String, #[prop(optional, into)] class: Opti
     let cls = class.map(|c| format!("{base} {c}")).unwrap_or_else(|| base.to_string());
 
     Effect::new(move |_| {
-        highlight_code_block(&code_block).unwrap_or_else(|e| error!("Highlight error: {e}"));
+        // Swallow any errors, since effects sometimes run when DOM is not ready, but runs again when ready.
+        let _ = highlight_code_block(&code_block);
     });
 
     view! { <pre class=cls><code node_ref=code_block>{code}</code></pre> }
@@ -110,14 +111,19 @@ pub fn ChordAnalysis(#[prop(optional)] chord: Option<Chord>) -> impl IntoView {
     let chord_section = chord.map(|c| {
         let precise = c.precise_name();
         let description = c.description().to_string();
-        let scale = c.scale().into_iter().map(|n| n.name()).collect::<Vec<_>>().join(", ");
-        let chord_tones = c.chord().into_iter().map(|n| n.name()).collect::<Vec<_>>().join(", ");
+        let scale = c.scale().into_iter().map(|n| view! { <code style="margin-right: 3px;">{n.name()}</code> }).collect::<Vec<_>>();
+        let chord_tones = c.chord().into_iter().map(|n| view! { <code style="margin-right: 3px;">{n.name()}</code> }).collect::<Vec<_>>();
 
         view! {
             <Panel title=precise>
-                <div class="kord-chord-analysis__description">{description}</div>
-                <div class="kord-chord-analysis__detail"><span class="kord-chord-analysis__label">Scale: </span>{scale}</div>
-                <div class="kord-chord-analysis__detail"><span class="kord-chord-analysis__label">Chord: </span>{chord_tones}</div>
+                <Flex justify=FlexJustify::SpaceBetween align=FlexAlign::Start>
+                    <div>
+                        <div class="kord-chord-analysis__description">{description}</div>
+                        <div class="kord-chord-analysis__detail"><span class="kord-chord-analysis__label">Scale: </span>{scale}</div>
+                        <div class="kord-chord-analysis__detail"><span class="kord-chord-analysis__label">Chord: </span>{chord_tones}</div>
+                    </div>
+                    <PrimaryButton on_click=move |_| play_chord(&c, 3.0)>"Play"</PrimaryButton>
+                </Flex>
             </Panel>
         }
     });

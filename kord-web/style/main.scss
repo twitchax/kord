@@ -45,11 +45,12 @@ pre {
 }
 
 code {
-	background-color: #202020;
+	background-color: #303030;
 	color: #ddd;
 	border-radius: 3px;
 	font-size: 0.9em;
 	font-weight: 400;
+	padding: 2px 5px 2px 5px;
 }
 
 pre {
@@ -418,7 +419,7 @@ footer {
 }
 
 .kord-chord-analysis__description {
-	color: var(--sage-700);
+	color: var(--sage-400);
 	font-size: 0.875rem;
 	line-height: 1.6;
 }

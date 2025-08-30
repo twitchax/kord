@@ -1,4 +1,7 @@
-use klib::core::{chord::Chord, note::Note};
+use std::time::Duration;
+
+use klib::core::{base::Playable, chord::Chord, note::Note};
+use leptos::prelude::set_timeout;
 
 /// Convert little-endian f32 PCM bytes to samples.
 pub fn le_bytes_to_f32_samples(bytes: &[u8]) -> Result<Vec<f32>, &'static str> {
@@ -22,4 +25,20 @@ pub fn infer_chords_from_samples(samples: &[f32], secs: u8) -> Result<Vec<Chord>
     candidates.truncate(8);
 
     Ok(candidates)
+}
+
+/// Play a chord for the specified duration in seconds.
+pub fn play_chord(chord: &Chord, duration_secs: f64) {
+    let delay = Duration::from_secs_f64(0.2);
+    let length = Duration::from_secs_f64(duration_secs);
+    let fade_in = Duration::from_secs_f64(0.1);
+
+    let handle = chord.play(delay, length, fade_in).unwrap();
+
+    set_timeout(
+        move || {
+            drop(handle);
+        },
+        length,
+    );
 }

@@ -3406,11 +3406,12 @@ dependencies = [
 
 [[package]]
 name = "kord-web"
-version = "0.6.0"
+version = "0.8.0"
 dependencies = [
  "axum",
  "axum-insights",
  "console_error_panic_hook",
+ "cpal",
  "js-sys",
  "kord",
  "leptos",
