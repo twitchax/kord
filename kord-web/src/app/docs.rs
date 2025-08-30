@@ -81,10 +81,10 @@ Commands:
   ml        Train and infer with ML" />
                 </div>
 
-                <div class="mb-6">
+                <div class="kord-docs__spacer-lg">
                     <Subheading text="Examples" />
 
-                    <div class="mb-4">
+                    <div class="kord-docs__spacer">
                         <TertiaryHeading text="Describe a Chord" />
                         <CodeBlock class="kord-docs__code-example" code="$ kord describe Cmaj7" />
                         <Callout>
@@ -95,7 +95,7 @@ Commands:
                         </Callout>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="kord-docs__spacer">
                         <TertiaryHeading text="Guess Chord from Notes" />
                         <CodeBlock class="kord-docs__code-example" code="$ kord guess C F# D# A" />
                         <Callout>
@@ -106,7 +106,7 @@ Commands:
                         </Callout>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="kord-docs__spacer">
                         <TertiaryHeading text="Audio Analysis" />
                         <CodeBlock class="kord-docs__code-example" code="$ kord analyze mic" />
                         <Callout>
@@ -122,16 +122,16 @@ Commands:
 
             <Section title="Library Usage (Rust)">
 
-                <div class="mb-6">
+                <div class="kord-docs__spacer-lg">
                     <Subheading text="Add to Cargo.toml" />
                     <CodeBlock code="[dependencies]
     kord = \"*\"  # choose a version" />
                 </div>
 
-                <div class="mb-6">
+                <div class="kord-docs__spacer-lg">
                     <Subheading text="Basic Examples" />
 
-                    <div class="mb-4">
+                    <div class="kord-docs__spacer">
                         <TertiaryHeading text="Create and Analyze Chords" />
                         <CodeBlock code="use klib::known_chord::KnownChord;
 use klib::modifier::Degree;
@@ -145,7 +145,7 @@ assert_eq!(
 );" />
                     </div>
 
-                    <div class="mb-4">
+                    <div class="kord-docs__spacer">
                         <TertiaryHeading text="Parse Chords from Strings" />
                         <CodeBlock code="use klib::base::Parsable;
 use klib::note::*;
@@ -159,7 +159,7 @@ assert_eq!(
 );" />
                     </div>
 
-                    <div class="mb-4">
+                    <div class="kord-docs__spacer">
                         <TertiaryHeading text="Build Chords Fluently" />
                         <CodeBlock code="use klib::note::*;
 use klib::chord::*;
@@ -177,9 +177,9 @@ assert_eq!(chord_tones, vec![C, E, GSharp, B]);" />
 
             <Section title="JavaScript Usage">
 
-                <div class="mb-6">
+                <div class="kord-docs__spacer-lg">
                     <Subheading text="Installation & Setup" />
-                    <CodeBlock class="mb-4" code="npm install --save kordweb" />
+                    <CodeBlock class="kord-docs__code-example" code="npm install --save kordweb" />
 
                     <CodeBlock code="import init, { KordNote, KordChord } from 'kordweb/klib.js';
 
@@ -187,10 +187,10 @@ assert_eq!(chord_tones, vec![C, E, GSharp, B]);" />
 await init();" />
                 </div>
 
-                <div class="mb-6">
+                <div class="kord-docs__spacer-lg">
                     <Subheading text="Examples" />
 
-                    <div class="mb-4">
+                    <div class="kord-docs__spacer">
                         <TertiaryHeading text="Working with Notes" />
                         <CodeBlock code="// Create notes
 const note = KordNote.parse('C4');
@@ -199,7 +199,7 @@ note.name();    // \"C4\"
 note.octave();  // 4" />
                     </div>
 
-                    <div class="mb-4">
+                    <div class="kord-docs__spacer">
                         <TertiaryHeading text="Building Chords" />
                         <CodeBlock code="// Parse and build chords
 const chord = KordChord.parse('C7#9');
@@ -216,7 +216,7 @@ const notes = KordChord.parse('C')
 // [\"C4\", \"Eb4\", \"G4\", \"Bb4\"]" />
                     </div>
 
-                    <div class="mb-4">
+                    <div class="kord-docs__spacer">
                         <TertiaryHeading text="Chord Transformations" />
                         <CodeBlock code="// Transform existing chords
 KordChord.parse('C7b9')
@@ -229,11 +229,11 @@ KordChord.parse('C7b9')
             </Section>
 
             <Section title="Feature Flags">
-                <p class="mb-4">
+                <p class="kord-docs__spacer">
                     "Kord supports various feature flags for different use cases and deployment targets:"
                 </p>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="kord-docs__grid kord-docs__grid--two kord-docs__grid--gap-4">
                     <Panel title="Core Features">
                         <ul>
                             <li><code>"cli"</code> - Command-line interface</li>
@@ -258,7 +258,7 @@ KordChord.parse('C7b9')
             </Section>
 
             <Section title="API Reference">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="kord-docs__grid kord-docs__grid--two kord-docs__grid--gap-6">
                     <Flex vertical=true gap=FlexGap::Medium>
                         <CardLink href="https://docs.rs/kord/latest/klib/" title="Rust Documentation" desc="Complete API reference for the Rust library" />
                         <CardLink href="https://www.npmjs.com/package/kordweb" title="NPM Package" desc="JavaScript/TypeScript package information" />

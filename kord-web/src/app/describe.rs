@@ -44,8 +44,8 @@ pub fn DescribePage() -> impl IntoView {
     let rules = vec![required_rule, chord_parse_rule];
 
     view! {
-        <PageTitle>"Describe a Chord"</PageTitle>
-        <Flex vertical=true gap=FlexGap::Large class="mt-4">
+    <PageTitle>"Describe a Chord"</PageTitle>
+    <Flex vertical=true gap=FlexGap::Large class="kord-content__section">
             <Field label="Chord Symbol">
                 <Input
                     id="describe-chord"

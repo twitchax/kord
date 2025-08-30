@@ -81,8 +81,8 @@ pub fn GuessPage() -> impl IntoView {
     let rules = vec![tokens_valid_rule, min_notes_rule];
 
     view! {
-        <PageTitle>"Guess Chords from Notes"</PageTitle>
-        <Flex vertical=true gap=FlexGap::Large class="mt-4">
+    <PageTitle>"Guess Chords from Notes"</PageTitle>
+    <Flex vertical=true gap=FlexGap::Large class="kord-content__section">
             <Field label="Notes (space separated)">
                 <Input
                     id="guess-notes"

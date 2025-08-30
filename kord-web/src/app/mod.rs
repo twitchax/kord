@@ -88,7 +88,7 @@ pub fn App() -> impl IntoView {
                 <NavBar/>
                 <main class="kord-main">
                     <div class="kord-content">
-                        <div class="mt-6">
+                        <div class="kord-content__spacer-lg">
                             <Routes fallback=|| view! { <p class="kord-error">"Page not found."</p> }>
                                 <Route path=StaticSegment("") view=home::HomePage/>
                                 <Route path=StaticSegment("docs") view=docs::DocsPage/>

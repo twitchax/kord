@@ -468,41 +468,42 @@ footer {
 	font-weight: 500;
 }
 
-// Keep minimal Tailwind utilities for docs page
-.grid {
+// Docs-specific layout helpers (semantic)
+.kord-docs__grid {
 	display: grid;
 }
 
-.grid-cols-1 {
-	grid-template-columns: repeat(1, 1fr);
+.kord-docs__grid--two {
+	grid-template-columns: 1fr;
 }
 
 @media (min-width: 768px) {
-	.md\:grid-cols-2 {
+	.kord-docs__grid--two {
 		grid-template-columns: repeat(2, 1fr);
 	}
 }
 
-.gap-4 {
+.kord-docs__grid--gap-4 {
 	gap: 1rem;
 }
 
-.gap-6 {
+.kord-docs__grid--gap-6 {
 	gap: 1.5rem;
 }
 
-.text-center {
-	text-align: center;
-}
-
-.mb-4 {
+.kord-docs__spacer {
 	margin-bottom: 1rem;
 }
 
-.mb-6 {
+.kord-docs__spacer-lg {
 	margin-bottom: 1.5rem;
 }
 
-.mt-6 {
+// App content spacing (semantic)
+.kord-content__section {
+	margin-top: 1rem;
+}
+
+.kord-content__spacer-lg {
 	margin-top: 1.5rem;
 }

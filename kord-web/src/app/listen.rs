@@ -111,8 +111,8 @@ pub fn ListenPage() -> impl IntoView {
     };
 
     view! {
-        <PageTitle>"Listen"</PageTitle>
-        <Flex gap=FlexGap::Large class="mt-4">
+    <PageTitle>"Listen"</PageTitle>
+    <Flex gap=FlexGap::Large class="kord-content__section">
             <Flex vertical=true gap=FlexGap::Large>
                 <Input input_type=InputType::Number value=seconds_text>
                     <InputSuffix slot>
@@ -124,14 +124,14 @@ pub fn ListenPage() -> impl IntoView {
                     appearance=Signal::derive(move || if recording.get() { ButtonAppearance::Subtle } else { ButtonAppearance::Primary })
                     on_click=start
                 >{move || if recording.get() { "Recording..." } else { "Start" }}</Button>
-                {move || error.get().map(|e| view!{ <p class="text-xs text-red-600">{e}</p> })}
+                {move || error.get().map(|e| view!{ <p class="kord-error">{e}</p> })}
             </Flex>
             <Flex justify=FlexJustify::Center gap=FlexGap::Small>
                 <ProgressCircle value=progress_percent />
             </Flex>
         </Flex>
 
-        <div class="mt-4">
+    <div class="kord-content__section">
             {move || chords.get().into_iter().map(|c| view! { <ChordAnalysis chord=c /> }).collect_view()}
         </div>
 
