@@ -69,7 +69,7 @@ pub fn CodeBlock(#[prop(into)] code: String, #[prop(optional, into)] class: Opti
         let _ = highlight_code_block(&code_block);
     });
 
-    view! { <pre class=cls><code node_ref=code_block>{code}</code></pre> }
+    view! { <pre class=cls><code node_ref=code_block>{move || code.clone()}</code></pre> }
 }
 
 /// Card-styled external link

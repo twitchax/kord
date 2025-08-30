@@ -86,7 +86,7 @@ Commands:
 
                     <div class="mb-4">
                         <TertiaryHeading text="Describe a Chord" />
-                        <CodeBlock class="mb-2" code="$ kord describe Cmaj7" />
+                        <CodeBlock class="kord-docs__code-example" code="$ kord describe Cmaj7" />
                         <Callout>
                             "Cmaj7" <br/>
                             "   major 7, ionian, first mode of major scale" <br/>
@@ -97,7 +97,7 @@ Commands:
 
                     <div class="mb-4">
                         <TertiaryHeading text="Guess Chord from Notes" />
-                        <CodeBlock class="mb-2" code="$ kord guess C F# D# A" />
+                        <CodeBlock class="kord-docs__code-example" code="$ kord guess C F# D# A" />
                         <Callout>
                             "Cdim" <br/>
                             "   fully diminished, diminished seventh" <br/>
@@ -108,7 +108,7 @@ Commands:
 
                     <div class="mb-4">
                         <TertiaryHeading text="Audio Analysis" />
-                        <CodeBlock class="mb-2" code="$ kord analyze mic" />
+                        <CodeBlock class="kord-docs__code-example" code="$ kord analyze mic" />
                         <Callout>
                             "Notes: C3 E3 G3" <br/>
                             "C@3" <br/>
@@ -229,13 +229,13 @@ KordChord.parse('C7b9')
             </Section>
 
             <Section title="Feature Flags">
-                <p class="text-sage-700 mb-4">
+                <p class="mb-4">
                     "Kord supports various feature flags for different use cases and deployment targets:"
                 </p>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Panel title="Core Features">
-                        <ul class="text-sm text-sage-700 space-y-1">
+                        <ul>
                             <li><code>"cli"</code> - Command-line interface</li>
                             <li><code>"audio"</code> - Audio playback support</li>
                             <li><code>"wasm"</code> - WebAssembly compilation</li>
@@ -244,7 +244,7 @@ KordChord.parse('C7b9')
                     </Panel>
 
                     <Panel title="Analysis & ML">
-                        <ul class="text-sm text-sage-700 space-y-1">
+                        <ul>
                             <li><code>"analyze"</code> - Audio analysis</li>
                             <li><code>"analyze_mic"</code> - Microphone input</li>
                             <li><code>"analyze_file"</code> - File analysis</li>
@@ -271,10 +271,10 @@ KordChord.parse('C7b9')
                 </div>
             </Section>
 
-            <footer class="text-center mt-12 pt-8 border-t border-sage-200">
-                <p class="text-sage-600">
+            <footer>
+                <p>
                     "Built with ♪ by the Kord team. Licensed under "
-                    <a href="https://github.com/twitchax/kord/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" class="underline hover:text-sage-800 transition-colors duration-200">"MIT"</a>
+                    <a href="https://github.com/twitchax/kord/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">"MIT"</a>
                     "."
                 </p>
             </footer>
