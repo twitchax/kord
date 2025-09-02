@@ -31,9 +31,25 @@ pub fn infer_chords_from_samples(samples: &[f32], secs: u8) -> Result<Vec<Chord>
 pub fn play_chord(chord: &Chord, duration_secs: f64) {
     let delay = Duration::from_secs_f64(0.2);
     let length = Duration::from_secs_f64(duration_secs);
-    let fade_in = Duration::from_secs_f64(0.1);
+    let fade_in = Duration::from_secs_f64(0.2);
 
     let handle = chord.play(delay, length, fade_in).unwrap();
+
+    set_timeout(
+        move || {
+            drop(handle);
+        },
+        length,
+    );
+}
+
+/// Play a single note for the specified duration in seconds.
+pub fn play_note(note: &Note, duration_secs: f64) {
+    let delay = Duration::from_secs_f64(0.0);
+    let length = Duration::from_secs_f64(duration_secs);
+    let fade_in = Duration::from_secs_f64(0.2);
+
+    let handle = note.play(delay, length, fade_in).unwrap();
 
     set_timeout(
         move || {

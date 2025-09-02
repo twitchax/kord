@@ -14,6 +14,7 @@ pub mod guess;
 pub mod home;
 pub mod listen;
 pub mod shared;
+pub mod piano;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {

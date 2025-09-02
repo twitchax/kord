@@ -1,7 +1,11 @@
+use klib::core::note::Note;
 use leptos::{logging::log, prelude::*, task::spawn_local};
 use thaw::Flex;
 
-use super::shared::{PageTitle, PrimaryButton, SecondaryButton};
+use super::{
+    piano::Piano,
+    shared::{PageTitle, PrimaryButton, SecondaryButton},
+};
 use crate::api::hello;
 
 /// Renders the home page of your application.
@@ -22,6 +26,11 @@ pub fn HomePage() -> impl IntoView {
         });
     };
 
+    let on_key_press = move |n: Note| {
+        let nm = klib::core::base::HasName::name(&n);
+        log!("pressed: {}", nm);
+    };
+
     view! {
         <PageTitle>"Welcome to Kord!"</PageTitle>
         <Flex class="kord-home__actions">
@@ -32,6 +41,11 @@ pub fn HomePage() -> impl IntoView {
                 "Click Me for a server call"
             </SecondaryButton>
         </Flex>
+
+        // Piano preview
+        <div class="kord-content__section">
+            <Piano on_key_press=on_key_press/>
+        </div>
     }
 }
 

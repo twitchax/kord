@@ -394,6 +394,205 @@ footer {
 	gap: 0.75rem;
 }
 
+// Piano ----------------------------------------------------------------------
+.kord-piano {
+	max-width: 1100px;
+	margin: 1.5rem auto;
+	/* Maintain aspect ratio: approx 1:0.2 (wide and shallow) */
+	position: relative;
+}
+
+.kord-piano__case {
+	background: linear-gradient(180deg, #c91c1c, #a51212);
+	border: 2px solid #6b0f0f;
+	border-radius: 10px;
+	padding: 10px 12px 14px;
+	box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.15), 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.kord-piano__top {
+	position: relative;
+	display: grid;
+	grid-template-columns: 1fr auto;
+	align-items: center;
+	gap: 1rem;
+	margin-bottom: 10px;
+}
+
+.kord-piano__row {
+	display: contents;
+}
+
+.kord-piano__badge {
+	justify-self: end;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	color: #fff;
+	background: rgba(0, 0, 0, 0.25);
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	padding: 4px 8px;
+	border-radius: 4px;
+	text-transform: uppercase;
+	font-size: 0.8rem;
+	user-select: none;
+	margin-right: -16px;
+}
+
+.kord-piano__screw {
+	position: absolute;
+	top: -6px;
+	width: 10px;
+	height: 10px;
+	background: radial-gradient(circle at 30% 30%, #bbb, #666 60%, #333 100%);
+	border-radius: 50%;
+	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.kord-piano__screw--tl {
+	left: -6px;
+}
+
+.kord-piano__knob {
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	background: radial-gradient(circle at 30% 30%, #e5e5e5, #8d8d8d 60%, #5a5a5a 100%);
+	border: 1px solid #333;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.kord-piano__slider {
+	width: 50px;
+	height: 10px;
+	border-radius: 6px;
+	background: linear-gradient(90deg, #2a2a2a, #191919);
+	border: 1px solid #333;
+	position: relative;
+}
+
+.kord-piano__slider::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 14px;
+	height: 14px;
+	border-radius: 3px;
+	background: linear-gradient(180deg, #cfcfcf, #7d7d7d);
+	border: 1px solid #222;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.kord-piano__led {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: radial-gradient(circle at 40% 40%, #ff9494, #ff2b2b 60%, #7a0f0f 100%);
+	border: 1px solid #450808;
+	box-shadow: 0 0 8px rgba(255, 55, 55, 0.6);
+}
+
+.kord-piano__keys {
+	position: relative;
+	width: 100%;
+	/* Aspect via padding-bottom trick for pure CSS; ~7.5:1 width:height */
+	/* Height ~ 13% of width */
+	padding-bottom: 13%;
+}
+
+.kord-piano__whites {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	display: grid;
+	grid-template-columns: repeat(52, 1fr);
+	gap: 0;
+	z-index: 1;
+}
+
+.kord-piano__blacks {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 2;
+	pointer-events: none;
+}
+
+.kord-piano__key {
+	position: relative;
+	user-select: none;
+	cursor: pointer;
+}
+
+.kord-piano__key--white {
+	background: #f7f7f7;
+	border: 1px solid #bbb;
+	border-bottom: 3px solid #9e9e9e;
+	border-radius: 0 0 4px 4px;
+	box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.05);
+	transition: transform 60ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+
+.kord-piano__key--white::after {
+	content: '';
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 94%;
+	display: block;
+}
+
+.kord-piano__key--black {
+	position: absolute;
+	top: 0;
+	width: calc(100% / 52 * 0.65);
+	height: 60%;
+	transform: translateX(25%);
+	transform-origin: top center;
+	background: linear-gradient(180deg, #2c2c2c, #0e0e0e);
+	border-radius: 0 0 4px 4px;
+	box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4);
+	transition: transform 60ms ease, box-shadow 120ms ease, filter 120ms ease;
+	pointer-events: auto;
+}
+
+.kord-piano__key--white:hover {
+	filter: brightness(0.90);
+	box-shadow: inset 0 -10px 0 rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.kord-piano__key--black:hover {
+	filter: brightness(1.30);
+	box-shadow: inset 0 -8px 0 rgba(255, 255, 255, 0.05), 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.kord-piano__key--white:active {
+	transform: translateY(1px) scaleY(1.01);
+	box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.04);
+}
+
+.kord-piano__key--black:active {
+	transform: translateX(25%) scaleY(1.01);
+	box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.kord-piano__key--black::before {
+	content: '';
+	position: absolute;
+	top: 6%;
+	left: 10%;
+	right: 10%;
+	height: 10%;
+	border-radius: 2px;
+	background: rgba(255, 255, 255, 0.06);
+}
+
 // Docs page
 .kord-docs {
 	@extend .kord-container;
