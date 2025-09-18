@@ -127,11 +127,6 @@ impl HasStaticName for Degree {
             Degree::Thirteen => "13",
         }
     }
-
-    #[coverage(off)]
-    fn static_name_ascii(&self) -> &'static str {
-        self.static_name()
-    }
 }
 
 impl HasStaticName for Modifier {
@@ -156,28 +151,6 @@ impl HasStaticName for Modifier {
             Modifier::Diminished => "°",
         }
     }
-
-    #[coverage(off)]
-    fn static_name_ascii(&self) -> &'static str {
-        match self {
-            Modifier::Minor => "m",
-
-            Modifier::Flat5 => "b5",
-            Modifier::Augmented5 => "+",
-
-            Modifier::Major7 => "maj7",
-            Modifier::Dominant(dominant) => dominant.static_name_ascii(),
-
-            Modifier::Flat9 => "b9",
-            Modifier::Sharp9 => "#9",
-
-            Modifier::Sharp11 => "#11",
-
-            Modifier::Flat13 => "b13",
-
-            Modifier::Diminished => "dim",
-        }
-    }
 }
 
 impl HasStaticName for Extension {
@@ -190,26 +163,6 @@ impl HasStaticName for Extension {
             Extension::Flat11 => "♭11",
 
             Extension::Sharp13 => "♯13",
-
-            Extension::Add2 => "add2",
-            Extension::Add4 => "add4",
-            Extension::Add6 => "add6",
-
-            Extension::Add9 => "add9",
-            Extension::Add11 => "add11",
-            Extension::Add13 => "add13",
-        }
-    }
-
-    #[coverage(off)]
-    fn static_name_ascii(&self) -> &'static str {
-        match self {
-            Extension::Sus2 => "sus2",
-            Extension::Sus4 => "sus4",
-
-            Extension::Flat11 => "b11",
-
-            Extension::Sharp13 => "#13",
 
             Extension::Add2 => "add2",
             Extension::Add4 => "add4",

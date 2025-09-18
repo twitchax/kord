@@ -19,15 +19,17 @@ pub type Void = Res<()>;
 pub trait HasStaticName {
     /// Returns the static name of the type.
     fn static_name(&self) -> &'static str;
-
-    /// Returns the static name of the type in ASCII.
-    fn static_name_ascii(&self) -> &'static str;
 }
 
 /// A trait for types that have a computed name.
 pub trait HasName {
     /// Returns the computed name of the type.
     fn name(&self) -> String;
+
+    /// Returns the computed name of the type in ASCII.
+    fn name_ascii(&self) -> String {
+        self.name().replace('♯', "#").replace('♭', "b").replace('𝄪', "##").replace('𝄫', "bb").replace("°", "dim")
+    }
 }
 
 /// A trait for types that have a computed name.

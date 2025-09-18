@@ -273,67 +273,6 @@ impl HasStaticName for NamedPitch {
             NamedPitch::BTripleSharp => "B♯𝄪",
         }
     }
-
-    #[coverage(off)]
-    fn static_name_ascii(&self) -> &'static str {
-        match self {
-            NamedPitch::FTripleFlat => "Fbbb",
-            NamedPitch::CTripleFlat => "Cbbb",
-            NamedPitch::GTripleFlat => "Gbbb",
-            NamedPitch::DTripleFlat => "Dbbb",
-            NamedPitch::ATripleFlat => "Abbb",
-            NamedPitch::ETripleFlat => "Ebbb",
-            NamedPitch::BTripleFlat => "Bbbb",
-
-            NamedPitch::FDoubleFlat => "Fbb",
-            NamedPitch::CDoubleFlat => "Cbb",
-            NamedPitch::GDoubleFlat => "Gbb",
-            NamedPitch::DDoubleFlat => "Dbb",
-            NamedPitch::ADoubleFlat => "Abb",
-            NamedPitch::EDoubleFlat => "Ebb",
-            NamedPitch::BDoubleFlat => "Bbb",
-
-            NamedPitch::FFlat => "Fb",
-            NamedPitch::CFlat => "Cb",
-            NamedPitch::GFlat => "Gb",
-            NamedPitch::DFlat => "Db",
-            NamedPitch::AFlat => "Ab",
-            NamedPitch::EFlat => "Eb",
-            NamedPitch::BFlat => "Bb",
-
-            NamedPitch::F => "F",
-            NamedPitch::C => "C",
-            NamedPitch::G => "G",
-            NamedPitch::D => "D",
-            NamedPitch::A => "A",
-            NamedPitch::E => "E",
-            NamedPitch::B => "B",
-
-            NamedPitch::FSharp => "F#",
-            NamedPitch::CSharp => "C#",
-            NamedPitch::GSharp => "G#",
-            NamedPitch::DSharp => "D#",
-            NamedPitch::ASharp => "A#",
-            NamedPitch::ESharp => "E#",
-            NamedPitch::BSharp => "B#",
-
-            NamedPitch::FDoubleSharp => "F##",
-            NamedPitch::CDoubleSharp => "C##",
-            NamedPitch::GDoubleSharp => "G##",
-            NamedPitch::DDoubleSharp => "D##",
-            NamedPitch::ADoubleSharp => "A##",
-            NamedPitch::EDoubleSharp => "E##",
-            NamedPitch::BDoubleSharp => "B##",
-
-            NamedPitch::FTripleSharp => "F###",
-            NamedPitch::CTripleSharp => "C###",
-            NamedPitch::GTripleSharp => "G###",
-            NamedPitch::DTripleSharp => "D###",
-            NamedPitch::ATripleSharp => "A###",
-            NamedPitch::ETripleSharp => "E###",
-            NamedPitch::BTripleSharp => "B###",
-        }
-    }
 }
 
 impl HasPitch for NamedPitch {

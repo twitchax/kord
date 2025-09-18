@@ -255,10 +255,6 @@ impl HasStaticName for Note {
     fn static_name(&self) -> &'static str {
         self.named_pitch.static_name()
     }
-
-    fn static_name_ascii(&self) -> &'static str {
-        self.named_pitch.static_name_ascii()
-    }
 }
 
 impl HasName for Note {

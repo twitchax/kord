@@ -83,11 +83,6 @@ impl HasStaticName for Octave {
             Octave::Fifteen => "15",
         }
     }
-
-    #[inline]
-    fn static_name_ascii(&self) -> &'static str {
-        self.static_name()
-    }
 }
 
 impl Add for Octave {
