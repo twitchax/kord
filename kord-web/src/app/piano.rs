@@ -109,7 +109,7 @@ pub fn Key(note: Note, #[prop(optional, into)] class: Option<String>, #[prop(int
                 // Initial test code.
                 spawn_local(async move {
                     let mut player = MidiPlayer::new();
-                    player.play_midi_note(note.name(), 5.0).await.unwrap();
+                    player.play_midi_note(&note.name(), 5.0).await.unwrap();
                 });
 
                 on_key_press(note);
