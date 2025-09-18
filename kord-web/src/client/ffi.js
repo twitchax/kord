@@ -67,3 +67,38 @@ export function highlightCodeBlock(codeBlock) {
     }
     window.hljs.highlightElement(codeBlock);
 }
+
+// Prepare the audio context for playback.
+async function ensureAndGetPiano() {
+    window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    if (!window.piano) {
+        window.piano = await Soundfont.instrument(window.audioCtx, 'acoustic_grand_piano');
+    }
+
+    if (window.audioCtx.state !== 'running') await window.audioCtx.resume();
+
+    return [window.piano, window.audioCtx];
+}
+
+export async function playMidiNote(note, velocity) {
+    const [piano, audioCtx] = await ensureAndGetPiano();
+
+    if (!piano) {
+        console.warn('Piano not ready');
+        return;
+    }
+
+    const now = audioCtx.currentTime;
+    const handle = piano.play(note, now, { gain: velocity, attack: 0.003, decay: 0.02, sustain: 0.85, release: 0.25 });
+
+    return handle;
+}
+
+export async function stopMidiNote(handle) {
+    const [_, audioCtx] = await ensureAndGetPiano();
+
+    if (handle) {
+        handle.stop(audioCtx.currentTime);
+    }
+}

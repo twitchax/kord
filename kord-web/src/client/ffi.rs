@@ -20,6 +20,12 @@ extern "C" {
 
     #[wasm_bindgen(catch, js_name = highlightCodeBlock)]
     fn js_highlight_code_block(code_block: web_sys::HtmlElement) -> Result<(), JsValue>;
+
+    #[wasm_bindgen(catch, js_name = playMidiNote)]
+    async fn js_play_midi_note(note: &str, velocity: f32) -> Result<JsValue, JsValue>;
+
+    #[wasm_bindgen(catch, js_name = stopMidiNote)]
+    async fn js_stop_midi_note(handle: JsValue) -> Result<(), JsValue>;
 }
 
 // Records mono PCM for `seconds`, frame_size controls internal JS processing buffer.
@@ -66,4 +72,63 @@ pub fn highlight_code_block(node_ref: &NodeRef<Code>) -> Result<(), String> {
 #[cfg(not(feature = "hydrate"))]
 pub fn highlight_code_block(_code_block: &NodeRef<Code>) -> Result<(), String> {
     Err("highlight_code_block only available in browser".into())
+}
+
+/// struct that can play piano notes using the Web Audio API.
+#[cfg(feature = "hydrate")]
+pub struct MidiPlayer {
+    /// Handles to active notes.
+    handles: Vec<JsValue>,
+}
+
+#[cfg(not(feature = "hydrate"))]
+pub struct MidiPlayer {}
+
+impl MidiPlayer {
+    /// Creates a new MidiPlayer.
+    #[cfg(feature = "hydrate")]
+    pub fn new() -> Self {
+        Self { handles: Vec::new() }
+    }
+
+    /// Creates a new MidiPlayer.
+    #[cfg(not(feature = "hydrate"))]
+    pub fn new() -> Self {
+        Self {}
+    }
+
+    /// Plays a MIDI note with the given velocity.
+    #[cfg(feature = "hydrate")]
+    pub async fn play_midi_note(&mut self, note: &str, velocity: f32) -> Result<(), String> {
+        let handle = js_play_midi_note(note, velocity).await.map_err(|e| format!("js error: {e:?}"))?;
+        self.handles.push(handle);
+        Ok(())
+    }
+
+    /// Plays a MIDI note with the given velocity.
+    #[cfg(not(feature = "hydrate"))]
+    pub async fn play_midi_note(&mut self, _note: &str, _velocity: f32) -> Result<(), String> {
+        Err("play_midi_note only available in browser".into())
+    }
+
+    /// Stops all currently playing MIDI notes.
+    #[cfg(feature = "hydrate")]
+    pub async fn stop_all_notes(&mut self) -> Result<(), String> {
+        for handle in self.handles.drain(..) {
+            js_stop_midi_note(handle).await.map_err(|e| format!("js error: {e:?}"))?;
+        }
+        Ok(())
+    }
+
+    /// Stops all currently playing MIDI notes.
+    #[cfg(not(feature = "hydrate"))]
+    pub async fn stop_all_notes(&mut self) -> Result<(), String> {
+        Err("stop_all_notes only available in browser".into())
+    }
+}
+
+impl Default for MidiPlayer {
+    fn default() -> Self {
+        Self::new()
+    }
 }

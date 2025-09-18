@@ -13,8 +13,8 @@ pub mod docs;
 pub mod guess;
 pub mod home;
 pub mod listen;
-pub mod shared;
 pub mod piano;
+pub mod shared;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -24,15 +24,22 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
                 <head>
                     <meta charset="utf-8"/>
                     <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+                    // Google Fonts for Inter typeface.
                     <link rel="preconnect" href="https://fonts.googleapis.com" />
                     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
                     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
                     <link href="https://cdn.rawgit.com/Killercodes/281792c423a4fe5544d9a8d36a4430f2/raw/36c2eb3e0c44133880485a143717bda9d180f2c1/GistDarkCode.css" rel="stylesheet" type="text/css" />
 
+                    // Highlight.js for syntax highlighting.
                     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark-dimmed.min.css" />
                     <Script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></Script>
                     <Script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/rust.min.js"></Script>
 
+                    // Soundfont player for MIDI playback.
+                    <Script src="https://unpkg.com/soundfont-player@0.12.0/dist/soundfont-player.js"></Script>
+
+                    // Leptos auto-reload, hydration, and meta tags.
                     <AutoReload options=options.clone() />
                     <HydrationScripts options/>
                     <MetaTags/>

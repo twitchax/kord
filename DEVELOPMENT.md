@@ -70,3 +70,5 @@ docker run -it --rm -p 8080:8080 twitchax/kord-web
 ## TODO
 
 - Hyperparameter tuning should allow all backends.
+- Add a synth to the frontend so the sounds are more friendly.
+- Try training with a much larger dataset (e.g., [Slakh2100](https://zenodo.org/records/4599666)).

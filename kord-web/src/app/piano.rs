@@ -1,14 +1,14 @@
 use std::sync::LazyLock;
 
-use crate::client::audio::play_note;
+use crate::client::{audio::play_note, ffi::MidiPlayer};
 use klib::core::{
-    base::{HasName, Parsable},
+    base::{HasName, HasStaticName, Parsable},
     note::Note,
 };
-use leptos::prelude::*;
+use leptos::{prelude::*, task::spawn_local};
 use thaw_utils::ArcOneCallback;
 
-// Public Piano component ------------------------------------------------------
+// Public Piano component
 
 #[component]
 pub fn Piano(#[prop(optional, into)] on_key_press: Option<ArcOneCallback<Note>>) -> impl IntoView {
@@ -76,7 +76,7 @@ pub fn Piano(#[prop(optional, into)] on_key_press: Option<ArcOneCallback<Note>>)
     }
 }
 
-// Key components --------------------------------------------------------------
+// Key components
 
 #[component]
 pub fn WhiteKey(note: Note, index: usize, #[prop(into)] on_key_press: ArcOneCallback<Note>) -> impl IntoView {
@@ -104,14 +104,21 @@ pub fn Key(note: Note, #[prop(optional, into)] class: Option<String>, #[prop(int
             class=cls
             title=title_note
             on:click=move |_| {
-                play_note(&note, 0.6);
+                //play_note(&note, 0.6);
+
+                // Initial test code.
+                spawn_local(async move {
+                    let mut player = MidiPlayer::new();
+                    player.play_midi_note(note.name(), 5.0).await.unwrap();
+                });
+
                 on_key_press(note);
             }
         ></div>
     }
 }
 
-// Static Helpers --------------------------------------------------------------------
+// Static Helpers
 
 static NOTE_NAMES: [&str; 88] = [
     "A0", "A#0", "B0", "C1", "C#1", "D1", "D#1", "E1", "F1", "F#1", "G1", "G#1", "A1", "A#1", "B1", "C2", "C#2", "D2", "D#2", "E2", "F2", "F#2", "G2", "G#2", "A2", "A#2", "B2", "C3", "C#3", "D3",

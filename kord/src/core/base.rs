@@ -19,6 +19,9 @@ pub type Void = Res<()>;
 pub trait HasStaticName {
     /// Returns the static name of the type.
     fn static_name(&self) -> &'static str;
+
+    /// Returns the static name of the type in ASCII.
+    fn static_name_ascii(&self) -> &'static str;
 }
 
 /// A trait for types that have a computed name.
