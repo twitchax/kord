@@ -1,6 +1,10 @@
 # Kord — Agents Guide
 
-This document helps AI coding agents (and contributors) work effectively in this repository. It summarizes the workspace layout, build/run/test flows for both the core library/CLI and the web app, and a few project conventions to follow when making changes.
+This document provides detailed workflows and troubleshooting for AI coding agents working in this repository. 
+
+> **Quick Start**: For essential architecture patterns and conventions, see [`.github/copilot-instructions.md`](.github/copilot-instructions.md) first.
+
+This guide focuses on comprehensive build workflows, testing procedures, and detailed troubleshooting steps.
 
 ## Workspace Overview
 - `kord/` (aka `klib`): Core music theory/audio/ML library and CLI. Pest grammar at `kord/chord.pest`; parser at `kord/src/core/parser.rs`.
