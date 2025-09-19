@@ -2,7 +2,7 @@ use std::sync::LazyLock;
 
 use crate::client::ffi::MidiPlayer;
 use klib::core::{
-    base::{HasName, HasStaticName, Parsable},
+    base::{HasName, Parsable},
     note::Note,
 };
 use leptos::{prelude::*, task::spawn_local};
@@ -105,16 +105,22 @@ pub fn Key(note: Note, #[prop(optional, into)] class: Option<String>, #[prop(int
 
     let title_note = note.name();
 
-    view! {
-        <div
-            class=cls
-            title=title_note
-            on:click=move |_| {
+    // Build event handler factories outside of the view macro for reuse.
+    let make_start = {
+        let mp = midi_player.clone();
+        let on_key_press = on_key_press.clone();
+
+        move || {
+            let mp = mp.clone();
+            let on_key_press = on_key_press.clone();
+            let note = note;
+
+            move |_| {
                 let note_ascii = note.name_ascii();
-                let midi_player = midi_player.clone();
+                let value = mp.clone();
 
                 spawn_local(async move {
-                    if let Err(e) = midi_player.write_value().play_midi_note(&note_ascii, 0.6).await {
+                    if let Err(e) = value.write_value().play_midi_note(&note_ascii, 0.6).await {
                         #[cfg(feature = "hydrate")]
                         web_sys::console::warn_1(&format!("Failed to play note {note_ascii}: {e}").into());
                         #[cfg(not(feature = "hydrate"))]
@@ -124,6 +130,35 @@ pub fn Key(note: Note, #[prop(optional, into)] class: Option<String>, #[prop(int
 
                 on_key_press(note);
             }
+        }
+    };
+
+    let make_stop = {
+        let mp = midi_player.clone();
+        move || {
+            let mp = mp.clone();
+            move |_| {
+                let value = mp.clone();
+                spawn_local(async move {
+                    if let Err(e) = value.write_value().stop_all_notes().await {
+                        #[cfg(feature = "hydrate")]
+                        web_sys::console::warn_1(&format!("Failed to stop notes: {e}").into());
+                        #[cfg(not(feature = "hydrate"))]
+                        eprintln!("Failed to stop notes: {e}");
+                    }
+                });
+            }
+        }
+    };
+
+    view! {
+        <div
+            class=cls
+            title=title_note
+            on:pointerdown=make_start()
+            on:pointerup=make_stop()
+            on:pointerleave=make_stop()
+            on:pointercancel=make_stop()
         ></div>
     }
 }
