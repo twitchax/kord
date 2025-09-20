@@ -1,11 +1,11 @@
 use std::{rc::Rc, sync::LazyLock};
 
-use crate::client::ffi::MidiPlayer;
+use crate::client::{ffi::MidiPlayer, helpers::spawn_local_with_error_handling};
 use klib::core::{
     base::{HasName, Parsable},
     note::Note,
 };
-use leptos::{prelude::*, task::spawn_local};
+use leptos::prelude::*;
 use thaw_utils::ArcOneCallback;
 
 // Public Piano component
@@ -105,49 +105,34 @@ pub fn Key(note: Note, #[prop(optional, into)] class: Option<String>, #[prop(int
 
     let title_note = note.name();
 
-    // Build event handler factories outside of the view macro for reuse.
-    let make_start = {
+    let start = {
         let mp = midi_player.clone();
-        let on_key_press = on_key_press.clone();
 
-        move || {
+        move |_| {
+            let note_ascii = note.name_ascii();
             let mp = mp.clone();
-            let on_key_press = on_key_press.clone();
-            let note = note;
 
-            move |_| {
-                let note_ascii = note.name_ascii();
-                let value = mp.clone();
+            spawn_local_with_error_handling(async move {
+                mp.play_midi_note(&note_ascii, 3.0).await?;
 
-                spawn_local(async move {
-                    if let Err(e) = value.play_midi_note(&note_ascii, 0.8).await {
-                        #[cfg(feature = "hydrate")]
-                        web_sys::console::warn_1(&format!("Failed to play note {note_ascii}: {e}").into());
-                        #[cfg(not(feature = "hydrate"))]
-                        eprintln!("Failed to play note {note_ascii}: {e}");
-                    }
-                });
+                Ok::<(), String>(())
+            });
 
-                on_key_press(note);
-            }
+            on_key_press(note);
         }
     };
 
-    let make_stop = {
+    let stop = {
         let mp = midi_player.clone();
-        move || {
+
+        move |_| {
             let mp = mp.clone();
-            move |_| {
-                let value = mp.clone();
-                spawn_local(async move {
-                    if let Err(e) = value.stop_all_notes().await {
-                        #[cfg(feature = "hydrate")]
-                        web_sys::console::warn_1(&format!("Failed to stop notes: {e}").into());
-                        #[cfg(not(feature = "hydrate"))]
-                        eprintln!("Failed to stop notes: {e}");
-                    }
-                });
-            }
+
+            spawn_local_with_error_handling(async move {
+                mp.stop_all_notes().await?;
+
+                Ok::<(), String>(())
+            });
         }
     };
 
@@ -155,10 +140,10 @@ pub fn Key(note: Note, #[prop(optional, into)] class: Option<String>, #[prop(int
         <div
             class=cls
             title=title_note
-            on:pointerdown=make_start()
-            on:pointerup=make_stop()
-            on:pointerleave=make_stop()
-            on:pointercancel=make_stop()
+            on:pointerdown=start
+            on:pointerup=stop.clone()
+            on:pointerleave=stop.clone()
+            on:pointercancel=stop
         ></div>
     }
 }

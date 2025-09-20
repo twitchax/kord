@@ -1,10 +1,11 @@
 use leptos::{html::Code, prelude::NodeRef};
-use std::cell::RefCell;
 
 #[cfg(feature = "hydrate")]
 use js_sys::{Float32Array, Object, Reflect};
 #[cfg(feature = "hydrate")]
 use leptos::prelude::Get;
+#[cfg(feature = "hydrate")]
+use std::cell::RefCell;
 #[cfg(feature = "hydrate")]
 use wasm_bindgen::prelude::*;
 #[cfg(feature = "hydrate")]
