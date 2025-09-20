@@ -1,4 +1,4 @@
-use std::sync::LazyLock;
+use std::{rc::Rc, sync::LazyLock};
 
 use crate::client::ffi::MidiPlayer;
 use klib::core::{
@@ -12,8 +12,8 @@ use thaw_utils::ArcOneCallback;
 
 #[component]
 pub fn Piano(#[prop(optional, into)] on_key_press: Option<ArcOneCallback<Note>>) -> impl IntoView {
-    // Create a shared MIDI player instance to avoid resource leaks
-    let midi_player = ArcStoredValue::new(MidiPlayer::new());
+    // Create a shared, non-reactive MIDI player instance to avoid disposal issues
+    let midi_player: Rc<MidiPlayer> = Rc::new(MidiPlayer::new());
     // Get the notes of the piano statically.
 
     let notes = &*PIANO_NOTES;
@@ -85,21 +85,21 @@ pub fn Piano(#[prop(optional, into)] on_key_press: Option<ArcOneCallback<Note>>)
 // Key components
 
 #[component]
-pub fn WhiteKey(note: Note, index: usize, #[prop(into)] on_key_press: ArcOneCallback<Note>, midi_player: ArcStoredValue<MidiPlayer>) -> impl IntoView {
+pub fn WhiteKey(note: Note, index: usize, #[prop(into)] on_key_press: ArcOneCallback<Note>, midi_player: Rc<MidiPlayer>) -> impl IntoView {
     // grid-column is 1-based and spans 1 col
     let style = format!("grid-column: {index} / span 1");
     view! { <Key note class="kord-piano__key--white" on_key_press=on_key_press midi_player=midi_player.clone() attr:style=style /> }
 }
 
 #[component]
-pub fn BlackKey(note: Note, left_percent: f32, #[prop(into)] on_press: ArcOneCallback<Note>, midi_player: ArcStoredValue<MidiPlayer>) -> impl IntoView {
+pub fn BlackKey(note: Note, left_percent: f32, #[prop(into)] on_press: ArcOneCallback<Note>, midi_player: Rc<MidiPlayer>) -> impl IntoView {
     // place relative to the white grid using left percentage
     let style = format!("left: {left_percent:.6}%");
     view! { <Key note class="kord-piano__key--black" on_key_press=on_press midi_player=midi_player.clone() attr:style=style /> }
 }
 
 #[component]
-pub fn Key(note: Note, #[prop(optional, into)] class: Option<String>, #[prop(into)] on_key_press: ArcOneCallback<Note>, midi_player: ArcStoredValue<MidiPlayer>) -> impl IntoView {
+pub fn Key(note: Note, #[prop(optional, into)] class: Option<String>, #[prop(into)] on_key_press: ArcOneCallback<Note>, midi_player: Rc<MidiPlayer>) -> impl IntoView {
     let base = "kord-piano__key";
     let cls = class.map(|c| format!("{base} {c}")).unwrap_or_else(|| base.to_string());
 
@@ -120,7 +120,7 @@ pub fn Key(note: Note, #[prop(optional, into)] class: Option<String>, #[prop(int
                 let value = mp.clone();
 
                 spawn_local(async move {
-                    if let Err(e) = value.write_value().play_midi_note(&note_ascii, 0.6).await {
+                    if let Err(e) = value.play_midi_note(&note_ascii, 0.8).await {
                         #[cfg(feature = "hydrate")]
                         web_sys::console::warn_1(&format!("Failed to play note {note_ascii}: {e}").into());
                         #[cfg(not(feature = "hydrate"))]
@@ -140,7 +140,7 @@ pub fn Key(note: Note, #[prop(optional, into)] class: Option<String>, #[prop(int
             move |_| {
                 let value = mp.clone();
                 spawn_local(async move {
-                    if let Err(e) = value.write_value().stop_all_notes().await {
+                    if let Err(e) = value.stop_all_notes().await {
                         #[cfg(feature = "hydrate")]
                         web_sys::console::warn_1(&format!("Failed to stop notes: {e}").into());
                         #[cfg(not(feature = "hydrate"))]

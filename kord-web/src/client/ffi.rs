@@ -1,4 +1,5 @@
 use leptos::{html::Code, prelude::NodeRef};
+use std::cell::RefCell;
 
 #[cfg(feature = "hydrate")]
 use js_sys::{Float32Array, Object, Reflect};
@@ -78,7 +79,7 @@ pub fn highlight_code_block(_code_block: &NodeRef<Code>) -> Result<(), String> {
 #[cfg(feature = "hydrate")]
 pub struct MidiPlayer {
     /// Handles to active notes.
-    handles: Vec<JsValue>,
+    handles: RefCell<Vec<JsValue>>,
 }
 
 #[cfg(not(feature = "hydrate"))]
@@ -88,7 +89,7 @@ impl MidiPlayer {
     /// Creates a new MidiPlayer.
     #[cfg(feature = "hydrate")]
     pub fn new() -> Self {
-        Self { handles: Vec::new() }
+        Self { handles: RefCell::new(Vec::new()) }
     }
 
     /// Creates a new MidiPlayer.
@@ -99,22 +100,26 @@ impl MidiPlayer {
 
     /// Plays a MIDI note with the given velocity.
     #[cfg(feature = "hydrate")]
-    pub async fn play_midi_note(&mut self, note: &str, velocity: f32) -> Result<(), String> {
+    pub async fn play_midi_note(&self, note: &str, velocity: f32) -> Result<(), String> {
         let handle = js_play_midi_note(note, velocity).await.map_err(|e| format!("js error: {e:?}"))?;
-        self.handles.push(handle);
+        self.handles.borrow_mut().push(handle);
         Ok(())
     }
 
     /// Plays a MIDI note with the given velocity.
     #[cfg(not(feature = "hydrate"))]
-    pub async fn play_midi_note(&mut self, _note: &str, _velocity: f32) -> Result<(), String> {
+    pub async fn play_midi_note(&self, _note: &str, _velocity: f32) -> Result<(), String> {
         Err("play_midi_note only available in browser".into())
     }
 
     /// Stops all currently playing MIDI notes.
     #[cfg(feature = "hydrate")]
-    pub async fn stop_all_notes(&mut self) -> Result<(), String> {
-        for handle in self.handles.drain(..) {
+    pub async fn stop_all_notes(&self) -> Result<(), String> {
+        let handles = {
+            let mut h = self.handles.borrow_mut();
+            std::mem::take(&mut *h)
+        };
+        for handle in handles {
             js_stop_midi_note(handle).await.map_err(|e| format!("js error: {e:?}"))?;
         }
         Ok(())
@@ -122,7 +127,7 @@ impl MidiPlayer {
 
     /// Stops all currently playing MIDI notes.
     #[cfg(not(feature = "hydrate"))]
-    pub async fn stop_all_notes(&mut self) -> Result<(), String> {
+    pub async fn stop_all_notes(&self) -> Result<(), String> {
         Err("stop_all_notes only available in browser".into())
     }
 }
