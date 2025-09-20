@@ -1,14 +1,29 @@
-use std::{rc::Rc, sync::LazyLock};
+#[cfg(feature = "hydrate")]
+use std::{cell::RefCell, collections::HashMap};
+use std::{collections::HashSet, rc::Rc, sync::LazyLock};
 
 use crate::client::{ffi::MidiPlayer, helpers::spawn_local_with_error_handling};
 use klib::core::{
     base::{HasName, Parsable},
     note::Note,
 };
+#[cfg(feature = "hydrate")]
+use leptos::ev::{keydown, keyup};
+#[cfg(feature = "hydrate")]
+use leptos::prelude::window;
 use leptos::prelude::*;
+#[cfg(feature = "hydrate")]
+use leptos_use::use_event_listener;
 use thaw_utils::ArcOneCallback;
+#[cfg(feature = "hydrate")]
+use web_sys::KeyboardEvent;
 
-// Public Piano component
+/// Piano UI component.
+///
+/// Renders a stylized 88-key piano with white/black key layout and handles
+/// pointer interactions for starting/stopping notes via the shared `MidiPlayer`.
+/// When hydrated in the browser, global keyboard listeners are installed to map
+/// ASDFGHJK (white) and W/E/T/Y/U (black) to C4–C5 and highlight active keys.
 
 #[component]
 pub fn Piano(#[prop(optional, into)] on_key_press: Option<ArcOneCallback<Note>>) -> impl IntoView {
@@ -40,6 +55,9 @@ pub fn Piano(#[prop(optional, into)] on_key_press: Option<ArcOneCallback<Note>>)
     // Share the optional callback across many keys safely.
     let shared_on_press: ArcOneCallback<Note> = on_key_press.unwrap_or_else(|| ArcOneCallback::new(|_| {}));
 
+    // Reactive set of pressed note ASCII names for highlighting
+    let pressed_notes: RwSignal<HashSet<String>> = RwSignal::new(HashSet::new());
+
     let white_keys = whites
         .into_iter()
         .map({
@@ -48,7 +66,19 @@ pub fn Piano(#[prop(optional, into)] on_key_press: Option<ArcOneCallback<Note>>)
 
             move |(col, note)| {
                 let on_press = shared_on_press.clone();
-                view! { <WhiteKey note index=col on_key_press=on_press midi_player=midi_player.clone() /> }
+                let is_active = {
+                    let note_ascii = note.name_ascii();
+                    Signal::derive(move || pressed_notes.get().contains(&note_ascii))
+                };
+                view! {
+                    <WhiteKey
+                        note
+                        index=col
+                        on_key_press=on_press
+                        midi_player=midi_player.clone()
+                        is_active=is_active
+                    />
+                }
             }
         })
         .collect_view();
@@ -61,10 +91,27 @@ pub fn Piano(#[prop(optional, into)] on_key_press: Option<ArcOneCallback<Note>>)
 
             move |(left, note)| {
                 let on_press = shared_on_press.clone();
-                view! { <BlackKey note left_percent=left on_press=on_press midi_player=midi_player.clone() /> }
+                let is_active = {
+                    let note_ascii = note.name_ascii();
+                    Signal::derive(move || pressed_notes.get().contains(&note_ascii))
+                };
+                view! {
+                    <BlackKey
+                        note
+                        left_percent=left
+                        on_press=on_press
+                        midi_player=midi_player.clone()
+                        is_active=is_active
+                    />
+                }
             }
         })
         .collect_view();
+
+    // Keyboard input: map ASDFGHJK (white) and W/E/T/Y/U (black) to C4..C5
+    // Start on keydown (no repeat), stop on keyup for the specific note.
+    #[cfg(feature = "hydrate")]
+    setup_piano_keyboard_listeners(midi_player.clone(), shared_on_press.clone(), pressed_notes);
 
     view! {
         <div class="kord-piano">
@@ -82,24 +129,168 @@ pub fn Piano(#[prop(optional, into)] on_key_press: Option<ArcOneCallback<Note>>)
     }
 }
 
+/// Registers global keyboard listeners (hydrate only) that:
+/// - Map ASDFGHJK (white) and W/E/T/Y/U (black) to C4–C5
+/// - Start notes on keydown (ignoring repeats)
+/// - Stop the same note on keyup
+/// - Update `pressed_notes` to drive reactive key highlighting
+#[cfg(feature = "hydrate")]
+fn setup_piano_keyboard_listeners(midi_player: Rc<MidiPlayer>, on_key_press: ArcOneCallback<Note>, pressed_notes: RwSignal<HashSet<String>>) {
+    // Build the key -> base note map (C4..C5)
+    let mut map: HashMap<String, Note> = HashMap::new();
+
+    let add = |k: &str, n: &str, map: &mut HashMap<String, Note>| {
+        if let Ok(note) = Note::parse(n) {
+            map.insert(k.to_string(), note);
+        }
+    };
+
+    add("a", "C4", &mut map);
+    add("s", "D4", &mut map);
+    add("d", "E4", &mut map);
+    add("f", "F4", &mut map);
+    add("g", "G4", &mut map);
+    add("h", "A4", &mut map);
+    add("j", "B4", &mut map);
+    add("k", "C5", &mut map);
+    add("w", "C#4", &mut map);
+    add("e", "D#4", &mut map);
+    add("t", "F#4", &mut map);
+    add("y", "G#4", &mut map);
+    add("u", "A#4", &mut map);
+
+    // Track pressed keys to avoid repeats and enable proper keyup handling
+    let pressed: Rc<RefCell<HashSet<String>>> = Rc::new(RefCell::new(HashSet::new()));
+
+    // KeyDown: start note
+    {
+        let map = map.clone();
+        let pressed = Rc::clone(&pressed);
+        let mp = midi_player.clone();
+        let on_press = on_key_press.clone();
+
+        let cleanup = use_event_listener(window(), keydown, move |ev: KeyboardEvent| {
+            if ev.repeat() {
+                return;
+            }
+
+            let key = ev.key().to_lowercase();
+
+            if let Some(&note) = map.get(&key) {
+                let mut set = pressed.borrow_mut();
+
+                if !set.insert(key.clone()) {
+                    return;
+                }
+
+                let note_ascii = note.name_ascii();
+
+                pressed_notes.update(|s| {
+                    s.insert(note_ascii.clone());
+                });
+
+                let mp = mp.clone();
+                spawn_local_with_error_handling(async move {
+                    mp.play_midi_note(&note_ascii, 3.0).await?;
+                    Ok::<(), String>(())
+                });
+
+                on_press(note);
+            }
+        });
+
+        // Keep listener alive for component lifetime
+        leptos::prelude::on_cleanup(cleanup);
+    }
+
+    // KeyUp: stop note
+    {
+        let map = map.clone();
+        let pressed = Rc::clone(&pressed);
+        let mp = midi_player.clone();
+
+        let cleanup = use_event_listener(window(), keyup, move |ev: KeyboardEvent| {
+            let key = ev.key().to_lowercase();
+
+            if let Some(&note) = map.get(&key) {
+                let mut set = pressed.borrow_mut();
+
+                if set.remove(&key) {
+                    let note_ascii = note.name_ascii();
+
+                    pressed_notes.update(|s| {
+                        s.remove(&note_ascii);
+                    });
+
+                    let mp = mp.clone();
+                    spawn_local_with_error_handling(async move {
+                        mp.stop_note(&note_ascii).await?;
+                        Ok::<(), String>(())
+                    });
+                }
+            }
+        });
+
+        // Keep listener alive for component lifetime
+        leptos::prelude::on_cleanup(cleanup);
+    }
+}
+
 // Key components
 
+/// White key wrapper.
+///
+/// Positions itself within the white-key grid and delegates rendering/behavior
+/// to `Key`, passing along the active state and callbacks.
 #[component]
-pub fn WhiteKey(note: Note, index: usize, #[prop(into)] on_key_press: ArcOneCallback<Note>, midi_player: Rc<MidiPlayer>) -> impl IntoView {
+pub fn WhiteKey(note: Note, index: usize, #[prop(into)] on_key_press: ArcOneCallback<Note>, midi_player: Rc<MidiPlayer>, #[prop(into)] is_active: Signal<bool>) -> impl IntoView {
     // grid-column is 1-based and spans 1 col
     let style = format!("grid-column: {index} / span 1");
-    view! { <Key note class="kord-piano__key--white" on_key_press=on_key_press midi_player=midi_player.clone() attr:style=style /> }
+    view! {
+        <Key
+            note
+            class="kord-piano__key--white"
+            on_key_press=on_key_press
+            midi_player=midi_player.clone()
+            attr:style=style
+            is_active=is_active
+        />
+    }
 }
 
+/// Black key wrapper.
+///
+/// Absolutely positions itself over the white-key grid using a percentage left
+/// offset and delegates rendering/behavior to `Key`.
 #[component]
-pub fn BlackKey(note: Note, left_percent: f32, #[prop(into)] on_press: ArcOneCallback<Note>, midi_player: Rc<MidiPlayer>) -> impl IntoView {
+pub fn BlackKey(note: Note, left_percent: f32, #[prop(into)] on_press: ArcOneCallback<Note>, midi_player: Rc<MidiPlayer>, #[prop(into)] is_active: Signal<bool>) -> impl IntoView {
     // place relative to the white grid using left percentage
     let style = format!("left: {left_percent:.6}%");
-    view! { <Key note class="kord-piano__key--black" on_key_press=on_press midi_player=midi_player.clone() attr:style=style /> }
+    view! {
+        <Key
+            note
+            class="kord-piano__key--black"
+            on_key_press=on_press
+            midi_player=midi_player.clone()
+            attr:style=style
+            is_active=is_active
+        />
+    }
 }
 
+/// Low-level piano key component.
+///
+/// Handles pointer events (down/up/leave/cancel) to start/stop notes via the
+/// shared `MidiPlayer`. Applies the `kord-piano__key--active` class when the
+/// reactive `is_active` signal is true to visually highlight the key.
 #[component]
-pub fn Key(note: Note, #[prop(optional, into)] class: Option<String>, #[prop(into)] on_key_press: ArcOneCallback<Note>, midi_player: Rc<MidiPlayer>) -> impl IntoView {
+pub fn Key(
+    note: Note,
+    #[prop(optional, into)] class: Option<String>,
+    #[prop(into)] on_key_press: ArcOneCallback<Note>,
+    midi_player: Rc<MidiPlayer>,
+    #[prop(into)] is_active: Signal<bool>,
+) -> impl IntoView {
     let base = "kord-piano__key";
     let cls = class.map(|c| format!("{base} {c}")).unwrap_or_else(|| base.to_string());
 
@@ -139,6 +330,7 @@ pub fn Key(note: Note, #[prop(optional, into)] class: Option<String>, #[prop(int
     view! {
         <div
             class=cls
+            class=("kord-piano__key--active", is_active)
             title=title_note
             on:pointerdown=start
             on:pointerup=stop.clone()

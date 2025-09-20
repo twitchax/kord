@@ -7,6 +7,8 @@ use leptos::prelude::Get;
 #[cfg(feature = "hydrate")]
 use std::cell::RefCell;
 #[cfg(feature = "hydrate")]
+use std::collections::HashMap;
+#[cfg(feature = "hydrate")]
 use wasm_bindgen::prelude::*;
 #[cfg(feature = "hydrate")]
 use wasm_bindgen::JsCast;
@@ -80,7 +82,7 @@ pub fn highlight_code_block(_code_block: &NodeRef<Code>) -> Result<(), String> {
 #[cfg(feature = "hydrate")]
 pub struct MidiPlayer {
     /// Handles to active notes.
-    handles: RefCell<Vec<JsValue>>,
+    handles: RefCell<HashMap<String, Vec<JsValue>>>,
 }
 
 #[cfg(not(feature = "hydrate"))]
@@ -90,7 +92,7 @@ impl MidiPlayer {
     /// Creates a new MidiPlayer.
     #[cfg(feature = "hydrate")]
     pub fn new() -> Self {
-        Self { handles: RefCell::new(Vec::new()) }
+        Self { handles: RefCell::new(HashMap::new()) }
     }
 
     /// Creates a new MidiPlayer.
@@ -103,7 +105,7 @@ impl MidiPlayer {
     #[cfg(feature = "hydrate")]
     pub async fn play_midi_note(&self, note: &str, velocity: f32) -> Result<(), String> {
         let handle = js_play_midi_note(note, velocity).await.map_err(|e| format!("js error: {e:?}"))?;
-        self.handles.borrow_mut().push(handle);
+        self.handles.borrow_mut().entry(note.to_string()).or_default().push(handle);
         Ok(())
     }
 
@@ -113,15 +115,36 @@ impl MidiPlayer {
         Err("play_midi_note only available in browser".into())
     }
 
-    /// Stops all currently playing MIDI notes.
+    /// Stops all currently playing instances of a specific MIDI note.
     #[cfg(feature = "hydrate")]
-    pub async fn stop_all_notes(&self) -> Result<(), String> {
+    pub async fn stop_note(&self, note: &str) -> Result<(), String> {
         let handles = {
-            let mut h = self.handles.borrow_mut();
-            std::mem::take(&mut *h)
+            let mut map = self.handles.borrow_mut();
+            map.remove(note).unwrap_or_default()
         };
         for handle in handles {
             js_stop_midi_note(handle).await.map_err(|e| format!("js error: {e:?}"))?;
+        }
+        Ok(())
+    }
+
+    /// Stops all currently playing instances of a specific MIDI note (not available off-browser).
+    #[cfg(not(feature = "hydrate"))]
+    pub async fn stop_note(&self, _note: &str) -> Result<(), String> {
+        Err("stop_note only available in browser".into())
+    }
+
+    /// Stops all currently playing MIDI notes.
+    #[cfg(feature = "hydrate")]
+    pub async fn stop_all_notes(&self) -> Result<(), String> {
+        let all = {
+            let mut map = self.handles.borrow_mut();
+            std::mem::take(&mut *map)
+        };
+        for (_note, handles) in all {
+            for handle in handles {
+                js_stop_midi_note(handle).await.map_err(|e| format!("js error: {e:?}"))?;
+            }
         }
         Ok(())
     }
