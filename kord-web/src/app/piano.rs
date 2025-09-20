@@ -1,5 +1,6 @@
 use std::{collections::HashSet, rc::Rc, sync::LazyLock};
 
+use crate::app::piano_kb::setup_keyboard_listeners;
 use crate::client::{ffi::MidiPlayer, helpers::spawn_local_with_error_handling};
 use klib::core::{
     base::{HasName, Parsable},
@@ -7,7 +8,6 @@ use klib::core::{
 };
 use leptos::prelude::*;
 use thaw_utils::ArcOneCallback;
-use crate::app::piano_kb::setup_keyboard_listeners;
 
 /// Piano UI component.
 ///
@@ -124,7 +124,11 @@ pub fn Piano(#[prop(optional, into)] on_key_press: Option<ArcOneCallback<Note>>)
 pub(crate) fn setup_note_highlight(pressed_notes: &RwSignal<HashSet<String>>, note_ascii: &str, active: bool) {
     let note_ascii = note_ascii.to_string();
     pressed_notes.update(|s| {
-        if active { s.insert(note_ascii); } else { s.remove(&note_ascii); }
+        if active {
+            s.insert(note_ascii);
+        } else {
+            s.remove(&note_ascii);
+        }
     });
 }
 

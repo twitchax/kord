@@ -1,6 +1,6 @@
-use leptos::{html::Code, prelude::NodeRef};
 use js_sys::{Float32Array, Object, Reflect};
 use leptos::prelude::Get;
+use leptos::{html::Code, prelude::NodeRef};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
@@ -33,9 +33,7 @@ pub async fn record_microphone(seconds: u32) -> Result<Vec<u8>, String> {
     let obj = Object::from(js_val);
     let get = |k: &str| Reflect::get(&obj, &JsValue::from_str(k));
     let data_val = get("data").map_err(|_| "missing data".to_string())?;
-    let f32_array = data_val
-        .dyn_into::<Float32Array>()
-        .map_err(|_| "data not Float32Array".to_string())?;
+    let f32_array = data_val.dyn_into::<Float32Array>().map_err(|_| "data not Float32Array".to_string())?;
     let mut data = vec![0f32; f32_array.length() as usize];
     f32_array.copy_to(&mut data);
 
@@ -70,14 +68,8 @@ impl MidiPlayer {
 
     /// Plays a MIDI note with the given velocity.
     pub async fn play_midi_note(&self, note: &str, velocity: f32) -> Result<(), String> {
-        let handle = js_play_midi_note(note, velocity)
-            .await
-            .map_err(|e| format!("js error: {e:?}"))?;
-        self.handles
-            .borrow_mut()
-            .entry(note.to_string())
-            .or_default()
-            .push(handle);
+        let handle = js_play_midi_note(note, velocity).await.map_err(|e| format!("js error: {e:?}"))?;
+        self.handles.borrow_mut().entry(note.to_string()).or_default().push(handle);
         Ok(())
     }
 
@@ -88,9 +80,7 @@ impl MidiPlayer {
             map.remove(note).unwrap_or_default()
         };
         for handle in handles {
-            js_stop_midi_note(handle)
-                .await
-                .map_err(|e| format!("js error: {e:?}"))?;
+            js_stop_midi_note(handle).await.map_err(|e| format!("js error: {e:?}"))?;
         }
         Ok(())
     }
@@ -103,9 +93,7 @@ impl MidiPlayer {
         };
         for (_note, handles) in all {
             for handle in handles {
-                js_stop_midi_note(handle)
-                    .await
-                    .map_err(|e| format!("js error: {e:?}"))?;
+                js_stop_midi_note(handle).await.map_err(|e| format!("js error: {e:?}"))?;
             }
         }
         Ok(())

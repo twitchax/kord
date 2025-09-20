@@ -5,9 +5,13 @@ mod ffi_impl;
 mod ffi_shim;
 
 #[cfg(feature = "hydrate")]
-pub mod ffi { pub use super::ffi_impl::*; }
+pub mod ffi {
+    pub use super::ffi_impl::*;
+}
 
 #[cfg(not(feature = "hydrate"))]
-pub mod ffi { pub use super::ffi_shim::*; }
+pub mod ffi {
+    pub use super::ffi_shim::*;
+}
 
 pub mod helpers;
