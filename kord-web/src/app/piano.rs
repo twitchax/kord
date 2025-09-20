@@ -1,5 +1,3 @@
-#[cfg(feature = "hydrate")]
-use std::{cell::RefCell, collections::HashMap};
 use std::{collections::HashSet, rc::Rc, sync::LazyLock};
 
 use crate::client::{ffi::MidiPlayer, helpers::spawn_local_with_error_handling};
@@ -7,16 +5,9 @@ use klib::core::{
     base::{HasName, Parsable},
     note::Note,
 };
-#[cfg(feature = "hydrate")]
-use leptos::ev::{keydown, keyup};
-#[cfg(feature = "hydrate")]
-use leptos::prelude::window;
 use leptos::prelude::*;
-#[cfg(feature = "hydrate")]
-use leptos_use::use_event_listener;
 use thaw_utils::ArcOneCallback;
-#[cfg(feature = "hydrate")]
-use web_sys::KeyboardEvent;
+use crate::app::piano_kb::setup_keyboard_listeners;
 
 /// Piano UI component.
 ///
@@ -108,10 +99,9 @@ pub fn Piano(#[prop(optional, into)] on_key_press: Option<ArcOneCallback<Note>>)
         })
         .collect_view();
 
-    // Keyboard input: map ASDFGHJK (white) and W/E/T/Y/U (black) to C4..C5
-    // Start on keydown (no repeat), stop on keyup for the specific note.
-    #[cfg(feature = "hydrate")]
-    setup_piano_keyboard_listeners(midi_player.clone(), shared_on_press.clone(), pressed_notes);
+    // Keyboard input (browser only): map ASDFGHJK whites and W/E/T/Y/U blacks to C4–C5
+    // Start on keydown (no repeat), stop on keyup, update highlight state.
+    setup_keyboard_listeners(midi_player.clone(), shared_on_press.clone(), pressed_notes);
 
     view! {
         <div class="kord-piano">
@@ -129,111 +119,13 @@ pub fn Piano(#[prop(optional, into)] on_key_press: Option<ArcOneCallback<Note>>)
     }
 }
 
-/// Registers global keyboard listeners (hydrate only) that:
-/// - Map ASDFGHJK (white) and W/E/T/Y/U (black) to C4–C5
-/// - Start notes on keydown (ignoring repeats)
-/// - Stop the same note on keyup
-/// - Update `pressed_notes` to drive reactive key highlighting
-#[cfg(feature = "hydrate")]
-fn setup_piano_keyboard_listeners(midi_player: Rc<MidiPlayer>, on_key_press: ArcOneCallback<Note>, pressed_notes: RwSignal<HashSet<String>>) {
-    // Build the key -> base note map (C4..C5)
-    let mut map: HashMap<String, Note> = HashMap::new();
-
-    let add = |k: &str, n: &str, map: &mut HashMap<String, Note>| {
-        if let Ok(note) = Note::parse(n) {
-            map.insert(k.to_string(), note);
-        }
-    };
-
-    add("a", "C4", &mut map);
-    add("s", "D4", &mut map);
-    add("d", "E4", &mut map);
-    add("f", "F4", &mut map);
-    add("g", "G4", &mut map);
-    add("h", "A4", &mut map);
-    add("j", "B4", &mut map);
-    add("k", "C5", &mut map);
-    add("w", "C#4", &mut map);
-    add("e", "D#4", &mut map);
-    add("t", "F#4", &mut map);
-    add("y", "G#4", &mut map);
-    add("u", "A#4", &mut map);
-
-    // Track pressed keys to avoid repeats and enable proper keyup handling
-    let pressed: Rc<RefCell<HashSet<String>>> = Rc::new(RefCell::new(HashSet::new()));
-
-    // KeyDown: start note
-    {
-        let map = map.clone();
-        let pressed = Rc::clone(&pressed);
-        let mp = midi_player.clone();
-        let on_press = on_key_press.clone();
-
-        let cleanup = use_event_listener(window(), keydown, move |ev: KeyboardEvent| {
-            if ev.repeat() {
-                return;
-            }
-
-            let key = ev.key().to_lowercase();
-
-            if let Some(&note) = map.get(&key) {
-                let mut set = pressed.borrow_mut();
-
-                if !set.insert(key.clone()) {
-                    return;
-                }
-
-                let note_ascii = note.name_ascii();
-
-                pressed_notes.update(|s| {
-                    s.insert(note_ascii.clone());
-                });
-
-                let mp = mp.clone();
-                spawn_local_with_error_handling(async move {
-                    mp.play_midi_note(&note_ascii, 3.0).await?;
-                    Ok::<(), String>(())
-                });
-
-                on_press(note);
-            }
-        });
-
-        // Keep listener alive for component lifetime
-        leptos::prelude::on_cleanup(cleanup);
-    }
-
-    // KeyUp: stop note
-    {
-        let map = map.clone();
-        let pressed = Rc::clone(&pressed);
-        let mp = midi_player.clone();
-
-        let cleanup = use_event_listener(window(), keyup, move |ev: KeyboardEvent| {
-            let key = ev.key().to_lowercase();
-
-            if let Some(&note) = map.get(&key) {
-                let mut set = pressed.borrow_mut();
-
-                if set.remove(&key) {
-                    let note_ascii = note.name_ascii();
-
-                    pressed_notes.update(|s| {
-                        s.remove(&note_ascii);
-                    });
-
-                    let mp = mp.clone();
-                    spawn_local_with_error_handling(async move {
-                        mp.stop_note(&note_ascii).await?;
-                        Ok::<(), String>(())
-                    });
-                }
-            }
-        });
-
-        // Keep listener alive for component lifetime
-        leptos::prelude::on_cleanup(cleanup);
-    }
+/// Helper to add or remove a note from the active highlight set.
+#[allow(dead_code)]
+pub(crate) fn setup_note_highlight(pressed_notes: &RwSignal<HashSet<String>>, note_ascii: &str, active: bool) {
+    let note_ascii = note_ascii.to_string();
+    pressed_notes.update(|s| {
+        if active { s.insert(note_ascii); } else { s.remove(&note_ascii); }
+    });
 }
 
 // Key components
