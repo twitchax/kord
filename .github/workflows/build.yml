@@ -12,7 +12,7 @@ jobs:
         run: sudo apt-get install libasound2-dev
       - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly-2025-07-22
+          toolchain: nightly-2025-09-05
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
@@ -31,7 +31,7 @@ jobs:
         run: sudo apt-get install libasound2-dev
       - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly-2025-07-22
+          toolchain: nightly-2025-09-05
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
@@ -53,7 +53,7 @@ jobs:
         run: sudo apt-get install libasound2-dev
       - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly-2025-07-22
+          toolchain: nightly-2025-09-05
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
@@ -80,7 +80,7 @@ jobs:
         run: sudo apt-get install mingw-w64 cmake
       - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly-2025-07-22
+          toolchain: nightly-2025-09-05
           targets: x86_64-pc-windows-gnu
       - uses: Swatinem/rust-cache@v2
         with:
@@ -103,7 +103,7 @@ jobs:
           cache-all-crates: "true"
       - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly-2025-07-22
+          toolchain: nightly-2025-09-05
           targets: aarch64-apple-darwin
       - run: cargo build --target aarch64-apple-darwin --release
       - uses: actions/upload-artifact@v4
