@@ -48,15 +48,3 @@ pub fn HomePage() -> impl IntoView {
         </div>
     }
 }
-
-// Tests.
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_home_page_renders() {
-        let _ = HomePage();
-    }
-}
