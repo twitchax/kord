@@ -1,8 +1,8 @@
 use crate::{
-    app::shared::{ChordAnalysis, PageTitle},
     client::{
         audio::{infer_chords_from_samples, le_bytes_to_f32_samples},
         ffi::record_microphone,
+        shared::{ChordAnalysis, PageTitle},
     },
 };
 use klib::core::chord::Chord;

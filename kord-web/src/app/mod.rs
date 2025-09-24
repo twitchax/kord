@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::app::shared::NavLink;
+use crate::client::shared::NavLink;
 use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, MetaTags, Script, Stylesheet, Title};
 use leptos_router::{
@@ -13,7 +13,6 @@ pub mod docs;
 pub mod guess;
 pub mod home;
 pub mod listen;
-pub mod shared;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {

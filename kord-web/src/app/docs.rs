@@ -1,6 +1,4 @@
-use crate::app::shared::PageTitle;
-
-use super::shared::{Badge, Callout, CardLink, CodeBlock, Panel, Section, Subheading, TertiaryHeading};
+use crate::client::shared::{Badge, Callout, CardLink, CodeBlock, PageTitle, Panel, Section, Subheading, TertiaryHeading};
 use leptos::prelude::*;
 use thaw::{Flex, FlexGap, Text, TextTag};
 

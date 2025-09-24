@@ -1,4 +1,4 @@
-use crate::app::shared::{ChordAnalysis, PageTitle};
+use crate::client::shared::{ChordAnalysis, PageTitle};
 use klib::core::{base::Parsable, chord::Chord, note::Note};
 use leptos::prelude::*;
 use thaw::{Field, FieldValidationState, Flex, FlexGap, Input, InputRule};

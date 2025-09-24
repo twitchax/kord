@@ -111,8 +111,16 @@ pub fn ChordAnalysis(#[prop(optional)] chord: Option<Chord>) -> impl IntoView {
     let chord_section = chord.map(|c| {
         let precise = c.precise_name();
         let description = c.description().to_string();
-        let scale = c.scale().into_iter().map(|n| view! { <code style="margin-right: 3px;">{n.name()}</code> }).collect::<Vec<_>>();
-        let chord_tones = c.chord().into_iter().map(|n| view! { <code style="margin-right: 3px;">{n.name()}</code> }).collect::<Vec<_>>();
+        let scale = c
+            .scale()
+            .into_iter()
+            .map(|n| view! { <code style="margin-right: 3px;">{n.name()}</code> })
+            .collect::<Vec<_>>();
+        let chord_tones = c
+            .chord()
+            .into_iter()
+            .map(|n| view! { <code style="margin-right: 3px;">{n.name()}</code> })
+            .collect::<Vec<_>>();
 
         view! {
             <Panel title=precise>
