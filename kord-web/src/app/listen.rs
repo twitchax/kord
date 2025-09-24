@@ -1,16 +1,14 @@
-use crate::{
-    client::{
-        audio::{infer_chords_from_samples, le_bytes_to_f32_samples},
-        ffi::record_microphone,
-        shared::{ChordAnalysis, PageTitle},
-    },
+use crate::client::{
+    audio::{infer_chords_from_samples, le_bytes_to_f32_samples},
+    ffi::record_microphone,
+    shared::{ChordAnalysis, PageTitle},
 };
 use klib::core::chord::Chord;
 use leptos::logging::{error, log};
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_use::use_timestamp;
-use thaw::{Button, ButtonAppearance, Flex, FlexGap, FlexJustify, Input, InputSuffix, InputType, ProgressCircle};
+use thaw::{Button, ButtonAppearance, Field, Flex, FlexGap, FlexJustify, Input, InputSuffix, InputType, ProgressCircle};
 
 #[component]
 pub fn ListenPage() -> impl IntoView {
@@ -112,28 +110,50 @@ pub fn ListenPage() -> impl IntoView {
 
     view! {
     <PageTitle>"Listen"</PageTitle>
-    <Flex gap=FlexGap::Large class="kord-content__section">
-            <Flex vertical=true gap=FlexGap::Large>
-                <Input input_type=InputType::Number value=seconds_text>
-                    <InputSuffix slot>
-                        "seconds"
-                    </InputSuffix>
-                </Input>
+    <section class="kord-listen">
+        <Flex gap=FlexGap::Large class="kord-content__section kord-listen__controls">
+            <Flex vertical=true gap=FlexGap::Medium class="kord-listen__form">
+                <p class="kord-listen__hint">
+                    "Capture a quick snippet to identify the chords in your surroundings."
+                </p>
+                <Field label="Recording length">
+                    <Input input_type=InputType::Number value=seconds_text>
+                        <InputSuffix slot>
+                            "seconds"
+                        </InputSuffix>
+                    </Input>
+                </Field>
                 <Button
+                    class="kord-listen__start"
                     disabled=recording
                     appearance=Signal::derive(move || if recording.get() { ButtonAppearance::Subtle } else { ButtonAppearance::Primary })
                     on_click=start
-                >{move || if recording.get() { "Recording..." } else { "Start" }}</Button>
+                >{move || if recording.get() { "Recording..." } else { "Start Listening" }}</Button>
                 {move || error.get().map(|e| view!{ <p class="kord-error">{e}</p> })}
             </Flex>
-            <Flex justify=FlexJustify::Center gap=FlexGap::Small>
+            <Flex vertical=true justify=FlexJustify::Center gap=FlexGap::Small class="kord-listen__progress">
                 <ProgressCircle value=progress_percent />
+                <span class="kord-listen__status">
+                    {move || if recording.get() { "Listening..." } else { "Idle" }}
+                </span>
             </Flex>
         </Flex>
 
-    <div class="kord-content__section">
-            {move || chords.get().into_iter().map(|c| view! { <ChordAnalysis chord=c /> }).collect_view()}
+        <div class="kord-content__section kord-listen__results">
+            <h3 class="kord-listen__results-title">"Detected Chords"</h3>
+            <div class="kord-listen__chords">
+                <Show
+                    when=move || !chords.with(|detected| detected.is_empty())
+                    fallback=move || view! { <p class="kord-listen__empty">"Press start to analyze live audio."</p> }.into_view()
+                >
+                    <For
+                        each=move || chords.get()
+                        key=|chord: &Chord| chord.to_string()
+                        children=move |chord: Chord| view! { <ChordAnalysis chord=chord /> }
+                    />
+                </Show>
+            </div>
         </div>
-
+    </section>
     }
 }

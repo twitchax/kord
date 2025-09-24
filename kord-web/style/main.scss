@@ -396,6 +396,7 @@ footer {
 
 // Piano ----------------------------------------------------------------------
 .kord-piano {
+	width: 100%;
 	max-width: 1100px;
 	margin: 1.5rem auto;
 	/* Maintain aspect ratio: approx 1:0.2 (wide and shallow) */
@@ -716,10 +717,185 @@ footer {
 	margin-top: 1rem;
 }
 
-.kord-content__section--narrow {
-	max-width: 360px;
+
+.kord-listen {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.kord-listen__controls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: stretch;
+	gap: 1.5rem;
+}
+
+.kord-listen__controls>* {
+	flex: 1 1 260px;
+}
+
+.kord-listen__form {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.kord-listen__hint {
+	margin: 0;
+	color: var(--sage-300);
+	font-size: 0.95rem;
+}
+
+.kord-listen__start {
+	align-self: flex-start;
+}
+
+.kord-listen__progress {
+	align-items: center;
+	background: rgba(32, 32, 32, 0.65);
+	padding: 1.25rem;
+	border-radius: 0.75rem;
+	border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.kord-listen__status {
+	font-weight: 500;
+	color: var(--sage-200);
+}
+
+.kord-listen__results {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.kord-listen__chords {
+	display: grid;
+	gap: 1rem;
+}
+
+.kord-listen__results-title {
+	margin: 0;
+	font-size: 1.125rem;
+	font-weight: 600;
+}
+
+.kord-listen__empty {
+	margin: 0;
+	color: var(--sage-400);
+}
+
+@media (max-width: 768px) {
+	.kord-listen__progress {
+		align-self: stretch;
+	}
 }
 
 .kord-content__spacer-lg {
 	margin-top: 1.5rem;
+}
+
+.kord-describe,
+.kord-guess {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.kord-describe__card,
+.kord-describe__results,
+.kord-guess__form,
+.kord-guess__stage,
+.kord-guess__results {
+	background: rgba(32, 32, 32, 0.85);
+	border-radius: 0.75rem;
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+	padding: 1.5rem;
+	backdrop-filter: blur(6px);
+}
+
+.kord-describe__card,
+.kord-guess__form,
+.kord-guess__results {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.kord-describe__hint,
+.kord-guess__hint {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	color: var(--sage-300);
+	font-size: 0.95rem;
+	line-height: 1.55;
+}
+
+.kord-describe__hint p,
+.kord-guess__hint p {
+	margin: 0;
+}
+
+.kord-describe__field,
+.kord-guess__field {
+	max-width: 420px;
+	width: 100%;
+	align-self: flex-start;
+}
+
+.kord-guess__field {
+	max-width: 480px;
+}
+
+.kord-describe__results {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.kord-describe__results-title,
+.kord-guess__results-title,
+.kord-guess__stage-title {
+	margin: 0;
+	font-size: 1.125rem;
+	font-weight: 600;
+}
+
+.kord-describe__empty,
+.kord-guess__empty {
+	margin: 0;
+	color: var(--sage-400);
+}
+
+.kord-guess__stage {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1.25rem;
+}
+
+.kord-guess__stage-subtitle {
+	margin: 0;
+	color: var(--sage-400);
+	text-align: center;
+	max-width: 420px;
+}
+
+.kord-guess__chords {
+	display: grid;
+	gap: 1rem;
+}
+
+@media (max-width: 768px) {
+
+	.kord-describe__card,
+	.kord-describe__results,
+	.kord-guess__form,
+	.kord-guess__stage,
+	.kord-guess__results {
+		padding: 1.25rem;
+	}
 }

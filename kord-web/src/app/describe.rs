@@ -46,18 +46,39 @@ pub fn DescribePage() -> impl IntoView {
     let rules = vec![required_rule, chord_parse_rule];
 
     view! {
-    <PageTitle>"Describe a Chord"</PageTitle>
-    <Flex vertical=true gap=FlexGap::Large class="kord-content__section kord-content__section--narrow">
-            <Field label="Chord Symbol">
-                <Input
-                    id="describe-chord"
-                    placeholder="e.g. Cm7"
-                    value=chord_input
-                    rules=rules
-                />
-            </Field>
-        </Flex>
+        <PageTitle>"Describe a Chord"</PageTitle>
+        <section class="kord-describe">
+            <Flex vertical=true gap=FlexGap::Large>
+                <Flex vertical=true gap=FlexGap::Medium class="kord-content__section kord-describe__card">
+                    <div class="kord-describe__hint">
+                        <p>"Type any chord symbol to see its full breakdown."</p>
+                        <p>"We support complex extensions like Cm7(#11)/G or Cø7."</p>
+                    </div>
+                    <div class="kord-describe__field">
+                        <Field label="Chord Symbol">
+                            <Input
+                                id="describe-chord"
+                                placeholder="e.g. Cm7"
+                                value=chord_input
+                                rules=rules
+                            />
+                        </Field>
+                    </div>
+                </Flex>
 
-        {move || chord_result.get().map(|c| view! { <ChordAnalysis chord=c /> })}
+                <div class="kord-content__section kord-describe__results">
+                    <h3 class="kord-describe__results-title">"Chord Breakdown"</h3>
+                    <Show
+                        when=move || chord_result.with(|result| result.is_some())
+                        fallback=move || view! { <p class="kord-describe__empty">"Enter a chord symbol to preview its structure."</p> }.into_view()
+                    >
+                        {move || {
+                            let chord = chord_result.get().expect("chord exists when show renders");
+                            view! { <ChordAnalysis chord=chord /> }
+                        }}
+                    </Show>
+                </div>
+            </Flex>
+        </section>
     }
 }
