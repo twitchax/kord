@@ -102,7 +102,7 @@ pub fn GuessPage() -> impl IntoView {
 
     view! {
         <PageTitle>"Guess Chords from Notes"</PageTitle>
-        <Flex vertical=true gap=FlexGap::Large class="kord-content__section">
+    <Flex vertical=true gap=FlexGap::Large class="kord-content__section kord-content__section--narrow">
             <Field label="Notes">
                 <Input
                     id="guess-notes"

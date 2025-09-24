@@ -47,7 +47,7 @@ pub fn DescribePage() -> impl IntoView {
 
     view! {
     <PageTitle>"Describe a Chord"</PageTitle>
-    <Flex vertical=true gap=FlexGap::Large class="kord-content__section">
+    <Flex vertical=true gap=FlexGap::Large class="kord-content__section kord-content__section--narrow">
             <Field label="Chord Symbol">
                 <Input
                     id="describe-chord"
