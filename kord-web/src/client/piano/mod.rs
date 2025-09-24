@@ -1,6 +1,5 @@
 use std::{collections::HashSet, rc::Rc, sync::LazyLock};
 
-use crate::app::piano_kb::setup_keyboard_listeners;
 use crate::client::{ffi::MidiPlayer, helpers::spawn_local_with_error_handling};
 use klib::core::{
     base::{HasName, Parsable},
@@ -9,23 +8,36 @@ use klib::core::{
 use leptos::prelude::*;
 use thaw_utils::ArcOneCallback;
 
+#[cfg(feature = "hydrate")]
+mod keyboard_impl;
+#[cfg(not(feature = "hydrate"))]
+mod keyboard_shim;
+
+#[cfg(feature = "hydrate")]
+mod keyboard {
+    pub use super::keyboard_impl::setup_keyboard_listeners;
+}
+
+#[cfg(not(feature = "hydrate"))]
+mod keyboard {
+    pub use super::keyboard_shim::setup_keyboard_listeners;
+}
+
 /// Piano UI component.
 ///
 /// Renders a stylized 88-key piano with white/black key layout and handles
 /// pointer interactions for starting/stopping notes via the shared `MidiPlayer`.
 /// When hydrated in the browser, global keyboard listeners are installed to map
 /// ASDFGHJK (white) and W/E/T/Y/U (black) to C4–C5 and highlight active keys.
-
 #[component]
 pub fn Piano(#[prop(optional, into)] on_key_press: Option<ArcOneCallback<Note>>) -> impl IntoView {
     // Create a shared, non-reactive MIDI player instance to avoid disposal issues
     let midi_player: Rc<MidiPlayer> = Rc::new(MidiPlayer::new());
-    // Get the notes of the piano statically.
 
+    // Get the notes of the piano statically.
     let notes = &*PIANO_NOTES;
 
     // Build white and black key positions.
-
     let mut whites: Vec<(usize, Note)> = Vec::with_capacity(52);
     let mut blacks: Vec<(f32, Note)> = Vec::with_capacity(36);
 
@@ -101,7 +113,7 @@ pub fn Piano(#[prop(optional, into)] on_key_press: Option<ArcOneCallback<Note>>)
 
     // Keyboard input (browser only): map ASDFGHJK whites and W/E/T/Y/U blacks to C4–C5
     // Start on keydown (no repeat), stop on keyup, update highlight state.
-    setup_keyboard_listeners(midi_player.clone(), shared_on_press.clone(), pressed_notes);
+    keyboard::setup_keyboard_listeners(midi_player.clone(), shared_on_press.clone(), pressed_notes);
 
     view! {
         <div class="kord-piano">

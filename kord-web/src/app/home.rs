@@ -1,12 +1,12 @@
+use crate::{
+    api::hello,
+    client::piano::Piano,
+};
 use klib::core::note::Note;
 use leptos::{logging::log, prelude::*, task::spawn_local};
 use thaw::Flex;
 
-use super::{
-    piano::Piano,
-    shared::{PageTitle, PrimaryButton, SecondaryButton},
-};
-use crate::api::hello;
+use super::shared::{PageTitle, PrimaryButton, SecondaryButton};
 
 /// Renders the home page of your application.
 #[component]

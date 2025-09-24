@@ -13,19 +13,6 @@ pub mod docs;
 pub mod guess;
 pub mod home;
 pub mod listen;
-pub mod piano;
-#[cfg(feature = "hydrate")]
-mod piano_kb_impl;
-#[cfg(not(feature = "hydrate"))]
-mod piano_kb_shim;
-#[cfg(feature = "hydrate")]
-pub mod piano_kb {
-    pub use super::piano_kb_impl::*;
-}
-#[cfg(not(feature = "hydrate"))]
-pub mod piano_kb {
-    pub use super::piano_kb_shim::*;
-}
 pub mod shared;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
