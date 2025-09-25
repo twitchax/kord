@@ -388,10 +388,179 @@ footer {
 }
 
 // Home page
-.kord-home__actions {
-	margin-top: 1rem;
+.kord-home {
 	display: flex;
+	flex-direction: column;
+	gap: 2.5rem;
+}
+
+.kord-home__hero {
+	position: relative;
+	padding: 2.75rem;
+	border-radius: 1.25rem;
+	background: linear-gradient(135deg, rgba(17, 66, 50, 0.92) 0%, rgba(9, 40, 32, 0.94) 55%, rgba(7, 29, 25, 0.97) 100%);
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+	overflow: hidden;
+}
+
+.kord-home__hero>* {
+	position: relative;
+	z-index: 1;
+}
+
+.kord-home__badge {
+	align-self: flex-start;
+	background: rgba(15, 59, 45, 0.8);
+	color: var(--sage-200);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	font-weight: 600;
+}
+
+.kord-home__lead {
+	max-width: 720px;
+	font-size: 1.1rem;
+	line-height: 1.8;
+	margin: 1rem 0 1.5rem;
+	color: var(--sage-200);
+}
+
+.kord-home__cta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+	margin-bottom: 1.25rem;
+}
+
+.kord-home__cta-button {
+	padding-inline: 1.65rem;
+	font-size: 1rem;
+	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+.kord-home__note {
+	margin: 0 0 1.25rem;
+	color: var(--sage-300);
+	max-width: 640px;
+}
+
+.kord-home__meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	color: var(--sage-300);
+}
+
+.kord-home__meta-link {
+	background: none;
+	color: var(--sage-200);
+	border: none;
+	padding: 0;
+	font: inherit;
+	cursor: pointer;
+	text-decoration: none;
+	transition: color 0.2s ease;
+}
+
+.kord-home__meta-link:hover {
+	color: white;
+	text-decoration: underline;
+}
+
+.kord-home__meta-sep {
+	color: rgba(255, 255, 255, 0.25);
+}
+
+.kord-home__feature-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 1.5rem;
+}
+
+.kord-home__feature {
+	background: rgba(25, 25, 25, 0.9);
+	border-radius: 1rem;
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	padding: 1.5rem;
+	box-shadow: 0 18px 38px rgba(0, 0, 0, 0.3);
+	display: flex;
+	flex-direction: column;
 	gap: 0.75rem;
+}
+
+.kord-home__feature-title {
+	margin: 0;
+	font-size: 1.125rem;
+	font-weight: 600;
+	color: white;
+}
+
+.kord-home__feature-desc {
+	margin: 0;
+	color: var(--sage-200);
+	line-height: 1.6;
+}
+
+.kord-home__feature-action {
+	align-self: flex-start;
+}
+
+.kord-home__steps {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 1.25rem;
+}
+
+.kord-home__step {
+	display: flex;
+	gap: 1rem;
+	align-items: flex-start;
+}
+
+.kord-home__step-index {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	border-radius: 999px;
+	background: rgba(47, 101, 83, 0.9);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	font-weight: 600;
+	color: white;
+	flex-shrink: 0;
+}
+
+.kord-home__step-body h4 {
+	margin: 0 0 0.35rem;
+	font-size: 1.05rem;
+	font-weight: 600;
+}
+
+.kord-home__step-body p {
+	margin: 0;
+	color: var(--sage-200);
+	line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+	.kord-home__hero {
+		padding: 2.25rem;
+	}
+
+	.kord-home__lead {
+		font-size: 1rem;
+	}
+
+	.kord-home__feature-grid {
+		grid-template-columns: 1fr;
+	}
 }
 
 // Piano ----------------------------------------------------------------------
