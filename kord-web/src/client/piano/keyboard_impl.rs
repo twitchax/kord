@@ -14,11 +14,7 @@ use std::{
 use thaw_utils::ArcOneCallback;
 use web_sys::KeyboardEvent;
 
-pub fn setup_keyboard_listeners(
-    midi_player: Rc<MidiPlayer>,
-    on_key_press: ArcOneCallback<Note>,
-    pressed_notes: RwSignal<HashSet<String>>,
-) {
+pub fn setup_keyboard_listeners(midi_player: Rc<MidiPlayer>, on_key_press: ArcOneCallback<Note>, pressed_notes: RwSignal<HashSet<String>>) {
     // Build the key -> base note map (C4..C5)
     let mut map: HashMap<String, Note> = HashMap::new();
     let add = |k: &str, n: &str, map: &mut HashMap<String, Note>| {
