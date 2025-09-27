@@ -4,10 +4,12 @@
 #![allow(clippy::too_many_arguments)]
 
 pub mod data;
-#[cfg(feature = "analyze_mic")]
+#[cfg(all(feature = "ml_sample_gather", feature = "analyze_mic"))]
 pub mod gather;
 pub mod helpers;
 pub mod model;
+#[cfg(feature = "ml_sample_process")]
+pub mod process;
 
 use burn::config::Config;
 use std::path::PathBuf;
@@ -71,7 +73,7 @@ pub struct TrainConfig {
     pub adam_beta1: f32,
     /// The Adam optimizer beta2.
     pub adam_beta2: f32,
-    /// The Adam optimizer epsilon.`
+    /// The Adam optimizer epsilon.
     pub adam_epsilon: f32,
 
     /// The "sigmoid strength" of the final pass.

@@ -187,6 +187,25 @@ impl Note {
     pub fn new(pitch: NamedPitch, octave: Octave) -> Self {
         Self { named_pitch: pitch, octave }
     }
+
+    /// Attempts to create a [`Note`] from a MIDI note number.
+    pub fn try_from_midi(midi: u8) -> Res<Self> {
+        let pitch_index = midi % 12;
+        let octave_component = midi / 12;
+
+        // MIDI note numbers are defined such that note 60 is C4, which corresponds to octave index 4.
+        // Therefore, subtract 1 to map to the [`Octave`] enum where 0 == C0.
+        let octave_value = (octave_component as i16) - 1;
+
+        if octave_value < 0 {
+            return Err(anyhow::Error::msg(format!("MIDI note {midi} is below the supported octave range.")));
+        }
+
+        let octave = Octave::try_from(octave_value as u8).map_err(anyhow::Error::msg)?;
+        let pitch = Pitch::try_from(pitch_index).map_err(anyhow::Error::msg)?;
+
+        Ok(Self::new(NamedPitch::from(pitch), octave))
+    }
 }
 
 impl Note {

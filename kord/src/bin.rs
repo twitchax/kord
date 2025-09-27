@@ -113,10 +113,10 @@ enum AnalyzeCommand {
     File {
         /// Whether or not to play a preview of the selected section of the
         /// audio file before analyzing.
-        #[arg(long = "no-preview", action=ArgAction::SetFalse, default_value_t = true)]
+        #[arg(long = "no-preview", action = ArgAction::SetFalse, default_value_t = true)]
         preview: bool,
 
-        /// How far into the file to begin analyzing, as understood by systemd.time(7)
+        /// How far into the file to begin analyzing, as understood by systemd.time(7).
         #[arg(short, long)]
         start_time: Option<String>,
 
@@ -132,7 +132,7 @@ enum AnalyzeCommand {
 #[derive(Subcommand, Debug)]
 enum MlCommand {
     /// Records audio from the microphone, and writes the resulting sample to disk.
-    #[cfg(feature = "ml_train")]
+    #[cfg(feature = "ml_sample_gather")]
     Gather {
         /// Sets the destination directory for the gathered samples.
         #[arg(short, long, default_value = ".hidden/samples")]
@@ -141,6 +141,42 @@ enum MlCommand {
         /// Sets the duration of listening time (in seconds).
         #[arg(short, long, default_value_t = 10)]
         length: u8,
+    },
+
+    /// Processes paired MIDI and audio files into sanitized training samples.
+    #[cfg(feature = "ml_sample_process")]
+    Process {
+        /// Sets the destination directory for the processed samples.
+        #[arg(short, long, default_value = ".hidden/samples")]
+        destination: String,
+
+        /// The MIDI file containing chord annotations for the song.
+        #[arg(long)]
+        midi: PathBuf,
+
+        /// The audio file (WAV) aligned with the MIDI file.
+        #[arg(long)]
+        audio: PathBuf,
+
+        /// Minimum fraction of a measure that a note must sound to be included in the chord.
+        #[arg(long, default_value_t = 0.35)]
+        min_fraction: f32,
+
+        /// Minimum number of distinct notes required to emit a sample.
+        #[arg(long, default_value_t = 1)]
+        min_notes: usize,
+
+        /// Maximum number of notes to retain after sorting by prominence.
+        #[arg(long, default_value_t = 6)]
+        max_notes: usize,
+
+        /// Minimum duration (in seconds) required for the measure to be considered.
+        #[arg(long, default_value_t = 1.0)]
+        min_duration: f32,
+
+        /// Maximum number of samples to emit.
+        #[arg(long)]
+        limit: Option<usize>,
     },
 
     /// Runs the ML trainer using burn-rs, tch-rs, and CUDA as defaults.
@@ -403,9 +439,41 @@ fn start(args: Args) -> Void {
         },
         #[cfg(feature = "ml_base")]
         Some(Command::Ml { ml_command }) => match ml_command {
-            #[cfg(feature = "ml_train")]
+            #[cfg(feature = "ml_sample_gather")]
             Some(MlCommand::Gather { destination, length }) => {
                 klib::ml::base::gather::gather_sample(destination, length)?;
+            }
+            #[cfg(feature = "ml_sample_process")]
+            Some(MlCommand::Process {
+                destination,
+                midi,
+                audio,
+                min_fraction,
+                min_notes,
+                max_notes,
+                min_duration,
+                limit,
+            }) => {
+                use klib::ml::base::process::{process_song_samples, SongProcessingOptions};
+
+                if max_notes < min_notes {
+                    return Err(anyhow::Error::msg("`max-notes` must be greater than or equal to `min-notes`."));
+                }
+
+                if !(0.0..=1.0).contains(&min_fraction) {
+                    return Err(anyhow::Error::msg("`min-fraction` must be between 0.0 and 1.0."));
+                }
+
+                let options = SongProcessingOptions {
+                    min_note_fraction: min_fraction as f64,
+                    min_notes,
+                    max_notes,
+                    min_duration_seconds: min_duration as f64,
+                    max_samples: limit,
+                };
+
+                let paths = process_song_samples(&destination, midi, audio, options)?;
+                println!("Generated {} samples.", paths.len());
             }
             #[cfg(feature = "ml_train")]
             Some(MlCommand::Train {
@@ -574,7 +642,7 @@ fn start(args: Args) -> Void {
                     analyze::base::{compute_cqt, translate_frequency_space_to_peak_space},
                     helpers::plot_frequency_space,
                     ml::base::{
-                        helpers::{harmonic_convolution, load_kord_item, mel_filter_banks_from},
+                        helpers::{fold_binary, harmonic_convolution, load_kord_item, mel_filter_banks_from, note_binned_convolution},
                         MEL_SPACE_SIZE,
                     },
                 };
@@ -598,6 +666,17 @@ fn start(args: Args) -> Void {
                 let cqt_file_name = format!("{}_cqt", name);
                 let cqt_space = compute_cqt(&kord_item.frequency_space).into_iter().enumerate().map(|(k, v)| (k as f32, v)).collect::<Vec<_>>();
                 plot_frequency_space(&cqt_space, "KordItem CQT Space", &cqt_file_name, 0.0, 256.0);
+
+                // Plot note-binned convolution space.
+                let convolution_file_name = format!("{}_convolution", name);
+                let convolution_space = note_binned_convolution(&kord_item.frequency_space);
+                let convolution_space_as_freq = convolution_space.iter().enumerate().map(|(k, v)| (k as f32, *v)).collect::<Vec<_>>();
+                plot_frequency_space(&convolution_space_as_freq, "KordItem Note-Binned Convolution Space", &convolution_file_name, 0.0, 128.0);
+
+                // Plot folded note-binned convolution space.
+                let folded_convolution_file_name = format!("{}_convolution_folded", name);
+                let folded_convolution_space = fold_binary(&convolution_space).into_iter().enumerate().map(|(k, v)| (k as f32, v)).collect::<Vec<_>>();
+                plot_frequency_space(&folded_convolution_space, "KordItem Folded Note-Binned Convolution Space", &folded_convolution_file_name, 0.0, 12.0);
 
                 // Plot mel space.
                 let mel_file_name = format!("{}_mel", name);

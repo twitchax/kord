@@ -3116,6 +3116,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "hound"
+version = "3.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62adaabb884c94955b19907d60019f4e145d091c75345379e70d1ee696f7854f"
+
+[[package]]
 name = "html-escape"
 version = "0.2.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3579,7 +3585,9 @@ dependencies = [
  "futures",
  "futures-timer",
  "gloo-timers",
+ "hound",
  "js-sys",
+ "midly",
  "parse_duration0",
  "paste",
  "pest",
@@ -3593,6 +3601,7 @@ dependencies = [
  "rustfft",
  "serde",
  "symphonia",
+ "tempfile",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "wee_alloc",
@@ -4133,6 +4142,15 @@ dependencies = [
  "log",
  "objc",
  "paste",
+]
+
+[[package]]
+name = "midly"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "207d755f4cb882d20c4da58d707ca9130a0c9bc5061f657a4f299b8e36362b7a"
+dependencies = [
+ "rayon",
 ]
 
 [[package]]

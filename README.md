@@ -267,6 +267,8 @@ The library and binary both support various feature flags.  Of most important no
     * > NOTE: Adding the `analyze_mic` feature flag will enable the `ml infer mic` subcommand, which allows for inferring with ML models from a microphone.
     * > NOTE: Adding the `analyze_file` feature flag will enable the `ml infer file` subcommand, which allows for inferring with ML models from a file.
   * `ml_gpu`: enables the features to use a GPU for ML _training_.
+  * `ml_sample_gather`: enables the `ml gather` subcommand for capturing raw samples from a microphone (requires `analyze_mic`).
+* `ml_sample_process`: enables the `ml process` subcommand for generating samples from aligned MIDI and audio files, naming each emitted sample with its originating measure index, rounded duration (in seconds), and chord tones.
 * `wasm`: enables the features to compile to wasm.
 * `plot`: enables the features to plot data.
 

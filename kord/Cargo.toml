@@ -51,6 +51,9 @@ analyze_file_alac = ["symphonia/alac", "symphonia/isomp4"]
 ml = ["ml_train", "ml_infer"]
 ml_base = ["serde", "byteorder", "bincode"]
 
+ml_sample_gather = ["ml_base"]
+ml_sample_process = ["ml_base", "midly", "hound"]
+
 ml_train = [
     "ml_base",
     "rand",
@@ -131,6 +134,8 @@ bincode = { version = "2", default-features = false, optional = true, features =
 ] }
 rayon = { version = "1", optional = true }
 burn = { version = "0.18", default-features = false, optional = true }
+midly = { version = "0.5", optional = true }
+hound = { version = "3", optional = true }
 
 # plot
 plotters = { version = "0.3", optional = true }
@@ -145,3 +150,4 @@ gloo-timers = { version = "0.3", optional = true, features = ["futures"] }
 
 [dev-dependencies]
 pretty_assertions = "1"
+tempfile = "3"

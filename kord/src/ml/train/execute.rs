@@ -3,7 +3,6 @@
 use std::sync::Arc;
 
 use burn::{
-    backend::Autodiff,
     config::Config,
     data::dataloader::DataLoaderBuilder,
     lr_scheduler::constant::ConstantLr,
@@ -17,6 +16,9 @@ use burn::{
     },
 };
 use serde::{de::DeserializeOwned, Serialize};
+
+#[cfg(feature = "ml_train")]
+use burn::backend::Autodiff;
 
 use crate::{
     core::base::{Res, Void},
@@ -143,11 +145,11 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
 
         let deterministic = get_deterministic_guess(kord_item);
 
-        // Forward pass outputs logits, apply sigmoid and threshold for inference
+        // Forward pass outputs logits, apply sigmoid, and threshold for inference.
         let logits = model_trained.forward(sample).detach();
         let logits_vec: Vec<f32> = logits.into_data().to_vec().unwrap_or_default();
 
-        // Apply sigmoid and 0.5 threshold
+        // Apply sigmoid and a 0.5 threshold.
         let inferred = logits_to_binary_predictions(&logits_vec);
 
         if target_binary == deterministic {
@@ -247,7 +249,9 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
                                             run_training::<Autodiff<NdArray<f32>>>(device, &config, true, false)?
                                         }
                                         _ => {
-                                            return Err(anyhow::Error::msg("Invalid device (must choose either `gpu` [requires `ml_gpu` feature] or `cpu`)."));
+                                            return Err(anyhow::Error::msg(
+                                                "Invalid device (must choose either `tch` [requires `ml_tch` feature] or `cpu` [requires `ml_ndarray` feature]).",
+                                            ));
                                         }
                                     };
 
