@@ -3602,6 +3602,8 @@ dependencies = [
  "serde",
  "symphonia",
  "tempfile",
+ "tracing",
+ "tracing-subscriber",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "wee_alloc",

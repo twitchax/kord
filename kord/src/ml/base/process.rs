@@ -1,11 +1,15 @@
 //! Helpers for transforming full-song datasets into sanitized training samples.
 
-use std::collections::HashMap;
-use std::fs;
-use std::path::{Path, PathBuf};
+use std::{
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+    time::Instant,
+};
 
 use hound::{SampleFormat, WavReader};
 use midly::{MetaMessage, MidiMessage, Smf, Timing, TrackEventKind};
+use tracing::{debug, info, info_span, instrument, warn};
 
 use crate::analyze::base::{get_frequency_space, get_smoothed_frequency_space};
 use crate::core::{
@@ -78,10 +82,19 @@ struct ParseMidiResult {
 /// zero-padded to the next whole second, and that duration is encoded into the emitted file
 /// name (`*_{seconds}s_*`) alongside the originating measure index and chord tones so that
 /// downstream tooling can reason about sample length without reopening the binary payload.
+#[instrument(skip(destination, midi_path, audio_path, options))]
 pub fn process_song_samples(destination: impl AsRef<Path>, midi_path: impl AsRef<Path>, audio_path: impl AsRef<Path>, options: SongProcessingOptions) -> Res<Vec<PathBuf>> {
     let destination = destination.as_ref();
     fs::create_dir_all(destination)?;
 
+    info!(
+        destination = %destination.display(),
+        midi = %midi_path.as_ref().display(),
+        audio = %audio_path.as_ref().display(),
+        "Starting sample processing"
+    );
+
+    let midi_parse_start = Instant::now();
     let midi_bytes = fs::read(&midi_path)?;
     let smf = Smf::parse(&midi_bytes)?;
     let ppq = match smf.header.timing {
@@ -92,9 +105,17 @@ pub fn process_song_samples(destination: impl AsRef<Path>, midi_path: impl AsRef
     };
 
     let ParseMidiResult { tempo_events, measures } = parse_midi(&smf, ppq)?;
+    debug!(
+        elapsed_ms = midi_parse_start.elapsed().as_millis(),
+        measure_count = measures.len(),
+        tempo_event_count = tempo_events.len(),
+        "MIDI parsed"
+    );
 
+    let audio_load_start = Instant::now();
     let (audio_data, sample_rate) = load_wav_mono(&audio_path)?;
     let total_audio_seconds = audio_data.len() as f64 / sample_rate as f64;
+    debug!(elapsed_ms = audio_load_start.elapsed().as_millis(), sample_rate, samples = audio_data.len(), "Audio buffered");
 
     let mut saved_paths = Vec::new();
     let mut sorted_measures: Vec<_> = measures.into_values().collect();
@@ -108,6 +129,10 @@ pub fn process_song_samples(destination: impl AsRef<Path>, midi_path: impl AsRef
                 break;
             }
         }
+
+        let measure_span = info_span!("measure", index = measure.index);
+        let _enter = measure_span.enter();
+        let measure_timer = Instant::now();
 
         let total_ticks = (measure.end_tick - measure.start_tick).max(1) as f64;
         let mut note_fractions = measure.note_ticks.iter().map(|(note, ticks)| (*note, *ticks as f64 / total_ticks)).collect::<Vec<_>>();
@@ -149,12 +174,13 @@ pub fn process_song_samples(destination: impl AsRef<Path>, midi_path: impl AsRef
         }
 
         if end_seconds > total_audio_seconds {
-            // The audio does not contain this full measure.
+            warn!(end_seconds, total_audio_seconds, "Skipping measure that exceeds available audio duration");
             continue;
         }
 
         let duration_seconds = end_seconds - start_seconds;
         if duration_seconds < options.min_duration_seconds {
+            debug!(duration_seconds, min_duration = options.min_duration_seconds, "Skipping measure shorter than minimum duration");
             continue;
         }
 
@@ -164,6 +190,7 @@ pub fn process_song_samples(destination: impl AsRef<Path>, midi_path: impl AsRef
         let start_sample = (start_seconds * sample_rate as f64).floor() as usize;
         let end_sample = (end_seconds * sample_rate as f64).ceil() as usize;
         if start_sample >= audio_data.len() {
+            warn!(start_sample, audio_len = audio_data.len(), "Stopping because measure start exceeds audio length");
             break;
         }
 
@@ -173,6 +200,7 @@ pub fn process_song_samples(destination: impl AsRef<Path>, midi_path: impl AsRef
         buffer[..available_samples].copy_from_slice(&audio_data[start_sample..available_end]);
 
         if available_samples == 0 {
+            debug!("Skipping measure with zero available samples");
             continue;
         }
 
@@ -199,10 +227,18 @@ pub fn process_song_samples(destination: impl AsRef<Path>, midi_path: impl AsRef
 
         let prefix = format!("{}_measure_{:04}_{}s_", midi_stem, measure.index, length_in_seconds);
         let path = save_kord_item(destination, &prefix, &note_names, &item)?;
+        debug!(
+            processing_duration_ms = measure_timer.elapsed().as_millis(),
+            length_in_seconds,
+            note_count = chord_notes.len(),
+            path = %path.display(),
+            "Saved measure"
+        );
         saved_paths.push(path);
     }
 
     if saved_paths.is_empty() {
+        warn!("No qualifying measures produced any samples");
         anyhow::bail!(
             "No qualifying measures were found when processing {} and {}.",
             midi_path.as_ref().display(),

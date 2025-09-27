@@ -35,7 +35,7 @@ unexpected_cfgs = { level = "warn", check-cfg = [
 [features]
 default = ["cli", "analyze", "audio", "ml_infer"]
 
-cli = ["clap", "futures"]
+cli = ["clap", "futures", "tracing", "tracing-subscriber"]
 
 audio = ["rodio"]
 
@@ -52,7 +52,7 @@ ml = ["ml_train", "ml_infer"]
 ml_base = ["serde", "byteorder", "bincode"]
 
 ml_sample_gather = ["ml_base"]
-ml_sample_process = ["ml_base", "midly", "hound"]
+ml_sample_process = ["ml_base", "midly", "hound", "tracing"]
 
 ml_train = [
     "ml_base",
@@ -110,6 +110,11 @@ parse_duration0 = { version = "3", optional = true }
 # cli
 clap = { version = "4", features = ["derive"], optional = true }
 futures = { version = "0.3", optional = true }
+tracing = { version = "0.1", features = ["log"], optional = true }
+tracing-subscriber = { version = "0.3", features = [
+    "fmt",
+    "ansi",
+], optional = true }
 
 # audio
 rodio = { version = "0.21", default-features = false, features = [

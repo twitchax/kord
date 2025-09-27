@@ -9,10 +9,14 @@ use klib::core::{
     note::Note,
     octave::Octave,
 };
+use tracing_subscriber::fmt::SubscriberBuilder;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
+    /// Flag that specifies verbose logging.
+    #[arg(short, long)]
+    verbose: bool,
     #[command(subcommand)]
     command: Option<Command>,
 }
@@ -364,9 +368,31 @@ enum InferCommand {
 fn main() -> Void {
     let args = Args::parse();
 
+    init_tracing(args.verbose);
+
     start(args)?;
 
     Ok(())
+}
+
+fn init_tracing(verbose: bool) {
+    let level = if verbose { tracing::Level::DEBUG } else { tracing::Level::INFO };
+
+    SubscriberBuilder::default()
+        .with_ansi(true)
+        .with_level(true)
+        .with_file(false)
+        .with_target(true)
+        .with_thread_ids(false)
+        .with_thread_names(false)
+        .with_max_level(level)
+        .init();
+
+    if verbose {
+        tracing::debug!("Tracing initialized at DEBUG level");
+    } else {
+        tracing::info!("Tracing initialized at INFO level");
+    }
 }
 
 fn start(args: Args) -> Void {
@@ -799,6 +825,7 @@ mod tests {
     #[test]
     fn test_describe() {
         start(Args {
+            verbose: false,
             command: Some(Command::Describe {
                 symbol: "Cmaj7b9@3^2!".to_string(),
                 octave: 4,
@@ -810,6 +837,7 @@ mod tests {
     #[test]
     fn test_guess() {
         start(Args {
+            verbose: false,
             command: Some(Command::Guess {
                 notes: vec!["C".to_owned(), "E".to_owned(), "G".to_owned()],
             }),
