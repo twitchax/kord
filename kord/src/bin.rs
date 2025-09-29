@@ -1,5 +1,6 @@
 #![recursion_limit = "256"]
 
+#[cfg(any(feature = "analyze_file", feature = "ml_sample_process"))]
 use std::path::PathBuf;
 
 use clap::{ArgAction, Parser, Subcommand};
@@ -9,14 +10,19 @@ use klib::core::{
     note::Note,
     octave::Octave,
 };
-use tracing_subscriber::fmt::SubscriberBuilder;
+use tracing_subscriber::{filter::LevelFilter, fmt::SubscriberBuilder};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// Flag that specifies verbose logging.
-    #[arg(short, long)]
+    #[arg(short, long, conflicts_with = "quiet")]
     verbose: bool,
+
+    /// Flag that suppresses all tracing output.
+    #[arg(short, long, conflicts_with = "verbose")]
+    quiet: bool,
+
     #[command(subcommand)]
     command: Option<Command>,
 }
@@ -187,11 +193,11 @@ enum MlCommand {
     #[cfg(feature = "ml_train")]
     Train {
         /// The noise asset root for the simulated data.
-        #[arg(long, default_value = "kord/noise")]
+        #[arg(long, default_value = "kord/samples/noise")]
         noise_asset_root: String,
 
         /// The source directory for the gathered samples.
-        #[arg(long, default_value = "kord/samples")]
+        #[arg(long, default_value = "kord/samples/captured")]
         source: String,
 
         /// The destination directory for the trained model.
@@ -301,7 +307,7 @@ enum MlCommand {
     },
 
     /// Runs the ML trainer across various hyperparameters, and outputs the results.
-    #[cfg(feature = "ml_train")]
+    #[cfg(feature = "ml_hpt")]
     Hpt {
         /// The source directory for the gathered samples.
         #[arg(long, default_value = "kord/samples")]
@@ -368,25 +374,35 @@ enum InferCommand {
 fn main() -> Void {
     let args = Args::parse();
 
-    init_tracing(args.verbose);
+    init_tracing(args.verbose, args.quiet);
 
     start(args)?;
 
     Ok(())
 }
 
-fn init_tracing(verbose: bool) {
-    let level = if verbose { tracing::Level::DEBUG } else { tracing::Level::INFO };
+fn init_tracing(verbose: bool, quiet: bool) {
+    let level_filter = if quiet {
+        LevelFilter::OFF
+    } else if verbose {
+        LevelFilter::DEBUG
+    } else {
+        LevelFilter::INFO
+    };
 
     SubscriberBuilder::default()
         .with_ansi(true)
-        .with_level(true)
+        .with_level(!quiet)
         .with_file(false)
         .with_target(true)
         .with_thread_ids(false)
         .with_thread_names(false)
-        .with_max_level(level)
+        .with_max_level(level_filter)
         .init();
+
+    if quiet {
+        return;
+    }
 
     if verbose {
         tracing::debug!("Tracing initialized at DEBUG level");
@@ -743,7 +759,7 @@ fn start(args: Args) -> Void {
                 let time_space = klib::analyze::base::get_time_space(&peak_space);
                 plot_frequency_space(&time_space, "KordItem Time Space", &harmonic_file_name, x_min, x_max);
             }
-            #[cfg(feature = "ml_train")]
+            #[cfg(feature = "ml_hpt")]
             Some(MlCommand::Hpt { source, destination, log, device }) => {
                 use klib::ml::train::execute::hyper_parameter_tuning;
 
@@ -826,6 +842,7 @@ mod tests {
     fn test_describe() {
         start(Args {
             verbose: false,
+            quiet: false,
             command: Some(Command::Describe {
                 symbol: "Cmaj7b9@3^2!".to_string(),
                 octave: 4,
@@ -838,6 +855,7 @@ mod tests {
     fn test_guess() {
         start(Args {
             verbose: false,
+            quiet: false,
             command: Some(Command::Guess {
                 notes: vec!["C".to_owned(), "E".to_owned(), "G".to_owned()],
             }),
