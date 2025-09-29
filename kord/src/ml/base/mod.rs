@@ -19,14 +19,78 @@ use std::path::PathBuf;
 /// This covers up to C9, which is beyond the range of a standard 88-key piano (C8).
 pub const FREQUENCY_SPACE_SIZE: usize = 8192;
 
-/// The standard mel space size to use across all ML operations.
-pub const INPUT_SPACE_SIZE: usize = NUM_CLASSES + 128;
+/// The number of MIDI-indexed note bins used throughout the pipeline.
+pub const NOTE_SIGNATURE_SIZE: usize = 128;
+
+/// The number of pitch classes in a single octave (C through B).
+pub const PITCH_CLASS_COUNT: usize = 12;
+
+/// The deterministic guess vector mirrors the MIDI note signature.
+pub const DETERMINISTIC_GUESS_SIZE: usize = NOTE_SIGNATURE_SIZE;
 
 /// The standard mel space size to use across all ML operations.
 pub const MEL_SPACE_SIZE: usize = 512;
 
-/// The standard number of classes to use across all ML operations.
-pub const NUM_CLASSES: usize = 128;
+/// Ensure exactly one primary sample loader feature is enabled when ML base is compiled.
+#[cfg(any(
+    all(feature = "ml_loader_note_binned_convolution", feature = "ml_loader_mel"),
+    all(feature = "ml_loader_note_binned_convolution", feature = "ml_loader_frequency"),
+    all(feature = "ml_loader_mel", feature = "ml_loader_frequency"),
+))]
+compile_error!(
+    "Multiple ml_loader_* features enabled; enable exactly one of: \
+     ml_loader_note_binned_convolution, ml_loader_mel, ml_loader_frequency."
+);
+
+#[cfg(not(any(feature = "ml_loader_note_binned_convolution", feature = "ml_loader_mel", feature = "ml_loader_frequency",)))]
+compile_error!(
+    "No ml_loader_* feature enabled; enable exactly one of: \
+     ml_loader_note_binned_convolution, ml_loader_mel, ml_loader_frequency."
+);
+
+/// The base dimensionality of the sample tensor produced by `kord_item_to_sample_tensor`.
+#[cfg(feature = "ml_loader_note_binned_convolution")]
+const INPUT_BASE_SIZE: usize = NOTE_SIGNATURE_SIZE;
+
+/// The base dimensionality of the sample tensor produced by `kord_item_to_sample_tensor`.
+#[cfg(feature = "ml_loader_mel")]
+const INPUT_BASE_SIZE: usize = MEL_SPACE_SIZE;
+
+/// The base dimensionality of the sample tensor produced by `kord_item_to_sample_tensor`.
+#[cfg(feature = "ml_loader_frequency")]
+const INPUT_BASE_SIZE: usize = FREQUENCY_SPACE_SIZE;
+
+/// The dimensionality of the sample tensor produced by `kord_item_to_sample_tensor`.
+#[cfg(feature = "ml_loader_include_deterministic_guess")]
+pub const INPUT_SPACE_SIZE: usize = INPUT_BASE_SIZE + DETERMINISTIC_GUESS_SIZE;
+
+/// The dimensionality of the sample tensor produced by `kord_item_to_sample_tensor`.
+#[cfg(not(feature = "ml_loader_include_deterministic_guess"))]
+pub const INPUT_SPACE_SIZE: usize = INPUT_BASE_SIZE;
+
+/// Ensure at least one target encoding feature is enabled when ML base is compiled.
+#[cfg(not(any(feature = "ml_target_full", feature = "ml_target_folded")))]
+compile_error!("No ml_target_* feature enabled; enable at least one of: ml_target_full, ml_target_folded.");
+
+/// Whether the full 128-note target encoding is enabled.
+#[cfg(feature = "ml_target_full")]
+const TARGET_FULL_SIZE: usize = NOTE_SIGNATURE_SIZE;
+
+#[cfg(not(feature = "ml_target_full"))]
+const TARGET_FULL_SIZE: usize = 0;
+
+/// Whether the folded 12-class target encoding is enabled.
+#[cfg(feature = "ml_target_folded")]
+const TARGET_FOLDED_SIZE: usize = PITCH_CLASS_COUNT;
+
+#[cfg(not(feature = "ml_target_folded"))]
+const TARGET_FOLDED_SIZE: usize = 0;
+
+/// The dimensionality of the target tensor produced by `kord_item_to_target_tensor`.
+pub const TARGET_SPACE_SIZE: usize = TARGET_FULL_SIZE + TARGET_FOLDED_SIZE;
+
+/// Backward-compatible alias for target dimensionality.
+pub const NUM_CLASSES: usize = TARGET_SPACE_SIZE;
 
 // Training configuration.
 

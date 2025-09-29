@@ -11,6 +11,7 @@ use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
 use crate::{
     core::{
+        base::Res,
         interval::Interval,
         note::{HasNoteId, Note, ALL_PITCH_NOTES},
         pitch::HasFrequency,
@@ -38,7 +39,7 @@ impl<B: Backend> ValidStep<KordBatch<B>, MultiLabelClassificationOutput<B>> for 
 // Operations for simulating kord samples.
 
 /// Create a simulated kord sample item from a noise basis and a semi-random collection of notes.
-pub fn get_simulated_kord_item(noise_asset_root: impl AsRef<Path>, notes: &[Note], peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> KordItem {
+pub fn get_simulated_kord_item(noise_asset_root: impl AsRef<Path>, notes: &[Note], peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> Res<KordItem> {
     let noise_asset_root = noise_asset_root.as_ref().to_str().unwrap();
     let wobble_divisor = 35.0;
 
@@ -48,7 +49,7 @@ pub fn get_simulated_kord_item(noise_asset_root: impl AsRef<Path>, notes: &[Note
         2 => load_kord_item(format!("{noise_asset_root}/white_noise.bin")),
         3 => load_kord_item(format!("{noise_asset_root}/brown_noise.bin")),
         _ => unreachable!(),
-    };
+    }?;
 
     for note in notes {
         let mut harmonic_strength = 1.0;
@@ -79,12 +80,12 @@ pub fn get_simulated_kord_item(noise_asset_root: impl AsRef<Path>, notes: &[Note
 
     result.label = Note::id_mask(notes);
 
-    result
+    Ok(result)
 }
 
 /// Create simulated kord sample item by randomly selecting notes from a list of notes,
 /// and use the given configuration.
-pub fn get_simulated_kord_items<R>(noise_asset_root: R, count: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> Vec<KordItem>
+pub fn get_simulated_kord_items<R>(noise_asset_root: R, count: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> Res<Vec<KordItem>>
 where
     R: AsRef<Path> + Clone + Send + Sync,
 {
@@ -195,7 +196,7 @@ mod tests {
         };
 
         let path = save_kord_item(destination, "", "test", &item).unwrap();
-        let loaded = load_kord_item(path);
+        let loaded = load_kord_item(path).unwrap();
 
         assert_eq!(item.label, loaded.label);
     }

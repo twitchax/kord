@@ -24,29 +24,29 @@ use crate::{
     },
 };
 
-use super::{KordItem, FREQUENCY_SPACE_SIZE, MEL_SPACE_SIZE, NUM_CLASSES};
+use super::{KordItem, DETERMINISTIC_GUESS_SIZE, FREQUENCY_SPACE_SIZE, MEL_SPACE_SIZE, NOTE_SIGNATURE_SIZE, PITCH_CLASS_COUNT};
 
 // Operations for working with kord samples.
 
 /// Load the kord sample from the binary file into a new [`KordItem`].
-pub fn load_kord_item(path: impl AsRef<Path>) -> KordItem {
-    let file = std::fs::File::open(path.as_ref()).unwrap();
+pub fn load_kord_item(path: impl AsRef<Path>) -> Res<KordItem> {
+    let file = std::fs::File::open(path.as_ref())?;
     let mut reader = BufReader::new(file);
 
     // Read 8192 f32s in big endian from the file.
     let mut frequency_space = [0f32; 8192];
 
-    (0usize..FREQUENCY_SPACE_SIZE).for_each(|k| {
-        frequency_space[k] = reader.read_f32::<BigEndian>().unwrap();
-    });
+    for k in 0..FREQUENCY_SPACE_SIZE {
+        frequency_space[k] = reader.read_f32::<BigEndian>()?;
+    }
 
-    let label = reader.read_u128::<BigEndian>().unwrap();
+    let label = reader.read_u128::<BigEndian>()?;
 
-    KordItem {
+    Ok(KordItem {
         path: path.as_ref().to_owned(),
         frequency_space,
         label,
-    }
+    })
 }
 
 /// Save the kord sample into a binary file.
@@ -112,8 +112,8 @@ pub fn mel_filter_banks_from(spectrum: &[f32]) -> [f32; MEL_SPACE_SIZE] {
 }
 
 /// Run a note-binned "harmonic convolution" over the frequency space data.
-pub fn note_binned_convolution(spectrum: &[f32]) -> [f32; NUM_CLASSES] {
-    let mut convolution = [0f32; NUM_CLASSES];
+pub fn note_binned_convolution(spectrum: &[f32]) -> [f32; NOTE_SIGNATURE_SIZE] {
+    let mut convolution = [0f32; NOTE_SIGNATURE_SIZE];
 
     for (note, _) in ALL_PITCH_NOTES_WITH_FREQUENCY.iter().skip(7).take(90) {
         let id_index = note.id_index();
@@ -182,10 +182,10 @@ pub fn get_deterministic_guess(kord_item: &KordItem) -> u128 {
 }
 
 /// Produces a 128 element array of 0s and 1s from a u128.
-pub fn u128_to_binary(num: u128) -> [f32; 128] {
-    let mut binary = [0f32; 128];
-    for i in 0..128 {
-        binary[127 - i] = (num >> i & 1) as f32;
+pub fn u128_to_binary(num: u128) -> [f32; DETERMINISTIC_GUESS_SIZE] {
+    let mut binary = [0f32; DETERMINISTIC_GUESS_SIZE];
+    for i in 0..DETERMINISTIC_GUESS_SIZE {
+        binary[DETERMINISTIC_GUESS_SIZE - 1 - i] = (num >> i & 1) as f32;
     }
 
     binary
@@ -194,8 +194,8 @@ pub fn u128_to_binary(num: u128) -> [f32; 128] {
 /// Produces a u128 from a 128 element array of 0s and 1s.
 pub fn binary_to_u128(binary: &[f32]) -> u128 {
     let mut num = 0u128;
-    for i in 0..128 {
-        num += (binary[i] as u128) << (127 - i);
+    for i in 0..DETERMINISTIC_GUESS_SIZE {
+        num += (binary[i] as u128) << (DETERMINISTIC_GUESS_SIZE - 1 - i);
     }
 
     num
@@ -203,13 +203,13 @@ pub fn binary_to_u128(binary: &[f32]) -> u128 {
 
 /// Folds the 128-bit binary signature of the the notes into a 12-bit signature (which represent one octave)
 #[allow(dead_code)]
-pub fn fold_binary(binary: &[f32; 128]) -> [f32; 12] {
-    let mut folded = [0f32; 12];
+pub fn fold_binary(binary: &[f32; NOTE_SIGNATURE_SIZE]) -> [f32; PITCH_CLASS_COUNT] {
+    let mut folded = [0f32; PITCH_CLASS_COUNT];
 
-    for k in 0..10 {
-        let slice = &binary[k * 12..(k + 1) * 12];
+    for k in 0..(NOTE_SIGNATURE_SIZE / PITCH_CLASS_COUNT) {
+        let slice = &binary[k * PITCH_CLASS_COUNT..(k + 1) * PITCH_CLASS_COUNT];
 
-        for i in 0..12 {
+        for i in 0..PITCH_CLASS_COUNT {
             folded[i] = slice[i].max(folded[i]);
         }
     }

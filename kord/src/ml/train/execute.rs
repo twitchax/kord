@@ -17,11 +17,8 @@ use burn::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
-#[cfg(feature = "ml_train")]
-use burn::backend::Autodiff;
-
 use crate::{
-    core::base::{Res, Void},
+    core::base::Res,
     ml::base::{
         data::{kord_item_to_sample_tensor, kord_item_to_target_tensor},
         helpers::{binary_to_u128, get_deterministic_guess, logits_to_binary_predictions},
@@ -29,6 +26,9 @@ use crate::{
         NUM_CLASSES,
     },
 };
+
+#[cfg(feature = "ml_hpt")]
+use crate::core::base::Void;
 
 use super::data::{KordBatcher, KordDataset};
 
@@ -52,14 +52,14 @@ where
 
     // Define the datasets.
 
-    let (train_dataset, test_dataset) = KordDataset::from_folder_and_simulation(
+    let (train_dataset, test_dataset) = KordDataset::simulated_training_and_folder_validation(
         &config.noise_asset_root,
         &config.source,
         config.simulation_size,
         config.simulation_peak_radius,
         config.simulation_harmonic_decay,
         config.simulation_frequency_wobble,
-    );
+    )?;
 
     // Define the data loaders.
 
@@ -72,7 +72,7 @@ where
         .num_workers(config.model_workers)
         .build(Arc::new(train_dataset));
 
-    let dataloader_test = DataLoaderBuilder::new(batcher_valid)
+    let dataloader_valid = DataLoaderBuilder::new(batcher_valid)
         .batch_size(config.model_batch_size)
         .num_workers(config.model_workers)
         .build(Arc::new(test_dataset));
@@ -105,7 +105,7 @@ where
 
     // Train the model.
 
-    let model_trained = learner.fit(dataloader_train, dataloader_test);
+    let model_trained = learner.fit(dataloader_train, dataloader_valid);
 
     // Save the model.
 
@@ -122,15 +122,15 @@ where
 
     // Compute overall accuracy.
 
-    let accuracy = if print_accuracy_report { compute_overall_accuracy(&model_trained, &device) } else { 0.0 };
+    let accuracy = if print_accuracy_report { compute_overall_accuracy(&model_trained, &device)? } else { 0.0 };
 
     Ok(accuracy)
 }
 
 /// Compute the overall accuracy of the model.
 #[coverage(off)]
-pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device: &B::Device) -> f32 {
-    let dataset = KordDataset::from_folder_and_simulation("kord/asstes", "kord/samples", 0, 0.0, 0.0, 0.0);
+pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device: &B::Device) -> Res<f32> {
+    let dataset = KordDataset::simulated_training_and_folder_validation("kord/assets", "kord/samples", 0, 0.0, 0.0, 0.0)?;
 
     let kord_items = dataset.1.items;
 
@@ -167,15 +167,18 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
     let inference_accuracy = 100.0 * (inference_correct as f32 / kord_items.len() as f32);
     println!("Inference accuracy: {inference_accuracy}%");
 
-    inference_accuracy
+    Ok(inference_accuracy)
 }
 
 /// Run hyper parameter tuning.
 ///
-///This method sweeps through the hyper parameters and runs training for each combination. The best
+/// This method sweeps through the hyper parameters and runs training for each combination. The best
 /// hyper parameters are then printed at the end.
+#[cfg(feature = "ml_hpt")]
 #[coverage(off)]
 pub fn hyper_parameter_tuning(source: String, destination: String, log: String, backend: String) -> Void {
+    use burn::backend::Autodiff;
+
     let peak_radiuses = [2.0];
     let harmonic_decays = [0.1];
     let frequency_wobbles = [0.4];

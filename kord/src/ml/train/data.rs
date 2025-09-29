@@ -1,17 +1,21 @@
 //! Module that defines how data is batched and loaded for training.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use burn::{
     data::{dataloader::batcher::Batcher, dataset::Dataset},
     tensor::{backend::Backend, Int, Tensor},
 };
+use rand::seq::SliceRandom;
 use rayon::prelude::*;
 
-use crate::ml::base::{
-    data::{kord_item_to_sample_tensor, kord_item_to_target_tensor},
-    helpers::load_kord_item,
-    KordItem,
+use crate::{
+    core::base::Res,
+    ml::base::{
+        data::{kord_item_to_sample_tensor, kord_item_to_target_tensor},
+        helpers::load_kord_item,
+        KordItem,
+    },
 };
 
 use super::helpers::get_simulated_kord_items;
@@ -26,27 +30,52 @@ pub struct KordDataset {
 
 impl KordDataset {
     /// Load the kord dataset from the given folder.
-    pub fn from_folder_and_simulation<R>(noise_asset_root: R, name: impl AsRef<Path>, count: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> (Self, Self)
+    ///
+    /// This will load a simulated training set and a folder-based validation set.
+    pub fn simulated_training_and_folder_validation<R>(noise_asset_root: R, name: impl AsRef<Path>, count: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> Res<(Self, Self)>
     where
         R: AsRef<Path> + Clone + Send + Sync,
     {
-        // First, get all of the *.bin files in the folder.
-        let test_files = std::fs::read_dir(name)
-            .unwrap()
-            .map(|entry| entry.unwrap().path())
-            .filter(|path| path.is_file())
-            .filter(|path| path.extension().unwrap() == "bin")
-            .collect::<Vec<_>>();
+        let test_files = get_bin_files_in_directory(name);
 
-        let test_items: Vec<_> = test_files.par_iter().map(load_kord_item).collect();
-        let train_items = get_simulated_kord_items(noise_asset_root, count, peak_radius, harmonic_decay, frequency_wobble);
+        let test_items: Vec<_> = test_files.par_iter().map(load_kord_item).collect::<Res<Vec<_>>>()?;
+        let train_items = get_simulated_kord_items(noise_asset_root, count, peak_radius, harmonic_decay, frequency_wobble)?;
 
         // Return the train and test datasets.
         let train = Self { items: train_items };
         let test = Self { items: test_items };
 
-        (train, test)
+        Ok((train, test))
     }
+
+    /// Load the training set and testing set from the given folder (no simulation).
+    ///
+    /// The items are shuffled before splitting, and the dataset is split 80 / 20.
+    pub fn folder_for_training_and_validation(name: impl AsRef<Path>) -> Res<(Self, Self)> {
+        let files = get_bin_files_in_directory(name);
+
+        let mut items: Vec<_> = files.par_iter().map(load_kord_item).collect::<Res<Vec<_>>>()?;
+        items.shuffle(&mut rand::rng());
+
+        // Split the items into train and test sets (80/20 split).
+        let split = (items.len() as f32 * 0.8) as usize;
+        let (train_items, test_items) = items.split_at(split);
+
+        let train = Self { items: train_items.to_vec() };
+        let test = Self { items: test_items.to_vec() };
+
+        Ok((train, test))
+    }
+}
+
+// Get all bin files in a directory.
+fn get_bin_files_in_directory(name: impl AsRef<Path>) -> Vec<PathBuf> {
+    std::fs::read_dir(name)
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| path.is_file())
+        .filter(|path| path.extension().unwrap() == "bin")
+        .collect()
 }
 
 impl Dataset<KordItem> for KordDataset {

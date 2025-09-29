@@ -33,7 +33,15 @@ unexpected_cfgs = { level = "warn", check-cfg = [
 ] }
 
 [features]
-default = ["cli", "analyze", "audio", "ml_infer"]
+default = [
+    "cli",
+    "analyze",
+    "audio",
+    "ml_infer",
+    "ml_loader_note_binned_convolution",
+    "ml_loader_include_deterministic_guess",
+    "ml_target_full",
+]
 
 cli = ["clap", "futures", "tracing", "tracing-subscriber"]
 
@@ -51,6 +59,15 @@ analyze_file_alac = ["symphonia/alac", "symphonia/isomp4"]
 ml = ["ml_train", "ml_infer"]
 ml_base = ["serde", "byteorder", "bincode"]
 
+ml_loader_note_binned_convolution = []
+ml_loader_mel = []
+ml_loader_frequency = []
+ml_loader_include_deterministic_guess = []
+
+ml_target_full = []
+ml_target_folded = []
+ml_target_full_and_folded = []
+
 ml_sample_gather = ["ml_base"]
 ml_sample_process = ["ml_base", "midly", "hound", "tracing"]
 
@@ -65,6 +82,8 @@ ml_train = [
     "burn/tui",
     "burn/metrics",
 ]
+
+ml_hpt = ["ml_train"]
 
 ml_tch = ["ml_train", "burn/tch"]
 ml_candle = ["ml_train", "burn/candle"]

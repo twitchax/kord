@@ -85,8 +85,10 @@ Commands:
   help      Print this message or the help of the given subcommand(s)
 
 Options:
-  -h, --help     Print help information
-  -V, --version  Print version information
+   -v, --verbose  Flag that specifies verbose logging
+   -q, --quiet    Flag that suppresses all tracing output
+   -h, --help     Print help information
+   -V, --version  Print version information
 ```
 
 ### Describe A Chord
@@ -268,9 +270,54 @@ The library and binary both support various feature flags.  Of most important no
     * > NOTE: Adding the `analyze_file` feature flag will enable the `ml infer file` subcommand, which allows for inferring with ML models from a file.
   * `ml_gpu`: enables the features to use a GPU for ML _training_.
   * `ml_sample_gather`: enables the `ml gather` subcommand for capturing raw samples from a microphone (requires `analyze_mic`).
+  * `ml_hpt`: enables the `ml hpt` subcommand for sweeping hyperparameters (implies `ml_train`).
 * `ml_sample_process`: enables the `ml process` subcommand for generating samples from aligned MIDI and audio files, naming each emitted sample with its originating measure index, rounded duration (in seconds), and chord tones.
 * `wasm`: enables the features to compile to wasm.
 * `plot`: enables the features to plot data.
+
+### ML Loader & Target Feature Matrix
+
+The ML pipeline exposes toggles that change both the training inputs and labels without modifying source code. These features can be mixed and matched to explore alternative data representations:
+
+#### Sample Loader Features (choose exactly one)
+
+| Feature                             | Description                                                    | Input width (before deterministic guess) |
+| ----------------------------------- | -------------------------------------------------------------- | ---------------------------------------- |
+| `ml_loader_note_binned_convolution` | Uses the existing note-binned harmonic convolution (128 bins). | 128                                      |
+| `ml_loader_mel`                     | Applies mel filter banks to the full spectrum (512 bands).     | 512                                      |
+| `ml_loader_frequency`               | Feeds the raw 8,192-bin frequency spectrum.                    | 8192                                     |
+
+Optional add-on:
+
+| Feature                                 | Description                                                                                                                                  |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ml_loader_include_deterministic_guess` | Prepends the deterministic 128-note guess vector to whichever loader you selected above (doubling 128-bin inputs, adding 128 to the others). |
+
+#### Target Encoding Features (enable one or both)
+
+| Feature            | Description                                                  | Output width contribution |
+| ------------------ | ------------------------------------------------------------ | ------------------------- |
+| `ml_target_full`   | Emits the full 128-note mask (per MIDI note across octaves). | +128                      |
+| `ml_target_folded` | Emits a folded 12-class pitch-class mask (one octave).       | +12                       |
+
+When both target features are enabled, the model receives the 128-note mask followed by the 12-class folded mask in a single output vector (`TARGET_SPACE_SIZE = 140`).
+
+#### Example configurations
+
+```bash
+# Default (note-binned + deterministic guess, 128-note target)
+cargo check
+
+# Mel features with deterministic guess and combined targets
+cargo check --no-default-features \
+   --features "cli ml_infer ml_loader_mel ml_loader_include_deterministic_guess ml_target_full ml_target_folded"
+
+# Raw frequency spectrum without deterministic guess, folded targets only
+cargo check --no-default-features \
+   --features "cli ml_infer ml_loader_frequency ml_target_folded"
+```
+
+> Make sure exactly one loader feature is enabled at a time. The deterministic guess flag and target features can be toggled independently to suit experiments.
 
 ## Test
 
