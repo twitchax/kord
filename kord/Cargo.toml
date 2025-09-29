@@ -39,7 +39,6 @@ default = [
     "audio",
     "ml_infer",
     "ml_loader_note_binned_convolution",
-    "ml_loader_include_deterministic_guess",
     "ml_target_full",
 ]
 

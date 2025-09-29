@@ -19,6 +19,8 @@ wasm-bindgen-futures = { version = "0.4", optional = true }
 axum-insights = { version = "0.6", optional = true, default-features = false }
 klib = { package = "kord", path = "../kord", default-features = false, features = [
     "ml_infer",
+    "ml_loader_note_binned_convolution",
+    "ml_target_full",
     "analyze_base",
     "audio",
 ] }

@@ -99,8 +99,10 @@ pub const NUM_CLASSES: usize = TARGET_SPACE_SIZE;
 pub struct TrainConfig {
     /// The source directory for the noise assets used to generate simulated items.
     pub noise_asset_root: String,
-    /// The source directory for the gathered samples.
-    pub source: String,
+    /// The source directory for the training samples.
+    pub training_source: String,
+    /// The source directory for the validation samples.
+    pub validation_source: Option<String>,
     /// The destination directory for the trained model.
     pub destination: String,
     /// The log directory for training.

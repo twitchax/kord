@@ -32,11 +32,18 @@ impl KordDataset {
     /// Load the kord dataset from the given folder.
     ///
     /// This will load a simulated training set and a folder-based validation set.
-    pub fn simulated_training_and_folder_validation<R>(noise_asset_root: R, name: impl AsRef<Path>, count: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> Res<(Self, Self)>
+    pub fn from_simulated_training_and_folder_validation<R>(
+        noise_asset_root: R,
+        validation_source: impl AsRef<Path>,
+        count: usize,
+        peak_radius: f32,
+        harmonic_decay: f32,
+        frequency_wobble: f32,
+    ) -> Res<(Self, Self)>
     where
         R: AsRef<Path> + Clone + Send + Sync,
     {
-        let test_files = get_bin_files_in_directory(name);
+        let test_files = get_bin_files_in_directory(validation_source);
 
         let test_items: Vec<_> = test_files.par_iter().map(load_kord_item).collect::<Res<Vec<_>>>()?;
         let train_items = get_simulated_kord_items(noise_asset_root, count, peak_radius, harmonic_decay, frequency_wobble)?;
@@ -51,8 +58,8 @@ impl KordDataset {
     /// Load the training set and testing set from the given folder (no simulation).
     ///
     /// The items are shuffled before splitting, and the dataset is split 80 / 20.
-    pub fn folder_for_training_and_validation(name: impl AsRef<Path>) -> Res<(Self, Self)> {
-        let files = get_bin_files_in_directory(name);
+    pub fn from_one_folder(training_source: impl AsRef<Path>) -> Res<(Self, Self)> {
+        let files = get_bin_files_in_directory(training_source);
 
         let mut items: Vec<_> = files.par_iter().map(load_kord_item).collect::<Res<Vec<_>>>()?;
         items.shuffle(&mut rand::rng());
@@ -65,6 +72,27 @@ impl KordDataset {
         let test = Self { items: test_items.to_vec() };
 
         Ok((train, test))
+    }
+
+    /// Load the training set and validation set from the given folders.
+    ///
+    /// If the validation source is `None`, the training set will be split 80/20.
+    pub fn from_two_folders(training_source: impl AsRef<Path>, validation_source: &Option<impl AsRef<Path>>) -> Res<(Self, Self)> {
+        match validation_source {
+            Some(validation_source) => {
+                let train = Self::from_folder(training_source)?;
+                let validation = Self::from_folder(validation_source)?;
+                Ok((train, validation))
+            }
+            None => Self::from_one_folder(training_source),
+        }
+    }
+
+    /// Load the dataset from the given folder.
+    pub fn from_folder(training_source: impl AsRef<Path>) -> Res<Self> {
+        let files = get_bin_files_in_directory(training_source);
+        let items: Vec<_> = files.par_iter().map(load_kord_item).collect::<Res<Vec<_>>>()?;
+        Ok(Self { items })
     }
 }
 

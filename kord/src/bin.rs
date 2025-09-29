@@ -196,9 +196,13 @@ enum MlCommand {
         #[arg(long, default_value = "kord/samples/noise")]
         noise_asset_root: String,
 
-        /// The source directory for the gathered samples.
-        #[arg(long, default_value = "kord/samples/captured")]
-        source: String,
+        /// The source directory for the training samples.
+        #[arg(long, default_value = "kord/samples/slakh")]
+        training_source: String,
+
+        /// The source directory for the validation samples.
+        #[arg(long)]
+        validation_source: Option<String>,
 
         /// The destination directory for the trained model.
         #[arg(long, default_value = "kord/model")]
@@ -520,7 +524,8 @@ fn start(args: Args) -> Void {
             #[cfg(feature = "ml_train")]
             Some(MlCommand::Train {
                 noise_asset_root,
-                source,
+                training_source,
+                validation_source,
                 destination,
                 log,
                 simulation_size,
@@ -547,7 +552,8 @@ fn start(args: Args) -> Void {
 
                 let config = TrainConfig {
                     noise_asset_root,
-                    source,
+                    training_source,
+                    validation_source,
                     destination,
                     log,
                     simulation_size,
@@ -627,6 +633,8 @@ fn start(args: Args) -> Void {
 
                             let device = RemoteDevice::new(&backend);
                             klib::ml::train::run_training::<Autodiff<RemoteBackend>>(device, &config, true, true)?;
+
+                            return Ok(());
                         }
 
                         return Err(anyhow::Error::msg(

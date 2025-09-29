@@ -52,14 +52,16 @@ where
 
     // Define the datasets.
 
-    let (train_dataset, test_dataset) = KordDataset::simulated_training_and_folder_validation(
+    let (train_dataset, valid_dataset) = KordDataset::from_simulated_training_and_folder_validation(
         &config.noise_asset_root,
-        &config.source,
+        &config.training_source,
         config.simulation_size,
         config.simulation_peak_radius,
         config.simulation_harmonic_decay,
         config.simulation_frequency_wobble,
     )?;
+
+    //let (train_dataset, valid_dataset) = KordDataset::from_two_folders(&config.training_source, &config.validation_source)?;
 
     // Define the data loaders.
 
@@ -75,7 +77,7 @@ where
     let dataloader_valid = DataLoaderBuilder::new(batcher_valid)
         .batch_size(config.model_batch_size)
         .num_workers(config.model_workers)
-        .build(Arc::new(test_dataset));
+        .build(Arc::new(valid_dataset));
 
     // Define the model.
 
@@ -90,7 +92,6 @@ where
 
     if !config.no_plots {
         learner_builder = learner_builder
-            .metric_valid(burn::train::metric::CudaMetric::new())
             .metric_train_numeric(HammingScore::new())
             .metric_valid_numeric(HammingScore::new())
             .metric_train_numeric(LossMetric::new())
@@ -130,9 +131,7 @@ where
 /// Compute the overall accuracy of the model.
 #[coverage(off)]
 pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device: &B::Device) -> Res<f32> {
-    let dataset = KordDataset::simulated_training_and_folder_validation("kord/assets", "kord/samples", 0, 0.0, 0.0, 0.0)?;
-
-    let kord_items = dataset.1.items;
+    let kord_items = KordDataset::from_folder("kord/samples/captured")?.items;
 
     let mut deterministic_correct = 0;
     let mut inference_correct = 0;
@@ -302,7 +301,8 @@ mod tests {
 
         let config = TrainConfig {
             noise_asset_root: "noise".to_string(),
-            source: "tests/samples".to_string(),
+            training_source: "tests/samples".to_string(),
+            validation_source: None,
             destination: ".hidden/test_model".to_string(),
             log: ".hidden/test_log".to_string(),
             simulation_size: 1,
