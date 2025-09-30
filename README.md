@@ -286,6 +286,7 @@ The ML pipeline exposes toggles that change both the training inputs and labels 
 | `ml_loader_note_binned_convolution` | Uses the existing note-binned harmonic convolution (128 bins). | 128                                      |
 | `ml_loader_mel`                     | Applies mel filter banks to the full spectrum (512 bands).     | 512                                      |
 | `ml_loader_frequency`               | Feeds the raw 8,192-bin frequency spectrum.                    | 8192                                     |
+| `ml_loader_frequency_pooled`        | Averages the raw spectrum into 2,048 pooled bins (factor ×4).  | 2048                                     |
 
 Optional add-on:
 
@@ -315,6 +316,10 @@ cargo check --no-default-features \
 # Raw frequency spectrum without deterministic guess, folded targets only
 cargo check --no-default-features \
    --features "cli ml_infer ml_loader_frequency ml_target_folded"
+
+# Pooled raw spectrum with deterministic guess, folded targets only
+cargo check --no-default-features \
+   --features "cli ml_infer ml_loader_frequency_pooled ml_loader_include_deterministic_guess ml_target_folded"
 ```
 
 > Make sure exactly one loader feature is enabled at a time. The deterministic guess flag and target features can be toggled independently to suit experiments.

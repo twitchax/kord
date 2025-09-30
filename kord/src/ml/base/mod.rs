@@ -33,19 +33,27 @@ pub const MEL_SPACE_SIZE: usize = 512;
 
 /// Ensure exactly one primary sample loader feature is enabled when ML base is compiled.
 #[cfg(any(
-    all(feature = "ml_loader_note_binned_convolution", feature = "ml_loader_mel"),
-    all(feature = "ml_loader_note_binned_convolution", feature = "ml_loader_frequency"),
-    all(feature = "ml_loader_mel", feature = "ml_loader_frequency"),
+    all(
+        feature = "ml_loader_note_binned_convolution",
+        any(feature = "ml_loader_mel", feature = "ml_loader_frequency", feature = "ml_loader_frequency_pooled")
+    ),
+    all(feature = "ml_loader_mel", any(feature = "ml_loader_frequency", feature = "ml_loader_frequency_pooled")),
+    all(feature = "ml_loader_frequency", feature = "ml_loader_frequency_pooled"),
 ))]
 compile_error!(
     "Multiple ml_loader_* features enabled; enable exactly one of: \
-     ml_loader_note_binned_convolution, ml_loader_mel, ml_loader_frequency."
+     ml_loader_note_binned_convolution, ml_loader_mel, ml_loader_frequency, ml_loader_frequency_pooled."
 );
 
-#[cfg(not(any(feature = "ml_loader_note_binned_convolution", feature = "ml_loader_mel", feature = "ml_loader_frequency",)))]
+#[cfg(not(any(
+    feature = "ml_loader_note_binned_convolution",
+    feature = "ml_loader_mel",
+    feature = "ml_loader_frequency",
+    feature = "ml_loader_frequency_pooled",
+)))]
 compile_error!(
     "No ml_loader_* feature enabled; enable exactly one of: \
-     ml_loader_note_binned_convolution, ml_loader_mel, ml_loader_frequency."
+     ml_loader_note_binned_convolution, ml_loader_mel, ml_loader_frequency, ml_loader_frequency_pooled."
 );
 
 /// The base dimensionality of the sample tensor produced by `kord_item_to_sample_tensor`.
@@ -59,6 +67,18 @@ const INPUT_BASE_SIZE: usize = MEL_SPACE_SIZE;
 /// The base dimensionality of the sample tensor produced by `kord_item_to_sample_tensor`.
 #[cfg(feature = "ml_loader_frequency")]
 const INPUT_BASE_SIZE: usize = FREQUENCY_SPACE_SIZE;
+
+/// The frequency pooling factor applied when using the pooled loader variant.
+#[cfg(feature = "ml_loader_frequency_pooled")]
+pub const FREQUENCY_POOL_FACTOR: usize = 4;
+
+/// The dimensionality of the pooled frequency space representation.
+#[cfg(feature = "ml_loader_frequency_pooled")]
+pub const FREQUENCY_SPACE_POOLED_SIZE: usize = FREQUENCY_SPACE_SIZE / FREQUENCY_POOL_FACTOR;
+
+/// The base dimensionality of the sample tensor produced by `kord_item_to_sample_tensor`.
+#[cfg(feature = "ml_loader_frequency_pooled")]
+const INPUT_BASE_SIZE: usize = FREQUENCY_SPACE_POOLED_SIZE;
 
 /// The dimensionality of the sample tensor produced by `kord_item_to_sample_tensor`.
 #[cfg(feature = "ml_loader_include_deterministic_guess")]

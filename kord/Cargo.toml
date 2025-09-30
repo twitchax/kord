@@ -61,6 +61,7 @@ ml_base = ["serde", "byteorder", "bincode"]
 ml_loader_note_binned_convolution = []
 ml_loader_mel = []
 ml_loader_frequency = []
+ml_loader_frequency_pooled = []
 ml_loader_include_deterministic_guess = []
 
 ml_target_full = []

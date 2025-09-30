@@ -2,13 +2,19 @@
 
 use burn::tensor::{backend::Backend, Tensor, TensorData};
 
-use super::{
-    helpers::{get_deterministic_guess, note_binned_convolution, u128_to_binary},
-    KordItem, DETERMINISTIC_GUESS_SIZE, INPUT_SPACE_SIZE, TARGET_SPACE_SIZE,
-};
+use super::{helpers::u128_to_binary, KordItem, INPUT_SPACE_SIZE, TARGET_SPACE_SIZE};
+
+#[cfg(feature = "ml_loader_note_binned_convolution")]
+use super::helpers::note_binned_convolution;
 
 #[cfg(feature = "ml_loader_mel")]
 use super::helpers::mel_filter_banks_from;
+
+#[cfg(feature = "ml_loader_frequency_pooled")]
+use super::helpers::average_pool_frequency_space;
+
+#[cfg(feature = "ml_loader_include_deterministic_guess")]
+use super::{helpers::get_deterministic_guess, DETERMINISTIC_GUESS_SIZE};
 
 #[cfg(any(feature = "ml_target_folded", feature = "ml_target_full_and_folded"))]
 use super::helpers::fold_binary;
@@ -28,6 +34,11 @@ pub fn kord_item_to_sample_tensor<B: Backend>(device: &B::Device, item: &KordIte
     #[cfg(feature = "ml_loader_frequency")]
     {
         sample_from_frequency(device, item)
+    }
+
+    #[cfg(feature = "ml_loader_frequency_pooled")]
+    {
+        sample_from_frequency_pooled(device, item)
     }
 }
 
@@ -52,6 +63,14 @@ fn sample_from_frequency<B: Backend>(device: &B::Device, item: &KordItem) -> Ten
     sample_tensor_from_parts(device, item, frequency_space.to_vec())
 }
 
+#[cfg(feature = "ml_loader_frequency_pooled")]
+fn sample_from_frequency_pooled<B: Backend>(device: &B::Device, item: &KordItem) -> Tensor<B, 2> {
+    let mut frequency_space = average_pool_frequency_space(&item.frequency_space);
+    normalize(&mut frequency_space);
+    sample_tensor_from_parts(device, item, frequency_space.to_vec())
+}
+
+#[allow(unused_variables)]
 fn sample_tensor_from_parts<B: Backend>(device: &B::Device, item: &KordItem, mut features: Vec<f32>) -> Tensor<B, 2> {
     #[cfg(feature = "ml_loader_include_deterministic_guess")]
     {
@@ -119,6 +138,7 @@ fn tensor_from_vec_with_expected_size<B: Backend>(device: &B::Device, data: Vec<
     tensor.reshape([1, len])
 }
 
+#[cfg(feature = "ml_loader_include_deterministic_guess")]
 fn deterministic_guess_array(item: &KordItem) -> [f32; DETERMINISTIC_GUESS_SIZE] {
     let guess_binary = get_deterministic_guess(item);
     u128_to_binary(guess_binary)

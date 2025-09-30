@@ -25,6 +25,8 @@ use crate::{
 };
 
 use super::{KordItem, DETERMINISTIC_GUESS_SIZE, FREQUENCY_SPACE_SIZE, MEL_SPACE_SIZE, NOTE_SIGNATURE_SIZE, PITCH_CLASS_COUNT};
+#[cfg(feature = "ml_loader_frequency_pooled")]
+use super::{FREQUENCY_POOL_FACTOR, FREQUENCY_SPACE_POOLED_SIZE};
 
 // Operations for working with kord samples.
 
@@ -164,6 +166,19 @@ pub fn harmonic_convolution(spectrum: &[f32]) -> [f32; FREQUENCY_SPACE_SIZE] {
     }
 
     harmonic_convolution
+}
+
+/// Downsamples the full frequency space by averaging contiguous windows.
+#[cfg(feature = "ml_loader_frequency_pooled")]
+pub fn average_pool_frequency_space(spectrum: &[f32; FREQUENCY_SPACE_SIZE]) -> [f32; FREQUENCY_SPACE_POOLED_SIZE] {
+    let mut pooled = [0f32; FREQUENCY_SPACE_POOLED_SIZE];
+
+    for (index, chunk) in spectrum.chunks_exact(FREQUENCY_POOL_FACTOR).enumerate() {
+        let sum: f32 = chunk.iter().sum();
+        pooled[index] = sum / FREQUENCY_POOL_FACTOR as f32;
+    }
+
+    pooled
 }
 
 /// Create a linearly spaced vector.
