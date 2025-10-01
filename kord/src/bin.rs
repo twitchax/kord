@@ -196,13 +196,13 @@ enum MlCommand {
         #[arg(long, default_value = "kord/samples/noise")]
         noise_asset_root: String,
 
-        /// The source directory for the training samples.
-        #[arg(long, default_value = "kord/samples/slakh")]
-        training_source: String,
+        /// The directories (or `sim`) to draw training samples from.
+        #[arg(long = "training-sources", value_name = "PATH", required = true, num_args = 1..)]
+        training_sources: Vec<String>,
 
-        /// The source directory for the validation samples.
-        #[arg(long)]
-        validation_source: Option<String>,
+        /// Optional directories (or `sim`) to draw validation samples from.
+        #[arg(long = "validation-sources", value_name = "PATH", num_args = 1..)]
+        validation_sources: Vec<String>,
 
         /// The destination directory for the trained model.
         #[arg(long, default_value = "kord/model")]
@@ -524,8 +524,8 @@ fn start(args: Args) -> Void {
             #[cfg(feature = "ml_train")]
             Some(MlCommand::Train {
                 noise_asset_root,
-                training_source,
-                validation_source,
+                training_sources,
+                validation_sources,
                 destination,
                 log,
                 simulation_size,
@@ -552,8 +552,8 @@ fn start(args: Args) -> Void {
 
                 let config = TrainConfig {
                     noise_asset_root,
-                    training_source,
-                    validation_source,
+                    training_sources,
+                    validation_sources,
                     destination,
                     log,
                     simulation_size,

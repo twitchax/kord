@@ -52,16 +52,15 @@ where
 
     // Define the datasets.
 
-    let (train_dataset, valid_dataset) = KordDataset::from_simulated_training_and_folder_validation(
+    let (train_dataset, valid_dataset) = KordDataset::from_sources(
         &config.noise_asset_root,
-        &config.training_source,
+        &config.training_sources,
+        &config.validation_sources,
         config.simulation_size,
         config.simulation_peak_radius,
         config.simulation_harmonic_decay,
         config.simulation_frequency_wobble,
     )?;
-
-    //let (train_dataset, valid_dataset) = KordDataset::from_two_folders(&config.training_source, &config.validation_source)?;
 
     // Define the data loaders.
 
@@ -204,7 +203,8 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
                                 for weight_decay in &weight_decays {
                                     let config = TrainConfig {
                                         noise_asset_root: "kord/noise".to_string(),
-                                        source: source.clone(),
+                                        training_sources: vec![source.clone()],
+                                        validation_sources: Vec::new(),
                                         destination: destination.clone(),
                                         log: log.clone(),
                                         simulation_size: 100,
@@ -301,8 +301,8 @@ mod tests {
 
         let config = TrainConfig {
             noise_asset_root: "noise".to_string(),
-            training_source: "tests/samples".to_string(),
-            validation_source: None,
+            training_sources: vec!["tests/samples".to_string()],
+            validation_sources: Vec::new(),
             destination: ".hidden/test_model".to_string(),
             log: ".hidden/test_log".to_string(),
             simulation_size: 1,

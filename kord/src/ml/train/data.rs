@@ -2,6 +2,8 @@
 
 use std::path::{Path, PathBuf};
 
+use anyhow::{bail, Context};
+
 use burn::{
     data::{dataloader::batcher::Batcher, dataset::Dataset},
     tensor::{backend::Backend, Int, Tensor},
@@ -29,13 +31,17 @@ pub struct KordDataset {
 }
 
 impl KordDataset {
-    /// Load the kord dataset from the given folder.
+    /// Load training and validation datasets from the provided sources.
     ///
-    /// This will load a simulated training set and a folder-based validation set.
-    pub fn from_simulated_training_and_folder_validation<R>(
+    /// When `validation_sources` is empty the merged training pool is shuffled and
+    /// split 80/20 to provide both datasets. Otherwise, each side is built from the
+    /// corresponding list of sources. The special source name `"sim"` injects the
+    /// configured simulated samples into the merged pool.
+    pub fn from_sources<R>(
         noise_asset_root: R,
-        validation_source: impl AsRef<Path>,
-        count: usize,
+        training_sources: &[String],
+        validation_sources: &[String],
+        simulation_size: usize,
         peak_radius: f32,
         harmonic_decay: f32,
         frequency_wobble: f32,
@@ -43,67 +49,89 @@ impl KordDataset {
     where
         R: AsRef<Path> + Clone + Send + Sync,
     {
-        let test_files = get_bin_files_in_directory(validation_source);
-
-        let test_items: Vec<_> = test_files.par_iter().map(load_kord_item).collect::<Res<Vec<_>>>()?;
-        let train_items = get_simulated_kord_items(noise_asset_root, count, peak_radius, harmonic_decay, frequency_wobble)?;
-
-        // Return the train and test datasets.
-        let train = Self { items: train_items };
-        let test = Self { items: test_items };
-
-        Ok((train, test))
-    }
-
-    /// Load the training set and testing set from the given folder (no simulation).
-    ///
-    /// The items are shuffled before splitting, and the dataset is split 80 / 20.
-    pub fn from_one_folder(training_source: impl AsRef<Path>) -> Res<(Self, Self)> {
-        let files = get_bin_files_in_directory(training_source);
-
-        let mut items: Vec<_> = files.par_iter().map(load_kord_item).collect::<Res<Vec<_>>>()?;
-        items.shuffle(&mut rand::rng());
-
-        // Split the items into train and test sets (80/20 split).
-        let split = (items.len() as f32 * 0.8) as usize;
-        let (train_items, test_items) = items.split_at(split);
-
-        let train = Self { items: train_items.to_vec() };
-        let test = Self { items: test_items.to_vec() };
-
-        Ok((train, test))
-    }
-
-    /// Load the training set and validation set from the given folders.
-    ///
-    /// If the validation source is `None`, the training set will be split 80/20.
-    pub fn from_two_folders(training_source: impl AsRef<Path>, validation_source: &Option<impl AsRef<Path>>) -> Res<(Self, Self)> {
-        match validation_source {
-            Some(validation_source) => {
-                let train = Self::from_folder(training_source)?;
-                let validation = Self::from_folder(validation_source)?;
-                Ok((train, validation))
-            }
-            None => Self::from_one_folder(training_source),
+        if training_sources.is_empty() {
+            bail!("training_sources must contain at least one entry");
         }
+
+        let mut train_items = collect_items_from_sources(noise_asset_root.clone(), training_sources, simulation_size, peak_radius, harmonic_decay, frequency_wobble)?;
+
+        if train_items.is_empty() {
+            bail!("no training samples found for the requested sources");
+        }
+
+        train_items.shuffle(&mut rand::rng());
+
+        let validation_items = if validation_sources.is_empty() {
+            let len = train_items.len();
+            if len <= 1 {
+                Vec::new()
+            } else {
+                let mut split_index = (len as f32 * 0.8).floor() as usize;
+                if split_index == 0 {
+                    split_index = 1;
+                }
+                if split_index >= len {
+                    split_index = len - 1;
+                }
+                train_items.split_off(split_index)
+            }
+        } else {
+            let mut items = collect_items_from_sources(noise_asset_root, validation_sources, simulation_size, peak_radius, harmonic_decay, frequency_wobble)?;
+            items.shuffle(&mut rand::rng());
+            items
+        };
+
+        Ok((Self { items: train_items }, Self { items: validation_items }))
     }
 
     /// Load the dataset from the given folder.
     pub fn from_folder(training_source: impl AsRef<Path>) -> Res<Self> {
-        let files = get_bin_files_in_directory(training_source);
+        let files = get_bin_files_in_directory(training_source)?;
         let items: Vec<_> = files.par_iter().map(load_kord_item).collect::<Res<Vec<_>>>()?;
         Ok(Self { items })
     }
 }
 
 // Get all bin files in a directory.
-fn get_bin_files_in_directory(name: impl AsRef<Path>) -> Vec<PathBuf> {
-    std::fs::read_dir(name)
-        .unwrap()
-        .map(|entry| entry.unwrap().path())
-        .filter(|path| path.is_file())
-        .filter(|path| path.extension().unwrap() == "bin")
-        .collect()
+fn get_bin_files_in_directory(name: impl AsRef<Path>) -> Res<Vec<PathBuf>> {
+    let path = name.as_ref();
+    let entries = std::fs::read_dir(path).with_context(|| format!("failed to read directory {}", path.display()))?;
+
+    let mut bin_files = Vec::new();
+    for entry in entries {
+        let entry = entry.with_context(|| format!("failed to read directory entry in {}", path.display()))?;
+        let path = entry.path();
+        if path.is_file() && matches!(path.extension().and_then(|ext| ext.to_str()), Some("bin")) {
+            bin_files.push(path);
+        }
+    }
+
+    Ok(bin_files)
+}
+
+fn collect_items_from_sources<R>(noise_asset_root: R, sources: &[String], simulation_size: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> Res<Vec<KordItem>>
+where
+    R: AsRef<Path> + Clone + Send + Sync,
+{
+    let mut items = Vec::new();
+
+    for source in sources {
+        if source.eq_ignore_ascii_case("sim") {
+            if simulation_size == 0 {
+                continue;
+            }
+
+            let mut simulated = get_simulated_kord_items(noise_asset_root.clone(), simulation_size, peak_radius, harmonic_decay, frequency_wobble)?;
+            items.append(&mut simulated);
+            continue;
+        }
+
+        let files = get_bin_files_in_directory(source)?;
+        let mut folder_items: Vec<_> = files.par_iter().map(load_kord_item).collect::<Res<Vec<_>>>()?;
+        items.append(&mut folder_items);
+    }
+
+    Ok(items)
 }
 
 impl Dataset<KordItem> for KordDataset {

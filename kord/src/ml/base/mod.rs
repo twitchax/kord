@@ -119,10 +119,10 @@ pub const NUM_CLASSES: usize = TARGET_SPACE_SIZE;
 pub struct TrainConfig {
     /// The source directory for the noise assets used to generate simulated items.
     pub noise_asset_root: String,
-    /// The source directory for the training samples.
-    pub training_source: String,
-    /// The source directory for the validation samples.
-    pub validation_source: Option<String>,
+    /// The directories (or the special `sim` source) that provide training samples. Must contain at least one entry.
+    pub training_sources: Vec<String>,
+    /// Optional directories (or `sim`) that provide validation samples. An empty list triggers an 80/20 split of the training pool.
+    pub validation_sources: Vec<String>,
     /// The destination directory for the trained model.
     pub destination: String,
     /// The log directory for training.
