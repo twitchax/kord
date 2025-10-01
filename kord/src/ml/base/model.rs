@@ -31,7 +31,7 @@ impl<B: Backend> KordModel<B> {
     /// Create the model from the given configuration.
     pub fn new(device: &B::Device, mha_heads: usize, mha_dropout: f64, _sigmoid_strength: f32) -> Self {
         let mha = MultiHeadAttentionConfig::new(INPUT_SPACE_SIZE, mha_heads).with_dropout(mha_dropout).init::<B>(device);
-        let output = nn::LinearConfig::new(INPUT_SPACE_SIZE, NUM_CLASSES).init::<B>(device);
+        let output = nn::LinearConfig::new(INPUT_SPACE_SIZE, NUM_CLASSES).with_bias(true).init::<B>(device);
 
         Self { mha, output }
     }

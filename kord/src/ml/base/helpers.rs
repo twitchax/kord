@@ -242,19 +242,14 @@ pub fn fold_binary(binary: &[f32; NOTE_SIGNATURE_SIZE]) -> [f32; PITCH_CLASS_COU
     folded
 }
 
+/// Applies sigmoid activation to convert logits to probabilities in `[0, 1]`.
+pub fn logits_to_probabilities(logits: &[f32]) -> Vec<f32> {
+    logits.iter().map(|&logit| 1.0 / (1.0 + (-logit).exp())).collect()
+}
+
 /// Applies sigmoid activation and 0.5 threshold to convert logits to binary predictions.
 pub fn logits_to_binary_predictions(logits: &[f32]) -> Vec<f32> {
-    logits
-        .iter()
-        .map(|&logit| {
-            let prob = 1.0 / (1.0 + (-logit).exp()); // sigmoid
-            if prob > 0.5 {
-                1.0
-            } else {
-                0.0
-            }
-        })
-        .collect()
+    logits_to_probabilities(logits).into_iter().map(|prob| if prob > 0.5 { 1.0 } else { 0.0 }).collect()
 }
 
 // Common tensor operations.

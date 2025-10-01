@@ -1,6 +1,6 @@
 //! Training execution.
 
-use std::sync::Arc;
+use std::{cmp::Ordering, sync::Arc};
 
 use burn::{
     config::Config,
@@ -23,9 +23,9 @@ use crate::{
     core::base::Res,
     ml::base::{
         data::{kord_item_to_sample_tensor, kord_item_to_target_tensor},
-        helpers::{binary_to_u128, get_deterministic_guess, logits_to_binary_predictions},
+        helpers::{binary_to_u128, get_deterministic_guess, logits_to_probabilities},
         model::KordModel,
-        NUM_CLASSES,
+        KordItem, NOTE_SIGNATURE_SIZE, NUM_CLASSES,
     },
 };
 
@@ -134,10 +134,163 @@ where
 pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device: &B::Device) -> Res<f32> {
     let kord_items = KordDataset::from_folder("kord/samples/captured")?.items;
 
+    let stats = collect_prediction_stats(model_trained, device, &kord_items)?;
+    print_accuracy_report(&stats);
+
+    Ok(stats.inference_accuracy_percent())
+}
+
+struct PredictionStats {
+    deterministic_correct: usize,
+    inference_correct: usize,
+    total: usize,
+    macro_averages: Option<MacroAverages>,
+    pr_metrics: Option<PrMetrics>,
+    sample_f1_average: Option<f32>,
+}
+
+impl PredictionStats {
+    fn deterministic_accuracy_percent(&self) -> f32 {
+        if self.total == 0 {
+            0.0
+        } else {
+            100.0 * (self.deterministic_correct as f32 / self.total as f32)
+        }
+    }
+
+    fn inference_accuracy_percent(&self) -> f32 {
+        if self.total == 0 {
+            0.0
+        } else {
+            100.0 * (self.inference_correct as f32 / self.total as f32)
+        }
+    }
+}
+
+struct MacroAverages {
+    class_count: usize,
+    accuracy: f32,
+    precision: f32,
+    recall: f32,
+    f1: f32,
+}
+
+struct PrMetrics {
+    class_count: usize,
+    macro_auc: f32,
+}
+
+struct ClassCounts {
+    true_positive: Vec<usize>,
+    false_positive: Vec<usize>,
+    false_negative: Vec<usize>,
+}
+
+impl ClassCounts {
+    fn new(size: usize) -> Self {
+        Self {
+            true_positive: vec![0; size],
+            false_positive: vec![0; size],
+            false_negative: vec![0; size],
+        }
+    }
+
+    fn len(&self) -> usize {
+        self.true_positive.len()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.true_positive.is_empty()
+    }
+
+    fn update(&mut self, target: &[f32], inferred: &[f32]) -> SampleCounts {
+        let mut sample_counts = SampleCounts::default();
+
+        for (index, (&target_value, &inferred_value)) in target.iter().zip(inferred.iter()).enumerate() {
+            let target_on = target_value > 0.5;
+            let predicted_on = inferred_value > 0.5;
+
+            if predicted_on && target_on {
+                self.true_positive[index] += 1;
+                sample_counts.true_positive += 1;
+            } else if predicted_on && !target_on {
+                self.false_positive[index] += 1;
+            } else if !predicted_on && target_on {
+                self.false_negative[index] += 1;
+            }
+
+            if predicted_on {
+                sample_counts.predicted_positive += 1;
+            }
+
+            if target_on {
+                sample_counts.actual_positive += 1;
+            }
+        }
+
+        sample_counts
+    }
+}
+
+#[derive(Default)]
+struct SampleCounts {
+    true_positive: usize,
+    predicted_positive: usize,
+    actual_positive: usize,
+}
+
+struct PrCurves {
+    entries: Vec<Vec<(f32, bool)>>,
+}
+
+impl PrCurves {
+    fn new(size: usize) -> Self {
+        Self { entries: vec![Vec::new(); size] }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.entries.iter().all(Vec::is_empty)
+    }
+
+    fn update(&mut self, target: &[f32], probabilities: &[f32]) {
+        for (index, (&target_value, &probability)) in target.iter().zip(probabilities.iter()).enumerate() {
+            self.entries[index].push((probability, target_value > 0.5));
+        }
+    }
+
+    fn compute(&self) -> Option<PrMetrics> {
+        if self.entries.is_empty() {
+            return None;
+        }
+
+        let class_count = self.entries.len();
+        if class_count == 0 {
+            return None;
+        }
+
+        let mut auc_sum = 0.0;
+
+        for class_entries in &self.entries {
+            auc_sum += pr_auc_for_class(class_entries);
+        }
+
+        Some(PrMetrics {
+            class_count,
+            macro_auc: auc_sum / class_count as f32,
+        })
+    }
+}
+
+fn collect_prediction_stats<B: Backend>(model: &KordModel<B>, device: &B::Device, items: &[KordItem]) -> Res<PredictionStats> {
+    let macro_class_count = NOTE_SIGNATURE_SIZE.min(NUM_CLASSES);
+    let mut class_counts = ClassCounts::new(macro_class_count);
+    let mut pr_curves = PrCurves::new(macro_class_count);
+    let mut sample_f1_sum = 0.0;
+    let mut sample_f1_count = 0usize;
     let mut deterministic_correct = 0;
     let mut inference_correct = 0;
 
-    for kord_item in &kord_items {
+    for kord_item in items {
         let sample = kord_item_to_sample_tensor(device, kord_item).to_device(device).detach();
         let target: Vec<f32> = kord_item_to_target_tensor::<B>(device, kord_item).into_data().to_vec().unwrap_or_default();
         let target_array: [_; NUM_CLASSES] = target.clone().try_into().unwrap();
@@ -151,12 +304,10 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
         #[cfg(feature = "ml_target_folded")]
         let deterministic = binary_to_u16(&fold_binary(&u128_to_binary(deterministic)));
 
-        // Forward pass outputs logits, apply sigmoid, and threshold for inference.
-        let logits = model_trained.forward(sample).detach();
+        let logits = model.forward(sample).detach();
         let logits_vec: Vec<f32> = logits.into_data().to_vec().unwrap_or_default();
-
-        // Apply sigmoid and a 0.5 threshold.
-        let inferred = logits_to_binary_predictions(&logits_vec);
+        let probabilities = logits_to_probabilities(&logits_vec);
+        let inferred: Vec<f32> = probabilities.iter().map(|&probability| if probability > 0.5 { 1.0 } else { 0.0 }).collect();
 
         if target_binary == deterministic {
             deterministic_correct += 1;
@@ -165,15 +316,139 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
         if target == inferred {
             inference_correct += 1;
         }
+
+        if macro_class_count > 0 {
+            let target_slice = &target[..macro_class_count];
+            let inferred_slice = &inferred[..macro_class_count];
+            let probability_slice = &probabilities[..macro_class_count];
+
+            let sample_counts = class_counts.update(target_slice, inferred_slice);
+            sample_f1_sum += calculate_sample_f1(sample_counts);
+            sample_f1_count += 1;
+            pr_curves.update(target_slice, probability_slice);
+        }
     }
 
-    let deterministic_accuracy = 100.0 * (deterministic_correct as f32 / kord_items.len() as f32);
-    println!("Deterministic accuracy: {deterministic_accuracy}%");
+    let macro_averages = if !class_counts.is_empty() { build_macro_metrics(&class_counts, items.len()) } else { None };
+    let pr_metrics = if !pr_curves.is_empty() { pr_curves.compute() } else { None };
 
-    let inference_accuracy = 100.0 * (inference_correct as f32 / kord_items.len() as f32);
-    println!("Inference accuracy: {inference_accuracy}%");
+    let sample_f1_average = if sample_f1_count > 0 { Some(sample_f1_sum / sample_f1_count as f32) } else { None };
 
-    Ok(inference_accuracy)
+    Ok(PredictionStats {
+        deterministic_correct,
+        inference_correct,
+        total: items.len(),
+        macro_averages,
+        pr_metrics,
+        sample_f1_average,
+    })
+}
+
+fn build_macro_metrics(counts: &ClassCounts, total_samples: usize) -> Option<MacroAverages> {
+    if total_samples == 0 || counts.is_empty() {
+        return None;
+    }
+
+    let class_count = counts.len();
+    let mut accuracy_sum = 0.0;
+    let mut precision_sum = 0.0;
+    let mut recall_sum = 0.0;
+    let mut f1_sum = 0.0;
+
+    for index in 0..class_count {
+        let tp_count = counts.true_positive[index];
+        let fp_count = counts.false_positive[index];
+        let fn_count = counts.false_negative[index];
+
+        let tp = tp_count as f32;
+        let fp = fp_count as f32;
+        let fn_ = fn_count as f32;
+        let tn = total_samples.saturating_sub(tp_count + fp_count + fn_count) as f32;
+
+        let precision = if tp + fp > 0.0 { tp / (tp + fp) } else { 0.0 };
+        let recall = if tp + fn_ > 0.0 { tp / (tp + fn_) } else { 0.0 };
+        let f1 = if precision + recall > 0.0 { 2.0 * precision * recall / (precision + recall) } else { 0.0 };
+
+        accuracy_sum += (tp + tn) / total_samples as f32;
+        precision_sum += precision;
+        recall_sum += recall;
+        f1_sum += f1;
+    }
+
+    let class_count_f32 = class_count as f32;
+
+    Some(MacroAverages {
+        class_count,
+        accuracy: accuracy_sum / class_count_f32,
+        precision: precision_sum / class_count_f32,
+        recall: recall_sum / class_count_f32,
+        f1: f1_sum / class_count_f32,
+    })
+}
+
+fn calculate_sample_f1(sample_counts: SampleCounts) -> f32 {
+    if sample_counts.predicted_positive == 0 && sample_counts.actual_positive == 0 {
+        1.0
+    } else if sample_counts.true_positive == 0 {
+        0.0
+    } else {
+        2.0 * sample_counts.true_positive as f32 / (sample_counts.predicted_positive + sample_counts.actual_positive) as f32
+    }
+}
+
+fn pr_auc_for_class(entries: &[(f32, bool)]) -> f32 {
+    if entries.is_empty() {
+        return 0.0;
+    }
+
+    let mut sorted = entries.to_vec();
+    sorted.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(Ordering::Equal));
+
+    let positives = sorted.iter().filter(|(_, is_positive)| *is_positive).count();
+    if positives == 0 {
+        return 0.0;
+    }
+
+    let positives_f32 = positives as f32;
+    let mut true_positive = 0.0;
+    let mut false_positive = 0.0;
+    let mut previous_recall = 0.0;
+    let mut area = 0.0;
+
+    for (_, is_positive) in sorted {
+        if is_positive {
+            true_positive += 1.0;
+        } else {
+            false_positive += 1.0;
+        }
+
+        let recall = true_positive / positives_f32;
+        let precision = true_positive / (true_positive + false_positive);
+        area += precision * (recall - previous_recall);
+        previous_recall = recall;
+    }
+
+    area
+}
+
+fn print_accuracy_report(stats: &PredictionStats) {
+    println!("Deterministic accuracy: {:.2}%", stats.deterministic_accuracy_percent());
+    println!("Inference accuracy: {:.2}%", stats.inference_accuracy_percent());
+
+    if let Some(macro_averages) = &stats.macro_averages {
+        println!("Macro accuracy ({} classes): {:.2}%", macro_averages.class_count, macro_averages.accuracy * 100.0);
+        println!("Macro precision ({} classes): {:.2}%", macro_averages.class_count, macro_averages.precision * 100.0);
+        println!("Macro recall ({} classes): {:.2}%", macro_averages.class_count, macro_averages.recall * 100.0);
+        println!("Macro F1 ({} classes): {:.2}%", macro_averages.class_count, macro_averages.f1 * 100.0);
+    }
+
+    if let Some(pr_metrics) = &stats.pr_metrics {
+        println!("Macro PR AUC ({} classes): {:.2}%", pr_metrics.class_count, pr_metrics.macro_auc * 100.0);
+    }
+
+    if let Some(sample_f1) = stats.sample_f1_average {
+        println!("Sample-wise F1: {:.2}%", sample_f1 * 100.0);
+    }
 }
 
 /// Run hyper parameter tuning.
