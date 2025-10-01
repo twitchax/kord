@@ -69,7 +69,15 @@ ml_target_folded = []
 ml_target_full_and_folded = []
 
 ml_sample_gather = ["ml_base"]
-ml_sample_process = ["ml_base", "midly", "hound", "tracing"]
+ml_sample_process = [
+    "ml_base",
+    "analyze_base",
+    "midly",
+    "hound",
+    "symphonia",
+    "tracing",
+    "symphonia/flac",
+]
 
 ml_train = [
     "ml_base",

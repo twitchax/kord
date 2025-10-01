@@ -164,12 +164,12 @@ enum MlCommand {
         #[arg(long)]
         midi: PathBuf,
 
-        /// The audio file (WAV) aligned with the MIDI file.
+        /// The audio file (WAV or FLAC) aligned with the MIDI file.
         #[arg(long)]
         audio: PathBuf,
 
         /// Minimum fraction of a measure that a note must sound to be included in the chord.
-        #[arg(long, default_value_t = 0.35)]
+        #[arg(long, default_value_t = 0.2)]
         min_fraction: f32,
 
         /// Minimum number of distinct notes required to emit a sample.
@@ -177,7 +177,7 @@ enum MlCommand {
         min_notes: usize,
 
         /// Maximum number of notes to retain after sorting by prominence.
-        #[arg(long, default_value_t = 6)]
+        #[arg(long, default_value_t = 20)]
         max_notes: usize,
 
         /// Minimum duration (in seconds) required for the measure to be considered.

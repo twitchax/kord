@@ -271,7 +271,7 @@ The library and binary both support various feature flags.  Of most important no
   * `ml_gpu`: enables the features to use a GPU for ML _training_.
   * `ml_sample_gather`: enables the `ml gather` subcommand for capturing raw samples from a microphone (requires `analyze_mic`).
   * `ml_hpt`: enables the `ml hpt` subcommand for sweeping hyperparameters (implies `ml_train`).
-* `ml_sample_process`: enables the `ml process` subcommand for generating samples from aligned MIDI and audio files, naming each emitted sample with its originating measure index, rounded duration (in seconds), and chord tones.
+* `ml_sample_process`: enables the `ml process` subcommand for generating samples from aligned MIDI and audio files (WAV or FLAC), naming each emitted sample with its originating measure index, rounded duration (in seconds), and chord tones.
 * `wasm`: enables the features to compile to wasm.
 * `plot`: enables the features to plot data.
 

@@ -3,12 +3,17 @@
 use std::{
     collections::HashMap,
     fs,
+    io::ErrorKind,
     path::{Path, PathBuf},
     time::Instant,
 };
 
 use hound::{SampleFormat, WavReader};
 use midly::{MetaMessage, MidiMessage, Smf, Timing, TrackEventKind};
+use symphonia::{
+    core::{audio::SampleBuffer, codecs::DecoderOptions, errors::Error as SymphoniaError, formats::FormatOptions, io::MediaSourceStream, meta::MetadataOptions, probe::Hint},
+    default::{get_codecs, get_probe},
+};
 use tracing::{debug, info, info_span, instrument, warn};
 
 use crate::analyze::base::{get_frequency_space, get_smoothed_frequency_space};
@@ -19,9 +24,9 @@ use crate::core::{
 
 use super::{helpers::save_kord_item, KordItem, FREQUENCY_SPACE_SIZE};
 
-const DEFAULT_MIN_NOTE_FRACTION: f64 = 0.35;
+const DEFAULT_MIN_NOTE_FRACTION: f64 = 0.2;
 const DEFAULT_MIN_NOTES: usize = 1;
-const DEFAULT_MAX_NOTES: usize = 6;
+const DEFAULT_MAX_NOTES: usize = 20;
 const DEFAULT_MIN_DURATION_SECONDS: f64 = 0.0;
 
 /// Options that control how song processing sanitizes measures into training samples.
@@ -113,7 +118,7 @@ pub fn process_song_samples(destination: impl AsRef<Path>, midi_path: impl AsRef
     );
 
     let audio_load_start = Instant::now();
-    let (audio_data, sample_rate) = load_wav_mono(&audio_path)?;
+    let (audio_data, sample_rate) = load_audio_mono(&audio_path)?;
     let total_audio_seconds = audio_data.len() as f64 / sample_rate as f64;
     debug!(elapsed_ms = audio_load_start.elapsed().as_millis(), sample_rate, samples = audio_data.len(), "Audio buffered");
 
@@ -390,6 +395,18 @@ fn compute_measure_ticks(ppq: u16, numerator: u8, denominator: u32) -> u64 {
     (ppq * numerator * 4) / denominator.max(1)
 }
 
+/// Load an audio file into a mono floating-point buffer, normalizing integer sample formats to
+/// `[-1.0, 1.0]` in the process. Supports WAV and FLAC sources.
+fn load_audio_mono(path: impl AsRef<Path>) -> Res<(Vec<f32>, u32)> {
+    let path = path.as_ref();
+    let extension = path.extension().and_then(|ext| ext.to_str()).map(|ext| ext.to_ascii_lowercase());
+
+    match extension.as_deref() {
+        Some("flac") => load_flac_mono(path),
+        _ => load_wav_mono(path),
+    }
+}
+
 /// Load a WAV file into a mono floating-point buffer, normalizing integer sample formats to
 /// `[-1.0, 1.0]` in the process.
 fn load_wav_mono(path: impl AsRef<Path>) -> Res<(Vec<f32>, u32)> {
@@ -426,6 +443,90 @@ fn load_wav_mono(path: impl AsRef<Path>) -> Res<(Vec<f32>, u32)> {
         }
         let sum: f32 = chunk.iter().sum();
         mono.push(sum / channels as f32);
+    }
+
+    Ok((mono, sample_rate))
+}
+
+/// Load a FLAC file into a mono floating-point buffer using Symphonia.
+fn load_flac_mono(path: impl AsRef<Path>) -> Res<(Vec<f32>, u32)> {
+    let path = path.as_ref();
+    let file = std::fs::File::open(path)?;
+    let mss = MediaSourceStream::new(Box::new(file), Default::default());
+
+    let format_opts = FormatOptions::default();
+    let metadata_opts = MetadataOptions::default();
+
+    let mut hint = Hint::new();
+    if let Some(ext) = path.extension().and_then(|ext| ext.to_str()) {
+        hint.with_extension(ext);
+    }
+
+    let probed = get_probe().format(&hint, mss, &format_opts, &metadata_opts)?;
+    let mut format = probed.format;
+
+    let track = format
+        .default_track()
+        .ok_or_else(|| anyhow::Error::msg(format!("No playable audio track found in {}", path.display())))?;
+
+    let codec_params = &track.codec_params;
+    let sample_rate = codec_params.sample_rate.ok_or_else(|| anyhow::Error::msg(format!("Missing sample rate in {}", path.display())))?;
+
+    let mut decoder = get_codecs().make(codec_params, &DecoderOptions::default())?;
+
+    let mut mono = Vec::new();
+
+    loop {
+        match format.next_packet() {
+            Ok(packet) => match decoder.decode(&packet) {
+                Ok(decoded) => {
+                    let spec = *decoded.spec();
+                    let channels = spec.channels.count();
+
+                    if channels == 0 {
+                        anyhow::bail!("Audio file has zero channels.");
+                    }
+
+                    let frames = decoded.frames();
+                    let mut buffer = SampleBuffer::<f32>::new(frames as u64, spec);
+                    buffer.copy_interleaved_ref(decoded);
+
+                    for frame in buffer.samples().chunks(channels) {
+                        if frame.is_empty() {
+                            continue;
+                        }
+
+                        let sum: f32 = frame.iter().copied().sum();
+                        mono.push(sum / channels as f32);
+                    }
+                }
+                Err(SymphoniaError::DecodeError(_)) => {
+                    continue;
+                }
+                Err(SymphoniaError::ResetRequired) => {
+                    decoder.reset();
+                }
+                Err(err) => return Err(err.into()),
+            },
+            Err(SymphoniaError::IoError(err)) => {
+                if err.kind() == ErrorKind::UnexpectedEof {
+                    break;
+                }
+
+                return Err(err.into());
+            }
+            Err(SymphoniaError::DecodeError(_)) => {
+                continue;
+            }
+            Err(SymphoniaError::ResetRequired) => {
+                decoder.reset();
+            }
+            Err(err) => return Err(err.into()),
+        }
+    }
+
+    if mono.is_empty() {
+        anyhow::bail!("Decoded FLAC file {} produced no audio samples.", path.display());
     }
 
     Ok((mono, sample_rate))
@@ -501,10 +602,34 @@ mod tests {
                 .find(|segment| segment.ends_with('s') && segment.trim_end_matches('s').chars().all(|c| c.is_ascii_digit()) && !segment.trim_end_matches('s').is_empty())
                 .expect("Processed filename should include a seconds segment");
 
-            let item = load_kord_item(&output);
+            let item = load_kord_item(&output).unwrap();
             assert_ne!(item.label, 0, "Processed sample should have a non-zero chord label");
             assert!(item.frequency_space.iter().any(|&v| v != 0.0), "Frequency space should contain data");
         }
+    }
+
+    #[test]
+    fn test_process_song_samples_with_flac_fixture() {
+        let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let midi_path = manifest_dir.join("tests/test.mid");
+        let audio_path = manifest_dir.join("tests/test.flac");
+
+        assert!(midi_path.exists(), "Fixture MIDI file missing at {:?}", midi_path);
+        assert!(audio_path.exists(), "Fixture FLAC file missing at {:?}", audio_path);
+
+        let destination = manifest_dir.join(".hidden/test_data/process_song_flac");
+        if destination.exists() {
+            fs::remove_dir_all(&destination).unwrap();
+        }
+        fs::create_dir_all(&destination).unwrap();
+
+        let options = SongProcessingOptions {
+            max_samples: Some(64),
+            ..Default::default()
+        };
+
+        let outputs = process_song_samples(&destination, &midi_path, &audio_path, options).expect("processing flac fixtures");
+        assert!(!outputs.is_empty(), "Expected at least one processed sample");
     }
 
     /// Synthetic test that constructs a single-measure MIDI/WAV pair and verifies the
@@ -530,7 +655,7 @@ mod tests {
         let filename = outputs[0].file_name().and_then(|name| name.to_str()).expect("Output filename should be valid UTF-8");
         assert!(filename.contains("_2s_"), "Expected filename to include approximate duration (\"_2s_\"), found {filename:?}");
 
-        let item = load_kord_item(&outputs[0]);
+        let item = load_kord_item(&outputs[0]).unwrap();
         let expected_notes = vec![Note::try_from_midi(60).unwrap(), Note::try_from_midi(64).unwrap(), Note::try_from_midi(67).unwrap()];
 
         assert_eq!(item.label, Note::id_mask(&expected_notes));
@@ -558,7 +683,7 @@ mod tests {
         let outputs = process_song_samples(&destination, &midi_path, &audio_path, options).unwrap();
         assert_eq!(outputs.len(), 1);
 
-        let item = load_kord_item(&outputs[0]);
+        let item = load_kord_item(&outputs[0]).unwrap();
         let expected_notes = vec![Note::try_from_midi(60).unwrap(), Note::try_from_midi(64).unwrap(), Note::try_from_midi(67).unwrap()];
 
         assert_eq!(item.label, Note::id_mask(&expected_notes));
@@ -583,7 +708,7 @@ mod tests {
         let outputs = process_song_samples(&destination, &midi_path, &audio_path, options).unwrap();
         assert_eq!(outputs.len(), 1);
 
-        let item = load_kord_item(&outputs[0]);
+        let item = load_kord_item(&outputs[0]).unwrap();
         let expected_notes = vec![Note::try_from_midi(60).unwrap(), Note::try_from_midi(64).unwrap(), Note::try_from_midi(67).unwrap()];
         assert_eq!(item.label, Note::id_mask(&expected_notes));
 
