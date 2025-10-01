@@ -70,7 +70,7 @@ const INPUT_BASE_SIZE: usize = FREQUENCY_SPACE_SIZE;
 
 /// The frequency pooling factor applied when using the pooled loader variant.
 #[cfg(feature = "ml_loader_frequency_pooled")]
-pub const FREQUENCY_POOL_FACTOR: usize = 32;
+pub const FREQUENCY_POOL_FACTOR: usize = 4;
 
 /// The dimensionality of the pooled frequency space representation.
 #[cfg(feature = "ml_loader_frequency_pooled")]

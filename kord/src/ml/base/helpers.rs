@@ -197,10 +197,10 @@ pub fn get_deterministic_guess(kord_item: &KordItem) -> u128 {
 }
 
 /// Produces a 128 element array of 0s and 1s from a u128.
-pub fn u128_to_binary(num: u128) -> [f32; DETERMINISTIC_GUESS_SIZE] {
-    let mut binary = [0f32; DETERMINISTIC_GUESS_SIZE];
-    for i in 0..DETERMINISTIC_GUESS_SIZE {
-        binary[DETERMINISTIC_GUESS_SIZE - 1 - i] = (num >> i & 1) as f32;
+pub fn u128_to_binary(num: u128) -> [f32; 128] {
+    let mut binary = [0f32; 128];
+    for i in 0..128 {
+        binary[128 - 1 - i] = (num >> i & 1) as f32;
     }
 
     binary
@@ -209,8 +209,18 @@ pub fn u128_to_binary(num: u128) -> [f32; DETERMINISTIC_GUESS_SIZE] {
 /// Produces a u128 from a 128 element array of 0s and 1s.
 pub fn binary_to_u128(binary: &[f32]) -> u128 {
     let mut num = 0u128;
-    for i in 0..DETERMINISTIC_GUESS_SIZE {
-        num += (binary[i] as u128) << (DETERMINISTIC_GUESS_SIZE - 1 - i);
+    for i in 0..128 {
+        num += (binary[i] as u128) << (128 - 1 - i);
+    }
+
+    num
+}
+
+/// Produces a u16 from a 12 element array of 0s and 1s.
+pub fn binary_to_u16(binary: &[f32]) -> u16 {
+    let mut num = 0u16;
+    for i in 0..12 {
+        num += (binary[i] as u16) << (12 - 1 - i);
     }
 
     num

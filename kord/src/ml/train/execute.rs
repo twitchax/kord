@@ -17,6 +17,8 @@ use burn::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
+#[cfg(feature = "ml_target_folded")]
+use crate::ml::base::helpers::{binary_to_u16, fold_binary, u128_to_binary};
 use crate::{
     core::base::Res,
     ml::base::{
@@ -139,9 +141,15 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
         let sample = kord_item_to_sample_tensor(device, kord_item).to_device(device).detach();
         let target: Vec<f32> = kord_item_to_target_tensor::<B>(device, kord_item).into_data().to_vec().unwrap_or_default();
         let target_array: [_; NUM_CLASSES] = target.clone().try_into().unwrap();
+
+        #[cfg(feature = "ml_target_full")]
         let target_binary = binary_to_u128(&target_array);
+        #[cfg(feature = "ml_target_folded")]
+        let target_binary = binary_to_u16(&target_array);
 
         let deterministic = get_deterministic_guess(kord_item);
+        #[cfg(feature = "ml_target_folded")]
+        let deterministic = binary_to_u16(&fold_binary(&u128_to_binary(deterministic)));
 
         // Forward pass outputs logits, apply sigmoid, and threshold for inference.
         let logits = model_trained.forward(sample).detach();
