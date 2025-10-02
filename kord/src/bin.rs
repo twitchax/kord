@@ -240,7 +240,7 @@ enum MlCommand {
         mha_heads: usize,
 
         /// The Multi Head Attention (MHA) dropout rate.
-        #[arg(long, default_value_t = 0.5)]
+        #[arg(long, default_value_t = 0.1)]
         mha_dropout: f64,
 
         /// The number of epochs to train for.
