@@ -120,8 +120,8 @@ impl<B: Backend> KordModel<B> {
 }
 
 fn sinusoidal_pe<B: Backend>(f: usize, d_model: usize, device: &B::Device) -> Tensor<B, 2> {
-    let range1 = (0..f as u32).collect::<Vec<_>>();
-    let range2 = (0..(d_model / 2) as u32).collect::<Vec<_>>();
+    let range1 = (0..f as u32).map(|x| x as f32).collect::<Vec<_>>();
+    let range2 = (0..(d_model / 2) as u32).map(|x| x as f32).collect::<Vec<_>>();
 
     let pos = Tensor::<B, 1>::from(&range1[..]).reshape([f, 1]).to_device(device);
     let i = Tensor::<B, 1>::from(&range2[..]).to_device(device);
