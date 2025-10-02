@@ -23,7 +23,7 @@ use crate::{
     core::base::Res,
     ml::base::{
         data::{kord_item_to_sample_tensor, kord_item_to_target_tensor},
-        helpers::{binary_to_u128, get_deterministic_guess, logits_to_probabilities},
+        helpers::{binary_to_u128, get_deterministic_guess, logits_to_predictions, logits_to_probabilities},
         model::KordModel,
         KordItem, NOTE_SIGNATURE_SIZE, NUM_CLASSES,
     },
@@ -40,7 +40,7 @@ use crate::ml::base::TrainConfig;
 ///
 /// Given the [`TrainConfig`], this function will run the training and return the overall accuracy on
 /// the validation / test set.
-pub fn run_training<B: AutodiffBackend>(device: B::Device, config: &TrainConfig, print_accuracy_report: bool, save_model: bool) -> Res<f32>
+pub fn run_training<B: AutodiffBackend>(device: B::Device, config: &TrainConfig, should_print_accuracy_report: bool, save_model: bool) -> Res<f32>
 where
     B::FloatElem: Serialize + DeserializeOwned,
 {
@@ -109,34 +109,42 @@ where
 
     let model_trained = learner.fit(dataloader_train, dataloader_valid);
 
-    // Save the model.
+    // Compute overall accuracy and collect thresholds.
+
+    let kord_items = KordDataset::from_folder("kord/samples/captured")?.items;
+    let stats = collect_prediction_stats(&model_trained, &device, &kord_items, None)?;
+
+    if should_print_accuracy_report {
+        print_accuracy_report(&stats);
+    }
 
     if save_model {
         let config_path = format!("{}/model_config.json", &config.destination);
         let state_path = format!("{}/state.json.bin", &config.destination);
+        let thresholds_path = format!("{}/thresholds.json", &config.destination);
+
         let _ = std::fs::create_dir_all(&config.destination);
         let _ = std::fs::remove_file(&config_path);
         let _ = std::fs::remove_file(&state_path);
+        let _ = std::fs::remove_file(&thresholds_path);
 
         config.save(&config_path)?;
         BinFileRecorder::<FullPrecisionSettings>::new().record(model_trained.clone().into_record(), state_path.into())?;
+
+        if let Some(thresholds) = &stats.thresholds {
+            std::fs::write(&thresholds_path, serde_json::to_vec(thresholds)?)?;
+        }
     }
 
-    // Compute overall accuracy.
-
-    let accuracy = if print_accuracy_report { compute_overall_accuracy(&model_trained, &device)? } else { 0.0 };
-
-    Ok(accuracy)
+    Ok(stats.inference_accuracy_percent())
 }
 
 /// Compute the overall accuracy of the model.
 #[coverage(off)]
 pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device: &B::Device) -> Res<f32> {
     let kord_items = KordDataset::from_folder("kord/samples/captured")?.items;
-
-    let stats = collect_prediction_stats(model_trained, device, &kord_items)?;
+    let stats = collect_prediction_stats(model_trained, device, &kord_items, None)?;
     print_accuracy_report(&stats);
-
     Ok(stats.inference_accuracy_percent())
 }
 
@@ -147,6 +155,7 @@ struct PredictionStats {
     macro_averages: Option<MacroAverages>,
     pr_metrics: Option<PrMetrics>,
     sample_f1_average: Option<f32>,
+    thresholds: Option<Vec<f32>>,
 }
 
 impl PredictionStats {
@@ -239,6 +248,11 @@ struct SampleCounts {
     actual_positive: usize,
 }
 
+struct SampleObservation {
+    target: Vec<f32>,
+    probabilities: Vec<f32>,
+}
+
 struct PrCurves {
     entries: Vec<Vec<(f32, bool)>>,
 }
@@ -279,16 +293,78 @@ impl PrCurves {
             macro_auc: auc_sum / class_count as f32,
         })
     }
+
+    fn optimal_thresholds(&self) -> Option<Vec<f32>> {
+        if self.entries.is_empty() {
+            return None;
+        }
+
+        let mut thresholds = Vec::with_capacity(self.entries.len());
+        let mut has_data = false;
+
+        for class_entries in &self.entries {
+            if class_entries.is_empty() {
+                thresholds.push(0.5);
+                continue;
+            }
+
+            has_data = true;
+
+            let positives = class_entries.iter().filter(|(_, is_positive)| *is_positive).count();
+            if positives == 0 {
+                thresholds.push(1.0);
+                continue;
+            }
+
+            let mut best_threshold = 0.5;
+            let mut best_f1 = 0.0;
+
+            for step in 0..=100 {
+                let threshold = step as f32 / 100.0;
+                let mut tp = 0.0;
+                let mut fp = 0.0;
+                let mut fn_ = 0.0;
+
+                for &(probability, is_positive) in class_entries {
+                    if probability > threshold {
+                        if is_positive {
+                            tp += 1.0;
+                        } else {
+                            fp += 1.0;
+                        }
+                    } else if is_positive {
+                        fn_ += 1.0;
+                    }
+                }
+
+                let precision = if tp + fp > 0.0 { tp / (tp + fp) } else { 0.0 };
+                let recall = if tp + fn_ > 0.0 { tp / (tp + fn_) } else { 0.0 };
+                let f1 = if precision + recall > 0.0 { 2.0 * precision * recall / (precision + recall) } else { 0.0 };
+
+                if f1 > best_f1 {
+                    best_f1 = f1;
+                    best_threshold = threshold;
+                }
+            }
+
+            thresholds.push(best_threshold);
+        }
+
+        if has_data {
+            Some(thresholds)
+        } else {
+            None
+        }
+    }
 }
 
-fn collect_prediction_stats<B: Backend>(model: &KordModel<B>, device: &B::Device, items: &[KordItem]) -> Res<PredictionStats> {
+fn collect_prediction_stats<B: Backend>(model: &KordModel<B>, device: &B::Device, items: &[KordItem], thresholds_override: Option<&[f32]>) -> Res<PredictionStats> {
+    let class_count = NUM_CLASSES;
     let macro_class_count = NOTE_SIGNATURE_SIZE.min(NUM_CLASSES);
-    let mut class_counts = ClassCounts::new(macro_class_count);
-    let mut pr_curves = PrCurves::new(macro_class_count);
-    let mut sample_f1_sum = 0.0;
-    let mut sample_f1_count = 0usize;
+
+    let mut pr_curves = PrCurves::new(class_count);
+    let mut samples = Vec::with_capacity(items.len());
     let mut deterministic_correct = 0;
-    let mut inference_correct = 0;
 
     for kord_item in items {
         let sample = kord_item_to_sample_tensor(device, kord_item).to_device(device).detach();
@@ -304,43 +380,59 @@ fn collect_prediction_stats<B: Backend>(model: &KordModel<B>, device: &B::Device
         #[cfg(feature = "ml_target_folded")]
         let deterministic = binary_to_u16(&fold_binary(&u128_to_binary(deterministic)));
 
-        let logits = model.forward(sample).detach();
-        let logits_vec: Vec<f32> = logits.into_data().to_vec().unwrap_or_default();
-        let probabilities = logits_to_probabilities(&logits_vec);
-        let inferred: Vec<f32> = probabilities.iter().map(|&probability| if probability > 0.5 { 1.0 } else { 0.0 }).collect();
-
         if target_binary == deterministic {
             deterministic_correct += 1;
         }
 
-        if target == inferred {
+        let logits = model.forward(sample).detach();
+        let logits_vec: Vec<f32> = logits.into_data().to_vec().unwrap_or_default();
+        let probabilities = logits_to_probabilities(&logits_vec);
+
+        pr_curves.update(&target, &probabilities);
+        samples.push(SampleObservation { target, probabilities });
+    }
+
+    let computed_thresholds = if thresholds_override.is_none() { pr_curves.optimal_thresholds() } else { None };
+
+    let thresholds_for_eval = thresholds_override
+        .map(|t| t.to_vec())
+        .or_else(|| computed_thresholds.clone())
+        .unwrap_or_else(|| vec![0.5; class_count]);
+    let thresholds_slice = thresholds_for_eval.as_slice();
+
+    let mut class_counts = ClassCounts::new(macro_class_count);
+    let mut inference_correct = 0;
+    let mut sample_f1_sum = 0.0;
+    let mut sample_f1_count = 0usize;
+
+    for sample in &samples {
+        let predicted = logits_to_predictions(&sample.probabilities, thresholds_slice);
+
+        if sample.target == predicted {
             inference_correct += 1;
         }
 
         if macro_class_count > 0 {
-            let target_slice = &target[..macro_class_count];
-            let inferred_slice = &inferred[..macro_class_count];
-            let probability_slice = &probabilities[..macro_class_count];
-
+            let target_slice = &sample.target[..macro_class_count];
+            let inferred_slice = &predicted[..macro_class_count];
             let sample_counts = class_counts.update(target_slice, inferred_slice);
             sample_f1_sum += calculate_sample_f1(sample_counts);
             sample_f1_count += 1;
-            pr_curves.update(target_slice, probability_slice);
         }
     }
 
-    let macro_averages = if !class_counts.is_empty() { build_macro_metrics(&class_counts, items.len()) } else { None };
+    let macro_averages = if !class_counts.is_empty() { build_macro_metrics(&class_counts, samples.len()) } else { None };
     let pr_metrics = if !pr_curves.is_empty() { pr_curves.compute() } else { None };
-
     let sample_f1_average = if sample_f1_count > 0 { Some(sample_f1_sum / sample_f1_count as f32) } else { None };
 
     Ok(PredictionStats {
         deterministic_correct,
         inference_correct,
-        total: items.len(),
+        total: samples.len(),
         macro_averages,
         pr_metrics,
         sample_f1_average,
+        thresholds: computed_thresholds,
     })
 }
 

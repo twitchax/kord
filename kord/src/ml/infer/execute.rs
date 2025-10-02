@@ -8,6 +8,7 @@ use burn::{
     tensor::backend::Backend,
 };
 use serde::{de::DeserializeOwned, Serialize};
+use serde_json;
 
 use crate::{
     analyze::base::{get_frequency_space, get_smoothed_frequency_space},
@@ -17,7 +18,7 @@ use crate::{
     },
     ml::base::{
         data::kord_item_to_sample_tensor,
-        helpers::{binary_to_u128, logits_to_binary_predictions},
+        helpers::{binary_to_u128, logits_to_predictions, logits_to_probabilities},
         model::KordModel,
         KordItem, TrainConfig, FREQUENCY_SPACE_SIZE,
     },
@@ -29,7 +30,6 @@ where
     B::FloatElem: Serialize + DeserializeOwned,
 {
     // Load the config and state.
-
     let config = match TrainConfig::load_binary(CONFIG) {
         Ok(config) => config,
         Err(e) => {
@@ -51,14 +51,13 @@ where
     let sample = kord_item_to_sample_tensor(device, kord_item).detach();
 
     // Run the inference.
-    // Forward pass outputs logits, apply sigmoid and threshold for inference
     let logits = model.forward(sample).detach();
     let logits_vec: Vec<f32> = logits.into_data().to_vec().unwrap_or_default();
+    let probabilities = logits_to_probabilities(&logits_vec);
+    let thresholds: Vec<f32> = serde_json::from_slice(THRESHOLDS_JSON).unwrap_or_default();
+    let inferred = logits_to_predictions(&probabilities, thresholds.as_slice());
 
-    // Apply sigmoid and 0.5 threshold
-    let inferred = logits_to_binary_predictions(&logits_vec);
-
-    let inferred_array: [_; 128] = inferred.try_into().unwrap();
+    let inferred_array: [_; 128] = inferred.iter().cloned().take(128).collect::<Vec<_>>().try_into().unwrap();
     let mut inferred_notes = Note::from_id_mask(binary_to_u128(&inferred_array)).unwrap();
     inferred_notes.sort();
 
@@ -95,12 +94,16 @@ static CONFIG: &[u8] = include_bytes!("../../../model/model_config.json");
 #[cfg(host_family_unix)]
 //static STATE: &[u8] = include_bytes!("../../../model/state.json.gz");
 static STATE_BINCODE: &[u8] = include_bytes!("../../../model/state.json.bin");
+#[cfg(host_family_unix)]
+static THRESHOLDS_JSON: &[u8] = include_bytes!("../../../model/thresholds.json");
 
 #[cfg(host_family_windows)]
 static CONFIG: &[u8] = include_bytes!("..\\..\\..\\model\\model_config.json");
 #[cfg(host_family_windows)]
 //static STATE: &[u8] = include_bytes!("..\\..\\..\\model\\state.json.gz");
 static STATE_BINCODE: &[u8] = include_bytes!("..\\..\\..\\model\\state.json.bin");
+#[cfg(host_family_windows)]
+static THRESHOLDS_JSON: &[u8] = include_bytes!("..\\..\\..\\model\\thresholds.json");
 
 // Tests.
 

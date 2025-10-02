@@ -24,7 +24,7 @@ use crate::{
     },
 };
 
-use super::{KordItem, DETERMINISTIC_GUESS_SIZE, FREQUENCY_SPACE_SIZE, MEL_SPACE_SIZE, NOTE_SIGNATURE_SIZE, PITCH_CLASS_COUNT};
+use super::{KordItem, FREQUENCY_SPACE_SIZE, MEL_SPACE_SIZE, NOTE_SIGNATURE_SIZE, PITCH_CLASS_COUNT};
 #[cfg(feature = "ml_loader_frequency_pooled")]
 use super::{FREQUENCY_POOL_FACTOR, FREQUENCY_SPACE_POOLED_SIZE};
 
@@ -245,6 +245,15 @@ pub fn fold_binary(binary: &[f32; NOTE_SIGNATURE_SIZE]) -> [f32; PITCH_CLASS_COU
 /// Applies sigmoid activation to convert logits to probabilities in `[0, 1]`.
 pub fn logits_to_probabilities(logits: &[f32]) -> Vec<f32> {
     logits.iter().map(|&logit| 1.0 / (1.0 + (-logit).exp())).collect()
+}
+
+/// Converts probabilities to binary predictions using per-class thresholds.
+pub fn logits_to_predictions(probabilities: &[f32], thresholds: &[f32]) -> Vec<f32> {
+    probabilities
+        .iter()
+        .zip(thresholds.iter().chain(std::iter::repeat(&0.5)))
+        .map(|(&prob, &thresh)| if prob > thresh { 1.0 } else { 0.0 })
+        .collect()
 }
 
 /// Applies sigmoid activation and 0.5 threshold to convert logits to binary predictions.
