@@ -236,7 +236,7 @@ enum MlCommand {
         simulation_frequency_wobble: f32,
 
         /// The number of Multi Head Attention (MHA) heads.
-        #[arg(long, default_value_t = 16)]
+        #[arg(long, default_value_t = 8)]
         mha_heads: usize,
 
         /// The Multi Head Attention (MHA) dropout rate.

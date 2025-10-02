@@ -17,13 +17,11 @@ use burn::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
-#[cfg(feature = "ml_target_folded")]
-use crate::ml::base::helpers::{binary_to_u16, fold_binary, u128_to_binary};
 use crate::{
     core::base::Res,
     ml::base::{
         data::{kord_item_to_sample_tensor, kord_item_to_target_tensor},
-        helpers::{binary_to_u128, get_deterministic_guess, logits_to_predictions, logits_to_probabilities},
+        helpers::{logits_to_predictions, logits_to_probabilities},
         model::KordModel,
         KordItem, NOTE_SIGNATURE_SIZE, NUM_CLASSES,
     },
@@ -64,6 +62,9 @@ where
         config.simulation_frequency_wobble,
     )?;
 
+    let train_dataset = Arc::new(train_dataset);
+    let valid_dataset = Arc::new(valid_dataset);
+
     // Define the data loaders.
 
     let batcher_train = KordBatcher::<B>::new(device.clone());
@@ -73,12 +74,12 @@ where
         .batch_size(config.model_batch_size)
         .shuffle(config.model_seed)
         .num_workers(config.model_workers)
-        .build(Arc::new(train_dataset));
+        .build(train_dataset.clone());
 
     let dataloader_valid = DataLoaderBuilder::new(batcher_valid)
         .batch_size(config.model_batch_size)
         .num_workers(config.model_workers)
-        .build(Arc::new(valid_dataset));
+        .build(valid_dataset.clone());
 
     // Define the model.
 
@@ -111,8 +112,8 @@ where
 
     // Compute overall accuracy and collect thresholds.
 
-    let kord_items = KordDataset::from_folder("kord/samples/captured")?.items;
-    let stats = collect_prediction_stats(&model_trained, &device, &kord_items, None)?;
+    let stat_items = valid_dataset.items.iter().take(1000).cloned().collect::<Vec<_>>();
+    let stats = collect_prediction_stats(&model_trained, &device, &stat_items, None)?;
 
     if should_print_accuracy_report {
         print_accuracy_report(&stats);
@@ -149,7 +150,6 @@ pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device
 }
 
 struct PredictionStats {
-    deterministic_correct: usize,
     inference_correct: usize,
     total: usize,
     macro_averages: Option<MacroAverages>,
@@ -159,14 +159,6 @@ struct PredictionStats {
 }
 
 impl PredictionStats {
-    fn deterministic_accuracy_percent(&self) -> f32 {
-        if self.total == 0 {
-            0.0
-        } else {
-            100.0 * (self.deterministic_correct as f32 / self.total as f32)
-        }
-    }
-
     fn inference_accuracy_percent(&self) -> f32 {
         if self.total == 0 {
             0.0
@@ -364,25 +356,10 @@ fn collect_prediction_stats<B: Backend>(model: &KordModel<B>, device: &B::Device
 
     let mut pr_curves = PrCurves::new(class_count);
     let mut samples = Vec::with_capacity(items.len());
-    let mut deterministic_correct = 0;
 
     for kord_item in items {
         let sample = kord_item_to_sample_tensor(device, kord_item).to_device(device).detach();
         let target: Vec<f32> = kord_item_to_target_tensor::<B>(device, kord_item).into_data().to_vec().unwrap_or_default();
-        let target_array: [_; NUM_CLASSES] = target.clone().try_into().unwrap();
-
-        #[cfg(feature = "ml_target_full")]
-        let target_binary = binary_to_u128(&target_array);
-        #[cfg(feature = "ml_target_folded")]
-        let target_binary = binary_to_u16(&target_array);
-
-        let deterministic = get_deterministic_guess(kord_item);
-        #[cfg(feature = "ml_target_folded")]
-        let deterministic = binary_to_u16(&fold_binary(&u128_to_binary(deterministic)));
-
-        if target_binary == deterministic {
-            deterministic_correct += 1;
-        }
 
         let logits = model.forward(sample).detach();
         let logits_vec: Vec<f32> = logits.into_data().to_vec().unwrap_or_default();
@@ -426,7 +403,6 @@ fn collect_prediction_stats<B: Backend>(model: &KordModel<B>, device: &B::Device
     let sample_f1_average = if sample_f1_count > 0 { Some(sample_f1_sum / sample_f1_count as f32) } else { None };
 
     Ok(PredictionStats {
-        deterministic_correct,
         inference_correct,
         total: samples.len(),
         macro_averages,
@@ -524,7 +500,6 @@ fn pr_auc_for_class(entries: &[(f32, bool)]) -> f32 {
 }
 
 fn print_accuracy_report(stats: &PredictionStats) {
-    println!("Deterministic accuracy: {:.2}%", stats.deterministic_accuracy_percent());
     println!("Inference accuracy: {:.2}%", stats.inference_accuracy_percent());
 
     if let Some(macro_averages) = &stats.macro_averages {
