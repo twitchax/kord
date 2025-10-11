@@ -31,8 +31,13 @@ use crate::{
 use crate::core::base::Void;
 
 use super::data::{KordBatcher, KordDataset};
-
 use crate::ml::base::TrainConfig;
+
+const EVAL_SAMPLE_LIMIT: usize = 1000;
+const CAPTURED_DATASET_PATH: &str = "samples/captured";
+const THRESHOLD_DEFAULT: f32 = 0.5;
+const THRESHOLD_MIN: f32 = 0.05;
+const THRESHOLD_MAX: f32 = 0.95;
 
 /// Run the training.
 ///
@@ -112,11 +117,37 @@ where
 
     // Compute overall accuracy and collect thresholds.
 
-    let stat_items = valid_dataset.items.iter().take(1000).cloned().collect::<Vec<_>>();
+    let stat_items = valid_dataset.items.iter().take(EVAL_SAMPLE_LIMIT).cloned().collect::<Vec<_>>();
     let stats = collect_prediction_stats(&model_trained, &device, &stat_items, None)?;
 
+    let captured_stats_result = if should_print_accuracy_report {
+        Some(load_captured_items(EVAL_SAMPLE_LIMIT).and_then(|items| {
+            if items.is_empty() {
+                Ok(None)
+            } else {
+                let thresholds_override = stats.thresholds.as_deref();
+                collect_prediction_stats(&model_trained, &device, items.as_slice(), thresholds_override).map(Some)
+            }
+        }))
+    } else {
+        None
+    };
+
     if should_print_accuracy_report {
+        println!("Validation dataset metrics ({} samples):", stats.total);
         print_accuracy_report(&stats);
+
+        if let Some(result) = &captured_stats_result {
+            println!();
+            match result {
+                Ok(Some(captured_stats)) => {
+                    println!("Captured dataset metrics ({} samples):", captured_stats.total);
+                    print_accuracy_report(captured_stats);
+                }
+                Ok(None) => println!("Captured dataset metrics unavailable: no samples found at {CAPTURED_DATASET_PATH}."),
+                Err(err) => println!("Captured dataset metrics unavailable: {err}"),
+            }
+        }
     }
 
     if save_model {
@@ -143,7 +174,7 @@ where
 /// Compute the overall accuracy of the model.
 #[coverage(off)]
 pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device: &B::Device) -> Res<f32> {
-    let kord_items = KordDataset::from_folder("kord/samples/captured")?.items;
+    let kord_items = KordDataset::from_folder("samples/captured")?.items;
     let stats = collect_prediction_stats(model_trained, device, &kord_items, None)?;
     print_accuracy_report(&stats);
     Ok(stats.inference_accuracy_percent())
@@ -296,7 +327,7 @@ impl PrCurves {
 
         for class_entries in &self.entries {
             if class_entries.is_empty() {
-                thresholds.push(0.5);
+                thresholds.push(THRESHOLD_DEFAULT);
                 continue;
             }
 
@@ -304,11 +335,11 @@ impl PrCurves {
 
             let positives = class_entries.iter().filter(|(_, is_positive)| *is_positive).count();
             if positives == 0 {
-                thresholds.push(1.0);
+                thresholds.push(THRESHOLD_DEFAULT);
                 continue;
             }
 
-            let mut best_threshold = 0.5;
+            let mut best_threshold = THRESHOLD_DEFAULT;
             let mut best_f1 = 0.0;
 
             for step in 0..=100 {
@@ -339,7 +370,8 @@ impl PrCurves {
                 }
             }
 
-            thresholds.push(best_threshold);
+            let clamped = best_threshold.clamp(THRESHOLD_MIN, THRESHOLD_MAX);
+            thresholds.push(clamped);
         }
 
         if has_data {
@@ -374,7 +406,7 @@ fn collect_prediction_stats<B: Backend>(model: &KordModel<B>, device: &B::Device
     let thresholds_for_eval = thresholds_override
         .map(|t| t.to_vec())
         .or_else(|| computed_thresholds.clone())
-        .unwrap_or_else(|| vec![0.5; class_count]);
+        .unwrap_or_else(|| vec![THRESHOLD_DEFAULT; class_count]);
     let thresholds_slice = thresholds_for_eval.as_slice();
 
     let mut class_counts = ClassCounts::new(macro_class_count);
@@ -516,6 +548,12 @@ fn print_accuracy_report(stats: &PredictionStats) {
     if let Some(sample_f1) = stats.sample_f1_average {
         println!("Sample-wise F1: {:.2}%", sample_f1 * 100.0);
     }
+}
+
+fn load_captured_items(limit: usize) -> Res<Vec<KordItem>> {
+    let dataset = KordDataset::from_folder(CAPTURED_DATASET_PATH)?;
+    let items = dataset.items.into_iter().take(limit).collect();
+    Ok(items)
 }
 
 /// Run hyper parameter tuning.

@@ -220,7 +220,7 @@ enum MlCommand {
         backend: String,
 
         /// Simulation data set size.
-        #[arg(long, default_value_t = 100)]
+        #[arg(long, default_value_t = 500)]
         simulation_size: usize,
 
         /// Simulation peak radius.

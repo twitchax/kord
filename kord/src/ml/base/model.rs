@@ -64,39 +64,61 @@ impl<B: Backend> KordModel<B> {
 
     /// Applies the forward pass on the input tensor.
     pub fn forward(&self, input: Tensor<B, 2>) -> Tensor<B, 2> {
-        // x: [B, F] scalars
-        let [b, f] = input.dims();
+        let [batch_size, input_size] = input.dims();
 
-        // [B, F] -> [B, F, 1] -> per-bin embed to [B, F, d_model]
-        let x = input.reshape([b, f, 1]);
-        let mut h = self.embed.forward(x); // [B, F, d_model]
+        // Reshape to sequence format for attention
+        let x = input.reshape([batch_size, 1, input_size]);
 
-        // (Optional but helpful) add sinusoidal positional encoding over F
-        let pe = sinusoidal_pe::<B>(f, INPUT_SPACE_SIZE, &h.device()); // [F, d_model]
-        let pe = pe.unsqueeze::<3>().expand([b, f, INPUT_SPACE_SIZE]);
-        h = h + pe;
+        // Apply multi-head attention
+        let attn_output = self.mha.forward(MhaInput::new(x.clone(), x.clone(), x));
 
-        // Pre-attn norm
-        let h_norm = self.ln1.forward(h.clone()); // [B, F, d_model]
+        // Flatten back to [batch_size, input_size]
+        let x = attn_output.context.reshape([batch_size, input_size]);
 
-        // Burn’s MHA expects [B, T, d_model]; use h_norm as Q=K=V
-        let attn = self.mha.forward(nn::attention::MhaInput::new(h_norm.clone(), h_norm.clone(), h_norm));
+        // Final linear layer to produce logits
+        self.output.forward(x)
 
-        // attn.context: [B, F, d_model]
-        let ctx = self.attn_dropout.forward(attn.context);
+        // let x = input.reshape([batch_size, input_size, 1]);
+        // let h = self.embed.forward(x);
+        // let attn = self.mha.forward(MhaInput::new(h.clone(), h.clone(), h));
+        // let pooled = attn.context.sum_dim(1).div_scalar(INPUT_SPACE_SIZE as f32).squeeze(1);
+        // let logits = self.output.forward(pooled);
 
-        // Residual + FFN block
-        let h2 = h + ctx; // residual
-        let h2n = self.ln2.forward(h2.clone());
-        let ff = Gelu::new().forward(self.ffn_in.forward(h2n));
-        let ff = self.ffn_out.forward(ff);
-        let h3 = h2 + ff; // residual
+        // logits
 
-        // Pool tokens (frequency bins) -> [B, d_model]
-        let pooled = h3.mean_dim(1).squeeze(1);
+        // // x: [B, F] scalars
+        // let [b, f] = input.dims();
 
-        // Classify -> logits [B, 128]
-        self.output.forward(pooled)
+        // // [B, F] -> [B, F, 1] -> per-bin embed to [B, F, d_model]
+        // let x = input.reshape([b, f, 1]);
+        // let mut h = self.embed.forward(x); // [B, F, d_model]
+
+        // // (Optional but helpful) add sinusoidal positional encoding over F
+        // let pe = sinusoidal_pe::<B>(f, INPUT_SPACE_SIZE, &h.device()); // [F, d_model]
+        // let pe = pe.unsqueeze::<3>().expand([b, f, INPUT_SPACE_SIZE]);
+        // h = h + pe;
+
+        // // Pre-attn norm
+        // let h_norm = self.ln1.forward(h.clone()); // [B, F, d_model]
+
+        // // Burn’s MHA expects [B, T, d_model]; use h_norm as Q=K=V
+        // let attn = self.mha.forward(nn::attention::MhaInput::new(h_norm.clone(), h_norm.clone(), h_norm));
+
+        // // attn.context: [B, F, d_model]
+        // let ctx = self.attn_dropout.forward(attn.context);
+
+        // // Residual + FFN block
+        // let h2 = h + ctx; // residual
+        // let h2n = self.ln2.forward(h2.clone());
+        // let ff = Gelu::new().forward(self.ffn_in.forward(h2n));
+        // let ff = self.ffn_out.forward(ff);
+        // let h3 = h2 + ff; // residual
+
+        // // Pool tokens (frequency bins) -> [B, d_model]
+        // let pooled = h3.mean_dim(1).squeeze(1);
+
+        // // Classify -> logits [B, 128]
+        // self.output.forward(pooled)
     }
 
     /// Applies the forward classification pass on the input tensor.

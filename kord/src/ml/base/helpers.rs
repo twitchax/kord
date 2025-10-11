@@ -8,20 +8,18 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use anyhow::Context;
 use burn::{
     module::Module,
     tensor::{backend::Backend, Tensor},
 };
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 
-use crate::{
-    analyze::base::get_notes_from_smoothed_frequency_space,
-    core::{
-        base::Res,
-        helpers::{inv_mel, mel},
-        note::{HasNoteId, Note, ALL_PITCH_NOTES_WITH_FREQUENCY},
-        pitch::HasFrequency,
-    },
+use crate::core::{
+    base::Res,
+    helpers::{inv_mel, mel},
+    note::{HasNoteId, Note, ALL_PITCH_NOTES_WITH_FREQUENCY},
+    pitch::HasFrequency,
 };
 
 use super::{KordItem, FREQUENCY_SPACE_SIZE, MEL_SPACE_SIZE, NOTE_SIGNATURE_SIZE, PITCH_CLASS_COUNT};
@@ -32,7 +30,8 @@ use super::{FREQUENCY_POOL_FACTOR, FREQUENCY_SPACE_POOLED_SIZE};
 
 /// Load the kord sample from the binary file into a new [`KordItem`].
 pub fn load_kord_item(path: impl AsRef<Path>) -> Res<KordItem> {
-    let file = std::fs::File::open(path.as_ref())?;
+    let path = path.as_ref();
+    let file = std::fs::File::open(path).with_context(|| format!("File: `{path:?}`."))?;
     let mut reader = BufReader::new(file);
 
     // Read 8192 f32s in big endian from the file.
@@ -45,7 +44,7 @@ pub fn load_kord_item(path: impl AsRef<Path>) -> Res<KordItem> {
     let label = reader.read_u128::<BigEndian>()?;
 
     Ok(KordItem {
-        path: path.as_ref().to_owned(),
+        path: path.to_owned(),
         frequency_space,
         label,
     })
@@ -188,7 +187,10 @@ pub fn linspace(start: f32, end: f32, num_points: usize) -> Vec<f32> {
 }
 
 /// Gets the "deterministic guess" for a given kord item.
+#[cfg(feature = "analyze_base")]
 pub fn get_deterministic_guess(kord_item: &KordItem) -> u128 {
+    use crate::analyze::base::get_notes_from_smoothed_frequency_space;
+
     let smoothed_frequency_space = kord_item.frequency_space.into_iter().enumerate().map(|(k, v)| (k as f32, v)).collect::<Vec<_>>();
 
     let notes = get_notes_from_smoothed_frequency_space(&smoothed_frequency_space);
