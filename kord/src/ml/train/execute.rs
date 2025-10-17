@@ -35,6 +35,7 @@ use crate::ml::base::TrainConfig;
 
 const EVAL_SAMPLE_LIMIT: usize = 1000;
 const CAPTURED_DATASET_PATH: &str = "samples/captured";
+const CLASS_BREAKDOWN_TOP_K: usize = 10;
 const THRESHOLD_DEFAULT: f32 = 0.5;
 const THRESHOLD_MIN: f32 = 0.05;
 const THRESHOLD_MAX: f32 = 0.95;
@@ -65,6 +66,7 @@ where
         config.simulation_peak_radius,
         config.simulation_harmonic_decay,
         config.simulation_frequency_wobble,
+        config.captured_oversample_factor,
     )?;
 
     let train_dataset = Arc::new(train_dataset);
@@ -135,14 +137,14 @@ where
 
     if should_print_accuracy_report {
         println!("Validation dataset metrics ({} samples):", stats.total);
-        print_accuracy_report(&stats);
+        print_accuracy_report("Validation", &stats, CLASS_BREAKDOWN_TOP_K);
 
         if let Some(result) = &captured_stats_result {
             println!();
             match result {
                 Ok(Some(captured_stats)) => {
                     println!("Captured dataset metrics ({} samples):", captured_stats.total);
-                    print_accuracy_report(captured_stats);
+                    print_accuracy_report("Captured", captured_stats, CLASS_BREAKDOWN_TOP_K);
                 }
                 Ok(None) => println!("Captured dataset metrics unavailable: no samples found at {CAPTURED_DATASET_PATH}."),
                 Err(err) => println!("Captured dataset metrics unavailable: {err}"),
@@ -176,7 +178,7 @@ where
 pub fn compute_overall_accuracy<B: Backend>(model_trained: &KordModel<B>, device: &B::Device) -> Res<f32> {
     let kord_items = KordDataset::from_folder("samples/captured")?.items;
     let stats = collect_prediction_stats(model_trained, device, &kord_items, None)?;
-    print_accuracy_report(&stats);
+    print_accuracy_report("Captured", &stats, CLASS_BREAKDOWN_TOP_K);
     Ok(stats.inference_accuracy_percent())
 }
 
@@ -187,6 +189,7 @@ struct PredictionStats {
     pr_metrics: Option<PrMetrics>,
     sample_f1_average: Option<f32>,
     thresholds: Option<Vec<f32>>,
+    class_breakdown: Option<Vec<ClassMetric>>,
 }
 
 impl PredictionStats {
@@ -210,6 +213,16 @@ struct MacroAverages {
 struct PrMetrics {
     class_count: usize,
     macro_auc: f32,
+}
+
+#[derive(Clone)]
+struct ClassMetric {
+    index: usize,
+    support: usize,
+    predicted_positive: usize,
+    precision: f32,
+    recall: f32,
+    f1: f32,
 }
 
 struct ClassCounts {
@@ -433,6 +446,7 @@ fn collect_prediction_stats<B: Backend>(model: &KordModel<B>, device: &B::Device
     let macro_averages = if !class_counts.is_empty() { build_macro_metrics(&class_counts, samples.len()) } else { None };
     let pr_metrics = if !pr_curves.is_empty() { pr_curves.compute() } else { None };
     let sample_f1_average = if sample_f1_count > 0 { Some(sample_f1_sum / sample_f1_count as f32) } else { None };
+    let class_breakdown = if !class_counts.is_empty() { Some(build_class_breakdown(&class_counts)) } else { None };
 
     Ok(PredictionStats {
         inference_correct,
@@ -441,6 +455,7 @@ fn collect_prediction_stats<B: Backend>(model: &KordModel<B>, device: &B::Device
         pr_metrics,
         sample_f1_average,
         thresholds: computed_thresholds,
+        class_breakdown,
     })
 }
 
@@ -531,7 +546,34 @@ fn pr_auc_for_class(entries: &[(f32, bool)]) -> f32 {
     area
 }
 
-fn print_accuracy_report(stats: &PredictionStats) {
+fn build_class_breakdown(counts: &ClassCounts) -> Vec<ClassMetric> {
+    let mut breakdown = Vec::with_capacity(counts.len());
+
+    for index in 0..counts.len() {
+        let tp = counts.true_positive[index] as f32;
+        let fp = counts.false_positive[index] as f32;
+        let fn_ = counts.false_negative[index] as f32;
+
+        let support = (tp + fn_) as usize;
+        let predicted_positive = (tp + fp) as usize;
+        let precision = if tp + fp > 0.0 { tp / (tp + fp) } else { 0.0 };
+        let recall = if tp + fn_ > 0.0 { tp / (tp + fn_) } else { 0.0 };
+        let f1 = if precision + recall > 0.0 { 2.0 * precision * recall / (precision + recall) } else { 0.0 };
+
+        breakdown.push(ClassMetric {
+            index,
+            support,
+            predicted_positive,
+            precision,
+            recall,
+            f1,
+        });
+    }
+
+    breakdown
+}
+
+fn print_accuracy_report(dataset_label: &str, stats: &PredictionStats, class_breakdown_top_k: usize) {
     println!("Inference accuracy: {:.2}%", stats.inference_accuracy_percent());
 
     if let Some(macro_averages) = &stats.macro_averages {
@@ -547,6 +589,61 @@ fn print_accuracy_report(stats: &PredictionStats) {
 
     if let Some(sample_f1) = stats.sample_f1_average {
         println!("Sample-wise F1: {:.2}%", sample_f1 * 100.0);
+    }
+
+    if class_breakdown_top_k == 0 {
+        return;
+    }
+
+    if let Some(breakdown) = &stats.class_breakdown {
+        println!("{} class insights:", dataset_label);
+
+        let mut unsupported: Vec<_> = breakdown.iter().filter(|metric| metric.support == 0).collect();
+        if !unsupported.is_empty() {
+            unsupported.sort_by(|a, b| b.predicted_positive.cmp(&a.predicted_positive).then_with(|| a.index.cmp(&b.index)));
+            let count = unsupported.len().min(class_breakdown_top_k);
+            print!("  Zero-support classes (showing {}):", count);
+            for metric in unsupported.into_iter().take(count) {
+                print!(" {}", metric.index);
+            }
+            println!();
+        }
+
+        let mut low_precision: Vec<_> = breakdown.iter().filter(|metric| metric.support > 0).cloned().collect();
+        if !low_precision.is_empty() {
+            low_precision.sort_by(|a, b| a.precision.partial_cmp(&b.precision).unwrap_or(Ordering::Equal).then_with(|| a.index.cmp(&b.index)));
+            let limit = class_breakdown_top_k.min(low_precision.len());
+            println!("  Lowest precision ({}):", limit);
+            for metric in low_precision.into_iter().take(limit) {
+                println!(
+                    "    class {:>3}: support {:>4}, predicted {:>4}, precision {:>6.2}%, recall {:>6.2}%, f1 {:>6.2}%",
+                    metric.index,
+                    metric.support,
+                    metric.predicted_positive,
+                    metric.precision * 100.0,
+                    metric.recall * 100.0,
+                    metric.f1 * 100.0
+                );
+            }
+        }
+
+        let mut low_recall: Vec<_> = breakdown.iter().filter(|metric| metric.support > 0).cloned().collect();
+        if !low_recall.is_empty() {
+            low_recall.sort_by(|a, b| a.recall.partial_cmp(&b.recall).unwrap_or(Ordering::Equal).then_with(|| a.index.cmp(&b.index)));
+            let limit = class_breakdown_top_k.min(low_recall.len());
+            println!("  Lowest recall ({}):", limit);
+            for metric in low_recall.into_iter().take(limit) {
+                println!(
+                    "    class {:>3}: support {:>4}, predicted {:>4}, precision {:>6.2}%, recall {:>6.2}%, f1 {:>6.2}%",
+                    metric.index,
+                    metric.support,
+                    metric.predicted_positive,
+                    metric.precision * 100.0,
+                    metric.recall * 100.0,
+                    metric.f1 * 100.0
+                );
+            }
+        }
     }
 }
 
@@ -599,6 +696,7 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
                                         simulation_peak_radius: *peak_radius,
                                         simulation_harmonic_decay: *harmonic_decay,
                                         simulation_frequency_wobble: *frequency_wobble,
+                                        captured_oversample_factor: 1,
                                         mha_heads: *mha_head,
                                         mha_dropout: *mha_dropout,
                                         model_epochs: *epoch as usize,
@@ -697,6 +795,7 @@ mod tests {
             simulation_peak_radius: 1.0,
             simulation_harmonic_decay: 0.5,
             simulation_frequency_wobble: 0.5,
+            captured_oversample_factor: 1,
             mha_heads: 16,
             mha_dropout: 0.3,
             model_epochs: 1,

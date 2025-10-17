@@ -37,6 +37,7 @@ impl KordDataset {
     /// split 80/20 to provide both datasets. Otherwise, each side is built from the
     /// corresponding list of sources. The special source name `"sim"` injects the
     /// configured simulated samples into the merged pool.
+    #[allow(clippy::too_many_arguments)]
     pub fn from_sources<R>(
         noise_asset_root: R,
         training_sources: &[String],
@@ -45,6 +46,7 @@ impl KordDataset {
         peak_radius: f32,
         harmonic_decay: f32,
         frequency_wobble: f32,
+        captured_oversample_factor: usize,
     ) -> Res<(Self, Self)>
     where
         R: AsRef<Path> + Clone + Send + Sync,
@@ -53,7 +55,15 @@ impl KordDataset {
             bail!("training_sources must contain at least one entry");
         }
 
-        let mut train_items = collect_items_from_sources(noise_asset_root.clone(), training_sources, simulation_size, peak_radius, harmonic_decay, frequency_wobble)?;
+        let mut train_items = collect_items_from_sources(
+            noise_asset_root.clone(),
+            training_sources,
+            simulation_size,
+            peak_radius,
+            harmonic_decay,
+            frequency_wobble,
+            captured_oversample_factor,
+        )?;
 
         if train_items.is_empty() {
             bail!("no training samples found for the requested sources");
@@ -76,7 +86,15 @@ impl KordDataset {
                 train_items.split_off(split_index)
             }
         } else {
-            let mut items = collect_items_from_sources(noise_asset_root, validation_sources, simulation_size, peak_radius, harmonic_decay, frequency_wobble)?;
+            let mut items = collect_items_from_sources(
+                noise_asset_root,
+                validation_sources,
+                simulation_size,
+                peak_radius,
+                harmonic_decay,
+                frequency_wobble,
+                captured_oversample_factor,
+            )?;
             items.shuffle(&mut rand::rng());
             items
         };
@@ -109,7 +127,15 @@ fn get_bin_files_in_directory(name: impl AsRef<Path>) -> Res<Vec<PathBuf>> {
     Ok(bin_files)
 }
 
-fn collect_items_from_sources<R>(noise_asset_root: R, sources: &[String], simulation_size: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> Res<Vec<KordItem>>
+fn collect_items_from_sources<R>(
+    noise_asset_root: R,
+    sources: &[String],
+    simulation_size: usize,
+    peak_radius: f32,
+    harmonic_decay: f32,
+    frequency_wobble: f32,
+    captured_oversample_factor: usize,
+) -> Res<Vec<KordItem>>
 where
     R: AsRef<Path> + Clone + Send + Sync,
 {
@@ -128,10 +154,32 @@ where
 
         let files = get_bin_files_in_directory(source)?;
         let mut folder_items: Vec<_> = files.par_iter().map(load_kord_item).collect::<Res<Vec<_>>>()?;
+
+        if should_oversample_captured(source, captured_oversample_factor) {
+            folder_items = oversample_items(&folder_items, captured_oversample_factor);
+        }
+
         items.append(&mut folder_items);
     }
 
     Ok(items)
+}
+
+fn should_oversample_captured(source: &str, factor: usize) -> bool {
+    factor > 1 && source.to_ascii_lowercase().contains("captured")
+}
+
+fn oversample_items(items: &[KordItem], factor: usize) -> Vec<KordItem> {
+    if factor <= 1 || items.is_empty() {
+        return items.to_vec();
+    }
+
+    let mut oversampled = Vec::with_capacity(items.len() * factor);
+    for _ in 0..factor {
+        oversampled.extend(items.iter().cloned());
+    }
+
+    oversampled
 }
 
 impl Dataset<KordItem> for KordDataset {

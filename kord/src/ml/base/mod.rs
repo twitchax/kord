@@ -137,6 +137,9 @@ pub struct TrainConfig {
     /// Simulation frequency wobble.
     pub simulation_frequency_wobble: f32,
 
+    /// The number of times to replicate captured samples when constructing datasets.
+    pub captured_oversample_factor: usize,
+
     /// The number of Multi Head Attention (MHA) heads.
     pub mha_heads: usize,
     /// The Multi Head Attention (MHA) dropout rate.

@@ -235,6 +235,10 @@ enum MlCommand {
         #[arg(long, default_value_t = 0.4)]
         simulation_frequency_wobble: f32,
 
+        /// The number of times to replicate captured samples during training.
+        #[arg(long, default_value_t = 16)]
+        captured_oversample_factor: usize,
+
         /// The number of Multi Head Attention (MHA) heads.
         #[arg(long, default_value_t = 8)]
         mha_heads: usize,
@@ -533,6 +537,7 @@ fn start(args: Args) -> Void {
                 simulation_peak_radius,
                 simulation_harmonic_decay,
                 simulation_frequency_wobble,
+                captured_oversample_factor,
                 mha_heads,
                 mha_dropout,
                 model_epochs,
@@ -560,6 +565,7 @@ fn start(args: Args) -> Void {
                     simulation_peak_radius,
                     simulation_harmonic_decay,
                     simulation_frequency_wobble,
+                    captured_oversample_factor,
                     mha_heads,
                     mha_dropout,
                     model_epochs,

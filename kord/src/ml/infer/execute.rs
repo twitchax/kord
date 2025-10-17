@@ -92,7 +92,6 @@ pub fn infer(audio_data: &[f32], length_in_seconds: u8) -> Res<Vec<Note>> {
 #[cfg(host_family_unix)]
 static CONFIG: &[u8] = include_bytes!("../../../model/model_config.json");
 #[cfg(host_family_unix)]
-//static STATE: &[u8] = include_bytes!("../../../model/state.json.gz");
 static STATE_BINCODE: &[u8] = include_bytes!("../../../model/state.json.bin");
 #[cfg(host_family_unix)]
 static THRESHOLDS_JSON: &[u8] = include_bytes!("../../../model/thresholds.json");
@@ -100,7 +99,6 @@ static THRESHOLDS_JSON: &[u8] = include_bytes!("../../../model/thresholds.json")
 #[cfg(host_family_windows)]
 static CONFIG: &[u8] = include_bytes!("..\\..\\..\\model\\model_config.json");
 #[cfg(host_family_windows)]
-//static STATE: &[u8] = include_bytes!("..\\..\\..\\model\\state.json.gz");
 static STATE_BINCODE: &[u8] = include_bytes!("..\\..\\..\\model\\state.json.bin");
 #[cfg(host_family_windows)]
 static THRESHOLDS_JSON: &[u8] = include_bytes!("..\\..\\..\\model\\thresholds.json");
