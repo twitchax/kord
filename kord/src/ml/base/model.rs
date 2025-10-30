@@ -9,7 +9,6 @@ use burn::{
     nn::{
         self,
         attention::{MhaInput, MultiHeadAttention, MultiHeadAttentionConfig},
-        Gelu,
     },
     tensor::{backend::Backend, Tensor},
 };
@@ -139,20 +138,4 @@ impl<B: Backend> KordModel<B> {
 
         MultiLabelClassificationOutput { loss, output, targets }
     }
-}
-
-fn sinusoidal_pe<B: Backend>(f: usize, d_model: usize, device: &B::Device) -> Tensor<B, 2> {
-    let range1 = (0..f as u32).map(|x| x as f32).collect::<Vec<_>>();
-    let range2 = (0..(d_model / 2) as u32).map(|x| x as f32).collect::<Vec<_>>();
-
-    let pos = Tensor::<B, 1>::from(&range1[..]).reshape([f, 1]).to_device(device);
-    let i = Tensor::<B, 1>::from(&range2[..]).to_device(device);
-
-    let denom = Tensor::<B, 1>::from_floats([10000.0], device).powf(i * 2.0 / Tensor::from_floats([d_model as f32], device));
-    let angle = pos / denom.unsqueeze::<2>().expand([f, d_model / 2]);
-
-    let sin = angle.clone().sin();
-    let cos = angle.cos();
-
-    Tensor::cat(vec![sin, cos], 1)
 }

@@ -4,6 +4,9 @@ use burn::tensor::{backend::Backend, Tensor, TensorData};
 
 use super::{helpers::u128_to_binary, KordItem, INPUT_SPACE_SIZE, TARGET_SPACE_SIZE};
 
+#[cfg(feature = "ml_target_folded_bass")]
+use super::PITCH_CLASS_COUNT;
+
 #[cfg(feature = "ml_loader_note_binned_convolution")]
 use super::helpers::note_binned_convolution;
 
@@ -16,7 +19,7 @@ use super::helpers::average_pool_frequency_space;
 #[cfg(feature = "ml_loader_include_deterministic_guess")]
 use super::{helpers::get_deterministic_guess, DETERMINISTIC_GUESS_SIZE};
 
-#[cfg(any(feature = "ml_target_folded", feature = "ml_target_full_and_folded"))]
+#[cfg(any(feature = "ml_target_folded", feature = "ml_target_folded_bass", feature = "ml_target_full_and_folded"))]
 use super::helpers::fold_binary;
 
 /// Takes a loaded kord item and converts it to a sample tensor that is ready for classification.
@@ -91,15 +94,31 @@ pub fn kord_item_to_target_tensor<B: Backend>(device: &B::Device, item: &KordIte
 
     #[cfg(feature = "ml_target_full")]
     {
-        let binary = u128_to_binary(item.label);
-        components.extend_from_slice(&binary);
+        let binary_full = u128_to_binary(item.label);
+        components.extend_from_slice(&binary_full);
     }
 
-    #[cfg(feature = "ml_target_folded")]
+    #[cfg(any(feature = "ml_target_folded", feature = "ml_target_folded_bass", feature = "ml_target_full_and_folded"))]
     {
-        let binary = u128_to_binary(item.label);
-        let folded = fold_binary(&binary);
-        components.extend_from_slice(&folded);
+        let binary_full = u128_to_binary(item.label);
+        let folded = fold_binary(&binary_full);
+
+        #[cfg(feature = "ml_target_folded_bass")]
+        {
+            let bass = lowest_pitch_class_mask(item.label);
+            components.extend_from_slice(&bass);
+            components.extend_from_slice(&folded);
+        }
+
+        #[cfg(feature = "ml_target_folded")]
+        {
+            components.extend_from_slice(&folded);
+        }
+
+        #[cfg(feature = "ml_target_full_and_folded")]
+        {
+            components.extend_from_slice(&folded);
+        }
     }
 
     tensor_from_vec_with_expected_size(device, components, TARGET_SPACE_SIZE)
@@ -142,4 +161,37 @@ fn tensor_from_vec_with_expected_size<B: Backend>(device: &B::Device, data: Vec<
 fn deterministic_guess_array(item: &KordItem) -> [f32; DETERMINISTIC_GUESS_SIZE] {
     let guess_binary = get_deterministic_guess(item);
     u128_to_binary(guess_binary)
+}
+
+#[cfg(feature = "ml_target_folded_bass")]
+fn lowest_pitch_class_mask(label: u128) -> [f32; PITCH_CLASS_COUNT] {
+    let mut mask = [0.0; PITCH_CLASS_COUNT];
+
+    if label != 0 {
+        let lowest = label.trailing_zeros() as usize;
+        let pitch_class = lowest % PITCH_CLASS_COUNT;
+        mask[pitch_class] = 1.0;
+    }
+
+    mask
+}
+
+#[cfg(all(test, feature = "ml_target_folded_bass"))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn lowest_pitch_class_mask_marks_expected_bin() {
+        let label = 1u128 << 17; // arbitrary note index 17 -> pitch class 5
+        let mask = lowest_pitch_class_mask(label);
+
+        assert_eq!(mask.iter().sum::<f32>(), 1.0);
+        assert_eq!(mask[5], 1.0);
+    }
+
+    #[test]
+    fn lowest_pitch_class_mask_handles_empty_label() {
+        let mask = lowest_pitch_class_mask(0);
+        assert!(mask.iter().all(|v| *v == 0.0));
+    }
 }

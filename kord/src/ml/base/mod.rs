@@ -89,8 +89,11 @@ pub const INPUT_SPACE_SIZE: usize = INPUT_BASE_SIZE + DETERMINISTIC_GUESS_SIZE;
 pub const INPUT_SPACE_SIZE: usize = INPUT_BASE_SIZE;
 
 /// Ensure at least one target encoding feature is enabled when ML base is compiled.
-#[cfg(not(any(feature = "ml_target_full", feature = "ml_target_folded")))]
-compile_error!("No ml_target_* feature enabled; enable at least one of: ml_target_full, ml_target_folded.");
+#[cfg(not(any(feature = "ml_target_full", feature = "ml_target_folded", feature = "ml_target_folded_bass", feature = "ml_target_full_and_folded",)))]
+compile_error!("No ml_target_* feature enabled; enable at least one of: ml_target_full, ml_target_folded, ml_target_folded_bass.");
+
+#[cfg(all(feature = "ml_target_folded", feature = "ml_target_folded_bass"))]
+compile_error!("`ml_target_folded` and `ml_target_folded_bass` cannot be enabled together.");
 
 /// Whether the full 128-note target encoding is enabled.
 #[cfg(feature = "ml_target_full")]
@@ -106,8 +109,15 @@ const TARGET_FOLDED_SIZE: usize = PITCH_CLASS_COUNT;
 #[cfg(not(feature = "ml_target_folded"))]
 const TARGET_FOLDED_SIZE: usize = 0;
 
+/// Whether the folded+bass target encoding is enabled.
+#[cfg(feature = "ml_target_folded_bass")]
+const TARGET_FOLDED_BASS_SIZE: usize = 2 * PITCH_CLASS_COUNT;
+
+#[cfg(not(feature = "ml_target_folded_bass"))]
+const TARGET_FOLDED_BASS_SIZE: usize = 0;
+
 /// The dimensionality of the target tensor produced by `kord_item_to_target_tensor`.
-pub const TARGET_SPACE_SIZE: usize = TARGET_FULL_SIZE + TARGET_FOLDED_SIZE;
+pub const TARGET_SPACE_SIZE: usize = TARGET_FULL_SIZE + TARGET_FOLDED_SIZE + TARGET_FOLDED_BASS_SIZE;
 
 /// Backward-compatible alias for target dimensionality.
 pub const NUM_CLASSES: usize = TARGET_SPACE_SIZE;

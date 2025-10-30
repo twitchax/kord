@@ -294,14 +294,15 @@ Optional add-on:
 | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ml_loader_include_deterministic_guess` | Prepends the deterministic 128-note guess vector to whichever loader you selected above (doubling 128-bin inputs, adding 128 to the others). |
 
-#### Target Encoding Features (enable one or both)
+#### Target Encoding Features (enable at least one)
 
-| Feature            | Description                                                  | Output width contribution |
-| ------------------ | ------------------------------------------------------------ | ------------------------- |
-| `ml_target_full`   | Emits the full 128-note mask (per MIDI note across octaves). | +128                      |
-| `ml_target_folded` | Emits a folded 12-class pitch-class mask (one octave).       | +12                       |
+| Feature                 | Description                                                                                                                | Output width contribution |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `ml_target_full`        | Emits the full 128-note mask (per MIDI note across octaves).                                                               | +128                      |
+| `ml_target_folded`      | Emits a folded 12-class pitch-class mask (one octave).                                                                     | +12                       |
+| `ml_target_folded_bass` | Emits two 12-class masks: a one-hot bass pitch class and a multi-hot mask of every pitch class present across all octaves. | +24                       |
 
-When both target features are enabled, the model receives the 128-note mask followed by the 12-class folded mask in a single output vector (`TARGET_SPACE_SIZE = 140`).
+`ml_target_folded` and `ml_target_folded_bass` are mutually exclusive. When multiple target features are enabled, the model concatenates each contribution in the order listed above (for example, `ml_target_full` + `ml_target_folded_bass` yields a 152-wide output).
 
 #### Example configurations
 
@@ -320,6 +321,10 @@ cargo check --no-default-features \
 # Pooled raw spectrum with deterministic guess, folded targets only
 cargo check --no-default-features \
    --features "cli ml_infer ml_loader_frequency_pooled ml_loader_include_deterministic_guess ml_target_folded"
+
+# Pooled spectrum with deterministic guess and folded+bass targets
+cargo check --no-default-features \
+   --features "cli ml_infer ml_loader_frequency_pooled ml_loader_include_deterministic_guess ml_target_folded_bass"
 ```
 
 > Make sure exactly one loader feature is enabled at a time. The deterministic guess flag and target features can be toggled independently to suit experiments.

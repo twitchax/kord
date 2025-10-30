@@ -20,7 +20,7 @@ use crate::{
         data::kord_item_to_sample_tensor,
         helpers::{binary_to_u128, logits_to_predictions, logits_to_probabilities},
         model::KordModel,
-        KordItem, TrainConfig, FREQUENCY_SPACE_SIZE,
+        KordItem, TrainConfig, FREQUENCY_SPACE_SIZE, NOTE_SIGNATURE_SIZE, NUM_CLASSES,
     },
 };
 
@@ -43,6 +43,13 @@ where
             return Err(anyhow::Error::msg("Could not load the state from within the binary."));
         }
     };
+
+    // TODO: remove this when inference uses just folded bass and folded targets (which is the direction we seem to be going).
+    if NUM_CLASSES < NOTE_SIGNATURE_SIZE {
+        return Err(anyhow::Error::msg(
+            "Inference requires a target space with at least 128 classes; enable `ml_target_full` when building the inference binary.",
+        ));
+    }
 
     // Define the model.
     let model = KordModel::<B>::new(device, config.mha_heads, config.mha_dropout, config.sigmoid_strength).load_record(recorder);
