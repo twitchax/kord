@@ -152,7 +152,8 @@ fn tensor_from_vec_with_expected_size<B: Backend>(device: &B::Device, data: Vec<
     debug_assert_eq!(data.len(), expected, "Tensor length mismatch: expected {expected}, received {}", data.len());
 
     let len = data.len();
-    let tensor = Tensor::<B, 1>::from_data(TensorData::from(data.as_slice()), device);
+    let tensor_data = TensorData::from(data.as_slice()).convert::<B::FloatElem>();
+    let tensor = Tensor::<B, 1>::from_data(tensor_data, device);
 
     tensor.reshape([1, len])
 }

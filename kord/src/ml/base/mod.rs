@@ -8,8 +8,11 @@ pub mod data;
 pub mod gather;
 pub mod helpers;
 pub mod model;
+pub mod precision;
 #[cfg(feature = "ml_sample_process")]
 pub mod process;
+
+pub use precision::{PrecisionElement, StorePrecisionSettings, PRECISION_DTYPE};
 
 use burn::config::Config;
 use std::path::PathBuf;

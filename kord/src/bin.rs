@@ -553,7 +553,7 @@ fn start(args: Args) -> Void {
                 no_plots,
             }) => {
                 use burn::backend::Autodiff;
-                use klib::ml::base::TrainConfig;
+                use klib::ml::base::{PrecisionElement, TrainConfig};
 
                 let config = TrainConfig {
                     noise_asset_root,
@@ -593,7 +593,7 @@ fn start(args: Args) -> Void {
                         #[cfg(target_os = "macos")]
                         let device = LibTorchDevice::Mps;
 
-                        klib::ml::train::run_training::<Autodiff<LibTorch<f32>>>(device, &config, true, true)?;
+                        klib::ml::train::run_training::<Autodiff<LibTorch<PrecisionElement>>>(device, &config, true, true)?;
                     }
                     #[cfg(feature = "ml_cuda")]
                     "cuda" => {
@@ -601,7 +601,7 @@ fn start(args: Args) -> Void {
 
                         let device = CudaDevice::default();
 
-                        klib::ml::train::run_training::<Autodiff<Cuda<f32>>>(device, &config, true, true)?;
+                        klib::ml::train::run_training::<Autodiff<Cuda<PrecisionElement>>>(device, &config, true, true)?;
                     }
                     #[cfg(feature = "ml_wgpu")]
                     "wgpu" => {
@@ -609,7 +609,7 @@ fn start(args: Args) -> Void {
 
                         let device = WgpuDevice::default();
 
-                        klib::ml::train::run_training::<Autodiff<Wgpu<f32>>>(device, &config, true, true)?;
+                        klib::ml::train::run_training::<Autodiff<Wgpu<PrecisionElement>>>(device, &config, true, true)?;
                     }
                     #[cfg(feature = "ml_candle")]
                     "candle" => {
@@ -622,7 +622,7 @@ fn start(args: Args) -> Void {
                         #[cfg(target_os = "macos")]
                         let device = CandleDevice::Cpu;
 
-                        klib::ml::train::run_training::<Autodiff<Candle<f32>>>(device, &config, true, true)?;
+                        klib::ml::train::run_training::<Autodiff<Candle<PrecisionElement>>>(device, &config, true, true)?;
                     }
                     #[cfg(feature = "ml_ndarray")]
                     "ndarray" => {
@@ -630,7 +630,7 @@ fn start(args: Args) -> Void {
 
                         let device = NdArrayDevice::default();
 
-                        klib::ml::train::run_training::<Autodiff<NdArray<f32>>>(device, &config, true, true)?;
+                        klib::ml::train::run_training::<Autodiff<NdArray<PrecisionElement>>>(device, &config, true, true)?;
                     }
                     _ => {
                         #[cfg(feature = "ml_remote")]

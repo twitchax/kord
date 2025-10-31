@@ -40,6 +40,8 @@ default = [
     "ml_infer",
     "ml_loader_frequency_pooled",
     "ml_target_folded_bass",
+    "ml_train_precision_fp32",
+    "ml_store_precision_full",
 ]
 
 cli = ["clap", "futures", "tracing", "tracing-subscriber"]
@@ -57,6 +59,13 @@ analyze_file_alac = ["symphonia/alac", "symphonia/isomp4"]
 
 ml = ["ml_train", "ml_infer"]
 ml_base = ["serde", "byteorder", "bincode"]
+
+ml_train_precision_fp32 = []
+ml_train_precision_fp16 = []
+ml_train_precision_bf16 = []
+
+ml_store_precision_full = []
+ml_store_precision_half = []
 
 ml_loader_note_binned_convolution = []
 ml_loader_mel = []

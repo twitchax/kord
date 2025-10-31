@@ -4,7 +4,7 @@ use burn::{
     backend::{ndarray::NdArrayDevice, NdArray},
     config::Config,
     module::Module,
-    record::{BinBytesRecorder, FullPrecisionSettings, Recorder},
+    record::{BinBytesRecorder, Recorder},
     tensor::backend::Backend,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -20,7 +20,7 @@ use crate::{
         data::kord_item_to_sample_tensor,
         helpers::{binary_to_u128, logits_to_predictions, logits_to_probabilities},
         model::KordModel,
-        KordItem, TrainConfig, FREQUENCY_SPACE_SIZE, NOTE_SIGNATURE_SIZE, NUM_CLASSES,
+        KordItem, StorePrecisionSettings, TrainConfig, FREQUENCY_SPACE_SIZE, NOTE_SIGNATURE_SIZE, NUM_CLASSES,
     },
 };
 
@@ -37,7 +37,7 @@ where
         }
     };
 
-    let recorder = match BinBytesRecorder::<FullPrecisionSettings>::new().load(Vec::from_iter(STATE_BINCODE.iter().cloned()), device) {
+    let recorder = match BinBytesRecorder::<StorePrecisionSettings>::new().load(Vec::from_iter(STATE_BINCODE.iter().cloned()), device) {
         Ok(recorder) => recorder,
         Err(_) => {
             return Err(anyhow::Error::msg("Could not load the state from within the binary."));
@@ -59,7 +59,7 @@ where
 
     // Run the inference.
     let logits = model.forward(sample).detach();
-    let logits_vec: Vec<f32> = logits.into_data().to_vec().unwrap_or_default();
+    let logits_vec: Vec<f32> = logits.into_data().convert::<f32>().to_vec().unwrap_or_default();
     let probabilities = logits_to_probabilities(&logits_vec);
     let thresholds: Vec<f32> = serde_json::from_slice(THRESHOLDS_JSON).unwrap_or_default();
     let inferred = logits_to_predictions(&probabilities, thresholds.as_slice());

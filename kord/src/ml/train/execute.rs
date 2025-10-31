@@ -8,7 +8,7 @@ use burn::{
     lr_scheduler::constant::ConstantLr,
     module::Module,
     optim::{decay::WeightDecayConfig, AdamConfig},
-    record::{BinFileRecorder, FullPrecisionSettings, Recorder},
+    record::{BinFileRecorder, Recorder},
     tensor::backend::{AutodiffBackend, Backend},
     train::{
         metric::{HammingScore, LossMetric},
@@ -23,7 +23,7 @@ use crate::{
         data::{kord_item_to_sample_tensor, kord_item_to_target_tensor},
         helpers::{logits_to_predictions, logits_to_probabilities},
         model::KordModel,
-        KordItem, NOTE_SIGNATURE_SIZE, NUM_CLASSES,
+        KordItem, StorePrecisionSettings, NOTE_SIGNATURE_SIZE, NUM_CLASSES,
     },
 };
 
@@ -163,7 +163,7 @@ where
         let _ = std::fs::remove_file(&thresholds_path);
 
         config.save(&config_path)?;
-        BinFileRecorder::<FullPrecisionSettings>::new().record(model_trained.clone().into_record(), state_path.into())?;
+        BinFileRecorder::<StorePrecisionSettings>::new().record(model_trained.clone().into_record(), state_path.into())?;
 
         if let Some(thresholds) = &stats.thresholds {
             std::fs::write(&thresholds_path, serde_json::to_vec(thresholds)?)?;
@@ -404,10 +404,10 @@ fn collect_prediction_stats<B: Backend>(model: &KordModel<B>, device: &B::Device
 
     for kord_item in items {
         let sample = kord_item_to_sample_tensor(device, kord_item).to_device(device).detach();
-        let target: Vec<f32> = kord_item_to_target_tensor::<B>(device, kord_item).into_data().to_vec().unwrap_or_default();
+        let target: Vec<f32> = kord_item_to_target_tensor::<B>(device, kord_item).into_data().convert::<f32>().to_vec().unwrap_or_default();
 
         let logits = model.forward(sample).detach();
-        let logits_vec: Vec<f32> = logits.into_data().to_vec().unwrap_or_default();
+        let logits_vec: Vec<f32> = logits.into_data().convert::<f32>().to_vec().unwrap_or_default();
         let probabilities = logits_to_probabilities(&logits_vec);
 
         pr_curves.update(&target, &probabilities);
@@ -661,6 +661,7 @@ fn load_captured_items(limit: usize) -> Res<Vec<KordItem>> {
 #[coverage(off)]
 pub fn hyper_parameter_tuning(source: String, destination: String, log: String, backend: String) -> Void {
     use burn::backend::Autodiff;
+    use kord::ml::base::PrecisionElement;
 
     let peak_radiuses = [2.0];
     let harmonic_decays = [0.1];
@@ -726,7 +727,20 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
                                             #[cfg(target_os = "macos")]
                                             let device = TchDevice::Mps;
 
-                                            run_training::<Autodiff<LibTorch<f32>>>(device, &config, true, false)?
+                                            run_training::<Autodiff<LibTorch<PrecisionElement>>>(device, &config, true, false)?
+                                        }
+                                        #[cfg(feature = "ml_candle")]
+                                        "candle" => {
+                                            #[cfg(not(target_os = "macos"))]
+                                            use burn::backend::candle::CandleDevice;
+                                            use burn::backend::Candle;
+
+                                            #[cfg(not(target_os = "macos"))]
+                                            let device = CandleDevice::cuda(0);
+                                            #[cfg(target_os = "macos")]
+                                            let device = CandleDevice::Cpu;
+
+                                            run_training::<Autodiff<Candle<PrecisionElement>>>(device, &config, true, false)?
                                         }
                                         #[cfg(feature = "ml_ndarray")]
                                         "ndarray" => {
@@ -734,11 +748,11 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
 
                                             let device = NdArrayDevice::Cpu;
 
-                                            run_training::<Autodiff<NdArray<f32>>>(device, &config, true, false)?
+                                            run_training::<Autodiff<NdArray<PrecisionElement>>>(device, &config, true, false)?
                                         }
                                         _ => {
                                             return Err(anyhow::Error::msg(
-                                                "Invalid device (must choose either `tch` [requires `ml_tch` feature] or `cpu` [requires `ml_ndarray` feature]).",
+                                                "Invalid device (must choose either `tch` [requires `ml_tch` feature], `candle` [requires `ml_candle` feature], or `ndarray` [requires `ml_ndarray` feature]).",
                                             ));
                                         }
                                     };
@@ -779,6 +793,7 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
 #[cfg(feature = "ml_train")]
 mod tests {
     use super::*;
+    use crate::ml::base::PrecisionElement;
     use burn::backend::{ndarray::NdArrayDevice, Autodiff, NdArray};
 
     #[test]
@@ -811,6 +826,6 @@ mod tests {
             no_plots: true,
         };
 
-        run_training::<Autodiff<NdArray<f32>>>(device, &config, false, false).unwrap();
+        run_training::<Autodiff<NdArray<PrecisionElement>>>(device, &config, false, false).unwrap();
     }
 }
