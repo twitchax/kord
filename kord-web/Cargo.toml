@@ -19,8 +19,6 @@ wasm-bindgen-futures = { version = "0.4", optional = true }
 axum-insights = { version = "0.6", optional = true, default-features = false }
 klib = { package = "kord", path = "../kord", default-features = false, features = [
     "ml_infer",
-    "ml_loader_note_binned_convolution",
-    "ml_target_full",
     "analyze_base",
     "audio",
 ] }
@@ -37,6 +35,17 @@ wasm-bindgen = { version = "=0.2.100" }
 wasm-bindgen-test = { version = "0.3" }
 
 [features]
+default = ["kord_loader_frequency"]
+
+kord_loader_note_binned = [
+    "klib/ml_loader_note_binned_convolution",
+    "klib/ml_target_folded_bass",
+]
+kord_loader_frequency = [
+    "klib/ml_loader_frequency_pooled",
+    "klib/ml_target_folded_bass",
+]
+
 hydrate = [
     "dep:console_error_panic_hook",
     "dep:wasm-bindgen",

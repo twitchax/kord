@@ -12,7 +12,7 @@ use burn::{
     tensor::backend::{AutodiffBackend, Backend},
     train::{
         metric::{HammingScore, LossMetric},
-        LearnerBuilder,
+        LearnerBuilder, LearningStrategy,
     },
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -95,7 +95,7 @@ where
 
     let mut learner_builder = LearnerBuilder::new(&config.log)
         //.with_file_checkpointer::<f32>(2)
-        .devices(vec![device.clone()])
+        .learning_strategy(LearningStrategy::SingleDevice(device.clone()))
         .num_epochs(config.model_epochs)
         .summary();
 
@@ -115,7 +115,7 @@ where
 
     // Train the model.
 
-    let model_trained = learner.fit(dataloader_train, dataloader_valid);
+    let model_trained = learner.fit(dataloader_train, dataloader_valid).model;
 
     // Compute overall accuracy and collect thresholds.
 
