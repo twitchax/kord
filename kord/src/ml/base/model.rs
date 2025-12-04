@@ -15,6 +15,9 @@ use burn::{
 
 use super::{INPUT_SPACE_SIZE, NUM_CLASSES};
 
+#[cfg(all(feature = "ml_train", feature = "ml_target_folded_bass"))]
+use super::{PITCH_CLASS_COUNT, TARGET_FOLDED_BASS_NOTE_OFFSET, TARGET_FOLDED_BASS_OFFSET};
+
 #[cfg(feature = "ml_train")]
 use crate::ml::train::data::KordBatch;
 
@@ -121,21 +124,60 @@ impl<B: Backend> KordModel<B> {
     }
 
     /// Applies the forward classification pass on the input tensor.
-    #[cfg(feature = "ml_train")]
+    #[cfg(all(feature = "ml_train", feature = "ml_target_full"))]
     pub fn forward_classification(&self, item: KordBatch<B>) -> MultiLabelClassificationOutput<B> {
         use burn::nn::loss::BinaryCrossEntropyLossConfig;
 
+        let logits = self.forward(item.samples);
         let targets = item.targets;
-        let output = self.forward(item.samples);
 
-        let loss = BinaryCrossEntropyLossConfig::new().with_logits(true).init(&output.device());
-        let loss = loss.forward(output.clone(), targets.clone());
+        let loss = BinaryCrossEntropyLossConfig::new().with_logits(true).init(&logits.device()).forward(logits.clone(), targets.clone());
 
-        // Add L1 regularization
-        // let l1_reg_strength = 1e-4;
-        // let l1_penalty = self.output.weight.val().abs().sum() * l1_reg_strength;
-        // loss = loss + l1_penalty;
+        MultiLabelClassificationOutput { loss, output: logits, targets }
+    }
 
-        MultiLabelClassificationOutput { loss, output, targets }
+    /// Applies the forward classification pass when only the folded target is enabled.
+    #[cfg(all(feature = "ml_train", feature = "ml_target_folded"))]
+    pub fn forward_classification(&self, item: KordBatch<B>) -> MultiLabelClassificationOutput<B> {
+        use burn::nn::loss::BinaryCrossEntropyLossConfig;
+
+        let logits = self.forward(item.samples);
+        let targets = item.targets;
+
+        let loss = BinaryCrossEntropyLossConfig::new().with_logits(true).init(&logits.device()).forward(logits.clone(), targets.clone());
+
+        MultiLabelClassificationOutput { loss, output: logits, targets }
+    }
+
+    /// Applies the forward classification pass when the folded-bass target is enabled.
+    #[cfg(all(feature = "ml_train", feature = "ml_target_folded_bass"))]
+    pub fn forward_classification(&self, item: KordBatch<B>) -> MultiLabelClassificationOutput<B> {
+        use burn::nn::loss::{BinaryCrossEntropyLossConfig, CrossEntropyLossConfig};
+
+        let logits = self.forward(item.samples);
+        let targets = item.targets;
+        let batch = logits.dims()[0];
+
+        let device = logits.device();
+        let bce_loss = BinaryCrossEntropyLossConfig::new().with_logits(true).init(&device);
+        let ce_loss = CrossEntropyLossConfig::new().init(&device);
+
+        let bass_start = TARGET_FOLDED_BASS_OFFSET;
+        let bass_end = bass_start + PITCH_CLASS_COUNT;
+        let note_start = TARGET_FOLDED_BASS_NOTE_OFFSET;
+        let note_end = note_start + PITCH_CLASS_COUNT;
+
+        let bass_logits = logits.clone().slice([0..batch, bass_start..bass_end]);
+        let note_logits = logits.clone().slice([0..batch, note_start..note_end]);
+
+        let note_targets = targets.clone().slice([0..batch, note_start..note_end]);
+        let bass_targets_hot = targets.clone().slice([0..batch, bass_start..bass_end]);
+        let bass_targets = bass_targets_hot.argmax(1).squeeze();
+
+        let note_loss = bce_loss.forward(note_logits, note_targets);
+        let categorical_loss = ce_loss.forward(bass_logits, bass_targets);
+        let loss = note_loss + categorical_loss;
+
+        MultiLabelClassificationOutput { loss, output: logits, targets }
     }
 }

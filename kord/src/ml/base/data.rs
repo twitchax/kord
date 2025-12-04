@@ -7,6 +7,9 @@ use super::{helpers::u128_to_binary, KordItem, INPUT_SPACE_SIZE, TARGET_SPACE_SI
 #[cfg(feature = "ml_target_folded_bass")]
 use super::PITCH_CLASS_COUNT;
 
+#[cfg(any(feature = "ml_target_folded", feature = "ml_target_folded_bass"))]
+use super::helpers::fold_binary;
+
 #[cfg(feature = "ml_loader_note_binned_convolution")]
 use super::helpers::note_binned_convolution;
 
@@ -18,9 +21,6 @@ use super::helpers::average_pool_frequency_space;
 
 #[cfg(feature = "ml_loader_include_deterministic_guess")]
 use super::{helpers::get_deterministic_guess, DETERMINISTIC_GUESS_SIZE};
-
-#[cfg(any(feature = "ml_target_folded", feature = "ml_target_folded_bass", feature = "ml_target_full_and_folded"))]
-use super::helpers::fold_binary;
 
 /// Takes a loaded kord item and converts it to a sample tensor that is ready for classification.
 pub fn kord_item_to_sample_tensor<B: Backend>(device: &B::Device, item: &KordItem) -> Tensor<B, 2> {
@@ -89,37 +89,30 @@ fn sample_tensor_from_parts<B: Backend>(device: &B::Device, item: &KordItem, mut
 }
 
 /// Takes a loaded kord item and converts it to a target tensor that is ready for classification.
+#[cfg(feature = "ml_target_full")]
 pub fn kord_item_to_target_tensor<B: Backend>(device: &B::Device, item: &KordItem) -> Tensor<B, 2> {
+    let binary_full = u128_to_binary(item.label);
+    tensor_from_vec_with_expected_size(device, binary_full.to_vec(), TARGET_SPACE_SIZE)
+}
+
+/// Takes a loaded kord item and converts it to a folded target tensor that is ready for classification.
+#[cfg(feature = "ml_target_folded")]
+pub fn kord_item_to_target_tensor<B: Backend>(device: &B::Device, item: &KordItem) -> Tensor<B, 2> {
+    let binary_full = u128_to_binary(item.label);
+    let folded = fold_binary(&binary_full);
+    tensor_from_vec_with_expected_size(device, folded.to_vec(), TARGET_SPACE_SIZE)
+}
+
+/// Takes a loaded kord item and converts it to a folded+bass target tensor that is ready for classification.
+#[cfg(feature = "ml_target_folded_bass")]
+pub fn kord_item_to_target_tensor<B: Backend>(device: &B::Device, item: &KordItem) -> Tensor<B, 2> {
+    let binary_full = u128_to_binary(item.label);
+    let folded = fold_binary(&binary_full);
+    let bass = lowest_pitch_class_mask(item.label);
+
     let mut components = Vec::with_capacity(TARGET_SPACE_SIZE);
-
-    #[cfg(feature = "ml_target_full")]
-    {
-        let binary_full = u128_to_binary(item.label);
-        components.extend_from_slice(&binary_full);
-    }
-
-    #[cfg(any(feature = "ml_target_folded", feature = "ml_target_folded_bass", feature = "ml_target_full_and_folded"))]
-    {
-        let binary_full = u128_to_binary(item.label);
-        let folded = fold_binary(&binary_full);
-
-        #[cfg(feature = "ml_target_folded_bass")]
-        {
-            let bass = lowest_pitch_class_mask(item.label);
-            components.extend_from_slice(&bass);
-            components.extend_from_slice(&folded);
-        }
-
-        #[cfg(feature = "ml_target_folded")]
-        {
-            components.extend_from_slice(&folded);
-        }
-
-        #[cfg(feature = "ml_target_full_and_folded")]
-        {
-            components.extend_from_slice(&folded);
-        }
-    }
+    components.extend_from_slice(&bass);
+    components.extend_from_slice(&folded);
 
     tensor_from_vec_with_expected_size(device, components, TARGET_SPACE_SIZE)
 }

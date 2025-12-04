@@ -245,17 +245,94 @@ pub fn fold_binary(binary: &[f32; NOTE_SIGNATURE_SIZE]) -> [f32; PITCH_CLASS_COU
 }
 
 /// Applies sigmoid activation to convert logits to probabilities in `[0, 1]`.
+#[cfg(feature = "ml_target_full")]
 pub fn logits_to_probabilities(logits: &[f32]) -> Vec<f32> {
     logits.iter().map(|&logit| 1.0 / (1.0 + (-logit).exp())).collect()
 }
 
+/// Applies sigmoid activation to convert logits to probabilities in `[0, 1]`.
+#[cfg(feature = "ml_target_folded")]
+pub fn logits_to_probabilities(logits: &[f32]) -> Vec<f32> {
+    logits.iter().map(|&logit| 1.0 / (1.0 + (-logit).exp())).collect()
+}
+
+/// Applies sigmoid activation and bass softmax to convert logits to probabilities in `[0, 1]`.
+#[cfg(feature = "ml_target_folded_bass")]
+pub fn logits_to_probabilities(logits: &[f32]) -> Vec<f32> {
+    let mut probabilities: Vec<f32> = logits.iter().map(|&logit| 1.0 / (1.0 + (-logit).exp())).collect();
+
+    if logits.len() >= PITCH_CLASS_COUNT {
+        let slice = &logits[..PITCH_CLASS_COUNT];
+        let max_logit = slice.iter().copied().fold(f32::NEG_INFINITY, f32::max);
+        let exp_values: Vec<f32> = slice.iter().map(|&value| (value - max_logit).exp()).collect();
+        let sum: f32 = exp_values.iter().sum();
+
+        if sum > 0.0 {
+            for (offset, exp_value) in exp_values.iter().enumerate() {
+                probabilities[offset] = exp_value / sum;
+            }
+        }
+    }
+
+    probabilities
+}
+
 /// Converts probabilities to binary predictions using per-class thresholds.
+#[cfg(feature = "ml_target_full")]
 pub fn logits_to_predictions(probabilities: &[f32], thresholds: &[f32]) -> Vec<f32> {
     probabilities
         .iter()
-        .zip(thresholds.iter().chain(std::iter::repeat(&0.5)))
-        .map(|(&prob, &thresh)| if prob > thresh { 1.0 } else { 0.0 })
+        .enumerate()
+        .map(|(idx, probability)| {
+            let threshold = thresholds.get(idx).copied().unwrap_or(0.5);
+            if *probability > threshold {
+                1.0
+            } else {
+                0.0
+            }
+        })
         .collect()
+}
+
+/// Converts probabilities to binary predictions using per-class thresholds.
+#[cfg(feature = "ml_target_folded")]
+pub fn logits_to_predictions(probabilities: &[f32], thresholds: &[f32]) -> Vec<f32> {
+    probabilities
+        .iter()
+        .enumerate()
+        .map(|(idx, probability)| {
+            let threshold = thresholds.get(idx).copied().unwrap_or(0.5);
+            if *probability > threshold {
+                1.0
+            } else {
+                0.0
+            }
+        })
+        .collect()
+}
+
+/// Converts probabilities to binary predictions using per-class thresholds.
+#[cfg(feature = "ml_target_folded_bass")]
+pub fn logits_to_predictions(probabilities: &[f32], thresholds: &[f32]) -> Vec<f32> {
+    let mut predictions = vec![0.0; probabilities.len()];
+
+    if probabilities.len() >= PITCH_CLASS_COUNT {
+        let bass_slice = &probabilities[..PITCH_CLASS_COUNT];
+        if let Some((best_idx, _)) = bass_slice.iter().enumerate().max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal)) {
+            predictions[best_idx] = 1.0;
+        }
+
+        for offset in 0..PITCH_CLASS_COUNT {
+            let idx = PITCH_CLASS_COUNT + offset;
+            if idx < probabilities.len() {
+                let threshold = thresholds.get(idx).copied().unwrap_or(0.5);
+                let probability = probabilities[idx];
+                predictions[idx] = if probability > threshold { 1.0 } else { 0.0 };
+            }
+        }
+    }
+
+    predictions
 }
 
 /// Applies sigmoid activation and 0.5 threshold to convert logits to binary predictions.

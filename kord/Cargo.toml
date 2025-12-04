@@ -75,7 +75,6 @@ ml_loader_include_deterministic_guess = []
 
 ml_target_full = []
 ml_target_folded = []
-ml_target_full_and_folded = []
 ml_target_folded_bass = []
 
 ml_sample_gather = ["ml_base"]

@@ -277,7 +277,7 @@ The library and binary both support various feature flags.  Of most important no
 
 ### ML Loader & Target Feature Matrix
 
-The ML pipeline exposes toggles that change both the training inputs and labels without modifying source code. These features can be mixed and matched to explore alternative data representations:
+The ML pipeline exposes toggles that change both the training inputs and labels without modifying source code. Loader features and the deterministic guess flag can be combined, while target encodings are now mutually exclusive so that model layouts stay predictable:
 
 #### Sample Loader Features (choose exactly one)
 
@@ -294,15 +294,13 @@ Optional add-on:
 | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ml_loader_include_deterministic_guess` | Prepends the deterministic 128-note guess vector to whichever loader you selected above (doubling 128-bin inputs, adding 128 to the others). |
 
-#### Target Encoding Features (enable at least one)
+#### Target Encoding Features (choose exactly one)
 
-| Feature                 | Description                                                                                                                | Output width contribution |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| `ml_target_full`        | Emits the full 128-note mask (per MIDI note across octaves).                                                               | +128                      |
-| `ml_target_folded`      | Emits a folded 12-class pitch-class mask (one octave).                                                                     | +12                       |
-| `ml_target_folded_bass` | Emits two 12-class masks: a one-hot bass pitch class and a multi-hot mask of every pitch class present across all octaves. | +24                       |
-
-`ml_target_folded` and `ml_target_folded_bass` are mutually exclusive. When multiple target features are enabled, the model concatenates each contribution in the order listed above (for example, `ml_target_full` + `ml_target_folded_bass` yields a 152-wide output).
+| Feature                 | Description                                                                                                                                                           | Output width contribution |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `ml_target_full`        | Emits the full 128-note mask (per MIDI note across octaves).                                                                                                          | +128                      |
+| `ml_target_folded`      | Emits a folded 12-class pitch-class mask (one octave).                                                                                                                | +12                       |
+| `ml_target_folded_bass` | Emits two 12-class masks: a categorical bass pitch class (trained with softmax / cross-entropy) and a multi-hot mask of every pitch class present across all octaves. | +24                       |
 
 #### Example configurations
 
@@ -310,9 +308,9 @@ Optional add-on:
 # Default (note-binned + deterministic guess, 128-note target)
 cargo check
 
-# Mel features with deterministic guess and combined targets
+# Mel features with deterministic guess and folded targets
 cargo check --no-default-features \
-   --features "cli ml_infer ml_loader_mel ml_loader_include_deterministic_guess ml_target_full ml_target_folded"
+   --features "cli ml_infer ml_loader_mel ml_loader_include_deterministic_guess ml_target_folded"
 
 # Raw frequency spectrum without deterministic guess, folded targets only
 cargo check --no-default-features \
@@ -327,7 +325,7 @@ cargo check --no-default-features \
    --features "cli ml_infer ml_loader_frequency_pooled ml_loader_include_deterministic_guess ml_target_folded_bass"
 ```
 
-> Make sure exactly one loader feature is enabled at a time. The deterministic guess flag and target features can be toggled independently to suit experiments.
+> Make sure exactly one loader feature is enabled at a time, and exactly one target feature is enabled overall. The deterministic guess flag can be toggled independently to suit experiments.
 
 ## Test
 

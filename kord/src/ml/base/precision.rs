@@ -1,9 +1,12 @@
 //! Precision selection for ML pipelines.
 
-use burn::{
-    record::{FullPrecisionSettings, HalfPrecisionSettings},
-    tensor::DType,
-};
+use burn::tensor::DType;
+
+#[cfg(feature = "ml_store_precision_full")]
+use burn::record::FullPrecisionSettings;
+
+#[cfg(feature = "ml_store_precision_half")]
+use burn::record::HalfPrecisionSettings;
 
 #[cfg(all(feature = "ml_train_precision_fp32", feature = "ml_train_precision_fp16"))]
 compile_error!("`ml_train_precision_fp32` and `ml_train_precision_fp16` cannot be enabled together.");
