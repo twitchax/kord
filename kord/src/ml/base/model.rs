@@ -25,20 +25,40 @@ use crate::ml::train::data::KordBatch;
 #[derive(Module, Debug)]
 pub struct KordModel<B: Backend> {
     mha: MultiHeadAttention<B>,
+
+    trunk_in: nn::Linear<B>,
+    trunk_dropout: nn::Dropout,
+    trunk_out: nn::Linear<B>,
+
     output: nn::Linear<B>,
 }
 
 impl<B: Backend> KordModel<B> {
     /// Create the model from the given configuration.
-    pub fn new(device: &B::Device, mha_heads: usize, mha_dropout: f64, _sigmoid_strength: f32) -> Self {
+    pub fn new(device: &B::Device, mha_heads: usize, mha_dropout: f64, trunk_max_hidden_size: usize, _sigmoid_strength: f32) -> Self {
         let mha = MultiHeadAttentionConfig::new(INPUT_SPACE_SIZE, mha_heads).with_dropout(mha_dropout).init::<B>(device);
+
+        let trunk_hidden = INPUT_SPACE_SIZE.min(trunk_max_hidden_size);
+
+        let trunk_in = nn::LinearConfig::new(INPUT_SPACE_SIZE, trunk_hidden).with_bias(true).init::<B>(device);
+        let trunk_dropout = nn::DropoutConfig::new(mha_dropout).init();
+        let trunk_out = nn::LinearConfig::new(trunk_hidden, INPUT_SPACE_SIZE).with_bias(true).init::<B>(device);
+
         let output = nn::LinearConfig::new(INPUT_SPACE_SIZE, NUM_CLASSES).with_bias(true).init::<B>(device);
 
-        Self { mha, output }
+        Self {
+            mha,
+            trunk_in,
+            trunk_dropout,
+            trunk_out,
+            output,
+        }
     }
 
     /// Applies the forward pass on the input tensor.
     pub fn forward(&self, input: Tensor<B, 2>) -> Tensor<B, 2> {
+        use burn::tensor::activation::gelu;
+
         let [batch_size, input_size] = input.dims();
 
         // Reshape to sequence format for attention
@@ -49,6 +69,12 @@ impl<B: Backend> KordModel<B> {
 
         // Flatten back to [batch_size, input_size]
         let x = attn_output.context.reshape([batch_size, input_size]);
+
+        // Light MLP trunk before the final output head.
+        let x = self.trunk_in.forward(x);
+        let x = gelu(x);
+        let x = self.trunk_dropout.forward(x);
+        let x = self.trunk_out.forward(x);
 
         // Final linear layer to produce logits
         self.output.forward(x)

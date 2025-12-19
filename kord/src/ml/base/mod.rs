@@ -158,6 +158,9 @@ pub struct TrainConfig {
     /// The Multi Head Attention (MHA) dropout rate.
     pub mha_dropout: f64,
 
+    /// Cap on the hidden size of the model's MLP trunk.
+    pub trunk_max_hidden_size: usize,
+
     /// The number of epochs to train for.
     pub model_epochs: usize,
     /// The number of samples to use per epoch.

@@ -91,7 +91,7 @@ where
     // Define the model.
 
     let optimizer = adam_config.init();
-    let model = KordModel::new(&device, config.mha_heads, config.mha_dropout, config.sigmoid_strength);
+    let model = KordModel::new(&device, config.mha_heads, config.mha_dropout, config.trunk_max_hidden_size, config.sigmoid_strength);
 
     let mut learner_builder = LearnerBuilder::new(&config.log)
         //.with_file_checkpointer::<f32>(2)
@@ -700,6 +700,7 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
                                         captured_oversample_factor: 1,
                                         mha_heads: *mha_head,
                                         mha_dropout: *mha_dropout,
+                                        trunk_max_hidden_size: 1024,
                                         model_epochs: *epoch as usize,
                                         model_batch_size: 100,
                                         model_workers: 64,
@@ -813,6 +814,7 @@ mod tests {
             captured_oversample_factor: 1,
             mha_heads: 16,
             mha_dropout: 0.3,
+            trunk_max_hidden_size: 1024,
             model_epochs: 1,
             model_batch_size: 10,
             model_workers: 1,

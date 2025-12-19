@@ -247,6 +247,12 @@ enum MlCommand {
         #[arg(long, default_value_t = 0.1)]
         mha_dropout: f64,
 
+        /// Caps the hidden size of the model's MLP trunk.
+        ///
+        /// The trunk is a lightweight MLP inserted between attention and the final output head.
+        #[arg(long, default_value_t = 1024)]
+        trunk_max_hidden_size: usize,
+
         /// The number of epochs to train for.
         #[arg(long, default_value_t = 64)]
         model_epochs: usize,
@@ -540,6 +546,7 @@ fn start(args: Args) -> Void {
                 captured_oversample_factor,
                 mha_heads,
                 mha_dropout,
+                trunk_max_hidden_size,
                 model_epochs,
                 model_batch_size,
                 model_workers,
@@ -568,6 +575,7 @@ fn start(args: Args) -> Void {
                     captured_oversample_factor,
                     mha_heads,
                     mha_dropout,
+                    trunk_max_hidden_size,
                     model_epochs,
                     model_batch_size,
                     model_workers,
