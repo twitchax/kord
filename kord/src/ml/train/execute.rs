@@ -91,7 +91,7 @@ where
     // Define the model.
 
     let optimizer = adam_config.init();
-    let model = KordModel::new(&device, config.mha_heads, config.mha_dropout, config.trunk_max_hidden_size, config.sigmoid_strength);
+    let model = KordModel::new(&device, config.mha_heads, config.dropout, config.trunk_max_hidden_size, config.sigmoid_strength);
 
     let mut learner_builder = LearnerBuilder::new(&config.log)
         //.with_file_checkpointer::<f32>(2)
@@ -667,14 +667,13 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
     let harmonic_decays = [0.1];
     let frequency_wobbles = [0.4];
     let mha_heads = [16]; // Reduced to 4 heads for better per-head capacity
-    let mha_dropouts = [0.3]; // Reduced dropout for better learning
+    let dropouts = [0.3]; // Reduced dropout for better learning
     let epochs = [64];
     let learning_rates = [1e-3];
     let weight_decays = [1e-4];
 
     let mut count = 1;
-    let total =
-        peak_radiuses.len() * harmonic_decays.len() * frequency_wobbles.len() * mha_heads.len() * mha_dropouts.len() * mha_heads.len() * epochs.len() * learning_rates.len() * weight_decays.len();
+    let total = peak_radiuses.len() * harmonic_decays.len() * frequency_wobbles.len() * mha_heads.len() * dropouts.len() * mha_heads.len() * epochs.len() * learning_rates.len() * weight_decays.len();
 
     let mut max_accuracy = 0.0;
     let mut best_config = None;
@@ -683,7 +682,7 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
         for harmonic_decay in &harmonic_decays {
             for frequency_wobble in &frequency_wobbles {
                 for mha_head in &mha_heads {
-                    for mha_dropout in &mha_dropouts {
+                    for dropout in &dropouts {
                         for epoch in &epochs {
                             for learning_rate in &learning_rates {
                                 for weight_decay in &weight_decays {
@@ -699,7 +698,7 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
                                         simulation_frequency_wobble: *frequency_wobble,
                                         captured_oversample_factor: 1,
                                         mha_heads: *mha_head,
-                                        mha_dropout: *mha_dropout,
+                                        dropout: *dropout,
                                         trunk_max_hidden_size: 1024,
                                         model_epochs: *epoch as usize,
                                         model_batch_size: 100,
@@ -813,7 +812,7 @@ mod tests {
             simulation_frequency_wobble: 0.5,
             captured_oversample_factor: 1,
             mha_heads: 16,
-            mha_dropout: 0.3,
+            dropout: 0.3,
             trunk_max_hidden_size: 1024,
             model_epochs: 1,
             model_batch_size: 10,

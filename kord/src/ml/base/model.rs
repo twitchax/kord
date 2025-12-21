@@ -35,13 +35,13 @@ pub struct KordModel<B: Backend> {
 
 impl<B: Backend> KordModel<B> {
     /// Create the model from the given configuration.
-    pub fn new(device: &B::Device, mha_heads: usize, mha_dropout: f64, trunk_max_hidden_size: usize, _sigmoid_strength: f32) -> Self {
-        let mha = MultiHeadAttentionConfig::new(INPUT_SPACE_SIZE, mha_heads).with_dropout(mha_dropout).init::<B>(device);
+    pub fn new(device: &B::Device, mha_heads: usize, dropout: f64, trunk_max_hidden_size: usize, _sigmoid_strength: f32) -> Self {
+        let mha = MultiHeadAttentionConfig::new(INPUT_SPACE_SIZE, mha_heads).with_dropout(dropout).init::<B>(device);
 
         let trunk_hidden = INPUT_SPACE_SIZE.min(trunk_max_hidden_size);
 
         let trunk_in = nn::LinearConfig::new(INPUT_SPACE_SIZE, trunk_hidden).with_bias(true).init::<B>(device);
-        let trunk_dropout = nn::DropoutConfig::new(mha_dropout).init();
+        let trunk_dropout = nn::DropoutConfig::new(dropout).init();
         let trunk_out = nn::LinearConfig::new(trunk_hidden, INPUT_SPACE_SIZE).with_bias(true).init::<B>(device);
 
         let output = nn::LinearConfig::new(INPUT_SPACE_SIZE, NUM_CLASSES).with_bias(true).init::<B>(device);

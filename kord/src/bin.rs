@@ -243,9 +243,9 @@ enum MlCommand {
         #[arg(long, default_value_t = 8)]
         mha_heads: usize,
 
-        /// The Multi Head Attention (MHA) dropout rate.
-        #[arg(long, default_value_t = 0.1)]
-        mha_dropout: f64,
+        /// Dropout rate applied to attention and trunk layers.
+        #[arg(long, default_value_t = 0.2)]
+        dropout: f64,
 
         /// Caps the hidden size of the model's MLP trunk.
         ///
@@ -545,7 +545,7 @@ fn start(args: Args) -> Void {
                 simulation_frequency_wobble,
                 captured_oversample_factor,
                 mha_heads,
-                mha_dropout,
+                dropout,
                 trunk_max_hidden_size,
                 model_epochs,
                 model_batch_size,
@@ -574,7 +574,7 @@ fn start(args: Args) -> Void {
                     simulation_frequency_wobble,
                     captured_oversample_factor,
                     mha_heads,
-                    mha_dropout,
+                    dropout,
                     trunk_max_hidden_size,
                     model_epochs,
                     model_batch_size,

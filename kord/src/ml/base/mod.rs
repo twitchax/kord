@@ -155,8 +155,8 @@ pub struct TrainConfig {
 
     /// The number of Multi Head Attention (MHA) heads.
     pub mha_heads: usize,
-    /// The Multi Head Attention (MHA) dropout rate.
-    pub mha_dropout: f64,
+    /// The dropout rate applied to attention and trunk layers.
+    pub dropout: f64,
 
     /// Cap on the hidden size of the model's MLP trunk.
     pub trunk_max_hidden_size: usize,
