@@ -158,8 +158,8 @@ pub struct TrainConfig {
     /// The dropout rate applied to attention and trunk layers.
     pub dropout: f64,
 
-    /// Cap on the hidden size of the model's MLP trunk.
-    pub trunk_max_hidden_size: usize,
+    /// The hidden size of the model's MLP trunk.
+    pub trunk_hidden_size: usize,
 
     /// The number of epochs to train for.
     pub model_epochs: usize,

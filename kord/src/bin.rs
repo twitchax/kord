@@ -240,18 +240,18 @@ enum MlCommand {
         captured_oversample_factor: usize,
 
         /// The number of Multi Head Attention (MHA) heads.
-        #[arg(long, default_value_t = 8)]
+        #[arg(long, default_value_t = 16)]
         mha_heads: usize,
 
         /// Dropout rate applied to attention and trunk layers.
         #[arg(long, default_value_t = 0.2)]
         dropout: f64,
 
-        /// Caps the hidden size of the model's MLP trunk.
+        /// The hidden size of the model's MLP trunk.
         ///
         /// The trunk is a lightweight MLP inserted between attention and the final output head.
         #[arg(long, default_value_t = 1024)]
-        trunk_max_hidden_size: usize,
+        trunk_hidden_size: usize,
 
         /// The number of epochs to train for.
         #[arg(long, default_value_t = 64)]
@@ -546,7 +546,7 @@ fn start(args: Args) -> Void {
                 captured_oversample_factor,
                 mha_heads,
                 dropout,
-                trunk_max_hidden_size,
+                trunk_hidden_size,
                 model_epochs,
                 model_batch_size,
                 model_workers,
@@ -575,7 +575,7 @@ fn start(args: Args) -> Void {
                     captured_oversample_factor,
                     mha_heads,
                     dropout,
-                    trunk_max_hidden_size,
+                    trunk_hidden_size,
                     model_epochs,
                     model_batch_size,
                     model_workers,

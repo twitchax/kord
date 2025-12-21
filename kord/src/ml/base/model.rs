@@ -41,7 +41,7 @@ pub struct KordModel<B: Backend> {
 
 impl<B: Backend> KordModel<B> {
     /// Create the model from the given configuration.
-    pub fn new(device: &B::Device, mha_heads: usize, dropout: f64, trunk_max_hidden_size: usize, _sigmoid_strength: f32) -> Self {
+    pub fn new(device: &B::Device, mha_heads: usize, dropout: f64, trunk_hidden_size: usize, _sigmoid_strength: f32) -> Self {
         // Calculate chunk dimensions based on number of heads
         // Each head gets one chunk to attend to
         let num_chunks = mha_heads;
@@ -50,11 +50,9 @@ impl<B: Backend> KordModel<B> {
         let mha = MultiHeadAttentionConfig::new(chunk_size, mha_heads).with_dropout(dropout).init::<B>(device);
         let norm1 = nn::LayerNormConfig::new(INPUT_SPACE_SIZE).init(device);
 
-        let trunk_hidden = INPUT_SPACE_SIZE.min(trunk_max_hidden_size);
-
-        let trunk_in = nn::LinearConfig::new(INPUT_SPACE_SIZE, trunk_hidden).with_bias(true).init::<B>(device);
+        let trunk_in = nn::LinearConfig::new(INPUT_SPACE_SIZE, trunk_hidden_size).with_bias(true).init::<B>(device);
         let trunk_dropout = nn::DropoutConfig::new(dropout).init();
-        let trunk_out = nn::LinearConfig::new(trunk_hidden, INPUT_SPACE_SIZE).with_bias(true).init::<B>(device);
+        let trunk_out = nn::LinearConfig::new(trunk_hidden_size, INPUT_SPACE_SIZE).with_bias(true).init::<B>(device);
         let norm2 = nn::LayerNormConfig::new(INPUT_SPACE_SIZE).init(device);
 
         let output = nn::LinearConfig::new(INPUT_SPACE_SIZE, NUM_CLASSES).with_bias(true).init::<B>(device);
