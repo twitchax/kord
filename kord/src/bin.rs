@@ -289,10 +289,6 @@ enum MlCommand {
         #[arg(long, default_value_t = f32::EPSILON)]
         adam_epsilon: f32,
 
-        /// The "sigmoid strength" of the final pass.
-        #[arg(long, default_value_t = 1.0)]
-        sigmoid_strength: f32,
-
         /// Suppresses the training plots.
         #[arg(long, action=ArgAction::SetTrue, default_value_t = false)]
         no_plots: bool,
@@ -556,7 +552,6 @@ fn start(args: Args) -> Void {
                 adam_beta1,
                 adam_beta2,
                 adam_epsilon,
-                sigmoid_strength,
                 no_plots,
             }) => {
                 use burn::backend::Autodiff;
@@ -585,7 +580,6 @@ fn start(args: Args) -> Void {
                     adam_beta1,
                     adam_beta2,
                     adam_epsilon,
-                    sigmoid_strength,
                     no_plots,
                 };
 

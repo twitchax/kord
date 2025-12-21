@@ -41,7 +41,7 @@ pub struct KordModel<B: Backend> {
 
 impl<B: Backend> KordModel<B> {
     /// Create the model from the given configuration.
-    pub fn new(device: &B::Device, mha_heads: usize, dropout: f64, trunk_hidden_size: usize, _sigmoid_strength: f32) -> Self {
+    pub fn new(device: &B::Device, mha_heads: usize, dropout: f64, trunk_hidden_size: usize) -> Self {
         // Calculate chunk dimensions based on number of heads
         // Each head gets one chunk to attend to
         let num_chunks = mha_heads;

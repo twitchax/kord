@@ -52,7 +52,7 @@ where
     }
 
     // Define the model.
-    let model = KordModel::<B>::new(device, config.mha_heads, config.dropout, config.trunk_hidden_size, config.sigmoid_strength).load_record(recorder);
+    let model = KordModel::<B>::new(device, config.mha_heads, config.dropout, config.trunk_hidden_size).load_record(recorder);
 
     // Prepare the sample.
     let sample = kord_item_to_sample_tensor(device, kord_item).detach();

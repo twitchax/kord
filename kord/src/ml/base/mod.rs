@@ -181,9 +181,6 @@ pub struct TrainConfig {
     /// The Adam optimizer epsilon.
     pub adam_epsilon: f32,
 
-    /// The "sigmoid strength" of the final pass.
-    pub sigmoid_strength: f32,
-
     /// Suppresses the training plots.
     pub no_plots: bool,
 }

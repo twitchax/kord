@@ -91,7 +91,7 @@ where
     // Define the model.
 
     let optimizer = adam_config.init();
-    let model = KordModel::new(&device, config.mha_heads, config.dropout, config.trunk_hidden_size, config.sigmoid_strength);
+    let model = KordModel::new(&device, config.mha_heads, config.dropout, config.trunk_hidden_size);
 
     let mut learner_builder = LearnerBuilder::new(&config.log)
         //.with_file_checkpointer::<f32>(2)
@@ -107,9 +107,6 @@ where
             .metric_valid_numeric(LossMetric::new());
     }
 
-    // let cosine_lr = CosineAnnealingLrSchedulerConfig::new(config.adam_learning_rate, config.model_epochs)
-    //    .init()
-    //    .map_err(|s| anyhow::Error::msg(format!("Failed to initialize cosine LR scheduler: {s}")))?;
     let constant_lr = ConstantLr::new(config.adam_learning_rate);
     let learner = learner_builder.build(model, optimizer, constant_lr);
 
@@ -709,7 +706,7 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
                                         adam_beta1: 0.9,
                                         adam_beta2: 0.999,
                                         adam_epsilon: f32::EPSILON,
-                                        sigmoid_strength: 1.0,
+
                                         no_plots: false,
                                     };
 
@@ -823,7 +820,6 @@ mod tests {
             adam_beta1: 0.9,
             adam_beta2: 0.999,
             adam_epsilon: 1e-5,
-            sigmoid_strength: 1.0,
             no_plots: true,
         };
 
