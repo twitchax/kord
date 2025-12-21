@@ -33,12 +33,21 @@ pub struct KordModel<B: Backend> {
     norm2: nn::LayerNorm<B>,
 
     output: nn::Linear<B>,
+
+    // Store chunk dimensions for forward pass
+    num_chunks: usize,
+    chunk_size: usize,
 }
 
 impl<B: Backend> KordModel<B> {
     /// Create the model from the given configuration.
     pub fn new(device: &B::Device, mha_heads: usize, dropout: f64, trunk_max_hidden_size: usize, _sigmoid_strength: f32) -> Self {
-        let mha = MultiHeadAttentionConfig::new(INPUT_SPACE_SIZE, mha_heads).with_dropout(dropout).init::<B>(device);
+        // Calculate chunk dimensions based on number of heads
+        // Each head gets one chunk to attend to
+        let num_chunks = mha_heads;
+        let chunk_size = INPUT_SPACE_SIZE / mha_heads;
+
+        let mha = MultiHeadAttentionConfig::new(chunk_size, mha_heads).with_dropout(dropout).init::<B>(device);
         let norm1 = nn::LayerNormConfig::new(INPUT_SPACE_SIZE).init(device);
 
         let trunk_hidden = INPUT_SPACE_SIZE.min(trunk_max_hidden_size);
@@ -58,6 +67,8 @@ impl<B: Backend> KordModel<B> {
             trunk_out,
             norm2,
             output,
+            num_chunks,
+            chunk_size,
         }
     }
 
@@ -67,16 +78,18 @@ impl<B: Backend> KordModel<B> {
 
         let [batch_size, input_size] = input.dims();
 
-        // Reshape to sequence format for attention
-        let x = input.clone().reshape([batch_size, 1, input_size]);
+        // Reshape to multi-token sequence format for attention
+        // Split input into chunks so attention can attend between different frequency regions
+        // Each head gets its own chunk (num_chunks = mha_heads)
+        let x = input.clone().reshape([batch_size, self.num_chunks, self.chunk_size]);
 
-        // Apply multi-head attention
+        // Apply multi-head attention across the chunk sequence
         let attn_output = self.mha.forward(MhaInput::new(x.clone(), x.clone(), x));
 
         // Flatten back to [batch_size, input_size]
         let attn_out = attn_output.context.reshape([batch_size, input_size]);
 
-        // Post-norm after attention with residual
+        // Post-norm after attention with residual (normalize over full input_size)
         let x = self.norm1.forward(input + attn_out);
 
         // Light MLP trunk with residual connection and post-norm before the final output head.
