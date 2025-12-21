@@ -232,7 +232,7 @@ enum MlCommand {
         simulation_harmonic_decay: f32,
 
         /// Simulation frequency wobble.
-        #[arg(long, default_value_t = 0.4)]
+        #[arg(long, default_value_t = 0.2)]
         simulation_frequency_wobble: f32,
 
         /// The number of times to replicate captured samples during training.

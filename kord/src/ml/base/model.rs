@@ -25,10 +25,12 @@ use crate::ml::train::data::KordBatch;
 #[derive(Module, Debug)]
 pub struct KordModel<B: Backend> {
     mha: MultiHeadAttention<B>,
+    norm1: nn::LayerNorm<B>,
 
     trunk_in: nn::Linear<B>,
     trunk_dropout: nn::Dropout,
     trunk_out: nn::Linear<B>,
+    norm2: nn::LayerNorm<B>,
 
     output: nn::Linear<B>,
 }
@@ -37,20 +39,24 @@ impl<B: Backend> KordModel<B> {
     /// Create the model from the given configuration.
     pub fn new(device: &B::Device, mha_heads: usize, dropout: f64, trunk_max_hidden_size: usize, _sigmoid_strength: f32) -> Self {
         let mha = MultiHeadAttentionConfig::new(INPUT_SPACE_SIZE, mha_heads).with_dropout(dropout).init::<B>(device);
+        let norm1 = nn::LayerNormConfig::new(INPUT_SPACE_SIZE).init(device);
 
         let trunk_hidden = INPUT_SPACE_SIZE.min(trunk_max_hidden_size);
 
         let trunk_in = nn::LinearConfig::new(INPUT_SPACE_SIZE, trunk_hidden).with_bias(true).init::<B>(device);
         let trunk_dropout = nn::DropoutConfig::new(dropout).init();
         let trunk_out = nn::LinearConfig::new(trunk_hidden, INPUT_SPACE_SIZE).with_bias(true).init::<B>(device);
+        let norm2 = nn::LayerNormConfig::new(INPUT_SPACE_SIZE).init(device);
 
         let output = nn::LinearConfig::new(INPUT_SPACE_SIZE, NUM_CLASSES).with_bias(true).init::<B>(device);
 
         Self {
             mha,
+            norm1,
             trunk_in,
             trunk_dropout,
             trunk_out,
+            norm2,
             output,
         }
     }
@@ -62,19 +68,23 @@ impl<B: Backend> KordModel<B> {
         let [batch_size, input_size] = input.dims();
 
         // Reshape to sequence format for attention
-        let x = input.reshape([batch_size, 1, input_size]);
+        let x = input.clone().reshape([batch_size, 1, input_size]);
 
         // Apply multi-head attention
         let attn_output = self.mha.forward(MhaInput::new(x.clone(), x.clone(), x));
 
         // Flatten back to [batch_size, input_size]
-        let x = attn_output.context.reshape([batch_size, input_size]);
+        let attn_out = attn_output.context.reshape([batch_size, input_size]);
 
-        // Light MLP trunk before the final output head.
-        let x = self.trunk_in.forward(x);
-        let x = gelu(x);
-        let x = self.trunk_dropout.forward(x);
-        let x = self.trunk_out.forward(x);
+        // Post-norm after attention with residual
+        let x = self.norm1.forward(input + attn_out);
+
+        // Light MLP trunk with residual connection and post-norm before the final output head.
+        let trunk_in = self.trunk_in.forward(x.clone());
+        let trunk_in = gelu(trunk_in);
+        let trunk_in = self.trunk_dropout.forward(trunk_in);
+        let trunk_out = self.trunk_out.forward(trunk_in);
+        let x = self.norm2.forward(x + trunk_out);
 
         // Final linear layer to produce logits
         self.output.forward(x)
