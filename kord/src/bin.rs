@@ -236,7 +236,7 @@ enum MlCommand {
         simulation_frequency_wobble: f32,
 
         /// The number of times to replicate captured samples during training.
-        #[arg(long, default_value_t = 16)]
+        #[arg(long, default_value_t = 8)]
         captured_oversample_factor: usize,
 
         /// The number of Multi Head Attention (MHA) heads.
@@ -254,7 +254,7 @@ enum MlCommand {
         trunk_hidden_size: usize,
 
         /// The number of epochs to train for.
-        #[arg(long, default_value_t = 64)]
+        #[arg(long, default_value_t = 16)]
         model_epochs: usize,
 
         /// The number of samples to use per epoch.

@@ -54,7 +54,8 @@ where
         .with_weight_decay(Some(WeightDecayConfig::new(config.adam_weight_decay)))
         .with_beta_1(config.adam_beta1)
         .with_beta_2(config.adam_beta2)
-        .with_epsilon(config.adam_epsilon);
+        .with_epsilon(config.adam_epsilon)
+        .with_grad_clipping(Some(burn::grad_clipping::GradientClippingConfig::Norm(1.0)));
 
     // Define the datasets.
 
