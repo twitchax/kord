@@ -93,6 +93,6 @@ cargo check --bin kord --no-default-features --features "cli ml_train ml_train_p
 ## TODO
 
 - More epochs?
-- Fix inference.
+- Reduce model size with smaller MHA, fewer layers, or dropout changes.
 - Hyperparameter tuning should allow all backends.
 - Add a synth to the frontend so the sounds are more friendly.
