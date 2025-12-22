@@ -5,7 +5,7 @@ use std::{cmp::Ordering, sync::Arc};
 use burn::{
     config::Config,
     data::dataloader::DataLoaderBuilder,
-    lr_scheduler::constant::ConstantLr,
+    lr_scheduler::cosine::CosineAnnealingLrSchedulerConfig,
     module::Module,
     optim::{decay::WeightDecayConfig, AdamConfig},
     record::{BinFileRecorder, Recorder},
@@ -107,8 +107,10 @@ where
             .metric_valid_numeric(LossMetric::new());
     }
 
-    let constant_lr = ConstantLr::new(config.adam_learning_rate);
-    let learner = learner_builder.build(model, optimizer, constant_lr);
+    let lr_scheduler = CosineAnnealingLrSchedulerConfig::new(config.adam_learning_rate, config.model_epochs)
+        .init()
+        .expect("Failed to initialize learning rate scheduler");
+    let learner = learner_builder.build(model, optimizer, lr_scheduler);
 
     // Train the model.
 
