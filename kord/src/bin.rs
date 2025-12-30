@@ -661,10 +661,10 @@ fn start(args: Args) -> Void {
                     let audio_data = futures::executor::block_on(klib::analyze::mic::get_audio_data_from_microphone(length))?;
 
                     // Run the inference.
-                    let notes = infer(&audio_data, length)?;
+                    let result = infer(&audio_data, length)?;
 
                     // Show the results.
-                    show_notes_and_chords(&notes)?;
+                    show_inference_result(&result)?;
                 }
                 #[cfg(feature = "analyze_file")]
                 Some(InferCommand::File { preview, start_time, end_time, source }) => {
@@ -684,10 +684,10 @@ fn start(args: Args) -> Void {
                     let (audio_data, length) = get_audio_data_from_file(&source, start_time, end_time)?;
 
                     // Run inference.
-                    let notes = infer(&audio_data, length)?;
+                    let result = infer(&audio_data, length)?;
 
                     // Show the results.
-                    show_notes_and_chords(&notes)?;
+                    show_inference_result(&result)?;
                 }
                 _ => {
                     return Err(anyhow::Error::msg("Invalid inference command."));
@@ -828,6 +828,34 @@ fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
 
         let _playable = chord.play(Duration::from_secs_f32(delay), Duration::from_secs_f32(length), Duration::from_secs_f32(fade_in))?;
         std::thread::sleep(Duration::from_secs_f32(length));
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "ml_infer")]
+fn show_inference_result(result: &klib::ml::infer::InferenceResult) -> Res<()> {
+    use klib::core::base::HasStaticName;
+
+    // Show detected pitches.
+    let pitch_names: Vec<String> = result.pitches.iter().map(|p| klib::core::named_pitch::NamedPitch::from(*p).static_name().to_string()).collect();
+    println!("Pitches: {}", pitch_names.join(" "));
+
+    // Show pitch deltas for debugging.
+    println!("\nPitch deltas (probability - threshold):");
+    let pitch_class_names = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
+    for (i, &delta) in result.pitch_deltas.iter().enumerate() {
+        println!("  {}: {:.3}", pitch_class_names[i], delta);
+    }
+
+    // Show chord candidates.
+    if result.chords.is_empty() {
+        println!("\nNo chord candidates found");
+    } else {
+        println!("\nChord candidates:");
+        for candidate in &result.chords {
+            describe(candidate);
+        }
     }
 
     Ok(())

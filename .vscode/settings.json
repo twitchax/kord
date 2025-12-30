@@ -2,7 +2,7 @@
         "rust-analyzer.cargo.features": [
                 //"ml_sample_process",
                 "ml_train",
-                // "ml_infer",
+                "ml_infer",
                 // "ml_cuda",
                 // "ml_ndarray",
                 // "ml_tch",
@@ -11,8 +11,8 @@
                 // "ml_server",
                 // "ml_remote",
                 // "wasm",
-                // "ssr",
-                // "hydrate",
+                "ssr",
+                "hydrate",
         ],
         "cSpell.enabled": false
 }

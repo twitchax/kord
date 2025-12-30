@@ -233,11 +233,13 @@ pub fn binary_to_u16(binary: &[f32]) -> u16 {
 pub fn fold_binary(binary: &[f32; NOTE_SIGNATURE_SIZE]) -> [f32; PITCH_CLASS_COUNT] {
     let mut folded = [0f32; PITCH_CLASS_COUNT];
 
-    for k in 0..(NOTE_SIGNATURE_SIZE / PITCH_CLASS_COUNT) {
-        let slice = &binary[k * PITCH_CLASS_COUNT..(k + 1) * PITCH_CLASS_COUNT];
-
-        for i in 0..PITCH_CLASS_COUNT {
-            folded[i] = slice[i].max(folded[i]);
+    // binary is MSB-first from u128_to_binary, so we need to map array indices back to bit positions
+    for array_idx in 0..NOTE_SIGNATURE_SIZE {
+        if binary[array_idx] == 1.0 {
+            // Convert array index back to bit position: array_idx corresponds to bit (127 - array_idx)
+            let bit_position = NOTE_SIGNATURE_SIZE - 1 - array_idx;
+            let pitch_class = bit_position % PITCH_CLASS_COUNT;
+            folded[pitch_class] = 1.0;
         }
     }
 

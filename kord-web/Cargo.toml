@@ -19,9 +19,8 @@ wasm-bindgen-futures = { version = "0.4", optional = true }
 axum-insights = { version = "0.6", optional = true, default-features = false }
 klib = { package = "kord", path = "../kord", default-features = false, features = [
     "ml_infer",
-    "ml_train_precision_fp32",
-    "ml_store_precision_full",
-    "ml_target_folded_bass",
+    "ml_store_precision_half",
+    "ml_target_folded",
     "analyze_base",
     "audio",
 ] }
@@ -112,7 +111,7 @@ bin-features = ["ssr"]
 # If the --no-default-features flag should be used when compiling the bin target
 #
 # Optional. Defaults to false.
-bin-default-features = false
+bin-default-features = true
 
 # The features to use when compiling the lib target
 #
@@ -122,7 +121,7 @@ lib-features = ["hydrate"]
 # If the --no-default-features flag should be used when compiling the lib target
 #
 # Optional. Defaults to false.
-lib-default-features = false
+lib-default-features = true
 
 # The profile to use for the lib target when compiling for release
 #

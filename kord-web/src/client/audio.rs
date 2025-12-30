@@ -17,14 +17,34 @@ pub fn le_bytes_to_f32_samples(bytes: &[u8]) -> Result<Vec<f32>, &'static str> {
     Ok(samples)
 }
 
+/// Run ML inference and return the full inference result.
+pub fn infer_from_samples(samples: &[f32], secs: u8) -> Result<klib::ml::infer::InferenceResult, String> {
+    klib::ml::infer::infer(samples, secs).map_err(|e| e.to_string())
+}
+
+/// Get notes from pitches for display.
+pub fn pitches_to_notes(pitches: &[klib::core::pitch::Pitch]) -> Vec<Note> {
+    pitches
+        .iter()
+        .map(|&pitch| Note::new(klib::core::named_pitch::NamedPitch::from(pitch), klib::core::octave::Octave::Four))
+        .collect()
+}
+
+/// Generate chord candidates from pitch classes.
+pub fn chords_from_pitches(pitches: &[klib::core::pitch::Pitch]) -> Result<Vec<Chord>, String> {
+    if pitches.is_empty() {
+        return Ok(vec![]);
+    }
+
+    let mut chords = Chord::try_from_pitches(pitches).map_err(|e| e.to_string())?;
+    chords.truncate(8);
+    Ok(chords)
+}
+
 /// Run ML inference and derive up to 8 chord candidates from samples.
 pub fn infer_chords_from_samples(samples: &[f32], secs: u8) -> Result<Vec<Chord>, String> {
-    let notes: Vec<Note> = klib::ml::infer::infer(samples, secs).map_err(|e| e.to_string())?;
-    let mut candidates = Chord::try_from_notes(&notes).map_err(|e| e.to_string())?;
-
-    candidates.truncate(8);
-
-    Ok(candidates)
+    let result = infer_from_samples(samples, secs)?;
+    Ok(result.chords)
 }
 
 /// Play a chord for the specified duration in seconds.

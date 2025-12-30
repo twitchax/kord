@@ -2,6 +2,8 @@
 use klib::core::{
     base::{HasDescription, HasName, HasPreciseName},
     chord::{Chord, HasChord, HasScale},
+    note::Note,
+    pitch::Pitch,
 };
 use leptos::ev::MouseEvent;
 use leptos::prelude::*;
@@ -135,6 +137,16 @@ pub fn ChordAnalysis(#[prop(optional)] chord: Option<Chord>) -> impl IntoView {
     }
 }
 
+/// Note display component that shows a single note
+#[component]
+pub fn NoteDisplay(note: Note) -> impl IntoView {
+    view! {
+        <div class="kord-note-display">
+            <code class="kord-note-display__name">{note.name()}</code>
+        </div>
+    }
+}
+
 // Buttons
 
 /// Primary button
@@ -177,4 +189,83 @@ pub fn Badge(#[prop(optional, into)] class: Option<String>, children: Children) 
     let base = "kord-badge";
     let cls = class.map(|c| format!("{base} {c}")).unwrap_or_else(|| base.to_string());
     view! { <span class=cls>{children()}</span> }
+}
+
+// Pitch Visualizer
+
+/// Individual pitch bar item showing a single pitch class with its delta value.
+#[component]
+fn PitchBarItem<F>(pitch_idx: usize, pitch_deltas: ReadSignal<[f32; 12]>, detected_pitches: ReadSignal<Vec<Pitch>>, active_pitches: ReadSignal<Vec<Pitch>>, on_toggle: F) -> impl IntoView
+where
+    F: Fn(Pitch) + Copy + Send + 'static,
+{
+    let pitch_names = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
+    let pitch = Pitch::try_from(pitch_idx as u8).unwrap();
+
+    let delta = Signal::derive(move || pitch_deltas.get()[pitch_idx]);
+    let is_detected = Signal::derive(move || detected_pitches.with(|p| p.contains(&pitch)));
+    let is_active = Signal::derive(move || active_pitches.with(|p| p.contains(&pitch)));
+
+    let bar_height = Signal::derive(move || {
+        let d = delta.get();
+        // Normalize to 0-100 range, clamping to reasonable bounds
+        ((d + 0.5).clamp(0.0, 1.0) * 100.0) as u32
+    });
+
+    let class = Signal::derive(move || {
+        let mut cls = String::from("kord-pitch-bar");
+        if is_active.get() {
+            cls.push_str(" kord-pitch-bar--active");
+        } else if is_detected.get() {
+            cls.push_str(" kord-pitch-bar--detected");
+        }
+        cls
+    });
+
+    view! {
+        <div class="kord-pitch-visualizer__item">
+            <button
+                class=class
+                on:click=move |_| on_toggle(pitch)
+                title=move || format!(
+                    "{}: {:.3} (click to toggle)",
+                    pitch_names[pitch_idx],
+                    delta.get()
+                )
+            >
+                <div
+                    class="kord-pitch-bar__fill"
+                    style:height=move || format!("{}%", bar_height.get())
+                />
+            </button>
+            <span class="kord-pitch-visualizer__label">{pitch_names[pitch_idx]}</span>
+            <span class="kord-pitch-visualizer__delta">{move || format!("{:.2}", delta.get())}</span>
+        </div>
+    }
+}
+
+/// Interactive pitch visualizer showing delta bars for all 12 pitch classes.
+/// Users can click bars to toggle pitches on/off.
+#[component]
+pub fn PitchVisualizer<F>(pitch_deltas: ReadSignal<[f32; 12]>, detected_pitches: ReadSignal<Vec<Pitch>>, active_pitches: ReadSignal<Vec<Pitch>>, on_toggle: F) -> impl IntoView
+where
+    F: Fn(Pitch) + Copy + Send + 'static,
+{
+    view! {
+        <div class="kord-pitch-visualizer">
+            <For
+                each=move || 0..12
+                key=|&i| i
+                let:pitch_idx
+            >
+                <PitchBarItem
+                    pitch_idx=pitch_idx
+                    pitch_deltas=pitch_deltas
+                    detected_pitches=detected_pitches
+                    active_pitches=active_pitches
+                    on_toggle=on_toggle
+                />
+            </For>
+        </div>
+    }
 }

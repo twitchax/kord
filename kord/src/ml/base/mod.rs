@@ -12,7 +12,9 @@ pub mod precision;
 #[cfg(feature = "ml_sample_process")]
 pub mod process;
 
-pub use precision::{PrecisionElement, StorePrecisionSettings, PRECISION_DTYPE};
+pub use precision::StorePrecisionSettings;
+#[cfg(feature = "ml_train")]
+pub use precision::{PrecisionElement, PRECISION_DTYPE};
 
 use burn::config::Config;
 use std::path::PathBuf;

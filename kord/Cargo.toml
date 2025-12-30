@@ -39,9 +39,9 @@ default = [
     "audio",
     "ml_infer",
     "ml_loader_mel",
-    "ml_target_folded_bass",
+    "ml_target_folded",
     "ml_train_precision_fp32",
-    "ml_store_precision_full",
+    "ml_store_precision_half",
 ]
 
 cli = ["clap", "futures", "tracing", "tracing-subscriber"]

@@ -239,16 +239,21 @@ impl Note {
         use crate::{analyze::mic::get_audio_data_from_microphone, ml::infer::infer};
 
         let audio_data = get_audio_data_from_microphone(length_in_seconds).await?;
+        let result = infer(&audio_data, length_in_seconds)?;
 
-        infer(&audio_data, length_in_seconds)
+        // Convert pitches to notes at octave 4.
+        Ok(result.pitches.iter().map(|&pitch| Note::new(NamedPitch::from(pitch), Octave::Four)).collect())
     }
 
-    /// Attempts to use the provided to identify the notes in the audio data using ML.
+    /// Attempts to use the provided audio data to identify the notes using ML.
     #[cfg(all(feature = "ml_infer", feature = "analyze_base"))]
     pub fn try_from_audio_ml(data: &[f32], length_in_seconds: u8) -> Res<Vec<Self>> {
         use crate::ml::infer::infer;
 
-        infer(data, length_in_seconds)
+        let result = infer(data, length_in_seconds)?;
+
+        // Convert pitches to notes at octave 4.
+        Ok(result.pitches.iter().map(|&pitch| Note::new(NamedPitch::from(pitch), Octave::Four)).collect())
     }
 }
 

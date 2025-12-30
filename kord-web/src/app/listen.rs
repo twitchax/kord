@@ -1,9 +1,9 @@
 use crate::client::{
-    audio::{infer_chords_from_samples, le_bytes_to_f32_samples},
+    audio::{chords_from_pitches, infer_from_samples, le_bytes_to_f32_samples, pitches_to_notes},
     ffi::record_microphone,
-    shared::{ChordAnalysis, PageTitle},
+    shared::{ChordAnalysis, NoteDisplay, PageTitle, PitchVisualizer},
 };
-use klib::core::chord::Chord;
+use klib::core::{base::HasName, chord::Chord, note::Note, pitch::Pitch};
 use leptos::logging::{error, log};
 use leptos::prelude::*;
 use leptos::task::spawn_local;
@@ -20,6 +20,10 @@ pub fn ListenPage() -> impl IntoView {
     let recording = RwSignal::new(false);
 
     let error = RwSignal::new(Option::<String>::None);
+    let pitch_deltas = RwSignal::new([0.0f32; 12]);
+    let detected_pitches = RwSignal::new(Vec::<Pitch>::new());
+    let active_pitches = RwSignal::new(Vec::<Pitch>::new());
+    let notes = Signal::derive(move || pitches_to_notes(&active_pitches.get()));
     let chords = RwSignal::new(Vec::<Chord>::new());
 
     let timestamp = use_timestamp();
@@ -59,6 +63,31 @@ pub fn ListenPage() -> impl IntoView {
         false,
     );
 
+    // Effect to recompute chords when active pitches change.
+    Effect::watch(
+        move || active_pitches.get(),
+        move |pitches, _, _| match chords_from_pitches(pitches) {
+            Ok(candidates) => chords.set(candidates),
+            Err(e) => {
+                log!("Chord generation failed: {e}");
+                chords.set(vec![]);
+            }
+        },
+        false,
+    );
+
+    // Pitch toggle handler.
+    let toggle_pitch = move |pitch: Pitch| {
+        active_pitches.update(|pitches| {
+            if let Some(pos) = pitches.iter().position(|&p| p == pitch) {
+                pitches.remove(pos);
+            } else {
+                pitches.push(pitch);
+                pitches.sort();
+            }
+        });
+    };
+
     // Start handler.
 
     let start = move |_| {
@@ -93,13 +122,19 @@ pub fn ListenPage() -> impl IntoView {
                 }
             };
 
-            match infer_chords_from_samples(&samples, secs as u8) {
-                Ok(candidates) => {
-                    chords.set(candidates);
+            match infer_from_samples(&samples, secs as u8) {
+                Ok(result) => {
+                    pitch_deltas.set(result.pitch_deltas);
+                    detected_pitches.set(result.pitches.clone());
+                    active_pitches.set(result.pitches);
+                    chords.set(result.chords);
                 }
                 Err(e) => {
                     log!("Inference failed: {e}");
                     error.set(Some(e));
+                    pitch_deltas.set([0.0f32; 12]);
+                    detected_pitches.set(vec![]);
+                    active_pitches.set(vec![]);
                     chords.set(vec![]);
                 }
             }
@@ -140,11 +175,44 @@ pub fn ListenPage() -> impl IntoView {
         </Flex>
 
         <div class="kord-content__section kord-listen__results">
+            <h3 class="kord-listen__results-title">"Pitch Detection"</h3>
+            <Show
+                when=move || detected_pitches.with(|p| !p.is_empty())
+                fallback=move || view! { <p class="kord-listen__empty">"Pitch data will appear here after recording."</p> }.into_view()
+            >
+                <PitchVisualizer
+                    pitch_deltas=pitch_deltas.read_only()
+                    detected_pitches=detected_pitches.read_only()
+                    active_pitches=active_pitches.read_only()
+                    on_toggle=toggle_pitch
+                />
+            </Show>
+        </div>
+
+        <div class="kord-content__section kord-listen__results">
+            <h3 class="kord-listen__results-title">"Detected Notes"</h3>
+            <div class="kord-listen__notes">
+                <Show
+                    when=move || !notes.with(|detected| detected.is_empty())
+                    fallback=move || view! { <p class="kord-listen__empty">"Press start to analyze live audio."</p> }.into_view()
+                >
+                    <Flex gap=FlexGap::Small class="kord-notes-list">
+                        <For
+                            each=move || notes.get()
+                            key=|note: &Note| note.name()
+                            children=move |note: Note| view! { <NoteDisplay note=note /> }
+                        />
+                    </Flex>
+                </Show>
+            </div>
+        </div>
+
+        <div class="kord-content__section kord-listen__results">
             <h3 class="kord-listen__results-title">"Detected Chords"</h3>
             <div class="kord-listen__chords">
                 <Show
                     when=move || !chords.with(|detected| detected.is_empty())
-                    fallback=move || view! { <p class="kord-listen__empty">"Press start to analyze live audio."</p> }.into_view()
+                    fallback=move || view! { <p class="kord-listen__empty">"Notes will be analyzed into chords above."</p> }.into_view()
                 >
                     <For
                         each=move || chords.get()
