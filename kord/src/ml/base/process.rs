@@ -18,7 +18,7 @@ use tracing::{debug, info, info_span, instrument, warn};
 
 use crate::analyze::base::{get_frequency_space, get_smoothed_frequency_space};
 use crate::core::{
-    base::Res,
+    base::{Err, Res},
     note::{HasNoteId, Note},
 };
 
@@ -171,8 +171,8 @@ pub fn process_song_samples(destination: impl AsRef<Path>, midi_path: impl AsRef
 
         chord_notes.sort_by_key(|n| n.id_index());
 
-        let start_seconds = ticks_to_seconds(measure.start_tick, &tempo_events, ppq);
-        let end_seconds = ticks_to_seconds(measure.end_tick, &tempo_events, ppq);
+        let start_seconds = ticks_to_seconds(measure.start_tick, &tempo_events, ppq)?;
+        let end_seconds = ticks_to_seconds(measure.end_tick, &tempo_events, ppq)?;
 
         if end_seconds <= start_seconds {
             continue;
@@ -184,7 +184,7 @@ pub fn process_song_samples(destination: impl AsRef<Path>, midi_path: impl AsRef
         }
 
         let duration_seconds = end_seconds - start_seconds;
-        if duration_seconds < options.min_duration_seconds {
+        if duration_seconds < options.min_duration_seconds - (f32::EPSILON as f64) {
             debug!(duration_seconds, min_duration = options.min_duration_seconds, "Skipping measure shorter than minimum duration");
             continue;
         }
@@ -263,7 +263,7 @@ fn parse_midi(smf: &Smf<'_>, ppq: u16) -> Res<ParseMidiResult> {
     let mut time_signature_numerator = 4u8;
     let mut time_signature_denominator = 4u32;
     let mut measures: HashMap<u64, MeasureInfo> = HashMap::new();
-    let mut note_starts: HashMap<u8, Vec<u64>> = HashMap::new();
+    let mut note_starts: HashMap<u8, Vec<u64>> = HashMap::with_capacity(88);
     let mut max_tick = 0u64;
 
     for track in &smf.tracks {
@@ -533,7 +533,11 @@ fn load_flac_mono(path: impl AsRef<Path>) -> Res<(Vec<f32>, u32)> {
 }
 
 /// Convert an absolute tick offset into seconds using the precomputed tempo changes.
-fn ticks_to_seconds(ticks: u64, tempo_events: &[(u64, u32)], ppq: u16) -> f64 {
+fn ticks_to_seconds(ticks: u64, tempo_events: &[(u64, u32)], ppq: u16) -> Result<f64, Err> {
+    if tempo_events.is_empty() {
+        return Err(anyhow::Error::msg("No tempo events available to convert ticks to seconds."));
+    }
+
     let mut elapsed = 0f64;
     let mut last_tick = 0u64;
     let mut current_tempo = tempo_events.first().map(|(_, tempo)| *tempo).unwrap_or(500_000);
@@ -548,7 +552,7 @@ fn ticks_to_seconds(ticks: u64, tempo_events: &[(u64, u32)], ppq: u16) -> f64 {
         current_tempo = tempo;
     }
 
-    elapsed + (ticks - last_tick) as f64 * seconds_per_tick(ppq, current_tempo)
+    Ok(elapsed + (ticks - last_tick) as f64 * seconds_per_tick(ppq, current_tempo))
 }
 
 /// Compute the duration of a single tick given the current tempo (microseconds per quarter

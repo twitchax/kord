@@ -554,9 +554,13 @@ fn start(args: Args) -> Void {
                 adam_epsilon,
                 no_plots,
             }) => {
+                #[cfg(any(feature = "ml_tch", feature = "ml_cuda", feature = "ml_wgpu", feature = "ml_candle", feature = "ml_ndarray"))]
                 use burn::backend::Autodiff;
-                use klib::ml::base::{PrecisionElement, TrainConfig};
+                #[cfg(any(feature = "ml_tch", feature = "ml_cuda", feature = "ml_wgpu", feature = "ml_candle", feature = "ml_ndarray"))]
+                use klib::ml::base::PrecisionElement;
+                use klib::ml::base::TrainConfig;
 
+                #[allow(unused_variables)]
                 let config = TrainConfig {
                     noise_asset_root,
                     training_sources,
