@@ -26,9 +26,7 @@ required-features = ["cli"]
 wasm-opt = false
 
 [lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = [
-    'cfg(wasm)',
-] }
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm)'] }
 
 [features]
 default = [
