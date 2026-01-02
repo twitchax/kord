@@ -28,8 +28,6 @@ wasm-opt = false
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = [
     'cfg(wasm)',
-    'cfg(host_family_unix)',
-    'cfg(host_family_windows )',
 ] }
 
 [features]

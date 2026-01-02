@@ -120,20 +120,10 @@ where
     Ok(InferenceResult { pitches, chords, pitch_deltas })
 }
 
-// Statics.
-#[cfg(host_family_unix)]
+// Statics - forward slashes work on both Unix and Windows in include_bytes!
 static CONFIG: &[u8] = include_bytes!("../../../model/model_config.json");
-#[cfg(host_family_unix)]
 static STATE_BINCODE: &[u8] = include_bytes!("../../../model/state.json.bin");
-#[cfg(host_family_unix)]
 static THRESHOLDS_JSON: &[u8] = include_bytes!("../../../model/thresholds.json");
-
-#[cfg(host_family_windows)]
-static CONFIG: &[u8] = include_bytes!("..\\..\\..\\model\\model_config.json");
-#[cfg(host_family_windows)]
-static STATE_BINCODE: &[u8] = include_bytes!("..\\..\\..\\model\\state.json.bin");
-#[cfg(host_family_windows)]
-static THRESHOLDS_JSON: &[u8] = include_bytes!("..\\..\\..\\model\\thresholds.json");
 
 // Tests.
 
