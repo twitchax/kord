@@ -244,11 +244,11 @@ pub fn process_song_samples(destination: impl AsRef<Path>, midi_path: impl AsRef
 
     if saved_paths.is_empty() {
         warn!("No qualifying measures produced any samples");
-        anyhow::bail!(
+        return Err(anyhow::Error::msg(format!(
             "No qualifying measures were found when processing {} and {}.",
             midi_path.as_ref().display(),
             audio_path.as_ref().display()
-        );
+        )));
     }
 
     Ok(saved_paths)
@@ -433,7 +433,7 @@ fn load_wav_mono(path: impl AsRef<Path>) -> Res<(Vec<f32>, u32)> {
     };
 
     if channels == 0 {
-        anyhow::bail!("Audio file has zero channels.");
+        return Err(anyhow::Error::msg("Audio file has zero channels."));
     }
 
     let mut mono = Vec::with_capacity(raw_samples.len() / channels);
@@ -484,7 +484,7 @@ fn load_flac_mono(path: impl AsRef<Path>) -> Res<(Vec<f32>, u32)> {
                     let channels = spec.channels.count();
 
                     if channels == 0 {
-                        anyhow::bail!("Audio file has zero channels.");
+                        return Err(anyhow::Error::msg("Audio file has zero channels."));
                     }
 
                     let frames = decoded.frames();
@@ -526,7 +526,7 @@ fn load_flac_mono(path: impl AsRef<Path>) -> Res<(Vec<f32>, u32)> {
     }
 
     if mono.is_empty() {
-        anyhow::bail!("Decoded FLAC file {} produced no audio samples.", path.display());
+        return Err(anyhow::Error::msg(format!("Decoded FLAC file {} produced no audio samples.", path.display())));
     }
 
     Ok((mono, sample_rate))

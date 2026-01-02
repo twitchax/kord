@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, Context};
+use anyhow::Context;
 
 use burn::{
     data::{dataloader::batcher::Batcher, dataset::Dataset},
@@ -52,7 +52,7 @@ impl KordDataset {
         R: AsRef<Path> + Clone + Send + Sync,
     {
         if training_sources.is_empty() {
-            bail!("training_sources must contain at least one entry");
+            return Err(anyhow::Error::msg("training_sources must contain at least one entry"));
         }
 
         let mut train_items = collect_items_from_sources(
@@ -66,7 +66,7 @@ impl KordDataset {
         )?;
 
         if train_items.is_empty() {
-            bail!("no training samples found for the requested sources");
+            return Err(anyhow::Error::msg("no training samples found for the requested sources"));
         }
 
         train_items.shuffle(&mut rand::rng());
