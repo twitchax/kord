@@ -131,7 +131,7 @@ pub fn ListenPage() -> impl IntoView {
                 }
                 Err(e) => {
                     log!("Inference failed: {e}");
-                    error.set(Some(e));
+                    error.set(Some(e.to_string()));
                     pitch_deltas.set([0.0f32; 12]);
                     detected_pitches.set(vec![]);
                     active_pitches.set(vec![]);

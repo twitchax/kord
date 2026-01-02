@@ -65,9 +65,16 @@ impl Default for SongProcessingOptions {
 /// and its relative index in the song.
 #[derive(Clone, Debug)]
 struct MeasureInfo {
+    /// The zero-based measure number within the song.
     index: u64,
+    /// The absolute MIDI tick where this measure begins.
     start_tick: u64,
+    /// The absolute MIDI tick where this measure ends (may extend beyond the
+    /// measure boundary if notes are still sounding).
     end_tick: u64,
+    /// Map from MIDI note number (0-127) to the total number of ticks that
+    /// note sounded within this measure. Notes spanning multiple measures contribute
+    /// proportionally to each measure they occupy.
     note_ticks: HashMap<u8, u64>,
 }
 
@@ -77,7 +84,13 @@ struct MeasureInfo {
 /// reason about the concrete tuple shape.
 #[derive(Clone, Debug)]
 struct ParseMidiResult {
+    /// Sorted list of tempo changes as (tick, microseconds_per_quarter_note)
+    /// pairs. Used to convert MIDI ticks to wall-clock seconds. Defaults to 500,000 µs/qn
+    /// (120 BPM) if empty.
     tempo_events: Vec<(u64, u32)>,
+    /// Map from measure index to aggregated note information. Each measure tracks
+    /// which notes sounded and for how many ticks, allowing proper chord labeling even when
+    /// notes span measure boundaries.
     measures: HashMap<u64, MeasureInfo>,
 }
 
@@ -357,6 +370,22 @@ fn register_note_off(note: u8, tick: u64, note_starts: &mut HashMap<u8, Vec<u64>
 /// Partition a note segment across measure boundaries and accumulate the tick counts for
 /// each slice. This ensures notes that span multiple bars contribute proportionally to every
 /// measure they occupy.
+///
+/// # Algorithm
+///
+/// 1. Calculate the measure length in ticks based on time signature
+/// 2. Walk forward from the note's start tick to its end tick
+/// 3. For each measure the note intersects:
+///    - Calculate which portion of the note falls within that measure
+///    - Add that duration to the measure's note_ticks counter
+/// 4. Stop when the entire note duration has been accounted for
+///
+/// # Example
+///
+/// A whole note starting at tick 1800 in 4/4 time (measure_ticks=1920):
+/// - Measure 0 (ticks 0-1920): contributes 120 ticks
+/// - Measure 1 (ticks 1920-3840): contributes 1920 ticks (full measure)
+/// - Total: 2040 ticks across two measures
 fn insert_note_segment(note: u8, start_tick: u64, end_tick: u64, measures: &mut HashMap<u64, MeasureInfo>, ppq: u16, numerator: u8, denominator: u32) {
     if end_tick <= start_tick {
         return;
@@ -387,6 +416,22 @@ fn insert_note_segment(note: u8, start_tick: u64, end_tick: u64, measures: &mut 
 }
 
 /// Compute the number of ticks contained in a single measure for the current meter.
+///
+/// # Formula
+///
+/// `ticks_per_measure = (ppq × numerator × 4) / denominator`
+///
+/// Where:
+/// - `ppq` (pulses per quarter note) is the MIDI file's time resolution
+/// - `numerator` is the top number of the time signature (beats per measure)
+/// - `denominator` is the bottom number (note value that gets one beat)
+/// - The factor of 4 normalizes denominator to quarter notes
+///
+/// # Examples
+///
+/// - 4/4 time, ppq=480: `(480 × 4 × 4) / 4 = 1920` ticks
+/// - 3/4 time, ppq=480: `(480 × 3 × 4) / 4 = 1440` ticks
+/// - 6/8 time, ppq=480: `(480 × 6 × 4) / 8 = 1440` ticks
 fn compute_measure_ticks(ppq: u16, numerator: u8, denominator: u32) -> u64 {
     let ppq = ppq as u64;
     let numerator = numerator as u64;
@@ -824,6 +869,181 @@ mod tests {
         }
 
         writer.finalize()?;
+        Ok(())
+    }
+
+    /// Verifies that tempo changes are correctly applied when converting ticks to seconds.
+    #[test]
+    fn test_tempo_changes() {
+        let dir = tempdir().unwrap();
+        let midi_path = dir.path().join("tempo_change.mid");
+        let audio_path = dir.path().join("test.wav");
+        let destination = dir.path().join("samples");
+
+        write_test_midi_with_tempo_change(&midi_path).unwrap();
+        write_test_wav(&audio_path, 4.0).unwrap();
+
+        let options = SongProcessingOptions {
+            max_samples: Some(4),
+            ..Default::default()
+        };
+
+        let outputs = process_song_samples(&destination, &midi_path, &audio_path, options);
+        assert!(outputs.is_ok(), "Should handle tempo changes correctly");
+        assert!(!outputs.unwrap().is_empty(), "Should produce samples with tempo changes");
+    }
+
+    /// Verifies proper handling of complex time signatures like 7/8 and 5/4.
+    #[test]
+    fn test_complex_time_signature() {
+        let dir = tempdir().unwrap();
+        let midi_path = dir.path().join("complex_meter.mid");
+        let audio_path = dir.path().join("test.wav");
+        let destination = dir.path().join("samples");
+
+        write_test_midi_with_complex_time_sig(&midi_path).unwrap();
+        write_test_wav(&audio_path, 3.0).unwrap();
+
+        let options = SongProcessingOptions::default();
+
+        let outputs = process_song_samples(&destination, &midi_path, &audio_path, options);
+        assert!(outputs.is_ok(), "Should handle 7/8 time signature");
+    }
+
+    /// Verifies that notes spanning multiple measures are properly attributed to each measure.
+    #[test]
+    fn test_notes_spanning_measures() {
+        let dir = tempdir().unwrap();
+        let midi_path = dir.path().join("spanning.mid");
+        let audio_path = dir.path().join("test.wav");
+        let destination = dir.path().join("samples");
+
+        write_test_midi_with_long_notes(&midi_path).unwrap();
+        write_test_wav(&audio_path, 6.0).unwrap();
+
+        let options = SongProcessingOptions {
+            max_samples: Some(10),
+            ..Default::default()
+        };
+
+        let outputs = process_song_samples(&destination, &midi_path, &audio_path, options).unwrap();
+        assert!(outputs.len() >= 2, "Long notes should create multiple measure samples");
+    }
+
+    /// Helper that creates a MIDI file with a tempo change mid-song.
+    fn write_test_midi_with_tempo_change(path: &Path) -> Res<()> {
+        let mut data = Vec::new();
+        data.extend_from_slice(b"MThd");
+        data.extend_from_slice(&6u32.to_be_bytes());
+        data.extend_from_slice(&1u16.to_be_bytes());
+        data.extend_from_slice(&2u16.to_be_bytes());
+        data.extend_from_slice(&480u16.to_be_bytes());
+
+        let mut track0 = Vec::new();
+        push_vlq(&mut track0, 0);
+        track0.extend_from_slice(&[0xFF, 0x58, 0x04, 0x04, 0x02, 0x18, 0x08]);
+        push_vlq(&mut track0, 0);
+        track0.extend_from_slice(&[0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20]); // Initial tempo: 120 BPM
+        push_vlq(&mut track0, 1920); // After one measure
+        track0.extend_from_slice(&[0xFF, 0x51, 0x03, 0x05, 0xB8, 0xD8]); // Faster tempo: 160 BPM
+        push_vlq(&mut track0, 0);
+        track0.extend_from_slice(&[0xFF, 0x2F, 0x00]);
+
+        data.extend_from_slice(b"MTrk");
+        data.extend_from_slice(&(track0.len() as u32).to_be_bytes());
+        data.extend_from_slice(&track0);
+
+        let mut track1 = Vec::new();
+        push_vlq(&mut track1, 0);
+        track1.extend_from_slice(&[0x90, 0x3C, 0x64]);
+        push_vlq(&mut track1, 1920);
+        track1.extend_from_slice(&[0x80, 0x3C, 0x40]);
+        push_vlq(&mut track1, 0);
+        track1.extend_from_slice(&[0x90, 0x40, 0x64]);
+        push_vlq(&mut track1, 1920);
+        track1.extend_from_slice(&[0x80, 0x40, 0x40]);
+        push_vlq(&mut track1, 0);
+        track1.extend_from_slice(&[0xFF, 0x2F, 0x00]);
+
+        data.extend_from_slice(b"MTrk");
+        data.extend_from_slice(&(track1.len() as u32).to_be_bytes());
+        data.extend_from_slice(&track1);
+
+        std::fs::write(path, data)?;
+        Ok(())
+    }
+
+    /// Helper that creates a MIDI file with 7/8 time signature.
+    fn write_test_midi_with_complex_time_sig(path: &Path) -> Res<()> {
+        let mut data = Vec::new();
+        data.extend_from_slice(b"MThd");
+        data.extend_from_slice(&6u32.to_be_bytes());
+        data.extend_from_slice(&1u16.to_be_bytes());
+        data.extend_from_slice(&2u16.to_be_bytes());
+        data.extend_from_slice(&480u16.to_be_bytes());
+
+        let mut track0 = Vec::new();
+        push_vlq(&mut track0, 0);
+        track0.extend_from_slice(&[0xFF, 0x58, 0x04, 0x07, 0x03, 0x18, 0x08]); // 7/8 time
+        push_vlq(&mut track0, 0);
+        track0.extend_from_slice(&[0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20]);
+        push_vlq(&mut track0, 0);
+        track0.extend_from_slice(&[0xFF, 0x2F, 0x00]);
+
+        data.extend_from_slice(b"MTrk");
+        data.extend_from_slice(&(track0.len() as u32).to_be_bytes());
+        data.extend_from_slice(&track0);
+
+        let mut track1 = Vec::new();
+        push_vlq(&mut track1, 0);
+        track1.extend_from_slice(&[0x90, 0x3C, 0x64]);
+        push_vlq(&mut track1, 1680); // 7/8 measure in ticks
+        track1.extend_from_slice(&[0x80, 0x3C, 0x40]);
+        push_vlq(&mut track1, 0);
+        track1.extend_from_slice(&[0xFF, 0x2F, 0x00]);
+
+        data.extend_from_slice(b"MTrk");
+        data.extend_from_slice(&(track1.len() as u32).to_be_bytes());
+        data.extend_from_slice(&track1);
+
+        std::fs::write(path, data)?;
+        Ok(())
+    }
+
+    /// Helper that creates a MIDI file with notes spanning multiple measures.
+    fn write_test_midi_with_long_notes(path: &Path) -> Res<()> {
+        let mut data = Vec::new();
+        data.extend_from_slice(b"MThd");
+        data.extend_from_slice(&6u32.to_be_bytes());
+        data.extend_from_slice(&1u16.to_be_bytes());
+        data.extend_from_slice(&2u16.to_be_bytes());
+        data.extend_from_slice(&480u16.to_be_bytes());
+
+        let mut track0 = Vec::new();
+        push_vlq(&mut track0, 0);
+        track0.extend_from_slice(&[0xFF, 0x58, 0x04, 0x04, 0x02, 0x18, 0x08]);
+        push_vlq(&mut track0, 0);
+        track0.extend_from_slice(&[0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20]);
+        push_vlq(&mut track0, 0);
+        track0.extend_from_slice(&[0xFF, 0x2F, 0x00]);
+
+        data.extend_from_slice(b"MTrk");
+        data.extend_from_slice(&(track0.len() as u32).to_be_bytes());
+        data.extend_from_slice(&track0);
+
+        let mut track1 = Vec::new();
+        push_vlq(&mut track1, 0);
+        track1.extend_from_slice(&[0x90, 0x3C, 0x64]); // Note on
+        push_vlq(&mut track1, 5760); // Lasts 3 measures (3 * 1920 ticks)
+        track1.extend_from_slice(&[0x80, 0x3C, 0x40]); // Note off
+        push_vlq(&mut track1, 0);
+        track1.extend_from_slice(&[0xFF, 0x2F, 0x00]);
+
+        data.extend_from_slice(b"MTrk");
+        data.extend_from_slice(&(track1.len() as u32).to_be_bytes());
+        data.extend_from_slice(&track1);
+
+        std::fs::write(path, data)?;
         Ok(())
     }
 

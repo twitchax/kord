@@ -1,0 +1,14 @@
+[tasks.fmt]
+command = "cargo"
+args = ["fmt"]
+
+[tasks.build]
+command = "cargo"
+args = ["build"]
+dependencies = ["fmt"]
+
+[tasks.test]
+install_crate = "cargo-nextest"
+command = "cargo"
+args = ["nextest", "run", "--features", "ml_train ml_infer ml_sample_process"]
+dependencies = ["fmt"]

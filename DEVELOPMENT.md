@@ -21,6 +21,12 @@ Extract to a directory, e.g. `C:\libtorch`.
 $Env:LIBTORCH = "C:\libtorch"
 ```
 
+## Test
+
+```bash
+$ cargo make --no-workspace test
+```
+
 ## Publish to Cargo
 
 ```bash
