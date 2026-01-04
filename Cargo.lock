@@ -4034,6 +4034,7 @@ dependencies = [
  "leptos_axum",
  "leptos_meta",
  "leptos_router",
+ "serde",
  "thaw",
  "thaw_utils",
  "tokio",

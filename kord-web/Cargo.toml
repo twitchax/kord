@@ -31,6 +31,7 @@ leptos-use = { version = "0.16" }
 thaw_utils = { version = "0.2.0-beta" }
 cpal = { version = "0.16", features = ["wasm-bindgen"], optional = true }
 gloo = { version = "0.11", optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
 wasm-bindgen = { version = "=0.2.100" }
@@ -64,6 +65,7 @@ ssr = [
     "leptos_router/ssr",
     "thaw/ssr",
     "leptos-use/ssr",
+    "dep:serde",
 ]
 
 [package.metadata.leptos]
