@@ -330,7 +330,7 @@ cargo check --no-default-features \
 ## Test
 
 ```bash
-cargo test
+cargo make --no-workspace test
 ```
 
 ## License

@@ -25,7 +25,7 @@ Data/model artifacts used by analysis/ML are in `kord/model/`, `kord/noise/`, an
 Core (library + CLI):
 ```bash
 cargo build -p kord
-cargo test -p kord
+cargo make --no-workspace test
 ```
 Web (SSR + hydrate):
 ```bash
@@ -47,10 +47,9 @@ sudo apt-get update && sudo apt-get install -y libasound2-dev
 ```bash
 cargo build -p kord
 ```
-- Run tests (entire workspace or just core):
+- Run tests:
 ```bash
-cargo test            # workspace
-cargo test -p kord    # core crate only
+cargo make --no-workspace test
 ```
 
 ### Core Library Patterns
@@ -129,9 +128,9 @@ cargo wasi build --release --no-default-features \
   - Bind `thaw::Input` values via `RwSignal<String>` (Model<String>).
   - Use shared wrappers from `kord-web/src/app/shared.rs` for consistent UI.
 - When editing code, validate with targeted checks:
-  - Core: `cargo test -p kord`
+  - Core: `cargo make --no-workspace test`
   - Web: `cargo check -p kord-web --features ssr,hydrate`
-  - Full workspace checks are good before PRs: `cargo test` + `cargo check`.
+  - Full workspace checks are good before PRs: `cargo make --no-workspace test` + `cargo check`.
 
 ### SSR/Hydrate Gotchas
 - Prefer pointer events for cross-input support; ensure release/cancel stops any audio.
@@ -156,9 +155,9 @@ kord ml infer mic
 cd kord-web
 cargo check --features ssr,hydrate
 ```
-- Integration tests (if present) can be run with SSR enabled:
+- Integration tests are run as part of the main test suite:
 ```bash
-cargo test -p kord-web --features ssr
+cargo make --no-workspace test
 ```
 
 ## Troubleshooting Notes
