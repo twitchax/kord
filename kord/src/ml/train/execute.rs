@@ -163,7 +163,7 @@ where
         let _ = std::fs::remove_file(&thresholds_path);
 
         config.save(&config_path)?;
-        BinFileRecorder::<StorePrecisionSettings>::new().record(model_trained.clone().into_record(), state_path.into())?;
+        BinFileRecorder::<StorePrecisionSettings>::new().record(model_trained.into_record(), state_path.into())?;
 
         if let Some(thresholds) = &stats.thresholds {
             std::fs::write(&thresholds_path, serde_json::to_vec(thresholds)?)?;

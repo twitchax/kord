@@ -1211,7 +1211,7 @@ impl Parsable for Chord {
                         result = result.thirteen();
                     }
                     _ => {
-                        unreachable!();
+                        return Err(anyhow::Error::msg(format!("Unknown dominant modifier: {}", component.as_str())));
                     }
                 },
                 Rule::modifier => match component.as_str() {
@@ -1264,7 +1264,7 @@ impl Parsable for Chord {
                         result = result.sharp13();
                     }
                     _ => {
-                        unreachable!();
+                        return Err(anyhow::Error::msg(format!("Unknown modifier: {}", component.as_str())));
                     }
                 },
                 Rule::slash => {
@@ -1287,7 +1287,7 @@ impl Parsable for Chord {
                 }
                 Rule::EOI => {}
                 _ => {
-                    unreachable!();
+                    return Err(anyhow::Error::msg(format!("Unknown rule in chord parser: {:?}", component.as_rule())));
                 }
             }
         }
