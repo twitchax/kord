@@ -16,7 +16,16 @@ dependencies = ["fmt"]
 [tasks.codecov]
 install_crate = { crate_name = "cargo-llvm-cov", binary = "cargo-llvm-cov", test_arg = "--help" }
 command = "cargo"
-args = ["llvm-cov", "nextest", "--features", "ml_train ml_infer ml_sample_process", "--workspace", "--lcov", "--output-path", "coverage.lcov"]
+args = [
+    "llvm-cov",
+    "nextest",
+    "--features",
+    "ml_train ml_infer ml_sample_process",
+    "--workspace",
+    "--lcov",
+    "--output-path",
+    "coverage.lcov",
+]
 dependencies = ["fmt"]
 
 [tasks.build-linux]

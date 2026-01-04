@@ -89,7 +89,7 @@ jobs:
         with:
           name: kord_x86_64-pc-windows-gnu
           path: target/x86_64-pc-windows-gnu/release/kord.exe
-        
+
   build_macos:
     needs: test
     name: Build MacOS
