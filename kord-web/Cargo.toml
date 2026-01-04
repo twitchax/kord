@@ -16,7 +16,8 @@ leptos_meta = { version = "0.8" }
 tokio = { version = "1", features = ["rt-multi-thread"], optional = true }
 wasm-bindgen = { version = "=0.2.100", optional = true }
 wasm-bindgen-futures = { version = "0.4", optional = true }
-axum-insights = { version = "0.6", optional = true, default-features = false }
+axum-insights = { version = "0.6", optional = true }
+tracing = { version = "0.1.40", optional = true }
 klib = { package = "kord", path = "../kord", default-features = false, features = [
     "ml_infer",
     "ml_store_precision_half",
@@ -66,6 +67,7 @@ ssr = [
     "thaw/ssr",
     "leptos-use/ssr",
     "dep:serde",
+    "dep:tracing",
 ]
 
 [package.metadata.leptos]
