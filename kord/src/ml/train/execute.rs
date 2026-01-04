@@ -110,7 +110,7 @@ where
 
     let lr_scheduler = CosineAnnealingLrSchedulerConfig::new(config.adam_learning_rate, config.model_epochs)
         .init()
-        .expect("Failed to initialize learning rate scheduler");
+        .map_err(|e| anyhow::Error::msg(format!("Failed to initialize learning rate scheduler: {}", e)))?;
     let learner = learner_builder.build(model, optimizer, lr_scheduler);
 
     // Train the model.

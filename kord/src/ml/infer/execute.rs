@@ -46,7 +46,7 @@ pub fn infer(audio_data: &[f32], length_in_seconds: u8) -> Res<InferenceResult> 
         .map(|(_, v)| v)
         .collect::<Vec<_>>()
         .try_into()
-        .unwrap();
+        .map_err(|_| anyhow::Error::msg("Failed to convert smoothed frequency space into array"))?;
 
     let kord_item = KordItem {
         frequency_space: smoothed_frequency_space,
@@ -92,9 +92,13 @@ where
 
     // Run the inference.
     let logits = model.forward(sample).detach();
-    let logits_vec: Vec<f32> = logits.into_data().convert::<f32>().to_vec().unwrap_or_default();
+    let logits_vec: Vec<f32> = logits
+        .into_data()
+        .convert::<f32>()
+        .to_vec()
+        .map_err(|_| anyhow::Error::msg("Failed to convert logits tensor to Vec<f32>"))?;
     let probabilities = logits_to_probabilities(&logits_vec);
-    let thresholds: Vec<f32> = serde_json::from_slice(THRESHOLDS_JSON).unwrap_or_default();
+    let thresholds: Vec<f32> = serde_json::from_slice(THRESHOLDS_JSON).map_err(|e| anyhow::Error::msg(format!("Failed to deserialize embedded thresholds: {}", e)))?;
     let inferred = logits_to_predictions(&probabilities, thresholds.as_slice());
 
     // Decode folded format: 12 pitch classes.

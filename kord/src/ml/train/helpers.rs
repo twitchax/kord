@@ -40,7 +40,7 @@ impl<B: Backend> ValidStep<KordBatch<B>, MultiLabelClassificationOutput<B>> for 
 
 /// Create a simulated kord sample item from a noise basis and a semi-random collection of notes.
 pub fn get_simulated_kord_item(noise_asset_root: impl AsRef<Path>, notes: &[Note], peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> Res<KordItem> {
-    let noise_asset_root = noise_asset_root.as_ref().to_str().unwrap();
+    let noise_asset_root = noise_asset_root.as_ref().to_str().ok_or_else(|| anyhow::anyhow!("Invalid noise asset root path"))?;
     let wobble_divisor = 35.0;
 
     let mut result = match get_random_between(0.0, 4.0).round() as u32 {
@@ -48,7 +48,7 @@ pub fn get_simulated_kord_item(noise_asset_root: impl AsRef<Path>, notes: &[Note
         1 => load_kord_item(format!("{noise_asset_root}/pink_noise.bin")),
         2 => load_kord_item(format!("{noise_asset_root}/white_noise.bin")),
         3 => load_kord_item(format!("{noise_asset_root}/brown_noise.bin")),
-        _ => unreachable!(),
+        n => return Err(anyhow::anyhow!("Unexpected noise type index: {}", n)),
     }?;
 
     for note in notes {
@@ -136,7 +136,10 @@ where
                             ]),
                         );
                     }
-                    _ => unreachable!(),
+                    _ => {
+                        // This shouldn't happen as k is 0..5, but we handle it defensively
+                        continue;
+                    }
                 }
 
                 notes.sort();
@@ -148,10 +151,10 @@ where
             }
         }
 
-        inner_result
+        Ok::<Vec<Res<KordItem>>, anyhow::Error>(inner_result)
     });
 
-    results.flatten().collect()
+    results.flatten().flatten().collect()
 }
 
 /// Get a random item from a list of items.
