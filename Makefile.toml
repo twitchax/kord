@@ -1,3 +1,12 @@
+[tasks.install-nextest]
+install_crate = "cargo-nextest"
+
+[tasks.install-llvm-cov]
+install_crate = "cargo-llvm-cov"
+
+[tasks.tools]
+dependencies = ["install-nextest", "install-llvm-cov"]
+
 [tasks.fmt]
 command = "cargo"
 args = ["fmt"]
@@ -13,7 +22,7 @@ args = ["nextest", "run", "--features", "ml_train ml_infer ml_sample_process"]
 
 [tasks.codecov]
 clear = true
-install_crate = "cargo-llvm-cov"
+dependencies = ["tools"]
 command = "cargo"
 args = [
     "llvm-cov",
