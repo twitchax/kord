@@ -12,6 +12,7 @@ command = "cargo"
 args = ["nextest", "run", "--features", "ml_train ml_infer ml_sample_process"]
 
 [tasks.codecov]
+clear = true
 install_crate = "cargo-llvm-cov"
 command = "cargo"
 args = [
