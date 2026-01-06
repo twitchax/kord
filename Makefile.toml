@@ -55,6 +55,10 @@ install_crate = "wasm-pack"
 command = "wasm-pack"
 args = ["test", "--${WASM_TEST_BROWSER}", "--headless", "--features", "hydrate"]
 
+[tasks.test-all]
+workspace = false
+dependencies = ["test", "test-wasm", "test-web"]
+
 [tasks.codecov]
 cwd = "."
 workspace = false

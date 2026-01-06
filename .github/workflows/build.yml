@@ -20,9 +20,7 @@ jobs:
         with:
           cache-all-crates: "true"
       - run: cargo install cargo-make
-      - run: cargo make test
-      - run: cargo make test-wasm
-      - run: cargo make test-web
+      - run: cargo make test-all
 
   codecov:
     needs: test
