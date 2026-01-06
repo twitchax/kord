@@ -1,3 +1,5 @@
+# Helpers
+
 [tasks.install-nextest]
 install_crate = "cargo-nextest"
 
@@ -6,6 +8,8 @@ install_crate = "cargo-llvm-cov"
 
 [tasks.tools]
 dependencies = ["install-nextest", "install-llvm-cov"]
+
+# Build / test tasks.
 
 [tasks.fmt]
 command = "cargo"
@@ -35,6 +39,8 @@ args = [
     "coverage.lcov",
 ]
 
+# CI tasks
+
 [tasks.build-linux]
 command = "cargo"
 args = ["build", "--target", "x86_64-unknown-linux-gnu", "--release"]
@@ -49,3 +55,62 @@ args = ["build", "--target", "x86_64-pc-windows-gnu", "--release"]
 [tasks.build-macos]
 command = "cargo"
 args = ["build", "--target", "aarch64-apple-darwin", "--release"]
+
+# Publishing tasks
+
+[tasks.check-all]
+dependencies = ["fmt", "test"]
+
+[tasks.release]
+install_crate = "cargo-release"
+command = "cargo"
+args = ["release", "--workspace", "--no-publish", "--execute"]
+
+[tasks.build-cli]
+command = "cargo"
+args = ["build", "--release", "--bin", "kord", "-p", "kord"]
+
+[tasks.build-npm]
+cwd = "kord"
+install_crate = "wasm-pack"
+command = "wasm-pack"
+args = [
+    "build",
+    "--target",
+    "bundler",
+    "--out-dir",
+    "../pkg",
+    "--release",
+    "--no-default-features",
+    "--features",
+    "analyze audio ml_infer ml_store_precision_half ml_loader_mel ml_target_folded wasm",
+]
+
+[tasks.build-web]
+cwd = "kord-web"
+install_crate = "cargo-leptos"
+command = "cargo"
+args = ["leptos", "build", "--release"]
+
+[tasks.rename-npm-package]
+dependencies = ["build-npm"]
+install_crate = "sd"
+cwd = "pkg"
+command = "sd"
+args = ["\"name\": \"kord\"", "\"name\": \"kordweb\"", "package.json"]
+
+[tasks.publish-npm]
+dependencies = ["rename-npm-package"]
+cwd = "pkg"
+command = "npm"
+args = ["publish", "--access", "public"]
+
+[tasks.publish-crates]
+script = '''
+echo "Publishing kord crate to crates.io..."
+cargo publish -p kord --no-verify
+'''
+
+[tasks.publish-all]
+dependencies = ["check-all", "build-cli", "build-npm", "build-web"]
+run_task = { name = ["publish-crates", "publish-npm"], fork = false }
