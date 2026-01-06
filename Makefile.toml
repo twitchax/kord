@@ -1,5 +1,10 @@
 # Helpers
 
+[env]
+WASM_TEST_BROWSER = { value = "firefox", condition = { env_not_set = [
+    "WASM_TEST_BROWSER",
+] } }
+
 [tasks.install-nextest]
 install_crate = "cargo-nextest"
 
@@ -35,7 +40,20 @@ cwd = "kord"
 workspace = false
 install_crate = "wasm-pack"
 command = "wasm-pack"
-args = ["test", "--firefox", "--headless", "--features", "wasm ml_infer"]
+args = [
+    "test",
+    "--${WASM_TEST_BROWSER}",
+    "--headless",
+    "--features",
+    "wasm ml_infer",
+]
+
+[tasks.test-web]
+cwd = "kord-web"
+workspace = false
+install_crate = "wasm-pack"
+command = "wasm-pack"
+args = ["test", "--${WASM_TEST_BROWSER}", "--headless", "--features", "hydrate"]
 
 [tasks.codecov]
 cwd = "."
