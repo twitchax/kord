@@ -486,12 +486,34 @@ trait RefFromJsValue {
         Self: Sized + RefFromWasmAbi;
 }
 
+/// Extracts a u32 pointer value from a JsValue by trying multiple conversion strategies.
+///
+/// This handles different pointer representations that can occur across JavaScript environments:
+/// - JavaScript Number (most common, works with as_f64())
+/// - JavaScript BigInt (converted to string, then parsed)
+/// - Edge cases like boolean values for 0/1 pointers
+fn extract_ptr_from_js_value(ptr_value: &JsValue) -> JsRes<u32> {
+    if let Some(f) = ptr_value.as_f64() {
+        Ok(f as u32)
+    } else if let Some(b) = ptr_value.as_bool() {
+        // Sometimes happens with 0/1 pointers
+        Ok(b as u32)
+    } else {
+        // Try parsing as string (handles BigInt case)
+        ptr_value
+            .as_string()
+            .and_then(|s| s.parse::<u32>().ok())
+            .ok_or_else(|| JsValue::from_str("Could not cast pointer to u32 from any supported type."))
+    }
+}
+
 impl RefFromJsValue for KordNote {
     fn ref_from_js_value(abi: &JsValue) -> JsRes<<KordNote as RefFromWasmAbi>::Anchor>
     where
         Self: Sized + RefFromWasmAbi,
     {
-        let ptr = Reflect::get(abi, &JsValue::from_str("ptr"))?.as_f64().ok_or("Could not cast pointer to f64.")? as u32;
+        let ptr_value = Reflect::get(abi, &JsValue::from_str("ptr"))?;
+        let ptr = extract_ptr_from_js_value(&ptr_value)?;
 
         let object = abi.dyn_ref::<Object>().ok_or("Value is not an object.")?;
         if object.constructor().name() != "KordNote" {
@@ -514,7 +536,8 @@ impl RefFromJsValue for KordChord {
     where
         Self: Sized + RefFromWasmAbi,
     {
-        let ptr = Reflect::get(abi, &JsValue::from_str("ptr"))?.as_f64().ok_or("Could not cast pointer to f64.")? as u32;
+        let ptr_value = Reflect::get(abi, &JsValue::from_str("ptr"))?;
+        let ptr = extract_ptr_from_js_value(&ptr_value)?;
 
         let object = abi.dyn_ref::<Object>().ok_or("Value is not an object.")?;
         if object.constructor().name() != "KordChord" {
@@ -684,5 +707,43 @@ impl KordChord {
     #[wasm_bindgen]
     pub fn add13(&self) -> Self {
         KordChord { inner: self.inner.clone().add13() }
+    }
+}
+
+#[cfg(all(test, target_arch = "wasm32"))]
+mod tests {
+    use super::*;
+    use wasm_bindgen::JsValue;
+    use wasm_bindgen_test::*;
+
+    wasm_bindgen_test_configure!(run_in_browser);
+
+    /// Test the pointer extraction function directly with different types
+    /// This validates the fix for Issue #21 - handling different pointer representations
+    #[wasm_bindgen_test]
+    fn test_ptr_extraction_strategies() {
+        // Test with f64 (Number - most common case in most browsers)
+        let f64_val = JsValue::from_f64(12345.0);
+        let result = extract_ptr_from_js_value(&f64_val);
+        assert!(result.is_ok(), "Should extract f64 as u32");
+        assert_eq!(result.unwrap(), 12345u32);
+
+        // Test with string (BigInt case - the root cause of Issue #21)
+        // Some JavaScript engines represent WASM pointers as BigInt, which converts to string
+        let string_val = JsValue::from_str("67890");
+        let result = extract_ptr_from_js_value(&string_val);
+        assert!(result.is_ok(), "Should extract string (BigInt) as u32");
+        assert_eq!(result.unwrap(), 67890u32);
+
+        // Test with bool (0/1 edge case - seen in some edge conditions)
+        let bool_val = JsValue::from_bool(true);
+        let result = extract_ptr_from_js_value(&bool_val);
+        assert!(result.is_ok(), "Should extract bool as u32");
+        assert_eq!(result.unwrap(), 1u32);
+
+        let bool_val_false = JsValue::from_bool(false);
+        let result = extract_ptr_from_js_value(&bool_val_false);
+        assert!(result.is_ok(), "Should extract false as u32");
+        assert_eq!(result.unwrap(), 0u32);
     }
 }

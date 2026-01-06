@@ -189,3 +189,4 @@ gloo-timers = { version = "0.3", optional = true, features = ["futures"] }
 [dev-dependencies]
 pretty_assertions = "1"
 tempfile = "3"
+wasm-bindgen-test = "0.3"
