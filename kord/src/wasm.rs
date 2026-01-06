@@ -823,7 +823,7 @@ mod tests {
         let c4 = KordNote::parse("C4".to_string()).unwrap();
         let harmonics = c4.harmonic_series();
         assert_eq!(harmonics.length(), 13, "Should return 13 harmonics");
-        
+
         // Just verify we can get elements from the array
         assert!(!harmonics.get(0).is_undefined(), "First harmonic should exist");
     }
@@ -894,10 +894,10 @@ mod tests {
     fn test_chord_from_notes_string() {
         let result = KordChord::from_notes_string("C E G".to_string());
         assert!(result.is_ok(), "Should create chords from note string");
-        
+
         let chords = result.unwrap();
         assert!(chords.length() > 0, "Should return at least one chord candidate");
-        
+
         // Just verify we can access the first element
         let first = chords.get(0);
         assert!(!first.is_undefined(), "First chord should exist");
@@ -912,10 +912,10 @@ mod tests {
     #[wasm_bindgen_test]
     fn test_chord_chord_and_scale() {
         let chord = KordChord::parse("Cmaj7".to_string()).unwrap();
-        
+
         let chord_notes = chord.chord();
         assert!(chord_notes.length() >= 4, "Major 7th should have at least 4 notes");
-        
+
         let scale_notes = chord.scale();
         assert!(scale_notes.length() >= 7, "Scale should have at least 7 notes");
     }
@@ -923,10 +923,10 @@ mod tests {
     #[wasm_bindgen_test]
     fn test_chord_string_representations() {
         let chord = KordChord::parse("Cmaj7".to_string()).unwrap();
-        
+
         let chord_string = chord.chord_string();
         assert!(chord_string.contains("C"), "Chord string should contain root");
-        
+
         let scale_string = chord.scale_string();
         assert!(scale_string.contains("C"), "Scale string should contain root");
     }
@@ -934,10 +934,10 @@ mod tests {
     #[wasm_bindgen_test]
     fn test_chord_modifiers_and_extensions() {
         let chord = KordChord::parse("Cm7b5".to_string()).unwrap();
-        
+
         let modifiers = chord.modifiers();
         assert!(modifiers.length() > 0, "Should have modifiers");
-        
+
         let extensions = chord.extensions();
         // May or may not have extensions depending on the chord
         assert!(extensions.length() >= 0);
@@ -946,13 +946,13 @@ mod tests {
     #[wasm_bindgen_test]
     fn test_chord_precise_name_and_description() {
         let chord = KordChord::parse("Cmaj7".to_string()).unwrap();
-        
+
         let precise_name = chord.precise_name();
         assert!(!precise_name.is_empty(), "Should have precise name");
-        
+
         let description = chord.description();
         assert!(!description.is_empty(), "Should have description");
-        
+
         let display = chord.display();
         assert!(!display.is_empty(), "Should have display text");
     }
@@ -961,7 +961,7 @@ mod tests {
     fn test_chord_inversion() {
         let chord = KordChord::parse("C".to_string()).unwrap();
         assert_eq!(chord.inversion(), 0, "Root position should be 0");
-        
+
         let inverted = chord.with_inversion(1);
         assert_eq!(inverted.inversion(), 1, "First inversion should be 1");
     }
@@ -970,7 +970,7 @@ mod tests {
     fn test_chord_with_slash() {
         let chord = KordChord::parse("C".to_string()).unwrap();
         let e_note = KordNote::parse("E4".to_string()).unwrap();
-        
+
         let with_slash = chord.with_slash(&e_note);
         assert_eq!(with_slash.slash(), "E4");
     }
@@ -993,7 +993,7 @@ mod tests {
     fn test_chord_is_crunchy() {
         let chord = KordChord::parse("C".to_string()).unwrap();
         let _is_crunchy = chord.is_crunchy(); // Just verify it doesn't panic
-        
+
         let with_crunchy = chord.with_crunchy(true);
         assert!(with_crunchy.is_crunchy(), "Should be crunchy after setting");
     }
@@ -1071,13 +1071,13 @@ mod tests {
     #[wasm_bindgen_test]
     fn test_chord_builder_altered_notes() {
         let chord = KordChord::parse("C7".to_string()).unwrap();
-        
+
         let flat9 = chord.flat9();
         assert!(flat9.display().contains("♭9") || flat9.display().contains("b9"));
-        
+
         let sharp9 = chord.sharp9();
         assert!(sharp9.display().contains("♯9") || sharp9.display().contains("#9"));
-        
+
         let sharp11 = chord.sharp11();
         assert!(sharp11.display().contains("♯11") || sharp11.display().contains("#11"));
     }
@@ -1095,17 +1095,20 @@ mod tests {
         let half_dim = chord.half_dim();
         // Half-diminished creates Cm7b5, verify it contains both minor and flat 5
         let display = half_dim.display();
-        assert!(display.contains("m") && (display.contains("b5") || display.contains("♭5") || display.contains("ø")), 
-                "Half-dim should show minor with flat 5: {}", display);
+        assert!(
+            display.contains("m") && (display.contains("b5") || display.contains("♭5") || display.contains("ø")),
+            "Half-dim should show minor with flat 5: {}",
+            display
+        );
     }
 
     #[wasm_bindgen_test]
     fn test_chord_builder_sus() {
         let chord = KordChord::parse("C".to_string()).unwrap();
-        
+
         let sus2 = chord.sus2();
         assert!(sus2.display().contains("sus2"));
-        
+
         let sus4 = chord.sus4();
         assert!(sus4.display().contains("sus4"));
     }
@@ -1113,22 +1116,22 @@ mod tests {
     #[wasm_bindgen_test]
     fn test_chord_builder_add_extensions() {
         let chord = KordChord::parse("C".to_string()).unwrap();
-        
+
         let add2 = chord.add2();
         assert!(add2.display().contains("add2") || add2.display().contains("add9"));
-        
+
         let add4 = chord.add4();
         assert!(add4.display().contains("add4") || add4.display().contains("add11"));
-        
+
         let add6 = chord.add6();
         assert!(add6.display().contains("add6") || add6.display().contains("6"));
-        
+
         let add9 = chord.add9();
         assert!(add9.display().contains("add9"));
-        
+
         let add11 = chord.add11();
         assert!(add11.display().contains("add11"));
-        
+
         let add13 = chord.add13();
         assert!(add13.display().contains("add13"));
     }
@@ -1136,16 +1139,14 @@ mod tests {
     #[wasm_bindgen_test]
     fn test_chord_builder_flat_extensions() {
         let chord = KordChord::parse("C".to_string()).unwrap();
-        
+
         let flat11 = chord.flat11();
         let display = flat11.display();
-        assert!(display.contains("♭11") || display.contains("b11") || display.contains("11"), 
-                "Should show 11: {}", display);
-        
+        assert!(display.contains("♭11") || display.contains("b11") || display.contains("11"), "Should show 11: {}", display);
+
         let flat13 = chord.flat13();
         let display = flat13.display();
-        assert!(display.contains("♭13") || display.contains("b13") || display.contains("13"), 
-                "Should show 13: {}", display);
+        assert!(display.contains("♭13") || display.contains("b13") || display.contains("13"), "Should show 13: {}", display);
     }
 
     #[wasm_bindgen_test]
@@ -1161,7 +1162,7 @@ mod tests {
         // Test that we can chain multiple modifiers
         let chord = KordChord::parse("C".to_string()).unwrap();
         let complex = chord.minor().seven().flat9();
-        
+
         assert!(complex.display().contains("m"), "Should be minor");
         assert!(complex.display().contains("7"), "Should have dominant 7");
     }
@@ -1172,10 +1173,10 @@ mod tests {
     fn test_js_array_conversion() {
         let chord = KordChord::parse("C".to_string()).unwrap();
         let notes = chord.chord();
-        
+
         // Test that we can iterate the array
         assert!(notes.length() > 0, "Should have notes in array");
-        
+
         // Test that we can get individual elements
         let first = notes.get(0);
         assert!(!first.is_undefined(), "First element should exist");
@@ -1188,7 +1189,7 @@ mod tests {
         // Test basic ASCII strings pass through correctly
         let note = KordNote::parse("C4".to_string()).unwrap();
         assert_eq!(note.name(), "C4");
-        
+
         let chord = KordChord::parse("Cmaj7".to_string()).unwrap();
         assert!(chord.display().len() > 0, "Display should return non-empty string");
     }
@@ -1198,10 +1199,10 @@ mod tests {
         // Test that Unicode characters (sharps/flats) work correctly
         let sharp_note = KordNote::parse("C♯4".to_string());
         assert!(sharp_note.is_ok() || sharp_note.is_err(), "Should handle sharp unicode");
-        
+
         let flat_note = KordNote::parse("D♭4".to_string());
         assert!(flat_note.is_ok() || flat_note.is_err(), "Should handle flat unicode");
-        
+
         // Test that display strings may contain unicode
         let chord = KordChord::parse("C#m7b5".to_string()).unwrap();
         let display = chord.display();
@@ -1213,7 +1214,7 @@ mod tests {
         // Test that empty strings are handled correctly
         let result = KordNote::parse("".to_string());
         assert!(result.is_err(), "Empty string should fail to parse");
-        
+
         let result = KordChord::parse("".to_string());
         assert!(result.is_err(), "Empty string should fail to parse");
     }
@@ -1223,10 +1224,10 @@ mod tests {
         // Test that Rust Result<T, E> properly converts to JS exceptions
         let invalid_note = KordNote::parse("Invalid".to_string());
         assert!(invalid_note.is_err(), "Should return error for invalid note");
-        
+
         let invalid_chord = KordChord::parse("NotAChord123".to_string());
         assert!(invalid_chord.is_err(), "Should return error for invalid chord");
-        
+
         // Test that errors from array operations are handled
         let result = KordChord::from_notes_string("".to_string());
         assert!(result.is_err(), "Empty notes string should error");
@@ -1238,15 +1239,15 @@ mod tests {
         let note1 = KordNote::parse("C4".to_string()).unwrap();
         let note2 = KordNote::parse("D4".to_string()).unwrap();
         let note3 = KordNote::parse("E4".to_string()).unwrap();
-        
+
         // Verify they're distinct
         assert_ne!(note1.name(), note2.name());
         assert_ne!(note2.name(), note3.name());
-        
+
         // Test chord construction
         let chord1 = KordChord::parse("C".to_string()).unwrap();
         let chord2 = KordChord::parse("G".to_string()).unwrap();
-        
+
         assert!(chord1.root().starts_with("C"));
         assert!(chord2.root().starts_with("G"));
     }
@@ -1256,14 +1257,14 @@ mod tests {
         // Test that copy() creates independent objects
         let original = KordNote::parse("C4".to_string()).unwrap();
         let copy = original.copy();
-        
+
         assert_eq!(original.name(), copy.name());
         assert_eq!(original.frequency(), copy.frequency());
-        
+
         // Test chord copy
         let chord_original = KordChord::parse("Cmaj7".to_string()).unwrap();
         let chord_copy = chord_original.copy();
-        
+
         assert_eq!(chord_original.name(), chord_copy.name());
     }
 
@@ -1272,7 +1273,7 @@ mod tests {
         // Test that empty arrays are handled correctly
         let chord = KordChord::parse("C".to_string()).unwrap();
         let extensions = chord.extensions();
-        
+
         // Extensions might be empty or populated, just verify we get an array
         assert!(extensions.length() >= 0, "Should return valid array");
     }
@@ -1282,9 +1283,9 @@ mod tests {
         // Test arrays with multiple elements
         let chord = KordChord::parse("Cmaj7#9b13".to_string()).unwrap();
         let notes = chord.chord();
-        
+
         assert!(notes.length() > 0, "Complex chord should have notes");
-        
+
         // Verify we can access multiple elements
         for i in 0..notes.length() {
             let element = notes.get(i);
@@ -1297,13 +1298,13 @@ mod tests {
         // Test that floating-point frequencies maintain precision
         let a4 = KordNote::parse("A4".to_string()).unwrap();
         let freq = a4.frequency();
-        
+
         // A4 should be 440 Hz
         assert!((freq - 440.0).abs() < 0.1, "A4 frequency should be ~440 Hz, got {}", freq);
-        
+
         let c4 = KordNote::parse("C4".to_string()).unwrap();
         let c_freq = c4.frequency();
-        
+
         // C4 should be ~261.63 Hz
         assert!(c_freq > 260.0 && c_freq < 263.0, "C4 frequency should be ~261.63 Hz, got {}", c_freq);
     }
@@ -1313,10 +1314,10 @@ mod tests {
         // Test octave numbers across valid range
         let c0 = KordNote::parse("C0".to_string()).unwrap();
         assert_eq!(c0.octave(), 0);
-        
+
         let c4 = KordNote::parse("C4".to_string()).unwrap();
         assert_eq!(c4.octave(), 4);
-        
+
         let c8 = KordNote::parse("C8".to_string()).unwrap();
         assert_eq!(c8.octave(), 8);
     }
@@ -1325,13 +1326,13 @@ mod tests {
     fn test_abi_number_interval_operations() {
         // Test that interval arithmetic works correctly across ABI
         let c4 = KordNote::parse("C4".to_string()).unwrap();
-        
+
         let up_octave = c4.add_interval(Interval::PerfectOctave);
         assert_eq!(up_octave.octave(), 5, "Should be an octave higher");
-        
+
         let down_fifth = c4.subtract_interval(Interval::PerfectFifth);
         assert_eq!(down_fifth.octave(), 3, "Should be in octave 3");
-        
+
         // Test distance calculation
         let g4 = KordNote::parse("G4".to_string()).unwrap();
         let distance = c4.distance_to(g4);
@@ -1341,13 +1342,8 @@ mod tests {
     #[wasm_bindgen_test]
     fn test_abi_method_chaining() {
         // Test that method chaining works correctly (verifies proper return types)
-        let chord = KordChord::parse("C".to_string())
-            .unwrap()
-            .minor()
-            .seven()
-            .flat9()
-            .sharp11();
-        
+        let chord = KordChord::parse("C".to_string()).unwrap().minor().seven().flat9().sharp11();
+
         let display = chord.display();
         assert!(display.contains("m"), "Should show minor");
         assert!(display.contains("7"), "Should show 7");
@@ -1358,11 +1354,11 @@ mod tests {
         // Test that boolean values cross the ABI correctly
         let c4 = KordNote::parse("C4".to_string()).unwrap();
         let d4 = KordNote::parse("D4".to_string()).unwrap();
-        
+
         // Test equality (should be false for different notes)
         let same = c4.name() == d4.name();
         assert!(!same, "Different notes should not be equal");
-        
+
         // Test chord crunchy check
         let simple = KordChord::parse("C".to_string()).unwrap();
         let is_crunchy = simple.is_crunchy();
@@ -1374,10 +1370,10 @@ mod tests {
         // Test that optional slash bass note is handled correctly
         let no_slash = KordChord::parse("C".to_string()).unwrap();
         let slash_str = no_slash.slash();
-        
+
         // When no slash is present, slash() returns the root note
         assert!(slash_str.starts_with("C"), "No slash should return root note");
-        
+
         let with_slash = KordChord::parse("C/E".to_string()).unwrap();
         let slash_str = with_slash.slash();
         assert!(slash_str.starts_with("E"), "Should return slash note");
@@ -1390,7 +1386,7 @@ mod tests {
         let name = complex.name();
         let display = complex.display();
         let description = complex.description();
-        
+
         assert!(name.len() > 0, "Name should be non-empty");
         assert!(display.len() > 0, "Display should be non-empty");
         assert!(description.len() > 0, "Description should be non-empty");
@@ -1401,9 +1397,9 @@ mod tests {
         // Test harmonic series returns correct-sized array
         let c4 = KordNote::parse("C4".to_string()).unwrap();
         let harmonics = c4.harmonic_series();
-        
+
         assert_eq!(harmonics.length(), 13, "Should return 13 harmonics");
-        
+
         // Verify all elements are accessible
         for i in 0..harmonics.length() {
             let harmonic = harmonics.get(i);
@@ -1415,19 +1411,19 @@ mod tests {
     fn test_abi_object_reuse() {
         // Test that we can reuse objects multiple times
         let chord = KordChord::parse("C".to_string()).unwrap();
-        
+
         // Call same method multiple times
         let notes1 = chord.chord();
         let notes2 = chord.chord();
-        
+
         assert_eq!(notes1.length(), notes2.length(), "Should return consistent results");
-        
+
         // Call different methods on same object
         let _name = chord.name();
         let _display = chord.display();
         let _root = chord.root();
         let _description = chord.description();
-        
+
         // Object should still be valid
         assert!(chord.chord().length() > 0);
     }
@@ -1437,13 +1433,13 @@ mod tests {
         // Test that transformations return new independent objects
         let original = KordChord::parse("C".to_string()).unwrap();
         let minor = original.minor();
-        
+
         // Original should be unchanged
         assert!(original.name().contains("C"));
-        
+
         // New object should be different
         assert!(minor.display().contains("m"), "Should be minor");
-        
+
         // Both should be independently usable
         let _original_notes = original.chord();
         let _minor_notes = minor.chord();
