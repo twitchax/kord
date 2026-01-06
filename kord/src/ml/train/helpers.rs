@@ -90,6 +90,8 @@ where
     R: AsRef<Path> + Clone + Send + Sync,
 {
     let results = (0..count).into_par_iter().map(move |_| {
+        // Use 75 notes covering A0 to B6 (MIDI notes 21-95), which spans most of the
+        // practical range for chord training while staying within the model's 128-class output.
         let note_count = 75;
         let chord_count = 5;
         let mut inner_result = Vec::with_capacity(note_count * chord_count);
