@@ -10,9 +10,9 @@
                 // "ml_candle",
                 // "ml_server",
                 // "ml_remote",
-                // "wasm",
-                "ssr",
-                "hydrate",
+                "wasm",
+                // "ssr",
+                // "hydrate",
         ],
         "cSpell.enabled": false
 }

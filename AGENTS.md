@@ -25,7 +25,7 @@ Data/model artifacts used by analysis/ML are in `kord/model/`, `kord/noise/`, an
 Core (library + CLI):
 ```bash
 cargo build -p kord
-cargo make --no-workspace test
+cargo make test
 ```
 Web (SSR + hydrate):
 ```bash
@@ -49,7 +49,7 @@ cargo build -p kord
 ```
 - Run tests:
 ```bash
-cargo make --no-workspace test
+cargo make test
 ```
 
 ### Core Library Patterns
@@ -68,6 +68,7 @@ cargo leptos watch
 ```
 - Type-check with SSR + Hydrate features (useful for CI/agents):
 ```bash
+cd kord-web
 cargo check --features ssr,hydrate
 ```
 - Release build (SSR binary + client assets):
@@ -128,9 +129,9 @@ cargo wasi build --release --no-default-features \
   - Bind `thaw::Input` values via `RwSignal<String>` (Model<String>).
   - Use shared wrappers from `kord-web/src/app/shared.rs` for consistent UI.
 - When editing code, validate with targeted checks:
-  - Core: `cargo make --no-workspace test`
-  - Web: `cargo check -p kord-web --features ssr,hydrate`
-  - Full workspace checks are good before PRs: `cargo make --no-workspace test` + `cargo check`.
+  - Core: `cargo make test`
+  - Web: `cd kord-web && cargo check --features ssr,hydrate`
+  - Full workspace checks are good before PRs: `cargo make test` + `cargo check`.
 
 ### SSR/Hydrate Gotchas
 - Prefer pointer events for cross-input support; ensure release/cancel stops any audio.
@@ -157,7 +158,7 @@ cargo check --features ssr,hydrate
 ```
 - Integration tests are run as part of the main test suite:
 ```bash
-cargo make --no-workspace test
+cargo make test
 ```
 
 ## Troubleshooting Notes

@@ -21,8 +21,8 @@ jobs:
           cache-all-crates: "true"
       - run: cargo install cargo-make
       - run: cargo install wasm-pack
-      - run: cargo make --no-workspace test
-      - run: cd kord-web && wasm-pack test --firefox --headless --features hydrate
+      - run: cargo make test
+      - run: cargo make test-wasm
 
   codecov:
     needs: test
@@ -39,7 +39,7 @@ jobs:
         with:
           cache-all-crates: "true"
       - run: cargo install cargo-make
-      - run: cargo make --no-workspace codecov
+      - run: cargo make codecov
       - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -64,7 +64,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang mold
       - run: cargo install cargo-make
-      - run: cargo make --no-workspace build-linux
+      - run: cargo make build-linux
       - uses: actions/upload-artifact@v4
         with:
           name: kord_x86_64-unknown-linux-gnu
@@ -87,7 +87,7 @@ jobs:
         with:
           cache-all-crates: "true"
       - run: cargo install cargo-make
-      - run: cargo make --no-workspace build-windows
+      - run: cargo make build-windows
       - uses: actions/upload-artifact@v4
         with:
           name: kord_x86_64-pc-windows-gnu
@@ -108,7 +108,7 @@ jobs:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           targets: aarch64-apple-darwin
       - run: cargo install cargo-make
-      - run: cargo make --no-workspace build-macos
+      - run: cargo make build-macos
       - uses: actions/upload-artifact@v4
         with:
           name: kord_aarch64-apple-darwin

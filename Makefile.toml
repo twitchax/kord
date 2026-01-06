@@ -12,19 +12,34 @@ dependencies = ["install-nextest", "install-llvm-cov"]
 # Build / test tasks.
 
 [tasks.fmt]
+cwd = "."
+workspace = false
 command = "cargo"
 args = ["fmt"]
 
 [tasks.build]
+cwd = "."
+workspace = false
 command = "cargo"
 args = ["build"]
 
 [tasks.test]
+cwd = "."
+workspace = false
 install_crate = "cargo-nextest"
 command = "cargo"
 args = ["nextest", "run", "--features", "ml_train ml_infer ml_sample_process"]
 
+[tasks.test-wasm]
+cwd = "kord"
+workspace = false
+install_crate = "wasm-pack"
+command = "wasm-pack"
+args = ["test", "--firefox", "--headless", "--features", "wasm ml_infer"]
+
 [tasks.codecov]
+cwd = "."
+workspace = false
 clear = true
 dependencies = ["tools"]
 command = "cargo"
@@ -42,6 +57,8 @@ args = [
 # CI tasks
 
 [tasks.build-linux]
+cwd = "."
+workspace = false
 command = "cargo"
 args = ["build", "--target", "x86_64-unknown-linux-gnu", "--release"]
 
@@ -49,24 +66,33 @@ args = ["build", "--target", "x86_64-unknown-linux-gnu", "--release"]
 RUSTFLAGS = "-C linker=clang -C link-arg=-fuse-ld=mold"
 
 [tasks.build-windows]
+cwd = "."
+workspace = false
 command = "cargo"
 args = ["build", "--target", "x86_64-pc-windows-gnu", "--release"]
 
 [tasks.build-macos]
+cwd = "."
+workspace = false
 command = "cargo"
 args = ["build", "--target", "aarch64-apple-darwin", "--release"]
 
 # Publishing tasks
 
 [tasks.check-all]
+workspace = false
 dependencies = ["fmt", "test"]
 
 [tasks.release]
+cwd = "."
+workspace = false
 install_crate = "cargo-release"
 command = "cargo"
 args = ["release", "--workspace", "--no-publish", "--execute"]
 
 [tasks.build-cli]
+cwd = "."
+workspace = false
 command = "cargo"
 args = ["build", "--release", "--bin", "kord", "-p", "kord"]
 
@@ -106,11 +132,14 @@ command = "npm"
 args = ["publish", "--access", "public"]
 
 [tasks.publish-crates]
+cwd = "."
+workspace = false
 script = '''
 echo "Publishing kord crate to crates.io..."
 cargo publish -p kord --no-verify
 '''
 
 [tasks.publish-all]
+workspace = false
 dependencies = ["check-all", "build-cli", "build-npm", "build-web"]
 run_task = { name = ["publish-crates", "publish-npm"], fork = false }

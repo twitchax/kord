@@ -5,7 +5,7 @@
 ### Testing
 
 ```bash
-cargo make --no-workspace test
+cargo make test
 ```
 
 ### Platform-Specific Setup: libtorch on Windows
@@ -69,10 +69,10 @@ When using `ml_target_folded_bass`, the bass pitch uses softmax + cross-entropy 
 
 ```bash
 # Step 1: Bump versions and create git tags (does not publish)
-cargo make --no-workspace release
+cargo make release
 
 # Step 2: Build and publish to crates.io and npm
-cargo make --no-workspace publish-all
+cargo make publish-all
 ```
 
 ### Publish Without Version Changes
@@ -80,7 +80,7 @@ cargo make --no-workspace publish-all
 If you've already bumped versions manually or want to republish:
 
 ```bash
-cargo make --no-workspace publish-all
+cargo make publish-all
 ```
 
 **This orchestrates:**
@@ -95,13 +95,13 @@ cargo make --no-workspace publish-all
 
 ```bash
 # Build components individually
-cargo make --no-workspace build-cli
-cargo make --no-workspace build-npm
-cargo make --no-workspace build-web
+cargo make build-cli
+cargo make build-npm
+cargo make build-web
 
 # Publish individually
-cargo make --no-workspace publish-crates
-cargo make --no-workspace publish-npm
+cargo make publish-crates
+cargo make publish-npm
 ```
 
 ### Publish to Wasmer

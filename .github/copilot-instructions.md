@@ -5,6 +5,7 @@
 - Data/ML artifacts: `kord/model/`, `kord/noise/`, `kord/samples/` contain binaries used by analysis/ML; don't rename without adjusting code.
 - Feature dependencies: `analyze_mic` requires `cpal`; `ml_train` needs `burn` with backend (`ndarray`, `wgpu`, `cuda`); `wasm` needs `wasm-bindgen`.
 - Adversarial pass: always self-review changes for missed abstractions and edge cases; verify SSR/hydrate parity, feature flags, Thaw callback types (`thaw_utils::BoxOneCallback`), and `Input` model binding (`RwSignal<String>`).
+- cargo-make tasks run at workspace root by default (cwd set on all tasks).
 
 ## Debugging & Troubleshooting
 - **Audio issues**: Check `libasound2-dev` on Linux. For web, verify microphone permissions and HTTPS context.
@@ -45,7 +46,7 @@ Kord is a Rust workspace with a music theory/ML core and a Leptos web app. This 
 - **Web integration**: Core library compiled to WASM → JS interop via `wasm-bindgen` → Leptos components
 
 ## Build & Run
-- Core/CLI dev: `cargo build` | tests: `cargo make --no-workspace test`. On Linux, install `libasound2-dev` for audio.
+- Core/CLI dev: `cargo build` | tests: `cargo make test`. On Linux, install `libasound2-dev` for audio.
 - Web dev (SSR + hydrate):
 	- `cd kord-web`
 	- Dev: `cargo leptos watch`
