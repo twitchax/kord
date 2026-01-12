@@ -1374,8 +1374,8 @@ mod tests {
         let simple = KordChord::parse("C".to_string()).unwrap();
         assert!(!simple.is_crunchy(), "Simple major chord should not be crunchy");
 
-        let crunchy = KordChord::parse("Cmaj7#9#11b13".to_string()).unwrap();
-        assert!(crunchy.is_crunchy(), "Complex altered chord should be crunchy");
+        let crunchy = KordChord::parse("Cmaj7#9#11b13!".to_string()).unwrap();
+        assert!(crunchy.is_crunchy(), "Complex altered chord with ! should be crunchy");
     }
 
     #[wasm_bindgen_test]
