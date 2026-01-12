@@ -8,45 +8,46 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use anyhow::Context;
 use burn::{
     module::Module,
     tensor::{backend::Backend, Tensor},
 };
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 
-use crate::{
-    analyze::base::get_notes_from_smoothed_frequency_space,
-    core::{
-        base::Res,
-        helpers::{inv_mel, mel},
-        note::{HasNoteId, Note, ALL_PITCH_NOTES_WITH_FREQUENCY},
-        pitch::HasFrequency,
-    },
+use crate::core::{
+    base::Res,
+    helpers::{inv_mel, mel},
+    note::{HasNoteId, Note, ALL_PITCH_NOTES_WITH_FREQUENCY},
+    pitch::HasFrequency,
 };
 
-use super::{KordItem, FREQUENCY_SPACE_SIZE, MEL_SPACE_SIZE, NUM_CLASSES};
+use super::{KordItem, FREQUENCY_SPACE_SIZE, MEL_SPACE_SIZE, NOTE_SIGNATURE_SIZE, PITCH_CLASS_COUNT};
+#[cfg(feature = "ml_loader_frequency_pooled")]
+use super::{FREQUENCY_POOL_FACTOR, FREQUENCY_SPACE_POOLED_SIZE};
 
 // Operations for working with kord samples.
 
 /// Load the kord sample from the binary file into a new [`KordItem`].
-pub fn load_kord_item(path: impl AsRef<Path>) -> KordItem {
-    let file = std::fs::File::open(path.as_ref()).unwrap();
+pub fn load_kord_item(path: impl AsRef<Path>) -> Res<KordItem> {
+    let path = path.as_ref();
+    let file = std::fs::File::open(path).with_context(|| format!("File: `{path:?}`."))?;
     let mut reader = BufReader::new(file);
 
     // Read 8192 f32s in big endian from the file.
     let mut frequency_space = [0f32; 8192];
 
-    (0usize..FREQUENCY_SPACE_SIZE).for_each(|k| {
-        frequency_space[k] = reader.read_f32::<BigEndian>().unwrap();
-    });
+    for k in 0..FREQUENCY_SPACE_SIZE {
+        frequency_space[k] = reader.read_f32::<BigEndian>()?;
+    }
 
-    let label = reader.read_u128::<BigEndian>().unwrap();
+    let label = reader.read_u128::<BigEndian>()?;
 
-    KordItem {
-        path: path.as_ref().to_owned(),
+    Ok(KordItem {
+        path: path.to_owned(),
         frequency_space,
         label,
-    }
+    })
 }
 
 /// Save the kord sample into a binary file.
@@ -112,8 +113,8 @@ pub fn mel_filter_banks_from(spectrum: &[f32]) -> [f32; MEL_SPACE_SIZE] {
 }
 
 /// Run a note-binned "harmonic convolution" over the frequency space data.
-pub fn note_binned_convolution(spectrum: &[f32]) -> [f32; NUM_CLASSES] {
-    let mut convolution = [0f32; NUM_CLASSES];
+pub fn note_binned_convolution(spectrum: &[f32]) -> [f32; NOTE_SIGNATURE_SIZE] {
+    let mut convolution = [0f32; NOTE_SIGNATURE_SIZE];
 
     for (note, _) in ALL_PITCH_NOTES_WITH_FREQUENCY.iter().skip(7).take(90) {
         let id_index = note.id_index();
@@ -166,6 +167,19 @@ pub fn harmonic_convolution(spectrum: &[f32]) -> [f32; FREQUENCY_SPACE_SIZE] {
     harmonic_convolution
 }
 
+/// Downsamples the full frequency space by averaging contiguous windows.
+#[cfg(feature = "ml_loader_frequency_pooled")]
+pub fn average_pool_frequency_space(spectrum: &[f32; FREQUENCY_SPACE_SIZE]) -> [f32; FREQUENCY_SPACE_POOLED_SIZE] {
+    let mut pooled = [0f32; FREQUENCY_SPACE_POOLED_SIZE];
+
+    for (index, chunk) in spectrum.chunks_exact(FREQUENCY_POOL_FACTOR).enumerate() {
+        let sum: f32 = chunk.iter().sum();
+        pooled[index] = sum / FREQUENCY_POOL_FACTOR as f32;
+    }
+
+    pooled
+}
+
 /// Create a linearly spaced vector.
 pub fn linspace(start: f32, end: f32, num_points: usize) -> Vec<f32> {
     let step = (end - start) / (num_points - 1) as f32;
@@ -173,7 +187,10 @@ pub fn linspace(start: f32, end: f32, num_points: usize) -> Vec<f32> {
 }
 
 /// Gets the "deterministic guess" for a given kord item.
+#[cfg(feature = "analyze_base")]
 pub fn get_deterministic_guess(kord_item: &KordItem) -> u128 {
+    use crate::analyze::base::get_notes_from_smoothed_frequency_space;
+
     let smoothed_frequency_space = kord_item.frequency_space.into_iter().enumerate().map(|(k, v)| (k as f32, v)).collect::<Vec<_>>();
 
     let notes = get_notes_from_smoothed_frequency_space(&smoothed_frequency_space);
@@ -185,7 +202,7 @@ pub fn get_deterministic_guess(kord_item: &KordItem) -> u128 {
 pub fn u128_to_binary(num: u128) -> [f32; 128] {
     let mut binary = [0f32; 128];
     for i in 0..128 {
-        binary[127 - i] = (num >> i & 1) as f32;
+        binary[128 - 1 - i] = (num >> i & 1) as f32;
     }
 
     binary
@@ -195,7 +212,17 @@ pub fn u128_to_binary(num: u128) -> [f32; 128] {
 pub fn binary_to_u128(binary: &[f32]) -> u128 {
     let mut num = 0u128;
     for i in 0..128 {
-        num += (binary[i] as u128) << (127 - i);
+        num += (binary[i] as u128) << (128 - 1 - i);
+    }
+
+    num
+}
+
+/// Produces a u16 from a 12 element array of 0s and 1s.
+pub fn binary_to_u16(binary: &[f32]) -> u16 {
+    let mut num = 0u16;
+    for i in 0..12 {
+        num += (binary[i] as u16) << (12 - 1 - i);
     }
 
     num
@@ -203,33 +230,116 @@ pub fn binary_to_u128(binary: &[f32]) -> u128 {
 
 /// Folds the 128-bit binary signature of the the notes into a 12-bit signature (which represent one octave)
 #[allow(dead_code)]
-pub fn fold_binary(binary: &[f32; 128]) -> [f32; 12] {
-    let mut folded = [0f32; 12];
+pub fn fold_binary(binary: &[f32; NOTE_SIGNATURE_SIZE]) -> [f32; PITCH_CLASS_COUNT] {
+    let mut folded = [0f32; PITCH_CLASS_COUNT];
 
-    for k in 0..10 {
-        let slice = &binary[k * 12..(k + 1) * 12];
-
-        for i in 0..12 {
-            folded[i] = slice[i].max(folded[i]);
+    // binary is MSB-first from u128_to_binary, so we need to map array indices back to bit positions
+    for array_idx in 0..NOTE_SIGNATURE_SIZE {
+        if binary[array_idx] == 1.0 {
+            // Convert array index back to bit position: array_idx corresponds to bit (127 - array_idx)
+            let bit_position = NOTE_SIGNATURE_SIZE - 1 - array_idx;
+            let pitch_class = bit_position % PITCH_CLASS_COUNT;
+            folded[pitch_class] = 1.0;
         }
     }
 
     folded
 }
 
-/// Applies sigmoid activation and 0.5 threshold to convert logits to binary predictions.
-pub fn logits_to_binary_predictions(logits: &[f32]) -> Vec<f32> {
-    logits
+/// Applies sigmoid activation to convert logits to probabilities in `[0, 1]`.
+#[cfg(feature = "ml_target_full")]
+pub fn logits_to_probabilities(logits: &[f32]) -> Vec<f32> {
+    logits.iter().map(|&logit| 1.0 / (1.0 + (-logit).exp())).collect()
+}
+
+/// Applies sigmoid activation to convert logits to probabilities in `[0, 1]`.
+#[cfg(feature = "ml_target_folded")]
+pub fn logits_to_probabilities(logits: &[f32]) -> Vec<f32> {
+    logits.iter().map(|&logit| 1.0 / (1.0 + (-logit).exp())).collect()
+}
+
+/// Applies sigmoid activation and bass softmax to convert logits to probabilities in `[0, 1]`.
+#[cfg(feature = "ml_target_folded_bass")]
+pub fn logits_to_probabilities(logits: &[f32]) -> Vec<f32> {
+    let mut probabilities: Vec<f32> = logits.iter().map(|&logit| 1.0 / (1.0 + (-logit).exp())).collect();
+
+    if logits.len() >= PITCH_CLASS_COUNT {
+        let slice = &logits[..PITCH_CLASS_COUNT];
+        let max_logit = slice.iter().copied().fold(f32::NEG_INFINITY, f32::max);
+        let exp_values: Vec<f32> = slice.iter().map(|&value| (value - max_logit).exp()).collect();
+        let sum: f32 = exp_values.iter().sum();
+
+        if sum > 0.0 {
+            for (offset, exp_value) in exp_values.iter().enumerate() {
+                probabilities[offset] = exp_value / sum;
+            }
+        }
+    }
+
+    probabilities
+}
+
+/// Converts probabilities to binary predictions using per-class thresholds.
+#[cfg(feature = "ml_target_full")]
+pub fn logits_to_predictions(probabilities: &[f32], thresholds: &[f32]) -> Vec<f32> {
+    probabilities
         .iter()
-        .map(|&logit| {
-            let prob = 1.0 / (1.0 + (-logit).exp()); // sigmoid
-            if prob > 0.5 {
+        .enumerate()
+        .map(|(idx, probability)| {
+            let threshold = thresholds.get(idx).copied().unwrap_or(0.5);
+            if *probability > threshold {
                 1.0
             } else {
                 0.0
             }
         })
         .collect()
+}
+
+/// Converts probabilities to binary predictions using per-class thresholds.
+#[cfg(feature = "ml_target_folded")]
+pub fn logits_to_predictions(probabilities: &[f32], thresholds: &[f32]) -> Vec<f32> {
+    probabilities
+        .iter()
+        .enumerate()
+        .map(|(idx, probability)| {
+            let threshold = thresholds.get(idx).copied().unwrap_or(0.5);
+            if *probability > threshold {
+                1.0
+            } else {
+                0.0
+            }
+        })
+        .collect()
+}
+
+/// Converts probabilities to binary predictions using per-class thresholds.
+#[cfg(feature = "ml_target_folded_bass")]
+pub fn logits_to_predictions(probabilities: &[f32], thresholds: &[f32]) -> Vec<f32> {
+    let mut predictions = vec![0.0; probabilities.len()];
+
+    if probabilities.len() >= PITCH_CLASS_COUNT {
+        let bass_slice = &probabilities[..PITCH_CLASS_COUNT];
+        if let Some((best_idx, _)) = bass_slice.iter().enumerate().max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal)) {
+            predictions[best_idx] = 1.0;
+        }
+
+        for offset in 0..PITCH_CLASS_COUNT {
+            let idx = PITCH_CLASS_COUNT + offset;
+            if idx < probabilities.len() {
+                let threshold = thresholds.get(idx).copied().unwrap_or(0.5);
+                let probability = probabilities[idx];
+                predictions[idx] = if probability > threshold { 1.0 } else { 0.0 };
+            }
+        }
+    }
+
+    predictions
+}
+
+/// Applies sigmoid activation and 0.5 threshold to convert logits to binary predictions.
+pub fn logits_to_binary_predictions(logits: &[f32]) -> Vec<f32> {
+    logits_to_probabilities(logits).into_iter().map(|prob| if prob > 0.5 { 1.0 } else { 0.0 }).collect()
 }
 
 // Common tensor operations.

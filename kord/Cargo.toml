@@ -5,7 +5,7 @@ edition = "2021"
 authors = ["Aaron Roney <twitchax@gmail.com>"]
 license = "MIT"
 description = "A tool to easily explore music theory principles."
-readme = "README.md"
+readme = "../README.md"
 homepage = "https://github.com/twitchax/kord"
 repository = "https://github.com/twitchax/kord"
 keywords = ["cli", "music", "theory", "jazz", "chords"]
@@ -26,16 +26,21 @@ required-features = ["cli"]
 wasm-opt = false
 
 [lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = [
-    'cfg(wasm)',
-    'cfg(host_family_unix)',
-    'cfg(host_family_windows )',
-] }
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm)'] }
 
 [features]
-default = ["cli", "analyze", "audio", "ml_infer"]
+default = [
+    "cli",
+    "analyze",
+    "audio",
+    "ml_infer",
+    "ml_loader_mel",
+    "ml_target_folded",
+    "ml_train_precision_fp32",
+    "ml_store_precision_half",
+]
 
-cli = ["clap", "futures"]
+cli = ["clap", "futures", "tracing", "tracing-subscriber"]
 
 audio = ["rodio"]
 
@@ -51,6 +56,34 @@ analyze_file_alac = ["symphonia/alac", "symphonia/isomp4"]
 ml = ["ml_train", "ml_infer"]
 ml_base = ["serde", "byteorder", "bincode"]
 
+ml_train_precision_fp32 = []
+ml_train_precision_fp16 = []
+ml_train_precision_bf16 = []
+
+ml_store_precision_full = []
+ml_store_precision_half = []
+
+ml_loader_note_binned_convolution = []
+ml_loader_mel = []
+ml_loader_frequency = []
+ml_loader_frequency_pooled = []
+ml_loader_include_deterministic_guess = []
+
+ml_target_full = []
+ml_target_folded = []
+ml_target_folded_bass = []
+
+ml_sample_gather = ["ml_base"]
+ml_sample_process = [
+    "ml_base",
+    "analyze_base",
+    "midly",
+    "hound",
+    "symphonia",
+    "tracing",
+    "symphonia/flac",
+]
+
 ml_train = [
     "ml_base",
     "rand",
@@ -62,6 +95,8 @@ ml_train = [
     "burn/tui",
     "burn/metrics",
 ]
+
+ml_hpt = ["ml_train"]
 
 ml_tch = ["ml_train", "burn/tch"]
 ml_candle = ["ml_train", "burn/candle"]
@@ -107,6 +142,11 @@ parse_duration0 = { version = "3", optional = true }
 # cli
 clap = { version = "4", features = ["derive"], optional = true }
 futures = { version = "0.3", optional = true }
+tracing = { version = "0.1", features = ["log"], optional = true }
+tracing-subscriber = { version = "0.3", features = [
+    "fmt",
+    "ansi",
+], optional = true }
 
 # audio
 rodio = { version = "0.21", default-features = false, features = [
@@ -124,13 +164,16 @@ cpal = { version = "0.16", optional = true }
 # ml
 serde = { version = "1", features = ["derive"], optional = true }
 rand = { version = "0.9", optional = true }
-byteorder = { version = "1", optional = true }
 bincode = { version = "2", default-features = false, optional = true, features = [
     "alloc",
     "serde",
 ] }
+serde_json = { version = "1" }
+byteorder = { version = "1", optional = true }
 rayon = { version = "1", optional = true }
-burn = { version = "0.18", default-features = false, optional = true }
+burn = { version = "0.19", default-features = false, optional = true }
+midly = { version = "0.5", optional = true }
+hound = { version = "3", optional = true }
 
 # plot
 plotters = { version = "0.3", optional = true }
@@ -145,3 +188,5 @@ gloo-timers = { version = "0.3", optional = true, features = ["futures"] }
 
 [dev-dependencies]
 pretty_assertions = "1"
+tempfile = "3"
+wasm-bindgen-test = "0.3"

@@ -16,7 +16,7 @@ use crate::core::{
     note::{CZero, Note, NoteRecreator},
     octave::{HasOctave, Octave},
     parser::{note_str_to_note, octave_str_to_octave, ChordParser, Rule},
-    pitch::HasFrequency,
+    pitch::{HasFrequency, Pitch},
 };
 
 // Traits.
@@ -346,6 +346,60 @@ impl Chord {
 }
 
 impl Chord {
+    /// Attempts to guess the chord from detected pitch classes.
+    /// Tries intelligent permutations across octaves to find all plausible voicings.
+    /// The `try_from_notes` method will handle slash chords and inversions automatically.
+    pub fn try_from_pitches(all_pitches: &[Pitch]) -> Res<Vec<Self>> {
+        use crate::core::named_pitch::NamedPitch;
+        use crate::core::octave::Octave;
+
+        if all_pitches.is_empty() {
+            return Err(anyhow::Error::msg("Must have at least one pitch to guess a chord."));
+        }
+
+        let mut all_note_combinations = Vec::new();
+
+        // Convert pitches to notes at octave 4 as base
+        let mut base_notes: Vec<Note> = all_pitches.iter().map(|&p| Note::new(NamedPitch::from(p), Octave::Four)).collect();
+        base_notes.sort();
+
+        // Generate rotations - each rotation bumps the first note(s) to octave 5
+        for rotation in 0..base_notes.len() {
+            let mut rotated = base_notes.clone();
+
+            // Move first 'rotation' notes up an octave
+            for i in 0..rotation {
+                rotated[i] = rotated[i].with_octave(Octave::Five);
+            }
+
+            // Re-sort after octave adjustments
+            rotated.sort();
+
+            // Add this voicing to try
+            all_note_combinations.push(rotated);
+        }
+
+        // Try all combinations through the existing chord guesser
+        let mut all_candidates = Vec::new();
+        for notes in all_note_combinations {
+            if notes.len() >= 3 {
+                if let Ok(candidates) = Self::try_from_notes(&notes) {
+                    all_candidates.extend(candidates);
+                }
+            }
+        }
+
+        // Sort by complexity (simplest first), then deduplicate by string representation
+        all_candidates.sort();
+        all_candidates.dedup_by_key(|c| c.to_string());
+
+        if all_candidates.is_empty() {
+            return Err(anyhow::Error::msg("Could not determine chord from pitches."));
+        }
+
+        Ok(all_candidates)
+    }
+
     /// Attempts to guess the chord from the notes.
     pub fn try_from_notes(notes: &[Note]) -> Res<Vec<Self>> {
         if notes.len() < 3 {
@@ -1157,7 +1211,7 @@ impl Parsable for Chord {
                         result = result.thirteen();
                     }
                     _ => {
-                        unreachable!();
+                        return Err(anyhow::Error::msg(format!("Unknown dominant modifier: {}", component.as_str())));
                     }
                 },
                 Rule::modifier => match component.as_str() {
@@ -1210,7 +1264,7 @@ impl Parsable for Chord {
                         result = result.sharp13();
                     }
                     _ => {
-                        unreachable!();
+                        return Err(anyhow::Error::msg(format!("Unknown modifier: {}", component.as_str())));
                     }
                 },
                 Rule::slash => {
@@ -1233,7 +1287,7 @@ impl Parsable for Chord {
                 }
                 Rule::EOI => {}
                 _ => {
-                    unreachable!();
+                    return Err(anyhow::Error::msg(format!("Unknown rule in chord parser: {:?}", component.as_rule())));
                 }
             }
         }

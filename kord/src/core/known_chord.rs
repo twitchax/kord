@@ -81,7 +81,7 @@ pub enum KnownChord {
 impl HasDescription for KnownChord {
     fn description(&self) -> &'static str {
         match self {
-            KnownChord::Unknown => unreachable!(),
+            KnownChord::Unknown => panic!("KnownChord::Unknown should never be used in description()"),
             KnownChord::Major => "major",
             KnownChord::Minor => "minor",
             KnownChord::Major7 => "major 7, ionian, first mode of major scale",
@@ -106,7 +106,7 @@ impl HasDescription for KnownChord {
 impl HasRelativeScale for KnownChord {
     fn relative_scale(&self) -> Vec<Interval> {
         match self {
-            KnownChord::Unknown => unreachable!(),
+            KnownChord::Unknown => panic!("KnownChord::Unknown should never be used in relative_scale()"),
             KnownChord::Major => vec![
                 Interval::PerfectUnison,
                 Interval::MajorSecond,
@@ -268,7 +268,7 @@ impl HasRelativeScale for KnownChord {
 impl HasRelativeChord for KnownChord {
     fn relative_chord(&self) -> Vec<Interval> {
         match self {
-            KnownChord::Unknown => unreachable!(),
+            KnownChord::Unknown => panic!("KnownChord::Unknown should never be used in relative_chord()"),
             KnownChord::Major => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth],
             KnownChord::Minor => vec![Interval::PerfectUnison, Interval::MinorThird, Interval::PerfectFifth],
             KnownChord::Major7 => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth, Interval::MajorSeventh],
@@ -312,7 +312,7 @@ impl HasRelativeChord for KnownChord {
 impl HasName for KnownChord {
     fn name(&self) -> String {
         match self {
-            KnownChord::Unknown => unreachable!(),
+            KnownChord::Unknown => panic!("KnownChord::Unknown should never be used in name()"),
             KnownChord::Major => "".to_owned(),
             KnownChord::Minor => "m".to_owned(),
             KnownChord::Major7 => "maj7".to_owned(),

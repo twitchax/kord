@@ -1,5 +1,6 @@
 #![recursion_limit = "256"]
 
+#[cfg(any(feature = "analyze_file", feature = "ml_sample_process"))]
 use std::path::PathBuf;
 
 use clap::{ArgAction, Parser, Subcommand};
@@ -9,10 +10,19 @@ use klib::core::{
     note::Note,
     octave::Octave,
 };
+use tracing_subscriber::{filter::LevelFilter, fmt::SubscriberBuilder};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
+    /// Flag that specifies verbose logging.
+    #[arg(short, long, conflicts_with = "quiet")]
+    verbose: bool,
+
+    /// Flag that suppresses all tracing output.
+    #[arg(short, long, conflicts_with = "verbose")]
+    quiet: bool,
+
     #[command(subcommand)]
     command: Option<Command>,
 }
@@ -113,10 +123,10 @@ enum AnalyzeCommand {
     File {
         /// Whether or not to play a preview of the selected section of the
         /// audio file before analyzing.
-        #[arg(long = "no-preview", action=ArgAction::SetFalse, default_value_t = true)]
+        #[arg(long = "no-preview", action = ArgAction::SetFalse, default_value_t = true)]
         preview: bool,
 
-        /// How far into the file to begin analyzing, as understood by systemd.time(7)
+        /// How far into the file to begin analyzing, as understood by systemd.time(7).
         #[arg(short, long)]
         start_time: Option<String>,
 
@@ -132,7 +142,7 @@ enum AnalyzeCommand {
 #[derive(Subcommand, Debug)]
 enum MlCommand {
     /// Records audio from the microphone, and writes the resulting sample to disk.
-    #[cfg(feature = "ml_train")]
+    #[cfg(feature = "ml_sample_gather")]
     Gather {
         /// Sets the destination directory for the gathered samples.
         #[arg(short, long, default_value = ".hidden/samples")]
@@ -143,16 +153,56 @@ enum MlCommand {
         length: u8,
     },
 
+    /// Processes paired MIDI and audio files into sanitized training samples.
+    #[cfg(feature = "ml_sample_process")]
+    Process {
+        /// Sets the destination directory for the processed samples.
+        #[arg(short, long, default_value = ".hidden/samples")]
+        destination: String,
+
+        /// The MIDI file containing chord annotations for the song.
+        #[arg(long)]
+        midi: PathBuf,
+
+        /// The audio file (WAV or FLAC) aligned with the MIDI file.
+        #[arg(long)]
+        audio: PathBuf,
+
+        /// Minimum fraction of a measure that a note must sound to be included in the chord.
+        #[arg(long, default_value_t = 0.2)]
+        min_fraction: f32,
+
+        /// Minimum number of distinct notes required to emit a sample.
+        #[arg(long, default_value_t = 1)]
+        min_notes: usize,
+
+        /// Maximum number of notes to retain after sorting by prominence.
+        #[arg(long, default_value_t = 20)]
+        max_notes: usize,
+
+        /// Minimum duration (in seconds) required for the measure to be considered.
+        #[arg(long, default_value_t = 1.0)]
+        min_duration: f32,
+
+        /// Maximum number of samples to emit.
+        #[arg(long)]
+        limit: Option<usize>,
+    },
+
     /// Runs the ML trainer using burn-rs, tch-rs, and CUDA as defaults.
     #[cfg(feature = "ml_train")]
     Train {
         /// The noise asset root for the simulated data.
-        #[arg(long, default_value = "kord/noise")]
+        #[arg(long, default_value = "kord/samples/noise")]
         noise_asset_root: String,
 
-        /// The source directory for the gathered samples.
-        #[arg(long, default_value = "kord/samples")]
-        source: String,
+        /// The directories (or `sim`) to draw training samples from.
+        #[arg(long = "training-sources", value_name = "PATH", required = true, num_args = 1..)]
+        training_sources: Vec<String>,
+
+        /// Optional directories (or `sim`) to draw validation samples from.
+        #[arg(long = "validation-sources", value_name = "PATH", num_args = 1..)]
+        validation_sources: Vec<String>,
 
         /// The destination directory for the trained model.
         #[arg(long, default_value = "kord/model")]
@@ -170,7 +220,7 @@ enum MlCommand {
         backend: String,
 
         /// Simulation data set size.
-        #[arg(long, default_value_t = 100)]
+        #[arg(long, default_value_t = 500)]
         simulation_size: usize,
 
         /// Simulation peak radius.
@@ -182,19 +232,29 @@ enum MlCommand {
         simulation_harmonic_decay: f32,
 
         /// Simulation frequency wobble.
-        #[arg(long, default_value_t = 0.4)]
+        #[arg(long, default_value_t = 0.2)]
         simulation_frequency_wobble: f32,
+
+        /// The number of times to replicate captured samples during training.
+        #[arg(long, default_value_t = 8)]
+        captured_oversample_factor: usize,
 
         /// The number of Multi Head Attention (MHA) heads.
         #[arg(long, default_value_t = 16)]
         mha_heads: usize,
 
-        /// The Multi Head Attention (MHA) dropout rate.
-        #[arg(long, default_value_t = 0.5)]
-        mha_dropout: f64,
+        /// Dropout rate applied to attention and trunk layers.
+        #[arg(long, default_value_t = 0.2)]
+        dropout: f64,
+
+        /// The hidden size of the model's MLP trunk.
+        ///
+        /// The trunk is a lightweight MLP inserted between attention and the final output head.
+        #[arg(long, default_value_t = 1024)]
+        trunk_hidden_size: usize,
 
         /// The number of epochs to train for.
-        #[arg(long, default_value_t = 64)]
+        #[arg(long, default_value_t = 16)]
         model_epochs: usize,
 
         /// The number of samples to use per epoch.
@@ -229,10 +289,6 @@ enum MlCommand {
         #[arg(long, default_value_t = f32::EPSILON)]
         adam_epsilon: f32,
 
-        /// The "sigmoid strength" of the final pass.
-        #[arg(long, default_value_t = 1.0)]
-        sigmoid_strength: f32,
-
         /// Suppresses the training plots.
         #[arg(long, action=ArgAction::SetTrue, default_value_t = false)]
         no_plots: bool,
@@ -261,7 +317,7 @@ enum MlCommand {
     },
 
     /// Runs the ML trainer across various hyperparameters, and outputs the results.
-    #[cfg(feature = "ml_train")]
+    #[cfg(feature = "ml_hpt")]
     Hpt {
         /// The source directory for the gathered samples.
         #[arg(long, default_value = "kord/samples")]
@@ -328,9 +384,41 @@ enum InferCommand {
 fn main() -> Void {
     let args = Args::parse();
 
+    init_tracing(args.verbose, args.quiet);
+
     start(args)?;
 
     Ok(())
+}
+
+fn init_tracing(verbose: bool, quiet: bool) {
+    let level_filter = if quiet {
+        LevelFilter::OFF
+    } else if verbose {
+        LevelFilter::DEBUG
+    } else {
+        LevelFilter::INFO
+    };
+
+    SubscriberBuilder::default()
+        .with_ansi(true)
+        .with_level(!quiet)
+        .with_file(false)
+        .with_target(true)
+        .with_thread_ids(false)
+        .with_thread_names(false)
+        .with_max_level(level_filter)
+        .init();
+
+    if quiet {
+        return;
+    }
+
+    if verbose {
+        tracing::debug!("Tracing initialized at DEBUG level");
+    } else {
+        tracing::info!("Tracing initialized at INFO level");
+    }
 }
 
 fn start(args: Args) -> Void {
@@ -403,14 +491,47 @@ fn start(args: Args) -> Void {
         },
         #[cfg(feature = "ml_base")]
         Some(Command::Ml { ml_command }) => match ml_command {
-            #[cfg(feature = "ml_train")]
+            #[cfg(feature = "ml_sample_gather")]
             Some(MlCommand::Gather { destination, length }) => {
                 klib::ml::base::gather::gather_sample(destination, length)?;
+            }
+            #[cfg(feature = "ml_sample_process")]
+            Some(MlCommand::Process {
+                destination,
+                midi,
+                audio,
+                min_fraction,
+                min_notes,
+                max_notes,
+                min_duration,
+                limit,
+            }) => {
+                use klib::ml::base::process::{process_song_samples, SongProcessingOptions};
+
+                if max_notes < min_notes {
+                    return Err(anyhow::Error::msg("`max-notes` must be greater than or equal to `min-notes`."));
+                }
+
+                if !(0.0..=1.0).contains(&min_fraction) {
+                    return Err(anyhow::Error::msg("`min-fraction` must be between 0.0 and 1.0."));
+                }
+
+                let options = SongProcessingOptions {
+                    min_note_fraction: min_fraction as f64,
+                    min_notes,
+                    max_notes,
+                    min_duration_seconds: min_duration as f64,
+                    max_samples: limit,
+                };
+
+                let paths = process_song_samples(&destination, midi, audio, options)?;
+                println!("Generated {} samples.", paths.len());
             }
             #[cfg(feature = "ml_train")]
             Some(MlCommand::Train {
                 noise_asset_root,
-                source,
+                training_sources,
+                validation_sources,
                 destination,
                 log,
                 simulation_size,
@@ -418,8 +539,10 @@ fn start(args: Args) -> Void {
                 simulation_peak_radius,
                 simulation_harmonic_decay,
                 simulation_frequency_wobble,
+                captured_oversample_factor,
                 mha_heads,
-                mha_dropout,
+                dropout,
+                trunk_hidden_size,
                 model_epochs,
                 model_batch_size,
                 model_workers,
@@ -429,23 +552,29 @@ fn start(args: Args) -> Void {
                 adam_beta1,
                 adam_beta2,
                 adam_epsilon,
-                sigmoid_strength,
                 no_plots,
             }) => {
+                #[cfg(any(feature = "ml_tch", feature = "ml_cuda", feature = "ml_wgpu", feature = "ml_candle", feature = "ml_ndarray"))]
                 use burn::backend::Autodiff;
+                #[cfg(any(feature = "ml_tch", feature = "ml_cuda", feature = "ml_wgpu", feature = "ml_candle", feature = "ml_ndarray"))]
+                use klib::ml::base::PrecisionElement;
                 use klib::ml::base::TrainConfig;
 
+                #[allow(unused_variables)]
                 let config = TrainConfig {
                     noise_asset_root,
-                    source,
+                    training_sources,
+                    validation_sources,
                     destination,
                     log,
                     simulation_size,
                     simulation_peak_radius,
                     simulation_harmonic_decay,
                     simulation_frequency_wobble,
+                    captured_oversample_factor,
                     mha_heads,
-                    mha_dropout,
+                    dropout,
+                    trunk_hidden_size,
                     model_epochs,
                     model_batch_size,
                     model_workers,
@@ -455,7 +584,6 @@ fn start(args: Args) -> Void {
                     adam_beta1,
                     adam_beta2,
                     adam_epsilon,
-                    sigmoid_strength,
                     no_plots,
                 };
 
@@ -471,7 +599,7 @@ fn start(args: Args) -> Void {
                         #[cfg(target_os = "macos")]
                         let device = LibTorchDevice::Mps;
 
-                        klib::ml::train::run_training::<Autodiff<LibTorch<f32>>>(device, &config, true, true)?;
+                        klib::ml::train::run_training::<Autodiff<LibTorch<PrecisionElement>>>(device, &config, true, true)?;
                     }
                     #[cfg(feature = "ml_cuda")]
                     "cuda" => {
@@ -479,7 +607,7 @@ fn start(args: Args) -> Void {
 
                         let device = CudaDevice::default();
 
-                        klib::ml::train::run_training::<Autodiff<Cuda<f32>>>(device, &config, true, true)?;
+                        klib::ml::train::run_training::<Autodiff<Cuda<PrecisionElement>>>(device, &config, true, true)?;
                     }
                     #[cfg(feature = "ml_wgpu")]
                     "wgpu" => {
@@ -487,7 +615,7 @@ fn start(args: Args) -> Void {
 
                         let device = WgpuDevice::default();
 
-                        klib::ml::train::run_training::<Autodiff<Wgpu<f32>>>(device, &config, true, true)?;
+                        klib::ml::train::run_training::<Autodiff<Wgpu<PrecisionElement>>>(device, &config, true, true)?;
                     }
                     #[cfg(feature = "ml_candle")]
                     "candle" => {
@@ -500,7 +628,7 @@ fn start(args: Args) -> Void {
                         #[cfg(target_os = "macos")]
                         let device = CandleDevice::Cpu;
 
-                        klib::ml::train::run_training::<Autodiff<Candle<f32>>>(device, &config, true, true)?;
+                        klib::ml::train::run_training::<Autodiff<Candle<PrecisionElement>>>(device, &config, true, true)?;
                     }
                     #[cfg(feature = "ml_ndarray")]
                     "ndarray" => {
@@ -508,7 +636,7 @@ fn start(args: Args) -> Void {
 
                         let device = NdArrayDevice::default();
 
-                        klib::ml::train::run_training::<Autodiff<NdArray<f32>>>(device, &config, true, true)?;
+                        klib::ml::train::run_training::<Autodiff<NdArray<PrecisionElement>>>(device, &config, true, true)?;
                     }
                     _ => {
                         #[cfg(feature = "ml_remote")]
@@ -517,6 +645,8 @@ fn start(args: Args) -> Void {
 
                             let device = RemoteDevice::new(&backend);
                             klib::ml::train::run_training::<Autodiff<RemoteBackend>>(device, &config, true, true)?;
+
+                            return Ok(());
                         }
 
                         return Err(anyhow::Error::msg(
@@ -535,10 +665,10 @@ fn start(args: Args) -> Void {
                     let audio_data = futures::executor::block_on(klib::analyze::mic::get_audio_data_from_microphone(length))?;
 
                     // Run the inference.
-                    let notes = infer(&audio_data, length)?;
+                    let result = infer(&audio_data, length)?;
 
                     // Show the results.
-                    show_notes_and_chords(&notes)?;
+                    show_inference_result(&result)?;
                 }
                 #[cfg(feature = "analyze_file")]
                 Some(InferCommand::File { preview, start_time, end_time, source }) => {
@@ -558,10 +688,10 @@ fn start(args: Args) -> Void {
                     let (audio_data, length) = get_audio_data_from_file(&source, start_time, end_time)?;
 
                     // Run inference.
-                    let notes = infer(&audio_data, length)?;
+                    let result = infer(&audio_data, length)?;
 
                     // Show the results.
-                    show_notes_and_chords(&notes)?;
+                    show_inference_result(&result)?;
                 }
                 _ => {
                     return Err(anyhow::Error::msg("Invalid inference command."));
@@ -574,7 +704,7 @@ fn start(args: Args) -> Void {
                     analyze::base::{compute_cqt, translate_frequency_space_to_peak_space},
                     helpers::plot_frequency_space,
                     ml::base::{
-                        helpers::{harmonic_convolution, load_kord_item, mel_filter_banks_from},
+                        helpers::{fold_binary, harmonic_convolution, load_kord_item, mel_filter_banks_from, note_binned_convolution},
                         MEL_SPACE_SIZE,
                     },
                 };
@@ -598,6 +728,17 @@ fn start(args: Args) -> Void {
                 let cqt_file_name = format!("{}_cqt", name);
                 let cqt_space = compute_cqt(&kord_item.frequency_space).into_iter().enumerate().map(|(k, v)| (k as f32, v)).collect::<Vec<_>>();
                 plot_frequency_space(&cqt_space, "KordItem CQT Space", &cqt_file_name, 0.0, 256.0);
+
+                // Plot note-binned convolution space.
+                let convolution_file_name = format!("{}_convolution", name);
+                let convolution_space = note_binned_convolution(&kord_item.frequency_space);
+                let convolution_space_as_freq = convolution_space.iter().enumerate().map(|(k, v)| (k as f32, *v)).collect::<Vec<_>>();
+                plot_frequency_space(&convolution_space_as_freq, "KordItem Note-Binned Convolution Space", &convolution_file_name, 0.0, 128.0);
+
+                // Plot folded note-binned convolution space.
+                let folded_convolution_file_name = format!("{}_convolution_folded", name);
+                let folded_convolution_space = fold_binary(&convolution_space).into_iter().enumerate().map(|(k, v)| (k as f32, v)).collect::<Vec<_>>();
+                plot_frequency_space(&folded_convolution_space, "KordItem Folded Note-Binned Convolution Space", &folded_convolution_file_name, 0.0, 12.0);
 
                 // Plot mel space.
                 let mel_file_name = format!("{}_mel", name);
@@ -638,7 +779,7 @@ fn start(args: Args) -> Void {
                 let time_space = klib::analyze::base::get_time_space(&peak_space);
                 plot_frequency_space(&time_space, "KordItem Time Space", &harmonic_file_name, x_min, x_max);
             }
-            #[cfg(feature = "ml_train")]
+            #[cfg(feature = "ml_hpt")]
             Some(MlCommand::Hpt { source, destination, log, device }) => {
                 use klib::ml::train::execute::hyper_parameter_tuning;
 
@@ -696,6 +837,34 @@ fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
     Ok(())
 }
 
+#[cfg(feature = "ml_infer")]
+fn show_inference_result(result: &klib::ml::infer::InferenceResult) -> Res<()> {
+    use klib::core::base::HasStaticName;
+
+    // Show detected pitches.
+    let pitch_names: Vec<String> = result.pitches.iter().map(|p| klib::core::named_pitch::NamedPitch::from(*p).static_name().to_string()).collect();
+    println!("Pitches: {}", pitch_names.join(" "));
+
+    // Show pitch deltas for debugging.
+    println!("\nPitch deltas (probability - threshold):");
+    let pitch_class_names = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
+    for (i, &delta) in result.pitch_deltas.iter().enumerate() {
+        println!("  {}: {:.3}", pitch_class_names[i], delta);
+    }
+
+    // Show chord candidates.
+    if result.chords.is_empty() {
+        println!("\nNo chord candidates found");
+    } else {
+        println!("\nChord candidates:");
+        for candidate in &result.chords {
+            describe(candidate);
+        }
+    }
+
+    Ok(())
+}
+
 fn show_notes_and_chords(notes: &[Note]) -> Res<()> {
     println!("Notes: {}", notes.iter().map(ToString::to_string).collect::<Vec<_>>().join(" "));
 
@@ -720,6 +889,8 @@ mod tests {
     #[test]
     fn test_describe() {
         start(Args {
+            verbose: false,
+            quiet: false,
             command: Some(Command::Describe {
                 symbol: "Cmaj7b9@3^2!".to_string(),
                 octave: 4,
@@ -731,6 +902,8 @@ mod tests {
     #[test]
     fn test_guess() {
         start(Args {
+            verbose: false,
+            quiet: false,
             command: Some(Command::Guess {
                 notes: vec!["C".to_owned(), "E".to_owned(), "G".to_owned()],
             }),

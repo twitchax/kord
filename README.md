@@ -85,8 +85,10 @@ Commands:
   help      Print this message or the help of the given subcommand(s)
 
 Options:
-  -h, --help     Print help information
-  -V, --version  Print version information
+   -v, --verbose  Flag that specifies verbose logging
+   -q, --quiet    Flag that suppresses all tracing output
+   -h, --help     Print help information
+   -V, --version  Print version information
 ```
 
 ### Describe A Chord
@@ -267,13 +269,42 @@ The library and binary both support various feature flags.  Of most important no
     * > NOTE: Adding the `analyze_mic` feature flag will enable the `ml infer mic` subcommand, which allows for inferring with ML models from a microphone.
     * > NOTE: Adding the `analyze_file` feature flag will enable the `ml infer file` subcommand, which allows for inferring with ML models from a file.
   * `ml_gpu`: enables the features to use a GPU for ML _training_.
+  * `ml_sample_gather`: enables the `ml gather` subcommand for capturing raw samples from a microphone (requires `analyze_mic`).
+  * `ml_hpt`: enables the `ml hpt` subcommand for sweeping hyperparameters (implies `ml_train`).
+* `ml_sample_process`: enables the `ml process` subcommand for generating samples from aligned MIDI and audio files (WAV or FLAC), naming each emitted sample with its originating measure index, rounded duration (in seconds), and chord tones.
 * `wasm`: enables the features to compile to wasm.
 * `plot`: enables the features to plot data.
 
-## Test
+For detailed ML training configuration options (loaders, targets, precision settings), see the [ML Training Configuration](DEVELOPMENT.md#ml-training-configuration) section in [DEVELOPMENT.md](DEVELOPMENT.md).
+
+## Development
+
+For detailed development instructions, see [DEVELOPMENT.md](DEVELOPMENT.md).
+
+### Test
 
 ```bash
-cargo test
+cargo make test
+```
+
+### Docker
+
+Build:
+```bash
+cargo make docker-build
+```
+
+Run:
+```bash
+cargo make docker-run
+```
+
+### Fly.io Deployment
+
+This assumes there is a `fly.toml` file in the `.hidden` directory.
+
+```bash
+cargo make fly-deploy
 ```
 
 ## License

@@ -15,6 +15,12 @@ pub mod home;
 pub mod listen;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
+    #[cfg(feature = "ssr")]
+    let ai_connection_string = std::env::var("KORD_ANALYTICS_API_KEY").ok();
+
+    #[cfg(not(feature = "ssr"))]
+    let ai_connection_string: Option<String> = None;
+
     view! {
         <SSRMountStyleProvider>
             <!DOCTYPE html>
@@ -37,6 +43,26 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
                     // Soundfont player for MIDI playback.
                     <Script src="https://unpkg.com/soundfont-player@0.12.0/dist/soundfont-player.js"></Script>
 
+                    // Application Insights client-side telemetry.
+                    {ai_connection_string.map(|conn_str| view! {
+                        <script type="text/javascript">
+                            {format!(r#"
+                                var appInsights = window.appInsights || function(config) {{
+                                    function i(config) {{ t[config] = function() {{ var i = arguments; t.queue.push(function() {{ t[config].apply(t, i) }}) }} }}
+                                    var t = {{ config: config }}, u = document, e = window, o = "script", s = "AuthenticatedUserContext", h = "start", c = "stop", l = "Track", a = l + "Event", v = l + "Page", y = u.createElement(o), r, f;
+                                    y.src = config.url || "https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js";
+                                    u.getElementsByTagName(o)[0].parentNode.appendChild(y);
+                                    try {{ t.cookie = u.cookie }} catch (p) {{}}
+                                    for (t.queue = [], t.version = "3.0", r = ["Event", "PageView", "Exception", "Trace", "DependencyData", "Metric", "PageViewPerformance"]; r.length;) i("track" + r.pop());
+                                    return i(h + a), i(c + a), i(h + v), i(c + v), i("flush"), config.disableExceptionTracking || (r = "onerror", i("_" + r), f = e[r], e[r] = function(config, i, u, e, o) {{ var s = f && f(config, i, u, e, o); return s !== !0 && t["_" + r]({{ message: config, url: i, lineNumber: u, columnNumber: e, error: o, evt: window.event }}), s }}), t
+                                }}({{ connectionString: "{conn_str}" }});
+                                if (appInsights) {{
+                                    appInsights.trackPageView();
+                                }}
+                            "#)}
+                        </script>
+                    })}
+
                     // Leptos auto-reload, hydration, and meta tags.
                     <AutoReload options=options.clone() />
                     <HydrationScripts options/>
@@ -50,6 +76,7 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
     }
 }
 
+#[cfg_attr(feature = "ssr", tracing::instrument)]
 #[component]
 pub fn App() -> impl IntoView {
     // Provides context that manages stylesheets, titles, meta tags, etc.

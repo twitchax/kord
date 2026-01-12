@@ -11,6 +11,7 @@ use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
 use crate::{
     core::{
+        base::Res,
         interval::Interval,
         note::{HasNoteId, Note, ALL_PITCH_NOTES},
         pitch::HasFrequency,
@@ -38,8 +39,8 @@ impl<B: Backend> ValidStep<KordBatch<B>, MultiLabelClassificationOutput<B>> for 
 // Operations for simulating kord samples.
 
 /// Create a simulated kord sample item from a noise basis and a semi-random collection of notes.
-pub fn get_simulated_kord_item(noise_asset_root: impl AsRef<Path>, notes: &[Note], peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> KordItem {
-    let noise_asset_root = noise_asset_root.as_ref().to_str().unwrap();
+pub fn get_simulated_kord_item(noise_asset_root: impl AsRef<Path>, notes: &[Note], peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> Res<KordItem> {
+    let noise_asset_root = noise_asset_root.as_ref().to_str().ok_or_else(|| anyhow::anyhow!("Invalid noise asset root path"))?;
     let wobble_divisor = 35.0;
 
     let mut result = match get_random_between(0.0, 4.0).round() as u32 {
@@ -47,8 +48,8 @@ pub fn get_simulated_kord_item(noise_asset_root: impl AsRef<Path>, notes: &[Note
         1 => load_kord_item(format!("{noise_asset_root}/pink_noise.bin")),
         2 => load_kord_item(format!("{noise_asset_root}/white_noise.bin")),
         3 => load_kord_item(format!("{noise_asset_root}/brown_noise.bin")),
-        _ => unreachable!(),
-    };
+        n => return Err(anyhow::anyhow!("Unexpected noise type index: {}", n)),
+    }?;
 
     for note in notes {
         let mut harmonic_strength = 1.0;
@@ -79,21 +80,23 @@ pub fn get_simulated_kord_item(noise_asset_root: impl AsRef<Path>, notes: &[Note
 
     result.label = Note::id_mask(notes);
 
-    result
+    Ok(result)
 }
 
 /// Create simulated kord sample item by randomly selecting notes from a list of notes,
 /// and use the given configuration.
-pub fn get_simulated_kord_items<R>(noise_asset_root: R, count: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> Vec<KordItem>
+pub fn get_simulated_kord_items<R>(noise_asset_root: R, count: usize, peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> Res<Vec<KordItem>>
 where
     R: AsRef<Path> + Clone + Send + Sync,
 {
     let results = (0..count).into_par_iter().map(move |_| {
-        let note_count = 60;
+        // Use 75 notes covering A0 to B6 (MIDI notes 21-95), which spans most of the
+        // practical range for chord training while staying within the model's 128-class output.
+        let note_count = 75;
         let chord_count = 5;
         let mut inner_result = Vec::with_capacity(note_count * chord_count);
 
-        for note in ALL_PITCH_NOTES.iter().skip(24).take(note_count) {
+        for note in ALL_PITCH_NOTES.iter().skip(9).take(note_count) {
             let note = *note;
 
             for k in 0..chord_count {
@@ -135,7 +138,10 @@ where
                             ]),
                         );
                     }
-                    _ => unreachable!(),
+                    _ => {
+                        // This shouldn't happen as k is 0..5, but we handle it defensively
+                        continue;
+                    }
                 }
 
                 notes.sort();
@@ -147,10 +153,10 @@ where
             }
         }
 
-        inner_result
+        Ok::<Vec<Res<KordItem>>, anyhow::Error>(inner_result)
     });
 
-    results.flatten().collect()
+    results.flatten().flatten().collect()
 }
 
 /// Get a random item from a list of items.
@@ -195,7 +201,7 @@ mod tests {
         };
 
         let path = save_kord_item(destination, "", "test", &item).unwrap();
-        let loaded = load_kord_item(path);
+        let loaded = load_kord_item(path).unwrap();
 
         assert_eq!(item.label, loaded.label);
     }

@@ -9,6 +9,7 @@ This guide focuses on comprehensive build workflows, testing procedures, and det
 ## Workspace Overview
 - `kord/` (aka `klib`): Core music theory/audio/ML library and CLI. Pest grammar at `kord/chord.pest`; parser at `kord/src/core/parser.rs`.
 - `kord-web/`: Leptos 0.8 SSR app with client hydration (Axum SSR). Also builds to WASI/WASM for edge-like SSR.
+  - Loader/target features are forwarded explicitly: default `kord_loader_note_binned` enables `ml_loader_note_binned_convolution` + `ml_target_full` on `klib`. Disable defaults and opt into `kord_loader_frequency` when you need the folded-bass path (`ml_loader_frequency` + `ml_target_folded_bass`).
 
 Key feature flags (core crate):
 - Defaults: `default = ["cli", "analyze", "audio"]`
@@ -24,7 +25,7 @@ Data/model artifacts used by analysis/ML are in `kord/model/`, `kord/noise/`, an
 Core (library + CLI):
 ```bash
 cargo build -p kord
-cargo test -p kord
+cargo make test
 ```
 Web (SSR + hydrate):
 ```bash
@@ -46,10 +47,9 @@ sudo apt-get update && sudo apt-get install -y libasound2-dev
 ```bash
 cargo build -p kord
 ```
-- Run tests (entire workspace or just core):
+- Run tests:
 ```bash
-cargo test            # workspace
-cargo test -p kord    # core crate only
+cargo make test
 ```
 
 ### Core Library Patterns
@@ -68,6 +68,7 @@ cargo leptos watch
 ```
 - Type-check with SSR + Hydrate features (useful for CI/agents):
 ```bash
+cd kord-web
 cargo check --features ssr,hydrate
 ```
 - Release build (SSR binary + client assets):
@@ -128,9 +129,9 @@ cargo wasi build --release --no-default-features \
   - Bind `thaw::Input` values via `RwSignal<String>` (Model<String>).
   - Use shared wrappers from `kord-web/src/app/shared.rs` for consistent UI.
 - When editing code, validate with targeted checks:
-  - Core: `cargo test -p kord`
-  - Web: `cargo check -p kord-web --features ssr,hydrate`
-  - Full workspace checks are good before PRs: `cargo test` + `cargo check`.
+  - Core: `cargo make test`
+  - Web: `cd kord-web && cargo check --features ssr,hydrate`
+  - Full workspace checks are good before PRs: `cargo make test` + `cargo check`.
 
 ### SSR/Hydrate Gotchas
 - Prefer pointer events for cross-input support; ensure release/cancel stops any audio.
@@ -155,9 +156,9 @@ kord ml infer mic
 cd kord-web
 cargo check --features ssr,hydrate
 ```
-- Integration tests (if present) can be run with SSR enabled:
+- Integration tests are run as part of the main test suite:
 ```bash
-cargo test -p kord-web --features ssr
+cargo make test
 ```
 
 ## Troubleshooting Notes

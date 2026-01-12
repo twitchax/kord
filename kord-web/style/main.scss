@@ -955,9 +955,96 @@ footer {
 	color: var(--sage-400);
 }
 
+// Pitch Visualizer
+.kord-pitch-visualizer {
+	display: flex;
+	gap: 0.5rem;
+	padding: 1rem;
+	background: rgba(32, 32, 32, 0.65);
+	border-radius: 0.5rem;
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	overflow-x: auto;
+}
+
+.kord-pitch-visualizer__item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.25rem;
+	min-width: 60px;
+}
+
+.kord-pitch-bar {
+	width: 48px;
+	height: 120px;
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 4px;
+	cursor: pointer;
+	position: relative;
+	overflow: hidden;
+	transition: all 0.2s ease;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	padding: 0;
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.08);
+		border-color: rgba(255, 255, 255, 0.2);
+	}
+
+	&--detected {
+		border-color: var(--sage-600);
+		background: rgba(127, 182, 127, 0.1);
+	}
+
+	&--active {
+		border-color: var(--sage-500);
+		background: rgba(127, 182, 127, 0.2);
+
+		.kord-pitch-bar__fill {
+			background: var(--sage-500);
+		}
+	}
+}
+
+.kord-pitch-bar__fill {
+	width: 100%;
+	background: var(--sage-700);
+	transition: height 0.3s ease;
+	min-height: 2px;
+}
+
+.kord-pitch-visualizer__label {
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--sage-200);
+}
+
+.kord-pitch-visualizer__delta {
+	font-size: 0.75rem;
+	font-family: 'Fira Code', monospace;
+	color: var(--sage-400);
+}
+
 @media (max-width: 768px) {
 	.kord-listen__progress {
 		align-self: stretch;
+	}
+
+	.kord-pitch-visualizer {
+		padding: 0.75rem;
+		gap: 0.25rem;
+	}
+
+	.kord-pitch-visualizer__item {
+		min-width: 48px;
+	}
+
+	.kord-pitch-bar {
+		width: 40px;
+		height: 100px;
 	}
 }
 

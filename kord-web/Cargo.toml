@@ -16,9 +16,12 @@ leptos_meta = { version = "0.8" }
 tokio = { version = "1", features = ["rt-multi-thread"], optional = true }
 wasm-bindgen = { version = "=0.2.100", optional = true }
 wasm-bindgen-futures = { version = "0.4", optional = true }
-axum-insights = { version = "0.6", optional = true, default-features = false }
+axum-insights = { version = "0.6", optional = true }
+tracing = { version = "0.1.40", optional = true }
 klib = { package = "kord", path = "../kord", default-features = false, features = [
     "ml_infer",
+    "ml_store_precision_half",
+    "ml_target_folded",
     "analyze_base",
     "audio",
 ] }
@@ -29,12 +32,19 @@ leptos-use = { version = "0.16" }
 thaw_utils = { version = "0.2.0-beta" }
 cpal = { version = "0.16", features = ["wasm-bindgen"], optional = true }
 gloo = { version = "0.11", optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
 wasm-bindgen = { version = "=0.2.100" }
 wasm-bindgen-test = { version = "0.3" }
 
 [features]
+default = ["kord_loader_mel"]
+
+kord_loader_mel = ["klib/ml_loader_mel"]
+kord_loader_note_binned = ["klib/ml_loader_note_binned_convolution"]
+kord_loader_frequency = ["klib/ml_loader_frequency_pooled"]
+
 hydrate = [
     "dep:console_error_panic_hook",
     "dep:wasm-bindgen",
@@ -56,6 +66,8 @@ ssr = [
     "leptos_router/ssr",
     "thaw/ssr",
     "leptos-use/ssr",
+    "dep:serde",
+    "dep:tracing",
 ]
 
 [package.metadata.leptos]
@@ -103,7 +115,7 @@ bin-features = ["ssr"]
 # If the --no-default-features flag should be used when compiling the bin target
 #
 # Optional. Defaults to false.
-bin-default-features = false
+bin-default-features = true
 
 # The features to use when compiling the lib target
 #
@@ -113,7 +125,7 @@ lib-features = ["hydrate"]
 # If the --no-default-features flag should be used when compiling the lib target
 #
 # Optional. Defaults to false.
-lib-default-features = false
+lib-default-features = true
 
 # The profile to use for the lib target when compiling for release
 #
