@@ -327,10 +327,34 @@ cargo check --no-default-features \
 
 > Make sure exactly one loader feature is enabled at a time, and exactly one target feature is enabled overall. The deterministic guess flag can be toggled independently to suit experiments.
 
-## Test
+## Development
+
+For detailed development instructions, see [DEVELOPMENT.md](DEVELOPMENT.md).
+
+### Test
 
 ```bash
 cargo make test
+```
+
+### Docker
+
+Build:
+```bash
+cargo make docker-build
+```
+
+Run:
+```bash
+cargo make docker-run
+```
+
+### Fly.io Deployment
+
+This assumes there is a `fly.toml` file in the `.hidden` directory.
+
+```bash
+cargo make fly-deploy
 ```
 
 ## License

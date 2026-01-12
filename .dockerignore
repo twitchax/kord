@@ -48,8 +48,8 @@ site/
 
 # Docker local cache dirs (if any)
 .docker/
-
-# Exclude large sample/audio assets if not required in build context (uncomment as desired)
+    
+# Exclude large sample/audio assets (currently not required in build context
 kord/samples/
 kord/noise/
 .hidden/

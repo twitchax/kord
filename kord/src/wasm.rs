@@ -1366,7 +1366,7 @@ mod tests {
 
         // Test that same notes have equal names
         assert_eq!(c4.name(), c4_copy.name(), "Same notes should have equal names");
-        
+
         // Test that different notes have different names
         assert_ne!(c4.name(), d4.name(), "Different notes should have different names");
 

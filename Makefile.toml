@@ -165,3 +165,25 @@ cargo publish -p kord --no-verify
 workspace = false
 dependencies = ["check-all", "build-cli", "build-npm", "build-web"]
 run_task = { name = ["publish-crates", "publish-npm"], fork = false }
+
+# Docker tasks
+
+[tasks.docker-build]
+cwd = "."
+workspace = false
+command = "docker"
+args = ["build", "-f", "./docker/Dockerfile", "-t", "twitchax/kord-web", "."]
+
+[tasks.docker-run]
+cwd = "."
+workspace = false
+command = "docker"
+args = ["run", "-it", "--rm", "-p", "8080:3000", "twitchax/kord-web"]
+
+# Fly.io deployment
+
+[tasks.fly-deploy]
+cwd = "."
+workspace = false
+command = "fly"
+args = ["deploy", "-c", ".hidden/fly.toml", "--local-only"]

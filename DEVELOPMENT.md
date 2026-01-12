@@ -118,12 +118,19 @@ wasmer publish
 
 Build:
 ```bash
-docker build -f ./docker/Dockerfile -t twitchax/kord-web .
+cargo make docker-build
 ```
 
 Run:
 ```bash
-docker run -it --rm -p 8080:8080 twitchax/kord-web
+cargo make docker-run
+```
+
+### Fly.io
+
+Deploy:
+```bash
+cargo make fly-deploy
 ```
 
 ## Training Examples
