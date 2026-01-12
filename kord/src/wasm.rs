@@ -1196,17 +1196,20 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_abi_string_encoding_unicode() {
-        // Test that Unicode characters (sharps/flats) work correctly
-        let sharp_note = KordNote::parse("C♯4".to_string());
-        assert!(sharp_note.is_ok() || sharp_note.is_err(), "Should handle sharp unicode");
+        // Test that Unicode characters (sharps/flats) parse correctly
+        let sharp_note = KordNote::parse("C♯4".to_string()).unwrap();
+        assert_eq!(sharp_note.name(), "C♯4", "Should parse and display sharp unicode correctly");
+        assert_eq!(sharp_note.pitch(), "C♯", "Pitch should preserve sharp unicode");
 
-        let flat_note = KordNote::parse("D♭4".to_string());
-        assert!(flat_note.is_ok() || flat_note.is_err(), "Should handle flat unicode");
+        let flat_note = KordNote::parse("D♭4".to_string()).unwrap();
+        assert_eq!(flat_note.name(), "D♭4", "Should parse and display flat unicode correctly");
+        assert_eq!(flat_note.pitch(), "D♭", "Pitch should preserve flat unicode");
 
-        // Test that display strings may contain unicode
+        // Test that display strings contain unicode correctly
         let chord = KordChord::parse("C#m7b5".to_string()).unwrap();
         let display = chord.display();
-        assert!(display.len() > 0, "Display should return string with unicode");
+        assert!(display.contains("♯") || display.contains("#"), "Display should contain sharp symbol");
+        assert!(display.len() > 0, "Display should return non-empty string");
     }
 
     #[wasm_bindgen_test]
@@ -1270,12 +1273,17 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_abi_array_empty() {
-        // Test that empty arrays are handled correctly
+        // Test that arrays handle empty cases correctly
         let chord = KordChord::parse("C".to_string()).unwrap();
         let extensions = chord.extensions();
 
-        // Extensions might be empty or populated, just verify we get an array
-        assert!(extensions.length() >= 0, "Should return valid array");
+        // Simple C major has no extensions
+        assert_eq!(extensions.length(), 0, "Simple C major should have no extensions");
+
+        // Test with a chord that has extensions
+        let complex = KordChord::parse("Csus2".to_string()).unwrap();
+        let complex_extensions = complex.extensions();
+        assert!(complex_extensions.length() > 0, "Sus2 chord should have extensions");
     }
 
     #[wasm_bindgen_test]
@@ -1353,16 +1361,21 @@ mod tests {
     fn test_abi_boolean_returns() {
         // Test that boolean values cross the ABI correctly
         let c4 = KordNote::parse("C4".to_string()).unwrap();
+        let c4_copy = KordNote::parse("C4".to_string()).unwrap();
         let d4 = KordNote::parse("D4".to_string()).unwrap();
 
-        // Test equality (should be false for different notes)
-        let same = c4.name() == d4.name();
-        assert!(!same, "Different notes should not be equal");
+        // Test that same notes have equal names
+        assert_eq!(c4.name(), c4_copy.name(), "Same notes should have equal names");
+        
+        // Test that different notes have different names
+        assert_ne!(c4.name(), d4.name(), "Different notes should have different names");
 
-        // Test chord crunchy check
+        // Test chord crunchy check with known values
         let simple = KordChord::parse("C".to_string()).unwrap();
-        let is_crunchy = simple.is_crunchy();
-        assert!(!is_crunchy, "Simple major chord should not be crunchy");
+        assert!(!simple.is_crunchy(), "Simple major chord should not be crunchy");
+
+        let crunchy = KordChord::parse("Cmaj7#9#11b13".to_string()).unwrap();
+        assert!(crunchy.is_crunchy(), "Complex altered chord should be crunchy");
     }
 
     #[wasm_bindgen_test]
