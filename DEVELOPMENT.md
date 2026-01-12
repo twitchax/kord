@@ -29,11 +29,11 @@ The ML pipeline exposes toggles that change both the training inputs and labels 
 
 The project supports multiple training precision levels. **Choose exactly one:**
 
-| Feature                      | Description                                                           | Notes                                              |
-| ---------------------------- | --------------------------------------------------------------------- | -------------------------------------------------- |
-| `ml_train_precision_fp32`    | Full 32-bit floating point training                                   | Default; required for NdArray backend and HPT      |
-| `ml_train_precision_fp16`    | Half precision (16-bit) training with dynamic loss scaling            | Requires compatible backend (e.g., tch with CUDA)  |
-| `ml_train_precision_bf16`    | BFloat16 training with dynamic loss scaling                           | Requires compatible backend (e.g., tch with CUDA)  |
+| Feature                   | Description                                                | Notes                                             |
+| ------------------------- | ---------------------------------------------------------- | ------------------------------------------------- |
+| `ml_train_precision_fp32` | Full 32-bit floating point training                        | Default; required for NdArray backend and HPT     |
+| `ml_train_precision_fp16` | Half precision (16-bit) training with dynamic loss scaling | Requires compatible backend (e.g., tch with CUDA) |
+| `ml_train_precision_bf16` | BFloat16 training with dynamic loss scaling                | Requires compatible backend (e.g., tch with CUDA) |
 
 **Note:** NdArray-based training and hyperparameter tuning require `ml_train_precision_fp32`. Inference always runs on the NdArray backend and automatically converts stored values to f32.
 
@@ -41,36 +41,36 @@ The project supports multiple training precision levels. **Choose exactly one:**
 
 **Choose exactly one:**
 
-| Feature                      | Description                                                           |
-| ---------------------------- | --------------------------------------------------------------------- |
-| `ml_store_precision_full`    | Store models as full precision                                        |
-| `ml_store_precision_half`    | Store models as half precision (smaller files)                        |
+| Feature                   | Description                                    |
+| ------------------------- | ---------------------------------------------- |
+| `ml_store_precision_full` | Store models as full precision                 |
+| `ml_store_precision_half` | Store models as half precision (smaller files) |
 
 ### Sample Loader Features
 
 **Choose exactly one:**
 
-| Feature                             | Description                                                    | Input width (before deterministic guess) |
-| ----------------------------------- | -------------------------------------------------------------- | ---------------------------------------- |
-| `ml_loader_note_binned_convolution` | Uses the existing note-binned harmonic convolution (128 bins)  | 128                                      |
-| `ml_loader_mel`                     | Applies mel filter banks to the full spectrum (512 bands)      | 512                                      |
-| `ml_loader_frequency`               | Feeds the raw 8,192-bin frequency spectrum                     | 8192                                     |
-| `ml_loader_frequency_pooled`        | Averages the raw spectrum into 2,048 pooled bins (factor ×4)   | 2048                                     |
+| Feature                             | Description                                                   | Input width (before deterministic guess) |
+| ----------------------------------- | ------------------------------------------------------------- | ---------------------------------------- |
+| `ml_loader_note_binned_convolution` | Uses the existing note-binned harmonic convolution (128 bins) | 128                                      |
+| `ml_loader_mel`                     | Applies mel filter banks to the full spectrum (512 bands)     | 512                                      |
+| `ml_loader_frequency`               | Feeds the raw 8,192-bin frequency spectrum                    | 8192                                     |
+| `ml_loader_frequency_pooled`        | Averages the raw spectrum into 2,048 pooled bins (factor ×4)  | 2048                                     |
 
 **Optional add-on:**
 
-| Feature                                 | Description                                                                                                                                  |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Feature                                 | Description                                                                                                                                 |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ml_loader_include_deterministic_guess` | Prepends the deterministic 128-note guess vector to whichever loader you selected above (doubling 128-bin inputs, adding 128 to the others) |
 
 ### Target Encoding Features
 
 **Choose exactly one:**
 
-| Feature                 | Description                                                                                                                                                           | Output width contribution |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| `ml_target_full`        | Emits the full 128-note mask (per MIDI note across octaves)                                                                                                           | +128                      |
-| `ml_target_folded`      | Emits a folded 12-class pitch-class mask (one octave)                                                                                                                 | +12                       |
+| Feature                 | Description                                                                                                                                                          | Output width contribution |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `ml_target_full`        | Emits the full 128-note mask (per MIDI note across octaves)                                                                                                          | +128                      |
+| `ml_target_folded`      | Emits a folded 12-class pitch-class mask (one octave)                                                                                                                | +12                       |
 | `ml_target_folded_bass` | Emits two 12-class masks: a categorical bass pitch class (trained with softmax / cross-entropy) and a multi-hot mask of every pitch class present across all octaves | +24                       |
 
 When using `ml_target_folded_bass`, the bass pitch uses softmax + cross-entropy loss while other notes use binary cross-entropy. Inference decodes bass via argmax to emit a single pitch class.
