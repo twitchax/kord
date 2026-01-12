@@ -23,39 +23,82 @@ $Env:LIBTORCH = "C:\libtorch"
 
 ## ML Training Configuration
 
-### Precision Features
+The ML pipeline exposes toggles that change both the training inputs and labels without modifying source code. Loader features and the deterministic guess flag can be combined, while target encodings are mutually exclusive so that model layouts stay predictable.
 
-The project supports multiple training and storage precision levels:
+### Training Precision Features
 
-**Training Precision** (pick one):
-- `ml_train_precision_fp32` (default) - Full 32-bit floating point training
-- `ml_train_precision_fp16` - Half precision (16-bit) training with dynamic loss scaling
-- `ml_train_precision_bf16` - BFloat16 training with dynamic loss scaling
+The project supports multiple training precision levels. **Choose exactly one:**
 
-**Storage Precision** (pick one):
-- `ml_store_precision_full` (default) - Store models as full precision
-- `ml_store_precision_half` - Store models as half precision (smaller files)
+| Feature                      | Description                                                           | Notes                                              |
+| ---------------------------- | --------------------------------------------------------------------- | -------------------------------------------------- |
+| `ml_train_precision_fp32`    | Full 32-bit floating point training                                   | Default; required for NdArray backend and HPT      |
+| `ml_train_precision_fp16`    | Half precision (16-bit) training with dynamic loss scaling            | Requires compatible backend (e.g., tch with CUDA)  |
+| `ml_train_precision_bf16`    | BFloat16 training with dynamic loss scaling                           | Requires compatible backend (e.g., tch with CUDA)  |
 
 **Note:** NdArray-based training and hyperparameter tuning require `ml_train_precision_fp32`. Inference always runs on the NdArray backend and automatically converts stored values to f32.
 
-### Data Loaders
+### Storage Precision Features
 
-Pick one loader configuration:
-- `ml_loader_note_binned_convolution` - Note-binned with harmonic convolution
-- `ml_loader_mel` - Mel-frequency representation
-- `ml_loader_frequency` - Raw frequency space
-- `ml_loader_frequency_pooled` - Frequency space with pooling
+**Choose exactly one:**
 
-Add `ml_loader_include_deterministic_guess` to augment ML features with deterministic chord detection.
+| Feature                      | Description                                                           |
+| ---------------------------- | --------------------------------------------------------------------- |
+| `ml_store_precision_full`    | Store models as full precision                                        |
+| `ml_store_precision_half`    | Store models as half precision (smaller files)                        |
 
-### Target Encodings
+### Sample Loader Features
 
-**Exactly one must be enabled:**
-- `ml_target_full` - Full 128-note encoding
-- `ml_target_folded` - Folded octave encoding (12 notes)
-- `ml_target_folded_bass` - Folded with separate bass prediction
+**Choose exactly one:**
+
+| Feature                             | Description                                                    | Input width (before deterministic guess) |
+| ----------------------------------- | -------------------------------------------------------------- | ---------------------------------------- |
+| `ml_loader_note_binned_convolution` | Uses the existing note-binned harmonic convolution (128 bins)  | 128                                      |
+| `ml_loader_mel`                     | Applies mel filter banks to the full spectrum (512 bands)      | 512                                      |
+| `ml_loader_frequency`               | Feeds the raw 8,192-bin frequency spectrum                     | 8192                                     |
+| `ml_loader_frequency_pooled`        | Averages the raw spectrum into 2,048 pooled bins (factor ×4)   | 2048                                     |
+
+**Optional add-on:**
+
+| Feature                                 | Description                                                                                                                                  |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ml_loader_include_deterministic_guess` | Prepends the deterministic 128-note guess vector to whichever loader you selected above (doubling 128-bin inputs, adding 128 to the others) |
+
+### Target Encoding Features
+
+**Choose exactly one:**
+
+| Feature                 | Description                                                                                                                                                           | Output width contribution |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `ml_target_full`        | Emits the full 128-note mask (per MIDI note across octaves)                                                                                                           | +128                      |
+| `ml_target_folded`      | Emits a folded 12-class pitch-class mask (one octave)                                                                                                                 | +12                       |
+| `ml_target_folded_bass` | Emits two 12-class masks: a categorical bass pitch class (trained with softmax / cross-entropy) and a multi-hot mask of every pitch class present across all octaves | +24                       |
 
 When using `ml_target_folded_bass`, the bass pitch uses softmax + cross-entropy loss while other notes use binary cross-entropy. Inference decodes bass via argmax to emit a single pitch class.
+
+### Example ML Feature Configurations
+
+```bash
+# Default (note-binned + deterministic guess, 128-note target)
+cargo check
+
+# Mel features with deterministic guess and folded targets
+cargo check --no-default-features \
+   --features "cli ml_infer ml_loader_mel ml_loader_include_deterministic_guess ml_target_folded"
+
+# Raw frequency spectrum without deterministic guess, folded targets only
+cargo check --no-default-features \
+   --features "cli ml_infer ml_loader_frequency ml_target_folded"
+
+# Pooled raw spectrum with deterministic guess, folded targets only
+cargo check --no-default-features \
+   --features "cli ml_infer ml_loader_frequency_pooled ml_loader_include_deterministic_guess ml_target_folded"
+
+# Pooled spectrum with deterministic guess and folded+bass targets
+cargo check --no-default-features \
+   --features "cli ml_infer ml_loader_frequency_pooled ml_loader_include_deterministic_guess ml_target_folded_bass"
+```
+
+> Make sure exactly one loader feature is enabled at a time, and exactly one target feature is enabled overall. The deterministic guess flag can be toggled independently to suit experiments.
 
 ### Training Details
 

@@ -275,57 +275,7 @@ The library and binary both support various feature flags.  Of most important no
 * `wasm`: enables the features to compile to wasm.
 * `plot`: enables the features to plot data.
 
-### ML Loader & Target Feature Matrix
-
-The ML pipeline exposes toggles that change both the training inputs and labels without modifying source code. Loader features and the deterministic guess flag can be combined, while target encodings are now mutually exclusive so that model layouts stay predictable:
-
-#### Sample Loader Features (choose exactly one)
-
-| Feature                             | Description                                                    | Input width (before deterministic guess) |
-| ----------------------------------- | -------------------------------------------------------------- | ---------------------------------------- |
-| `ml_loader_note_binned_convolution` | Uses the existing note-binned harmonic convolution (128 bins). | 128                                      |
-| `ml_loader_mel`                     | Applies mel filter banks to the full spectrum (512 bands).     | 512                                      |
-| `ml_loader_frequency`               | Feeds the raw 8,192-bin frequency spectrum.                    | 8192                                     |
-| `ml_loader_frequency_pooled`        | Averages the raw spectrum into 2,048 pooled bins (factor ×4).  | 2048                                     |
-
-Optional add-on:
-
-| Feature                                 | Description                                                                                                                                  |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ml_loader_include_deterministic_guess` | Prepends the deterministic 128-note guess vector to whichever loader you selected above (doubling 128-bin inputs, adding 128 to the others). |
-
-#### Target Encoding Features (choose exactly one)
-
-| Feature                 | Description                                                                                                                                                           | Output width contribution |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| `ml_target_full`        | Emits the full 128-note mask (per MIDI note across octaves).                                                                                                          | +128                      |
-| `ml_target_folded`      | Emits a folded 12-class pitch-class mask (one octave).                                                                                                                | +12                       |
-| `ml_target_folded_bass` | Emits two 12-class masks: a categorical bass pitch class (trained with softmax / cross-entropy) and a multi-hot mask of every pitch class present across all octaves. | +24                       |
-
-#### Example configurations
-
-```bash
-# Default (note-binned + deterministic guess, 128-note target)
-cargo check
-
-# Mel features with deterministic guess and folded targets
-cargo check --no-default-features \
-   --features "cli ml_infer ml_loader_mel ml_loader_include_deterministic_guess ml_target_folded"
-
-# Raw frequency spectrum without deterministic guess, folded targets only
-cargo check --no-default-features \
-   --features "cli ml_infer ml_loader_frequency ml_target_folded"
-
-# Pooled raw spectrum with deterministic guess, folded targets only
-cargo check --no-default-features \
-   --features "cli ml_infer ml_loader_frequency_pooled ml_loader_include_deterministic_guess ml_target_folded"
-
-# Pooled spectrum with deterministic guess and folded+bass targets
-cargo check --no-default-features \
-   --features "cli ml_infer ml_loader_frequency_pooled ml_loader_include_deterministic_guess ml_target_folded_bass"
-```
-
-> Make sure exactly one loader feature is enabled at a time, and exactly one target feature is enabled overall. The deterministic guess flag can be toggled independently to suit experiments.
+For detailed ML training configuration options (loaders, targets, precision settings), see the [ML Training Configuration](DEVELOPMENT.md#ml-training-configuration) section in [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Development
 
