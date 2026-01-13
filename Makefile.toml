@@ -14,15 +14,15 @@ install_crate = "cargo-llvm-cov"
 [tasks.install-wasm-pack]
 install_crate = "wasm-pack"
 
-[tasks.install-wasm-pkg-tools]
-install_crate = "wasm-pkg-tools"
+[tasks.install-wkg]
+install_crate = "wkg"
 
 [tasks.tools]
 dependencies = [
     "install-nextest",
     "install-llvm-cov",
     "install-wasm-pack",
-    "install-wasm-pkg-tools",
+    "install-wkg",
 ]
 
 # Build / test tasks.
@@ -176,7 +176,6 @@ args = ["leptos", "build", "--release"]
 [tasks.build-oci]
 cwd = "kord"
 workspace = false
-dependencies = ["install-wasm-pkg-tools"]
 command = "cargo"
 args = [
     "build",
@@ -191,10 +190,9 @@ args = [
 ]
 
 [tasks.publish-oci]
-dependencies = ["build-oci"]
+dependencies = ["build-oci", "install-wkg"]
 cwd = "."
 workspace = false
-install_crate = "wasm-pkg-tools"
 command = "wkg"
 args = [
     "oci",

@@ -114,7 +114,7 @@ jobs:
 
   build_wasm:
     needs: test
-    name: Build and Publish WASM
+    name: Build WASM
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
@@ -128,10 +128,7 @@ jobs:
           cache-all-crates: "true"
       - run: cargo install cargo-make
       - run: cargo make build-oci
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+      - uses: actions/upload-artifact@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - run: cargo make publish-oci
+          name: kord_wasm32-wasip2
+          path: target/wasm32-wasip2/release/kord.wasm

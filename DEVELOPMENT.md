@@ -108,15 +108,73 @@ cargo check --no-default-features \
 
 ## Release and Publishing
 
-### Full Release with Version Bump
+### Prerequisites for Publishing
+
+Before running the release process, ensure you have:
+
+- ✅ **crates.io authentication**: `cargo login` with your API token
+- ✅ **npm authentication**: `npm login` or `npm adduser`
+- ✅ **GitHub Container Registry authentication**: `docker login ghcr.io -u USERNAME`
+- ✅ **wasm32-wasip2 target**: `rustup target add wasm32-wasip2`
+- ✅ **Required tools**: 
+  ```bash
+  cargo install cargo-release  # For version bumping
+  cargo install cargo-make     # For task orchestration
+  cargo install wkg            # For OCI publishing
+  cargo install wasm-pack      # For npm WASM builds
+  ```
+
+### Complete Release Process
+
+Follow these steps to cut a new release:
+
+#### 1. Prepare and Tag the Release
 
 ```bash
-# Step 1: Bump versions and create git tags (does not publish)
+# Bump versions and create git tags using cargo-release
 cargo make release
+```
 
-# Step 2: Build and publish to crates.io and npm
+This will:
+- Update version numbers in all `Cargo.toml` files
+- Create git commits for version bumps
+- Create git tags (e.g., `v0.8.0`)
+- **Does NOT publish** (controlled by `--no-publish` flag)
+
+#### 2. Build and Publish to All Registries
+
+```bash
+# Publish to crates.io, npm, and GitHub Container Registry
 cargo make publish-all
 ```
+
+This orchestrates:
+1. ✅ Format check and tests (`check-all`)
+2. ✅ Build CLI binary (`build-cli`)
+3. ✅ Build WASM package for npm (`build-npm`)
+4. ✅ Build Leptos web app (`build-web`)
+5. ✅ Build WASM binary for OCI (`build-oci`)
+6. ✅ Publish `kord` crate to **crates.io** (`publish-crates`)
+7. ✅ Rename and publish to **npm** as `kordweb` (`publish-npm`)
+8. ✅ Publish to **GitHub Container Registry** at `ghcr.io/twitchax/kord:latest` (`publish-oci`)
+
+#### 3. Push Tags to GitHub
+
+```bash
+# Push the version tags created by cargo-release
+git push --follow-tags
+```
+
+#### 4. Create GitHub Release
+
+🎯 **Manual step**: Go to [GitHub Releases](https://github.com/twitchax/kord/releases) and:
+- Click "Draft a new release"
+- Select the tag you just pushed (e.g., `v0.8.0`)
+- Generate release notes or write your own
+- Attach platform binaries from CI artifacts if desired
+- Publish the release
+
+> **Note**: CI automatically builds platform binaries (Linux, Windows, macOS) and the WASM binary on every push to main, but **does not automatically publish** them. All publishing is manual via the steps above.
 
 ### Publish Without Version Changes
 
@@ -125,14 +183,6 @@ If you've already bumped versions manually or want to republish:
 ```bash
 cargo make publish-all
 ```
-
-**This orchestrates:**
-1. Format check and tests (`check-all`)
-2. Build CLI binary (`build-cli`)
-3. Build WASM package (`build-npm`)
-4. Build Leptos web app (`build-web`)
-5. Publish `kord` crate to crates.io (`publish-crates`)
-6. Rename npm package to `kordweb` and publish (`publish-npm`)
 
 ### Individual Tasks
 
@@ -159,7 +209,7 @@ cargo make publish-oci
 
 > **Prerequisites**:
 > - Install the `wasm32-wasip2` target: `rustup target add wasm32-wasip2`
-> - Install `wkg` tool: `cargo install wasm-pkg-tools`
+> - Install `wkg` tool: `cargo install wkg`
 > - Authenticate with GitHub Container Registry: `docker login ghcr.io`
 >
 > The package will be available at `ghcr.io/twitchax/kord:latest` and can be run with any WASI-compatible runtime like Wasmtime or wkg.

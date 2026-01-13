@@ -177,8 +177,8 @@ cargo install cargo-leptos
 ```
  - WASM/WASI tooling often needed for advanced flows:
 ```bash
-cargo install wasm-pkg-tools  # for wkg (OCI publishing)
-cargo install wasm-pack       # for npm/wasm builds
+cargo install wkg        # for OCI publishing
+cargo install wasm-pack  # for npm/wasm builds
 brew install wasmtime || sudo apt-get install wasmtime
 ```
 
