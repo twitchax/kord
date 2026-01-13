@@ -16,10 +16,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
+      - uses: cargo-bins/cargo-binstall@main
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
-      - run: cargo install cargo-make
+      - run: cargo binstall cargo-make --no-confirm
       - run: cargo make test-all
 
   codecov:
@@ -33,10 +34,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
+      - uses: cargo-bins/cargo-binstall@main
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
-      - run: cargo install cargo-make
+      - run: cargo binstall cargo-make --no-confirm
       - run: cargo make codecov
       - uses: codecov/codecov-action@v5
         with:
@@ -54,6 +56,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
+      - uses: cargo-bins/cargo-binstall@main
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
@@ -61,7 +64,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y clang mold
-      - run: cargo install cargo-make
+      - run: cargo binstall cargo-make --no-confirm
       - run: cargo make build-linux
       - uses: actions/upload-artifact@v4
         with:
@@ -81,10 +84,11 @@ jobs:
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           targets: x86_64-pc-windows-gnu
+      - uses: cargo-bins/cargo-binstall@main
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
-      - run: cargo install cargo-make
+      - run: cargo binstall cargo-make --no-confirm
       - run: cargo make build-windows
       - uses: actions/upload-artifact@v4
         with:
@@ -98,14 +102,15 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
-      - uses: Swatinem/rust-cache@v2
-        with:
-          cache-all-crates: "true"
       - uses: dtolnay/rust-toolchain@nightly
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           targets: aarch64-apple-darwin
-      - run: cargo install cargo-make
+      - uses: cargo-bins/cargo-binstall@main
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: "true"
+      - run: cargo binstall cargo-make --no-confirm
       - run: cargo make build-macos
       - uses: actions/upload-artifact@v4
         with:
@@ -123,10 +128,11 @@ jobs:
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
           targets: wasm32-wasip2
+      - uses: cargo-bins/cargo-binstall@main
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
-      - run: cargo install cargo-make
+      - run: cargo binstall cargo-make --no-confirm
       - run: cargo make build-oci
       - uses: actions/upload-artifact@v4
         with:

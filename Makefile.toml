@@ -5,17 +5,28 @@ WASM_TEST_BROWSER = { value = "firefox", condition = { env_not_set = [
     "WASM_TEST_BROWSER",
 ] } }
 
+[tasks.install-cargo-binstall]
+install_crate = "cargo-binstall"
+
 [tasks.install-nextest]
-install_crate = "cargo-nextest"
+dependencies = ["install-cargo-binstall"]
+command = "cargo"
+args = ["binstall", "cargo-nextest", "--no-confirm"]
 
 [tasks.install-llvm-cov]
-install_crate = "cargo-llvm-cov"
+dependencies = ["install-cargo-binstall"]
+command = "cargo"
+args = ["binstall", "cargo-llvm-cov", "--no-confirm"]
 
 [tasks.install-wasm-pack]
-install_crate = "wasm-pack"
+dependencies = ["install-cargo-binstall"]
+command = "cargo"
+args = ["binstall", "wasm-pack", "--no-confirm"]
 
 [tasks.install-wkg]
-install_crate = "wkg"
+dependencies = ["install-cargo-binstall"]
+command = "cargo"
+args = ["binstall", "wkg", "--no-confirm"]
 
 [tasks.tools]
 dependencies = [
