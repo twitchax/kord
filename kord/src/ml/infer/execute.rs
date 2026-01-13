@@ -119,7 +119,16 @@ where
 
     // Generate chord candidates using smart octave permutations.
     // If there are no pitches detected, return empty chord list.
-    let chords = if pitches.is_empty() { vec![] } else { Chord::try_from_pitches(&pitches)? };
+    // If chord detection fails, log it but still return the pitches.
+    let chords = if pitches.is_empty() {
+        vec![]
+    } else {
+        Chord::try_from_pitches(&pitches).unwrap_or_else(|e| {
+            #[cfg(feature = "cli")]
+            eprintln!("Could not determine chords from pitches: {}", e);
+            vec![]
+        })
+    };
 
     Ok(InferenceResult { pitches, chords, pitch_deltas })
 }
