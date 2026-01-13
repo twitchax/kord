@@ -79,6 +79,21 @@ args = [
     "coverage.lcov",
 ]
 
+[tasks.codecov-html]
+cwd = "."
+workspace = false
+clear = true
+dependencies = ["tools"]
+command = "cargo"
+args = [
+    "llvm-cov",
+    "nextest",
+    "--features",
+    "ml_train ml_infer ml_sample_process",
+    "--workspace",
+    "--html",
+]
+
 # CI tasks
 
 [tasks.build-linux]
