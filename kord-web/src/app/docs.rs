@@ -43,7 +43,7 @@ pub fn DocsPage() -> impl IntoView {
 
                 <div class="kord-docs__install-section">
                     <TertiaryHeading text="WebAssembly (OCI)" />
-                    <CodeBlock class="lang-bash" code="$ wasmtime run ghcr.io/twitchax/kord:latest -- describe Am7" />
+                    <CodeBlock class="lang-bash" code="$ wasmtime run ghcr.io/twitchax/kord:latest describe Am7" />
                     <p class="kord-docs__install-text">"Or with wkg:"</p>
                     <CodeBlock class="lang-bash" code="$ wkg get github:twitchax/kord" />
                 </div>

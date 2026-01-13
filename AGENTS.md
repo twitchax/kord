@@ -112,7 +112,7 @@ cargo make publish-oci
 ```
 - Users can run with any WASI-compatible runtime:
 ```bash
-wasmtime run ghcr.io/twitchax/kord:latest -- describe Am7
+wasmtime run ghcr.io/twitchax/kord:latest describe Am7
 ```
 
 ## Editing Grammar & Parser

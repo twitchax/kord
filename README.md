@@ -59,7 +59,7 @@ Run directly from GitHub Container Registry using any WASI-compatible runtime. T
 With Wasmtime:
 
 ```bash
-$ wasmtime run ghcr.io/twitchax/kord:latest -- describe Am7
+$ wasmtime run ghcr.io/twitchax/kord:latest describe Am7
 ```
 
 With wkg (WebAssembly Package Manager):

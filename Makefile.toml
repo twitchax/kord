@@ -14,8 +14,16 @@ install_crate = "cargo-llvm-cov"
 [tasks.install-wasm-pack]
 install_crate = "wasm-pack"
 
+[tasks.install-wasm-pkg-tools]
+install_crate = "wasm-pkg-tools"
+
 [tasks.tools]
-dependencies = ["install-nextest", "install-llvm-cov", "install-wasm-pack"]
+dependencies = [
+    "install-nextest",
+    "install-llvm-cov",
+    "install-wasm-pack",
+    "install-wasm-pkg-tools",
+]
 
 # Build / test tasks.
 
@@ -168,6 +176,7 @@ args = ["leptos", "build", "--release"]
 [tasks.build-oci]
 cwd = "kord"
 workspace = false
+dependencies = ["install-wasm-pkg-tools"]
 command = "cargo"
 args = [
     "build",
@@ -219,7 +228,11 @@ cargo publish -p kord --no-verify
 [tasks.publish-all]
 workspace = false
 dependencies = ["check-all", "build-cli", "build-npm", "build-web", "build-oci"]
-run_task = { name = ["publish-crates", "publish-npm", "publish-oci"], fork = false }
+run_task = { name = [
+    "publish-crates",
+    "publish-npm",
+    "publish-oci",
+], fork = false }
 
 # Docker tasks
 
