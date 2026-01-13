@@ -5,6 +5,7 @@ pub mod chord;
 pub mod helpers;
 pub mod interval;
 pub mod known_chord;
+pub mod mode;
 pub mod modifier;
 pub mod named_pitch;
 pub mod note;
