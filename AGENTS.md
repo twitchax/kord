@@ -86,7 +86,7 @@ cargo leptos build --release
 - Timing: use `leptos-use` utilities (e.g., `use_timestamp`) over manual intervals.
 - Shared UI: reuse components in `kord-web/src/app/shared.rs` for consistent Thaw integration.
 
-### WASI SSR Library (for Wasmtime/Wasmer)
+### WASI SSR Library (for Wasmtime)
 - Build SSR library targeting `wasm32-wasip2`:
 ```bash
 export LEPTOS_OUTPUT_NAME=kord-web
@@ -104,11 +104,15 @@ wasm-pack build --features ml_infer --features wasm
 ```
 - Publish flow (summary): rename package to `kordweb`, then `wasm-pack publish`.
 
-### Wasmer Binary (reduced capabilities)
-- Build a WASI binary with limited features:
+### OCI CLI Binary (wasip2)
+- Build and publish the CLI as a WebAssembly component to GitHub Container Registry:
 ```bash
-cargo wasi build --release --no-default-features \
-  --features wasi --features cli --features ml_infer --features analyze_file -p kord
+cargo make build-oci
+cargo make publish-oci
+```
+- Users can run with any WASI-compatible runtime:
+```bash
+wasmtime run ghcr.io/twitchax/kord:latest -- describe Am7
 ```
 
 ## Editing Grammar & Parser
@@ -173,10 +177,9 @@ cargo install cargo-leptos
 ```
  - WASM/WASI tooling often needed for advanced flows:
 ```bash
-cargo install cargo-wasi      # for cargo wasi
+cargo install wasm-pkg-tools  # for wkg (OCI publishing)
 cargo install wasm-pack       # for npm/wasm builds
 brew install wasmtime || sudo apt-get install wasmtime
-brew install wasmer   || curl https://get.wasmer.io -sSfL | sh
 ```
 
 ---

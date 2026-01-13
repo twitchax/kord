@@ -165,6 +165,36 @@ install_crate = "cargo-leptos"
 command = "cargo"
 args = ["leptos", "build", "--release"]
 
+[tasks.build-oci]
+cwd = "kord"
+workspace = false
+command = "cargo"
+args = [
+    "build",
+    "--bin",
+    "kord",
+    "--release",
+    "--target",
+    "wasm32-wasip2",
+    "--no-default-features",
+    "--features",
+    "wasi cli analyze_file ml_infer ml_store_precision_half ml_loader_mel ml_target_folded",
+]
+
+[tasks.publish-oci]
+dependencies = ["build-oci"]
+cwd = "."
+workspace = false
+install_crate = "wasm-pkg-tools"
+command = "wkg"
+args = [
+    "oci",
+    "push",
+    "ghcr.io/twitchax/kord:latest",
+    "--file",
+    "target/wasm32-wasip2/release/kord.wasm",
+]
+
 [tasks.rename-npm-package]
 dependencies = ["build-npm"]
 install_crate = "sd"
@@ -188,8 +218,8 @@ cargo publish -p kord --no-verify
 
 [tasks.publish-all]
 workspace = false
-dependencies = ["check-all", "build-cli", "build-npm", "build-web"]
-run_task = { name = ["publish-crates", "publish-npm"], fork = false }
+dependencies = ["check-all", "build-cli", "build-npm", "build-web", "build-oci"]
+run_task = { name = ["publish-crates", "publish-npm", "publish-oci"], fork = false }
 
 # Docker tasks
 

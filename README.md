@@ -52,18 +52,20 @@ NPM:
 $ npm install --save kordweb
 ```
 
-### Wasmer
+### WebAssembly (via OCI Registry)
 
-This has a reduced capability set (no audio input / output), but works well for some of the core use cases.
+Run directly from GitHub Container Registry using any WASI-compatible runtime. This has a reduced capability set (no audio input / output), but works well for core use cases.
+
+With Wasmtime:
 
 ```bash
-$ wasmer install twitchax/kord
+$ wasmtime run ghcr.io/twitchax/kord:latest -- describe Am7
 ```
 
-Alternatively, you can use `wasmer run`.
+With wkg (WebAssembly Package Manager):
 
 ```bash
-$ wasmer run twitchax/kord -- describe Am7
+$ wkg get github:twitchax/kord
 ```
 
 ### Help Docs

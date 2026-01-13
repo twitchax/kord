@@ -51,10 +51,10 @@ Kord is a Rust workspace with a music theory/ML core and a Leptos web app. This 
 	- `cd kord-web`
 	- Dev: `cargo leptos watch`
 	- Release: `cargo leptos build --release`
-- WASI SSR lib (for Wasmer):
+- WASI SSR lib (for Wasmtime):
 	- `LEPTOS_OUTPUT_NAME=kord-web cargo build --lib --release --target wasm32-wasip2 --no-default-features --features ssr`
 - NPM WASM (library): `wasm-pack build --features ml_infer --features wasm`
-- Wasmer binary (reduced capabilities): `cargo wasi build --release --no-default-features --features wasi --features cli --features ml_infer --features analyze_file`
+- OCI CLI binary (wasip2): `cargo make build-oci` → publishes to ghcr.io via `cargo make publish-oci`
 
 ## Core Library Patterns (kord)
 - Types/traits: `Note`, `Chord`, `Modifier`, builder pattern via `Chordable`. Parsing via `Parsable` and Pest grammar.

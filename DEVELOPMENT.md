@@ -147,13 +147,22 @@ cargo make publish-crates
 cargo make publish-npm
 ```
 
-### Publish to Wasmer
+### Publish to OCI Registry (GitHub Container Registry)
 
 ```bash
-cargo wasi build --release --no-default-features \
-  --features wasi --features cli --features ml_infer --features analyze_file
-wasmer publish
+# Build the WASI binary for wasip2
+cargo make build-oci
+
+# Publish to GitHub Container Registry
+cargo make publish-oci
 ```
+
+> **Prerequisites**:
+> - Install the `wasm32-wasip2` target: `rustup target add wasm32-wasip2`
+> - Install `wkg` tool: `cargo install wasm-pkg-tools`
+> - Authenticate with GitHub Container Registry: `docker login ghcr.io`
+>
+> The package will be available at `ghcr.io/twitchax/kord:latest` and can be run with any WASI-compatible runtime like Wasmtime or wkg.
 
 ## Web Deployment
 
