@@ -6,7 +6,14 @@ WASM_TEST_BROWSER = { value = "firefox", condition = { env_not_set = [
 ] } }
 
 [tasks.install-cargo-binstall]
-install_crate = "cargo-binstall"
+# In CI, this is installed by the cargo-bins/cargo-binstall@main action
+# Locally, users should install manually: https://github.com/cargo-bins/cargo-binstall
+script = '''
+if ! command -v cargo-binstall &> /dev/null; then
+    echo "cargo-binstall not found. Install it from: https://github.com/cargo-bins/cargo-binstall"
+    exit 1
+fi
+'''
 
 [tasks.install-nextest]
 dependencies = ["install-cargo-binstall"]
