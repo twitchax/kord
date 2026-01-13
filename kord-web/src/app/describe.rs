@@ -6,18 +6,23 @@ use thaw::{Field, FieldValidationState, Flex, FlexGap, Input, InputRule};
 
 const DEBOUNCE_MS: u64 = 300;
 
+/// Parse a chord from user input, handling empty/whitespace strings.
+pub fn parse_chord_input(input: &str) -> Option<Chord> {
+    let trimmed = input.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Chord::parse(trimmed).ok()
+    }
+}
+
 #[component]
 pub fn DescribePage() -> impl IntoView {
     let chord_input = RwSignal::new(String::new());
     let chord_result = RwSignal::new(None);
 
     let mut debounced_parse = leptos::prelude::debounce(Duration::from_millis(DEBOUNCE_MS), move |val: String| {
-        let trimmed = val.trim();
-        if trimmed.is_empty() {
-            chord_result.set(None);
-        } else {
-            chord_result.set(Chord::parse(trimmed).ok());
-        }
+        chord_result.set(parse_chord_input(&val));
     });
 
     // Watch input changes and trigger debounced parsing.
@@ -80,5 +85,37 @@ pub fn DescribePage() -> impl IntoView {
                 </div>
             </Flex>
         </section>
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_chord_input_valid() {
+        assert!(parse_chord_input("C").is_some());
+        assert!(parse_chord_input("Cm7").is_some());
+        assert!(parse_chord_input("Cmaj7").is_some());
+        assert!(parse_chord_input("C7#9b5").is_some());
+    }
+
+    #[test]
+    fn test_parse_chord_input_with_whitespace() {
+        assert!(parse_chord_input(" Cm7 ").is_some());
+        assert!(parse_chord_input("\tCmaj7\n").is_some());
+    }
+
+    #[test]
+    fn test_parse_chord_input_empty() {
+        assert!(parse_chord_input("").is_none());
+        assert!(parse_chord_input("   ").is_none());
+        assert!(parse_chord_input("\t\n").is_none());
+    }
+
+    #[test]
+    fn test_parse_chord_input_invalid() {
+        assert!(parse_chord_input("InvalidChord123").is_none());
+        assert!(parse_chord_input("XYZ").is_none());
     }
 }

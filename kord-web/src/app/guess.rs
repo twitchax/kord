@@ -157,7 +157,7 @@ pub fn GuessPage() -> impl IntoView {
 }
 
 /// Splits the input string into tokens based on whitespace and common delimiters.
-fn tokens_from_input(value: &str) -> Vec<String> {
+pub fn tokens_from_input(value: &str) -> Vec<String> {
     value
         .split(|c: char| c.is_whitespace() || matches!(c, ',' | ';' | '|'))
         .filter_map(|token| {
@@ -172,7 +172,7 @@ fn tokens_from_input(value: &str) -> Vec<String> {
 }
 
 /// Parses a list of notes from the input string.
-fn parse_notes_input(value: &str) -> Result<Vec<Note>, String> {
+pub fn parse_notes_input(value: &str) -> Result<Vec<Note>, String> {
     let mut notes = Vec::new();
     for token in tokens_from_input(value) {
         match Note::parse(&token) {
@@ -181,4 +181,71 @@ fn parse_notes_input(value: &str) -> Result<Vec<Note>, String> {
         }
     }
     Ok(notes)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tokens_from_input_whitespace() {
+        assert_eq!(tokens_from_input("C E G"), vec!["C", "E", "G"]);
+        assert_eq!(tokens_from_input("C  E   G"), vec!["C", "E", "G"]);
+        assert_eq!(tokens_from_input("C\tE\nG"), vec!["C", "E", "G"]);
+    }
+
+    #[test]
+    fn test_tokens_from_input_delimiters() {
+        assert_eq!(tokens_from_input("C,E,G"), vec!["C", "E", "G"]);
+        assert_eq!(tokens_from_input("C;E;G"), vec!["C", "E", "G"]);
+        assert_eq!(tokens_from_input("C|E|G"), vec!["C", "E", "G"]);
+        assert_eq!(tokens_from_input("C, E, G"), vec!["C", "E", "G"]);
+    }
+
+    #[test]
+    fn test_tokens_from_input_mixed() {
+        assert_eq!(tokens_from_input("C E, G; Bb | D"), vec!["C", "E", "G", "Bb", "D"]);
+    }
+
+    #[test]
+    fn test_tokens_from_input_empty() {
+        assert_eq!(tokens_from_input(""), Vec::<String>::new());
+        assert_eq!(tokens_from_input("   "), Vec::<String>::new());
+        assert_eq!(tokens_from_input(",,,"), Vec::<String>::new());
+    }
+
+    #[test]
+    fn test_parse_notes_input_valid() {
+        let result = parse_notes_input("C E G");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().len(), 3);
+    }
+
+    #[test]
+    fn test_parse_notes_input_with_accidentals() {
+        let result = parse_notes_input("C# Eb F# Bb");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().len(), 4);
+    }
+
+    #[test]
+    fn test_parse_notes_input_invalid() {
+        let result = parse_notes_input("C X G");
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "X");
+    }
+
+    #[test]
+    fn test_parse_notes_input_empty() {
+        let result = parse_notes_input("");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().len(), 0);
+    }
+
+    #[test]
+    fn test_parse_notes_input_delimiters() {
+        let result = parse_notes_input("C, E, G, Bb");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().len(), 4);
+    }
 }

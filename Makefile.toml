@@ -51,16 +51,23 @@ args = [
     "wasm ml_infer",
 ]
 
-[tasks.test-web]
+[tasks.test-web-client]
 cwd = "kord-web"
 workspace = false
 dependencies = ["install-wasm-pack"]
 command = "wasm-pack"
 args = ["test", "--${WASM_TEST_BROWSER}", "--headless", "--features", "hydrate"]
 
+[tasks.test-web-server]
+cwd = "kord-web"
+workspace = false
+install_crate = "cargo-nextest"
+command = "cargo"
+args = ["nextest", "run", "--lib"]
+
 [tasks.test-all]
 workspace = false
-dependencies = ["test", "test-wasm", "test-web"]
+dependencies = ["test", "test-web-server", "test-web-client", "test-wasm"]
 
 [tasks.codecov]
 cwd = "."

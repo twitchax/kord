@@ -101,3 +101,83 @@ pub fn play_note(note: &Note, duration_secs: f64) {
         length,
     );
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_le_bytes_to_f32_samples_valid() {
+        let bytes = vec![0x00, 0x00, 0x80, 0x3f, 0x00, 0x00, 0x00, 0x40];
+        let result = le_bytes_to_f32_samples(&bytes);
+        assert!(result.is_ok());
+        let samples = result.unwrap();
+        assert_eq!(samples.len(), 2);
+        assert_eq!(samples[0], 1.0);
+        assert_eq!(samples[1], 2.0);
+    }
+
+    #[test]
+    fn test_le_bytes_to_f32_samples_invalid_length() {
+        let bytes = vec![0x00, 0x00, 0x80];
+        let result = le_bytes_to_f32_samples(&bytes);
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), AudioError::InvalidBufferLength));
+    }
+
+    #[test]
+    fn test_le_bytes_to_f32_samples_empty() {
+        let bytes = vec![];
+        let result = le_bytes_to_f32_samples(&bytes);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().len(), 0);
+    }
+
+    #[test]
+    fn test_pitches_to_notes() {
+        use klib::core::pitch::Pitch;
+        let pitches = vec![Pitch::C, Pitch::E, Pitch::G];
+        let notes = pitches_to_notes(&pitches);
+        assert_eq!(notes.len(), 3);
+    }
+
+    #[test]
+    fn test_pitches_to_notes_empty() {
+        let pitches = vec![];
+        let notes = pitches_to_notes(&pitches);
+        assert_eq!(notes.len(), 0);
+    }
+
+    #[test]
+    fn test_chords_from_pitches_empty() {
+        let pitches = vec![];
+        let result = chords_from_pitches(&pitches);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().len(), 0);
+    }
+
+    #[test]
+    fn test_chords_from_pitches_valid() {
+        use klib::core::pitch::Pitch;
+        let pitches = vec![Pitch::C, Pitch::E, Pitch::G];
+        let result = chords_from_pitches(&pitches);
+        assert!(result.is_ok());
+        let chords = result.unwrap();
+        assert!(!chords.is_empty());
+        assert!(chords.len() <= 8);
+    }
+
+    #[test]
+    fn test_audio_error_display() {
+        let err = AudioError::InvalidBufferLength;
+        assert!(err.to_string().contains("multiple of 4"));
+
+        let err = AudioError::InferenceError("test error".to_string());
+        assert!(err.to_string().contains("inference failed"));
+        assert!(err.to_string().contains("test error"));
+
+        let err = AudioError::ChordGenerationError("test error".to_string());
+        assert!(err.to_string().contains("chord generation failed"));
+        assert!(err.to_string().contains("test error"));
+    }
+}
