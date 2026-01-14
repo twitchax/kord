@@ -87,7 +87,16 @@ pub fn octave_str_to_octave(note_str: &str) -> Res<Octave> {
 /// Parses a mode name string into a [`ModeKind`].
 #[coverage(off)]
 pub fn mode_name_str_to_mode_kind(mode_str: &str) -> Res<ModeKind> {
-    let mode = match mode_str.to_lowercase().as_str() {
+    let normalized = mode_str.to_lowercase()
+        .replace("♮", "natural")
+        .replace("♯", "sharp")
+        .replace("#", "sharp")
+        .replace("♭", "flat")
+        .replace("b", "flat")
+        .replace(" ", "");
+    
+    let mode = match normalized.as_str() {
+        // Major scale modes
         "ionian" => ModeKind::Ionian,
         "dorian" => ModeKind::Dorian,
         "phrygian" => ModeKind::Phrygian,
@@ -95,6 +104,23 @@ pub fn mode_name_str_to_mode_kind(mode_str: &str) -> Res<ModeKind> {
         "mixolydian" => ModeKind::Mixolydian,
         "aeolian" => ModeKind::Aeolian,
         "locrian" => ModeKind::Locrian,
+        
+        // Harmonic minor modes
+        "locriannatural6" | "locriannat6" => ModeKind::LocrianNatural6,
+        "ioniansharp5" | "ionianaugmented" | "majorsharp5" | "augmentedmajor" => ModeKind::IonianSharp5,
+        "doriansharp4" => ModeKind::DorianSharp4,
+        "phrygiandominant" | "spanishphrygian" | "phrygianmajor" => ModeKind::PhrygianDominant,
+        "lydiansharp2" => ModeKind::LydianSharp2,
+        "ultralocrian" => ModeKind::Ultralocrian,
+        
+        // Melodic minor modes
+        "dorianflat2" | "phrygiannatural6" | "phrygiannat6" => ModeKind::DorianFlat2,
+        "lydianaugmented" | "lydiansharp5" => ModeKind::LydianAugmented,
+        "lydiandominant" | "lydianflat7" | "mixolydiansharp4" | "acoustic" | "acousticscale" => ModeKind::LydianDominant,
+        "mixolydianflat6" | "aeoliandominant" => ModeKind::MixolydianFlat6,
+        "locriannatural2" | "locriannat2" | "locriansharp2" | "half-diminished" | "half-diminishednatural2" | "half-diminishednat2" => ModeKind::LocrianNatural2,
+        "altered" | "alteredscale" | "superlocrian" => ModeKind::Altered,
+        
         _ => return Err(crate::core::base::Err::msg("Unknown mode name")),
     };
 

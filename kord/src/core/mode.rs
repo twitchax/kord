@@ -307,4 +307,48 @@ mod tests {
         assert_eq!(mode.root(), BFlat);
         assert_eq!(mode.kind(), ModeKind::Lydian);
     }
+
+    #[test]
+    fn test_harmonic_minor_modes_parse() {
+        // Test harmonic minor modes
+        let mode = Mode::parse("B locrian nat6").unwrap();
+        assert_eq!(mode.kind(), ModeKind::LocrianNatural6);
+        
+        let mode = Mode::parse("C ionian #5").unwrap();
+        assert_eq!(mode.kind(), ModeKind::IonianSharp5);
+        
+        let mode = Mode::parse("D dorian sharp 4").unwrap();
+        assert_eq!(mode.kind(), ModeKind::DorianSharp4);
+        
+        let mode = Mode::parse("E phrygian dominant").unwrap();
+        assert_eq!(mode.kind(), ModeKind::PhrygianDominant);
+        
+        let mode = Mode::parse("F lydian #2").unwrap();
+        assert_eq!(mode.kind(), ModeKind::LydianSharp2);
+        
+        let mode = Mode::parse("G# ultralocrian").unwrap();
+        assert_eq!(mode.kind(), ModeKind::Ultralocrian);
+    }
+
+    #[test]
+    fn test_melodic_minor_modes_parse() {
+        // Test melodic minor modes
+        let mode = Mode::parse("B dorian b2").unwrap();
+        assert_eq!(mode.kind(), ModeKind::DorianFlat2);
+        
+        let mode = Mode::parse("C lydian augmented").unwrap();
+        assert_eq!(mode.kind(), ModeKind::LydianAugmented);
+        
+        let mode = Mode::parse("D lydian dominant").unwrap();
+        assert_eq!(mode.kind(), ModeKind::LydianDominant);
+        
+        let mode = Mode::parse("E mixolydian b6").unwrap();
+        assert_eq!(mode.kind(), ModeKind::MixolydianFlat6);
+        
+        let mode = Mode::parse("F# locrian nat2").unwrap();
+        assert_eq!(mode.kind(), ModeKind::LocrianNatural2);
+        
+        let mode = Mode::parse("G# altered").unwrap();
+        assert_eq!(mode.kind(), ModeKind::Altered);
+    }
 }

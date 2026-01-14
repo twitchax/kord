@@ -44,7 +44,41 @@ bang = { "!" }
 
 // Mode names (case-insensitive would be nice but pest needs explicit)
 mode_name = @{
-    ^"ionian" | ^"dorian" | ^"phrygian" | ^"lydian" | ^"mixolydian" | ^"aeolian" | ^"locrian"
+    // Match longest patterns first to avoid conflicts
+    ^"locrian" ~ " "+ ~ (^"natural" | ^"nat" | "♮") ~ " "* ~ "6" |
+    ^"locrian" ~ " "+ ~ (^"natural" | ^"nat" | "♮") ~ " "* ~ "2" |
+    ^"locrian" ~ " "+ ~ (^"sharp" | "#" | "♯") ~ " "* ~ "2" |
+    ^"ionian" ~ " "+ ~ (^"sharp" | "#" | "♯") ~ " "* ~ "5" |
+    ^"ionian" ~ " "+ ~ ^"augmented" |
+    ^"dorian" ~ " "+ ~ (^"sharp" | "#" | "♯") ~ " "* ~ "4" |
+    ^"dorian" ~ " "+ ~ (^"flat" | "b" | "♭") ~ " "* ~ "2" |
+    ^"phrygian" ~ " "+ ~ ^"dominant" |
+    ^"phrygian" ~ " "+ ~ (^"natural" | ^"nat" | "♮") ~ " "* ~ "6" |
+    ^"phrygian" ~ " "+ ~ ^"major" |
+    ^"lydian" ~ " "+ ~ (^"sharp" | "#" | "♯") ~ " "* ~ "2" |
+    ^"lydian" ~ " "+ ~ (^"sharp" | "#" | "♯") ~ " "* ~ "5" |
+    ^"lydian" ~ " "+ ~ ^"augmented" |
+    ^"lydian" ~ " "+ ~ ^"dominant" |
+    ^"lydian" ~ " "+ ~ (^"flat" | "b" | "♭") ~ " "* ~ "7" |
+    ^"mixolydian" ~ " "+ ~ (^"sharp" | "#" | "♯") ~ " "* ~ "4" |
+    ^"mixolydian" ~ " "+ ~ (^"flat" | "b" | "♭") ~ " "* ~ "6" |
+    ^"major" ~ " "+ ~ (^"sharp" | "#" | "♯") ~ " "* ~ "5" |
+    ^"augmented" ~ " "+ ~ ^"major" |
+    ^"spanish" ~ " "+ ~ ^"phrygian" |
+    ^"ultra" ~ " "+ ~ ^"locrian" |
+    ^"aeolian" ~ " "+ ~ ^"dominant" |
+    ^"half" ~ "-"? ~ ^"diminished" ~ (" "+ ~ (^"natural" | ^"nat" | "♮") ~ " "* ~ "2")? |
+    ^"super" ~ " "+ ~ ^"locrian" |
+    ^"acoustic" ~ (" "+ ~ ^"scale")? |
+    ^"altered" ~ (" "+ ~ ^"scale")? |
+    ^"ultralocrian" |
+    ^"ionian" |
+    ^"dorian" |
+    ^"phrygian" |
+    ^"lydian" |
+    ^"mixolydian" |
+    ^"aeolian" |
+    ^"locrian"
 }
 
 // Scale names (case-insensitive)
