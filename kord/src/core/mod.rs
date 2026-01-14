@@ -5,6 +5,8 @@ pub mod chord;
 pub mod helpers;
 pub mod interval;
 pub mod known_chord;
+pub mod mode;
+pub mod mode_kind;
 pub mod modifier;
 pub mod named_pitch;
 pub mod note;
@@ -12,3 +14,5 @@ pub mod octave;
 #[allow(missing_docs)]
 pub mod parser;
 pub mod pitch;
+pub mod scale;
+pub mod scale_kind;
