@@ -5,12 +5,15 @@ use std::fmt::{Display, Error, Formatter};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+use pest::Parser;
+
 use crate::core::{
-    base::{HasDescription, HasName, HasPreciseName, HasStaticName},
+    base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Res},
     chord::HasRoot,
     interval::{HasIntervals, Interval},
     mode_kind::ModeKind,
     note::Note,
+    parser::{mode_name_str_to_mode_kind, note_str_to_note, ChordParser, Rule},
 };
 
 // Traits.
@@ -101,6 +104,30 @@ impl Display for Mode {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         let notes = self.notes().iter().map(|n| n.static_name()).collect::<Vec<_>>().join(", ");
         write!(f, "{}\n   {}\n   {}", self.name(), self.description(), notes)
+    }
+}
+
+impl Parsable for Mode {
+    fn parse(input: &str) -> Res<Self>
+    where
+        Self: Sized,
+    {
+        let pairs = ChordParser::parse(Rule::mode, input)?;
+        let root = pairs.clone().next().unwrap();
+
+        assert_eq!(Rule::mode, root.as_rule());
+
+        let mut components = root.into_inner();
+
+        let note = components.next().unwrap();
+        assert_eq!(Rule::note, note.as_rule());
+        let root_note = note_str_to_note(note.as_str().trim())?;
+
+        let mode_name = components.next().unwrap();
+        assert_eq!(Rule::mode_name, mode_name.as_rule());
+        let mode_kind = mode_name_str_to_mode_kind(mode_name.as_str())?;
+
+        Ok(Mode::new(root_note, mode_kind))
     }
 }
 
@@ -238,5 +265,46 @@ mod tests {
         let mode = Mode::new(B, ModeKind::Locrian);
         let notes = mode.notes();
         assert_eq!(notes[4], FFive); // 5th degree is diminished 5th
+    }
+
+    #[test]
+    fn test_mode_parse() {
+        // Test parsing various modes
+        let mode = Mode::parse("D dorian").unwrap();
+        assert_eq!(mode.root(), D);
+        assert_eq!(mode.kind(), ModeKind::Dorian);
+
+        let mode = Mode::parse("C ionian").unwrap();
+        assert_eq!(mode.root(), C);
+        assert_eq!(mode.kind(), ModeKind::Ionian);
+
+        let mode = Mode::parse("E phrygian").unwrap();
+        assert_eq!(mode.root(), E);
+        assert_eq!(mode.kind(), ModeKind::Phrygian);
+
+        let mode = Mode::parse("F lydian").unwrap();
+        assert_eq!(mode.root(), F);
+        assert_eq!(mode.kind(), ModeKind::Lydian);
+
+        let mode = Mode::parse("G mixolydian").unwrap();
+        assert_eq!(mode.root(), G);
+        assert_eq!(mode.kind(), ModeKind::Mixolydian);
+
+        let mode = Mode::parse("A aeolian").unwrap();
+        assert_eq!(mode.root(), A);
+        assert_eq!(mode.kind(), ModeKind::Aeolian);
+
+        let mode = Mode::parse("B locrian").unwrap();
+        assert_eq!(mode.root(), B);
+        assert_eq!(mode.kind(), ModeKind::Locrian);
+
+        // Test with accidentals
+        let mode = Mode::parse("F# dorian").unwrap();
+        assert_eq!(mode.root(), FSharp);
+        assert_eq!(mode.kind(), ModeKind::Dorian);
+
+        let mode = Mode::parse("Bb lydian").unwrap();
+        assert_eq!(mode.root(), BFlat);
+        assert_eq!(mode.kind(), ModeKind::Lydian);
     }
 }

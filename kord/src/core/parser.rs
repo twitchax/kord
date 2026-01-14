@@ -4,8 +4,10 @@ use pest_derive::Parser;
 
 use crate::core::{
     base::Res,
+    mode_kind::ModeKind,
     note::{self, Note},
     octave::Octave,
+    scale_kind::ScaleKind,
 };
 
 /// A parser for chord symbols.
@@ -80,4 +82,40 @@ pub fn octave_str_to_octave(note_str: &str) -> Res<Octave> {
     };
 
     Ok(octave)
+}
+
+/// Parses a mode name string into a [`ModeKind`].
+#[coverage(off)]
+pub fn mode_name_str_to_mode_kind(mode_str: &str) -> Res<ModeKind> {
+    let mode = match mode_str.to_lowercase().as_str() {
+        "ionian" => ModeKind::Ionian,
+        "dorian" => ModeKind::Dorian,
+        "phrygian" => ModeKind::Phrygian,
+        "lydian" => ModeKind::Lydian,
+        "mixolydian" => ModeKind::Mixolydian,
+        "aeolian" => ModeKind::Aeolian,
+        "locrian" => ModeKind::Locrian,
+        _ => return Err(crate::core::base::Err::msg("Unknown mode name")),
+    };
+
+    Ok(mode)
+}
+
+/// Parses a scale name string into a [`ScaleKind`].
+#[coverage(off)]
+pub fn scale_name_str_to_scale_kind(scale_str: &str) -> Res<ScaleKind> {
+    let normalized = scale_str.to_lowercase().replace(" ", "");
+    let scale = match normalized.as_str() {
+        "major" => ScaleKind::Major,
+        "naturalminor" => ScaleKind::NaturalMinor,
+        "harmonicminor" => ScaleKind::HarmonicMinor,
+        "melodicminor" => ScaleKind::MelodicMinor,
+        "wholetone" => ScaleKind::WholeTone,
+        "chromatic" => ScaleKind::Chromatic,
+        "diminished(whole-half)" => ScaleKind::DiminishedWholeHalf,
+        "diminished(half-whole)" => ScaleKind::DiminishedHalfWhole,
+        _ => return Err(crate::core::base::Err::msg("Unknown scale name")),
+    };
+
+    Ok(scale)
 }

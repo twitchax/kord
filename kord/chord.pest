@@ -42,6 +42,38 @@ hat = { "^" }
 
 bang = { "!" }
 
+// Mode names (case-insensitive would be nice but pest needs explicit)
+mode_name = @{
+    ^"ionian" | ^"dorian" | ^"phrygian" | ^"lydian" | ^"mixolydian" | ^"aeolian" | ^"locrian"
+}
+
+// Scale names (case-insensitive)
+scale_name = @{
+    ^"major" |
+    ^"natural" ~ " "? ~ ^"minor" |
+    ^"harmonic" ~ " "? ~ ^"minor" |
+    ^"melodic" ~ " "? ~ ^"minor" |
+    ^"whole" ~ " "? ~ ^"tone" |
+    ^"chromatic" |
+    ^"diminished" ~ " "? ~ "(" ~ ^"whole" ~ "-" ~ ^"half" ~ ")" |
+    ^"diminished" ~ " "? ~ "(" ~ ^"half" ~ "-" ~ ^"whole" ~ ")"
+}
+
+// Mode or Scale with root note
+mode = {
+    SOI ~
+    note ~
+    mode_name ~
+    EOI
+}
+
+scale = {
+    SOI ~
+    note ~
+    scale_name ~
+    EOI
+}
+
 WHITESPACE = _{ " " }
 
 chord = {

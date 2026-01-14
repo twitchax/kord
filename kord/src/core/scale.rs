@@ -5,11 +5,14 @@ use std::fmt::{Display, Error, Formatter};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+use pest::Parser;
+
 use crate::core::{
-    base::{HasDescription, HasName, HasPreciseName, HasStaticName},
+    base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Res},
     chord::HasRoot,
     interval::{HasIntervals, Interval},
     note::Note,
+    parser::{note_str_to_note, scale_name_str_to_scale_kind, ChordParser, Rule},
     scale_kind::ScaleKind,
 };
 
@@ -101,6 +104,29 @@ impl Display for Scale {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         let notes = self.notes().iter().map(|n| n.static_name()).collect::<Vec<_>>().join(", ");
         write!(f, "{}\n   {}\n   {}", self.name(), self.description(), notes)
+    }
+}
+
+impl Parsable for Scale {
+    fn parse(input: &str) -> Res<Self>
+    where
+        Self: Sized,
+    {
+        let root = ChordParser::parse(Rule::scale, input)?.next().unwrap();
+
+        assert_eq!(Rule::scale, root.as_rule());
+
+        let mut components = root.into_inner();
+
+        let note = components.next().unwrap();
+        assert_eq!(Rule::note, note.as_rule());
+        let root_note = note_str_to_note(note.as_str().trim())?;
+
+        let scale_name = components.next().unwrap();
+        assert_eq!(Rule::scale_name, scale_name.as_rule());
+        let scale_kind = scale_name_str_to_scale_kind(scale_name.as_str())?;
+
+        Ok(Scale::new(root_note, scale_kind))
     }
 }
 
@@ -202,5 +228,46 @@ mod tests {
         // E natural minor
         let scale = Scale::new(E, ScaleKind::NaturalMinor);
         assert_eq!(scale.notes(), vec![E, FSharp, G, A, B, CFive, DFive]);
+    }
+
+    #[test]
+    fn test_scale_parse() {
+        // Test parsing various scales
+        let scale = Scale::parse("C major").unwrap();
+        assert_eq!(scale.root(), C);
+        assert_eq!(scale.kind(), ScaleKind::Major);
+
+        let scale = Scale::parse("A natural minor").unwrap();
+        assert_eq!(scale.root(), A);
+        assert_eq!(scale.kind(), ScaleKind::NaturalMinor);
+
+        let scale = Scale::parse("A naturalminor").unwrap();
+        assert_eq!(scale.root(), A);
+        assert_eq!(scale.kind(), ScaleKind::NaturalMinor);
+
+        let scale = Scale::parse("A harmonic minor").unwrap();
+        assert_eq!(scale.root(), A);
+        assert_eq!(scale.kind(), ScaleKind::HarmonicMinor);
+
+        let scale = Scale::parse("A melodic minor").unwrap();
+        assert_eq!(scale.root(), A);
+        assert_eq!(scale.kind(), ScaleKind::MelodicMinor);
+
+        let scale = Scale::parse("C whole tone").unwrap();
+        assert_eq!(scale.root(), C);
+        assert_eq!(scale.kind(), ScaleKind::WholeTone);
+
+        let scale = Scale::parse("C chromatic").unwrap();
+        assert_eq!(scale.root(), C);
+        assert_eq!(scale.kind(), ScaleKind::Chromatic);
+
+        // Test with accidentals
+        let scale = Scale::parse("F# major").unwrap();
+        assert_eq!(scale.root(), FSharp);
+        assert_eq!(scale.kind(), ScaleKind::Major);
+
+        let scale = Scale::parse("Bb harmonic minor").unwrap();
+        assert_eq!(scale.root(), BFlat);
+        assert_eq!(scale.kind(), ScaleKind::HarmonicMinor);
     }
 }
