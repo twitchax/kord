@@ -13,3 +13,4 @@ pub mod octave;
 #[allow(missing_docs)]
 pub mod parser;
 pub mod pitch;
+pub mod scale;
