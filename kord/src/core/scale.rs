@@ -7,18 +7,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::core::{
     base::{HasDescription, HasName, HasPreciseName, HasStaticName},
+    chord::HasRoot,
     interval::{HasIntervals, Interval},
     note::Note,
     scale_kind::ScaleKind,
 };
 
 // Traits.
-
-/// A trait that represents a type that has a root note.
-pub trait HasRoot {
-    /// Returns the root note of the implementor (most likely a [`Scale`]).
-    fn root(&self) -> Note;
-}
 
 /// A trait that represents a type that has a scale kind.
 pub trait HasScaleKind {

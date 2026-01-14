@@ -7,18 +7,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::core::{
     base::{HasDescription, HasName, HasPreciseName, HasStaticName},
+    chord::HasRoot,
     interval::{HasIntervals, Interval},
     mode_kind::ModeKind,
     note::Note,
 };
 
 // Traits.
-
-/// A trait that represents a type that has a root note.
-pub trait HasRoot {
-    /// Returns the root note of the implementor (most likely a [`Mode`]).
-    fn root(&self) -> Note;
-}
 
 /// A trait that represents a type that has a mode kind.
 pub trait HasModeKind {
