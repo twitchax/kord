@@ -42,7 +42,7 @@ hat = { "^" }
 
 bang = { "!" }
 
-mode_name = { "Ionian" | "ionian" | "Dorian" | "dorian" | "Phrygian" | "phrygian" | "Lydian" | "lydian" | "Mixolydian" | "mixolydian" | "Aeolian" | "aeolian" | "Locrian" | "locrian" }
+mode_name = { ^"Ionian" | ^"Dorian" | ^"Phrygian" | ^"Lydian" | ^"Mixolydian" | ^"Aeolian" | ^"Locrian" | ^"Locrian Natural 6" | ^"Locrian Nat6" | ^"Locrian ♮6" | ^"Ionian Augmented" | ^"Ionian ♯5" | ^"Dorian ♯4" | ^"Phrygian Dominant" | ^"Lydian ♯2" | ^"Ultralocrian" | ^"Dorian ♭2" | ^"Phrygian ♮6" | ^"Lydian Augmented" | ^"Lydian ♯5" | ^"Lydian Dominant" | ^"Lydian ♭7" | ^"Mixolydian ♯4" | ^"Mixolydian ♭6" | ^"Aeolian Dominant" | ^"Locrian ♮2" | ^"Locrian ♯2" | ^"Altered" | ^"Super Locrian" }
 
 WHITESPACE = _{ " " }
 
