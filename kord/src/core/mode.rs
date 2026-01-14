@@ -455,7 +455,7 @@ impl ToChord for ModeWithRoot {
             Mode::LydianDominant => chord.seven().sharp11(),
             Mode::MixolydianFlat6 => chord.seven().flat13(),
             Mode::LocrianNatural2 => chord.minor().seven().flat5(),
-            Mode::Altered => chord.seven().flat9().sharp9().flat5().augmented(),
+            Mode::Altered => chord.seven().flat9().sharp9(), // 7alt chord
         }
     }
 }
