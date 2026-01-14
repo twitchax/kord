@@ -7,6 +7,7 @@ use clap::{ArgAction, Parser, Subcommand};
 use klib::core::{
     base::{Parsable, Res, Void},
     chord::{Chord, Chordable},
+    mode::ModeWithRoot,
     note::Note,
     octave::Octave,
 };
@@ -91,6 +92,15 @@ enum Command {
     Guess {
         /// A set of notes from which the guesser will attempt to build a chord.
         notes: Vec<String>,
+    },
+
+    /// Describes a mode (e.g., "C Dorian", "D Lydian Dominant").
+    ///
+    /// Supports Greek modes (Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian),
+    /// harmonic minor modes, and melodic minor modes.
+    Mode {
+        /// Mode symbol to parse (e.g., "C Dorian", "D Phrygian Dominant").
+        symbol: String,
     },
 
     /// Set of commands to analyze audio data.
@@ -443,6 +453,11 @@ fn start(args: Args) -> Void {
             for candidate in candidates {
                 describe(&candidate);
             }
+        }
+        Some(Command::Mode { symbol }) => {
+            let mode = ModeWithRoot::parse(&symbol)?;
+
+            describe_mode(&mode);
         }
         Some(Command::Loop { chords, bpm }) => {
             let chord_pairs = chords
@@ -820,6 +835,10 @@ fn start(args: Args) -> Void {
 
 fn describe(chord: &Chord) {
     println!("{chord}");
+}
+
+fn describe_mode(mode: &ModeWithRoot) {
+    println!("{mode}");
 }
 
 fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
