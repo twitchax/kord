@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::core::{
     base::{HasDescription, HasName, HasStaticName, Parsable, Res},
-    chord::{Chord, Chordable, HasRoot},
+    chord::{Chord, Chordable},
     interval::Interval,
     known_chord::HasRelativeScale,
     note::Note,
@@ -19,12 +19,6 @@ use crate::core::{
 pub trait ToChord {
     /// Converts the implementor to a chord.
     fn to_chord(&self) -> Chord;
-}
-
-/// A trait for types that can be converted to a mode.
-pub trait ToMode {
-    /// Converts the implementor to a mode with root, if possible.
-    fn to_mode(&self) -> Option<ModeWithRoot>;
 }
 
 // Enum.
@@ -460,77 +454,12 @@ impl ToChord for ModeWithRoot {
     }
 }
 
-impl ToMode for Chord {
-    fn to_mode(&self) -> Option<ModeWithRoot> {
-        use crate::core::chord::{HasModifiers, HasExtensions, HasDomninantDegree};
-        use crate::core::modifier::{Modifier, Degree, Extension};
-        
-        let modifiers = self.modifiers();
-        let extensions = self.extensions();
-        let has_dominant = self.dominant_degree();
-        
-        // Try to match chord to a mode
-        let mode = if modifiers.is_empty() && extensions.is_empty() {
-            // Plain major chord
-            Some(Mode::Ionian)
-        } else if modifiers.contains(&Modifier::Minor) && has_dominant == Some(Degree::Seven) {
-            if modifiers.contains(&Modifier::Flat5) {
-                // Locrian or LocrianNatural2
-                if extensions.contains(&Extension::Add13) {
-                    Some(Mode::LocrianNatural6)
-                } else {
-                    Some(Mode::Locrian)
-                }
-            } else if modifiers.contains(&Modifier::Flat9) && modifiers.contains(&Modifier::Flat13) {
-                Some(Mode::Phrygian)
-            } else if modifiers.contains(&Modifier::Flat13) {
-                Some(Mode::Aeolian)
-            } else if modifiers.contains(&Modifier::Flat9) {
-                Some(Mode::DorianFlat2)
-            } else if modifiers.contains(&Modifier::Sharp11) {
-                Some(Mode::DorianSharp4)
-            } else {
-                Some(Mode::Dorian)
-            }
-        } else if modifiers.contains(&Modifier::Major7) {
-            if modifiers.contains(&Modifier::Sharp11) {
-                if modifiers.contains(&Modifier::Augmented5) {
-                    Some(Mode::LydianAugmented)
-                } else {
-                    Some(Mode::Lydian)
-                }
-            } else if modifiers.contains(&Modifier::Augmented5) {
-                Some(Mode::IonianAugmented)
-            } else {
-                Some(Mode::Ionian)
-            }
-        } else if has_dominant == Some(Degree::Seven) {
-            if modifiers.contains(&Modifier::Sharp11) {
-                Some(Mode::LydianDominant)
-            } else if modifiers.contains(&Modifier::Flat13) {
-                Some(Mode::MixolydianFlat6)
-            } else if modifiers.contains(&Modifier::Flat9) {
-                if modifiers.contains(&Modifier::Sharp9) {
-                    Some(Mode::Altered)
-                } else {
-                    Some(Mode::PhrygianDominant)
-                }
-            } else {
-                Some(Mode::Mixolydian)
-            }
-        } else {
-            None
-        };
-        
-        mode.map(|m| ModeWithRoot::new(self.root(), m))
-    }
-}
-
 // Tests.
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::chord::ToMode;
     use crate::core::note::*;
     use pretty_assertions::assert_eq;
 
