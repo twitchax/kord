@@ -6,7 +6,7 @@ use std::fmt::Display;
 use serde::{Deserialize, Serialize};
 
 use crate::core::{
-    base::{HasDescription, HasName, HasStaticName, Parsable, Res},
+    base::{HasDescription, HasName, HasStaticName},
     interval::Interval,
     note::Note,
 };

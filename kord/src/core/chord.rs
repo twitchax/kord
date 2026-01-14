@@ -237,7 +237,7 @@ pub trait HasDomninantDegree {
 /// A trait for types that can be converted to a mode.
 pub trait ToMode {
     /// Converts the implementor to a mode with root, if possible.
-    fn to_mode(&self) -> Option<crate::core::mode::ModeWithRoot>;
+    fn to_mode(&self) -> Option<crate::core::mode::Mode>;
 }
 
 // Struct.
@@ -1340,8 +1340,8 @@ impl Playable for Chord {
 }
 
 impl ToMode for Chord {
-    fn to_mode(&self) -> Option<crate::core::mode::ModeWithRoot> {
-        use crate::core::mode::{Mode, ModeWithRoot};
+    fn to_mode(&self) -> Option<crate::core::mode::Mode> {
+        use crate::core::mode::{ModeKind, Mode};
         
         let modifiers = self.modifiers();
         let extensions = self.extensions();
@@ -1350,57 +1350,57 @@ impl ToMode for Chord {
         // Try to match chord to a mode
         let mode = if modifiers.is_empty() && extensions.is_empty() {
             // Plain major chord
-            Some(Mode::Ionian)
+            Some(ModeKind::Ionian)
         } else if modifiers.contains(&Modifier::Minor) && has_dominant == Some(Degree::Seven) {
             if modifiers.contains(&Modifier::Flat5) {
                 // Locrian or LocrianNatural2
                 if extensions.contains(&Extension::Add13) {
-                    Some(Mode::LocrianNatural6)
+                    Some(ModeKind::LocrianNatural6)
                 } else {
-                    Some(Mode::Locrian)
+                    Some(ModeKind::Locrian)
                 }
             } else if modifiers.contains(&Modifier::Flat9) && modifiers.contains(&Modifier::Flat13) {
-                Some(Mode::Phrygian)
+                Some(ModeKind::Phrygian)
             } else if modifiers.contains(&Modifier::Flat13) {
-                Some(Mode::Aeolian)
+                Some(ModeKind::Aeolian)
             } else if modifiers.contains(&Modifier::Flat9) {
-                Some(Mode::DorianFlat2)
+                Some(ModeKind::DorianFlat2)
             } else if modifiers.contains(&Modifier::Sharp11) {
-                Some(Mode::DorianSharp4)
+                Some(ModeKind::DorianSharp4)
             } else {
-                Some(Mode::Dorian)
+                Some(ModeKind::Dorian)
             }
         } else if modifiers.contains(&Modifier::Major7) {
             if modifiers.contains(&Modifier::Sharp11) {
                 if modifiers.contains(&Modifier::Augmented5) {
-                    Some(Mode::LydianAugmented)
+                    Some(ModeKind::LydianAugmented)
                 } else {
-                    Some(Mode::Lydian)
+                    Some(ModeKind::Lydian)
                 }
             } else if modifiers.contains(&Modifier::Augmented5) {
-                Some(Mode::IonianAugmented)
+                Some(ModeKind::IonianAugmented)
             } else {
-                Some(Mode::Ionian)
+                Some(ModeKind::Ionian)
             }
         } else if has_dominant == Some(Degree::Seven) {
             if modifiers.contains(&Modifier::Sharp11) {
-                Some(Mode::LydianDominant)
+                Some(ModeKind::LydianDominant)
             } else if modifiers.contains(&Modifier::Flat13) {
-                Some(Mode::MixolydianFlat6)
+                Some(ModeKind::MixolydianFlat6)
             } else if modifiers.contains(&Modifier::Flat9) {
                 if modifiers.contains(&Modifier::Sharp9) {
-                    Some(Mode::Altered)
+                    Some(ModeKind::Altered)
                 } else {
-                    Some(Mode::PhrygianDominant)
+                    Some(ModeKind::PhrygianDominant)
                 }
             } else {
-                Some(Mode::Mixolydian)
+                Some(ModeKind::Mixolydian)
             }
         } else {
             None
         };
         
-        mode.map(|m| ModeWithRoot::new(self.root(), m))
+        mode.map(|m| Mode::new(self.root(), m))
     }
 }
 

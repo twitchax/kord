@@ -23,11 +23,11 @@ pub trait ToChord {
 
 // Enum.
 
-/// An enum representing musical mode kinds (Greek modes, harmonic minor modes, and melodic minor modes).
+/// An enum representing musical modes (Greek modes, harmonic minor modes, and melodic minor modes).
 #[derive(PartialEq, Eq, Copy, Clone, Hash, Debug, Ord, PartialOrd)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8)]
-pub enum ModeKind {
+pub enum Mode {
     // Major scale modes (Greek modes)
     /// Ionian mode (major scale).
     Ionian,
@@ -75,74 +75,74 @@ pub enum ModeKind {
 
 // Struct.
 
-/// A struct representing a rooted mode instance.
+/// A struct representing a mode with a root note.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, Clone, Debug)]
-pub struct Mode {
+pub struct ModeWithRoot {
     /// The root note of the mode.
     root: Note,
     /// The mode.
-    mode: ModeKind,
+    mode: Mode,
 }
 
 // Impls.
 
-impl HasStaticName for ModeKind {
+impl HasStaticName for Mode {
     fn static_name(&self) -> &'static str {
         match self {
-            ModeKind::Ionian => "Ionian",
-            ModeKind::Dorian => "Dorian",
-            ModeKind::Phrygian => "Phrygian",
-            ModeKind::Lydian => "Lydian",
-            ModeKind::Mixolydian => "Mixolydian",
-            ModeKind::Aeolian => "Aeolian",
-            ModeKind::Locrian => "Locrian",
-            ModeKind::LocrianNatural6 => "Locrian ♮6",
-            ModeKind::IonianAugmented => "Ionian ♯5",
-            ModeKind::DorianSharp4 => "Dorian ♯4",
-            ModeKind::PhrygianDominant => "Phrygian Dominant",
-            ModeKind::LydianSharp2 => "Lydian ♯2",
-            ModeKind::Ultralocrian => "Ultralocrian",
-            ModeKind::DorianFlat2 => "Dorian ♭2",
-            ModeKind::LydianAugmented => "Lydian Augmented",
-            ModeKind::LydianDominant => "Lydian Dominant",
-            ModeKind::MixolydianFlat6 => "Mixolydian ♭6",
-            ModeKind::LocrianNatural2 => "Locrian ♮2",
-            ModeKind::Altered => "Altered",
+            Mode::Ionian => "Ionian",
+            Mode::Dorian => "Dorian",
+            Mode::Phrygian => "Phrygian",
+            Mode::Lydian => "Lydian",
+            Mode::Mixolydian => "Mixolydian",
+            Mode::Aeolian => "Aeolian",
+            Mode::Locrian => "Locrian",
+            Mode::LocrianNatural6 => "Locrian ♮6",
+            Mode::IonianAugmented => "Ionian ♯5",
+            Mode::DorianSharp4 => "Dorian ♯4",
+            Mode::PhrygianDominant => "Phrygian Dominant",
+            Mode::LydianSharp2 => "Lydian ♯2",
+            Mode::Ultralocrian => "Ultralocrian",
+            Mode::DorianFlat2 => "Dorian ♭2",
+            Mode::LydianAugmented => "Lydian Augmented",
+            Mode::LydianDominant => "Lydian Dominant",
+            Mode::MixolydianFlat6 => "Mixolydian ♭6",
+            Mode::LocrianNatural2 => "Locrian ♮2",
+            Mode::Altered => "Altered",
         }
     }
 }
 
-impl HasDescription for ModeKind {
+impl HasDescription for Mode {
     fn description(&self) -> &'static str {
         match self {
-            ModeKind::Ionian => "major scale, first mode of major scale",
-            ModeKind::Dorian => "second mode of major scale, minor with raised 6th",
-            ModeKind::Phrygian => "third mode of major scale, minor with lowered 2nd",
-            ModeKind::Lydian => "fourth mode of major scale, major with raised 4th",
-            ModeKind::Mixolydian => "fifth mode of major scale, major with lowered 7th",
-            ModeKind::Aeolian => "natural minor scale, sixth mode of major scale",
-            ModeKind::Locrian => "seventh mode of major scale, diminished scale with lowered 2nd and 5th",
-            ModeKind::LocrianNatural6 => "2nd mode of harmonic minor, common over m7♭5(♮13) colors",
-            ModeKind::IonianAugmented => "3rd mode of harmonic minor, major with sharp 5",
-            ModeKind::DorianSharp4 => "4th mode of harmonic minor, minor with a Lydian bite",
-            ModeKind::PhrygianDominant => "5th mode of harmonic minor, classic V in minor, Spanish sound",
-            ModeKind::LydianSharp2 => "6th mode of harmonic minor, bright and exotic with sharp 2 and sharp 4",
-            ModeKind::Ultralocrian => "7th mode of harmonic minor, rare, very unstable and dark",
-            ModeKind::DorianFlat2 => "2nd mode of melodic minor, minor with spicy flat 2 but strong 6",
-            ModeKind::LydianAugmented => "3rd mode of melodic minor, Lydian with sharp 5 sheen",
-            ModeKind::LydianDominant => "4th mode of melodic minor, the dominant-with-sharp-11 sound, also known as the acoustic scale",
-            ModeKind::MixolydianFlat6 => "5th mode of melodic minor, dominant that leans minor with flat 13",
-            ModeKind::LocrianNatural2 => "6th mode of melodic minor, m7♭5 with a cleaner 2",
-            ModeKind::Altered => "7th mode of melodic minor, the go-to for V7alt, also known as Super Locrian",
+            Mode::Ionian => "major scale, first mode of major scale",
+            Mode::Dorian => "second mode of major scale, minor with raised 6th",
+            Mode::Phrygian => "third mode of major scale, minor with lowered 2nd",
+            Mode::Lydian => "fourth mode of major scale, major with raised 4th",
+            Mode::Mixolydian => "fifth mode of major scale, major with lowered 7th",
+            Mode::Aeolian => "natural minor scale, sixth mode of major scale",
+            Mode::Locrian => "seventh mode of major scale, diminished scale with lowered 2nd and 5th",
+            Mode::LocrianNatural6 => "2nd mode of harmonic minor, common over m7♭5(♮13) colors",
+            Mode::IonianAugmented => "3rd mode of harmonic minor, major with sharp 5",
+            Mode::DorianSharp4 => "4th mode of harmonic minor, minor with a Lydian bite",
+            Mode::PhrygianDominant => "5th mode of harmonic minor, classic V in minor, Spanish sound",
+            Mode::LydianSharp2 => "6th mode of harmonic minor, bright and exotic with sharp 2 and sharp 4",
+            Mode::Ultralocrian => "7th mode of harmonic minor, rare, very unstable and dark",
+            Mode::DorianFlat2 => "2nd mode of melodic minor, minor with spicy flat 2 but strong 6",
+            Mode::LydianAugmented => "3rd mode of melodic minor, Lydian with sharp 5 sheen",
+            Mode::LydianDominant => "4th mode of melodic minor, the dominant-with-sharp-11 sound, also known as the acoustic scale",
+            Mode::MixolydianFlat6 => "5th mode of melodic minor, dominant that leans minor with flat 13",
+            Mode::LocrianNatural2 => "6th mode of melodic minor, m7♭5 with a cleaner 2",
+            Mode::Altered => "7th mode of melodic minor, the go-to for V7alt, also known as Super Locrian",
         }
     }
 }
 
-impl HasRelativeScale for ModeKind {
+impl HasRelativeScale for Mode {
     fn relative_scale(&self) -> Vec<Interval> {
         match self {
-            ModeKind::Ionian => vec![
+            Mode::Ionian => vec![
                 Interval::PerfectUnison,
                 Interval::MajorSecond,
                 Interval::MajorThird,
@@ -151,7 +151,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::MajorSixth,
                 Interval::MajorSeventh,
             ],
-            ModeKind::Dorian => vec![
+            Mode::Dorian => vec![
                 Interval::PerfectUnison,
                 Interval::MajorSecond,
                 Interval::MinorThird,
@@ -160,7 +160,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::MajorSixth,
                 Interval::MinorSeventh,
             ],
-            ModeKind::Phrygian => vec![
+            Mode::Phrygian => vec![
                 Interval::PerfectUnison,
                 Interval::MinorSecond,
                 Interval::MinorThird,
@@ -169,7 +169,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::MinorSixth,
                 Interval::MinorSeventh,
             ],
-            ModeKind::Lydian => vec![
+            Mode::Lydian => vec![
                 Interval::PerfectUnison,
                 Interval::MajorSecond,
                 Interval::MajorThird,
@@ -178,7 +178,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::MajorSixth,
                 Interval::MajorSeventh,
             ],
-            ModeKind::Mixolydian => vec![
+            Mode::Mixolydian => vec![
                 Interval::PerfectUnison,
                 Interval::MajorSecond,
                 Interval::MajorThird,
@@ -187,7 +187,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::MajorSixth,
                 Interval::MinorSeventh,
             ],
-            ModeKind::Aeolian => vec![
+            Mode::Aeolian => vec![
                 Interval::PerfectUnison,
                 Interval::MajorSecond,
                 Interval::MinorThird,
@@ -196,7 +196,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::MinorSixth,
                 Interval::MinorSeventh,
             ],
-            ModeKind::Locrian => vec![
+            Mode::Locrian => vec![
                 Interval::PerfectUnison,
                 Interval::MinorSecond,
                 Interval::MinorThird,
@@ -206,7 +206,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::MinorSeventh,
             ],
             // Harmonic minor modes
-            ModeKind::LocrianNatural6 => vec![
+            Mode::LocrianNatural6 => vec![
                 Interval::PerfectUnison,
                 Interval::MinorSecond,
                 Interval::MinorThird,
@@ -215,7 +215,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::MajorSixth,
                 Interval::MinorSeventh,
             ],
-            ModeKind::IonianAugmented => vec![
+            Mode::IonianAugmented => vec![
                 Interval::PerfectUnison,
                 Interval::MajorSecond,
                 Interval::MajorThird,
@@ -224,7 +224,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::MajorSixth,
                 Interval::MajorSeventh,
             ],
-            ModeKind::DorianSharp4 => vec![
+            Mode::DorianSharp4 => vec![
                 Interval::PerfectUnison,
                 Interval::MajorSecond,
                 Interval::MinorThird,
@@ -233,7 +233,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::MajorSixth,
                 Interval::MinorSeventh,
             ],
-            ModeKind::PhrygianDominant => vec![
+            Mode::PhrygianDominant => vec![
                 Interval::PerfectUnison,
                 Interval::MinorSecond,
                 Interval::MajorThird,
@@ -242,7 +242,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::MinorSixth,
                 Interval::MinorSeventh,
             ],
-            ModeKind::LydianSharp2 => vec![
+            Mode::LydianSharp2 => vec![
                 Interval::PerfectUnison,
                 Interval::AugmentedSecond,
                 Interval::MajorThird,
@@ -251,7 +251,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::MajorSixth,
                 Interval::MajorSeventh,
             ],
-            ModeKind::Ultralocrian => vec![
+            Mode::Ultralocrian => vec![
                 Interval::PerfectUnison,
                 Interval::MinorSecond,
                 Interval::MinorThird,
@@ -261,7 +261,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::DiminishedSeventh,
             ],
             // Melodic minor modes
-            ModeKind::DorianFlat2 => vec![
+            Mode::DorianFlat2 => vec![
                 Interval::PerfectUnison,
                 Interval::MinorSecond,
                 Interval::MinorThird,
@@ -270,7 +270,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::MajorSixth,
                 Interval::MinorSeventh,
             ],
-            ModeKind::LydianAugmented => vec![
+            Mode::LydianAugmented => vec![
                 Interval::PerfectUnison,
                 Interval::MajorSecond,
                 Interval::MajorThird,
@@ -279,7 +279,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::MajorSixth,
                 Interval::MajorSeventh,
             ],
-            ModeKind::LydianDominant => vec![
+            Mode::LydianDominant => vec![
                 Interval::PerfectUnison,
                 Interval::MajorSecond,
                 Interval::MajorThird,
@@ -288,7 +288,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::MajorSixth,
                 Interval::MinorSeventh,
             ],
-            ModeKind::MixolydianFlat6 => vec![
+            Mode::MixolydianFlat6 => vec![
                 Interval::PerfectUnison,
                 Interval::MajorSecond,
                 Interval::MajorThird,
@@ -297,7 +297,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::MinorSixth,
                 Interval::MinorSeventh,
             ],
-            ModeKind::LocrianNatural2 => vec![
+            Mode::LocrianNatural2 => vec![
                 Interval::PerfectUnison,
                 Interval::MajorSecond,
                 Interval::MinorThird,
@@ -306,7 +306,7 @@ impl HasRelativeScale for ModeKind {
                 Interval::MinorSixth,
                 Interval::MinorSeventh,
             ],
-            ModeKind::Altered => vec![
+            Mode::Altered => vec![
                 Interval::PerfectUnison,
                 Interval::MinorSecond,
                 Interval::AugmentedSecond,
@@ -319,49 +319,49 @@ impl HasRelativeScale for ModeKind {
     }
 }
 
-impl Display for ModeKind {
+impl Display for Mode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.static_name())
     }
 }
 
-impl Parsable for ModeKind {
+impl Parsable for Mode {
     fn parse(input: &str) -> Res<Self>
     where
         Self: Sized,
     {
         let lower = input.to_lowercase();
         match lower.as_str() {
-            "ionian" => Ok(ModeKind::Ionian),
-            "dorian" => Ok(ModeKind::Dorian),
-            "phrygian" => Ok(ModeKind::Phrygian),
-            "lydian" => Ok(ModeKind::Lydian),
-            "mixolydian" => Ok(ModeKind::Mixolydian),
-            "aeolian" => Ok(ModeKind::Aeolian),
-            "locrian" => Ok(ModeKind::Locrian),
+            "ionian" => Ok(Mode::Ionian),
+            "dorian" => Ok(Mode::Dorian),
+            "phrygian" => Ok(Mode::Phrygian),
+            "lydian" => Ok(Mode::Lydian),
+            "mixolydian" => Ok(Mode::Mixolydian),
+            "aeolian" => Ok(Mode::Aeolian),
+            "locrian" => Ok(Mode::Locrian),
             // Harmonic minor modes
-            "locrian natural 6" | "locrian nat6" | "locrian ♮6" => Ok(ModeKind::LocrianNatural6),
-            "ionian augmented" | "ionian ♯5" | "major ♯5" | "augmented major" => Ok(ModeKind::IonianAugmented),
-            "dorian ♯4" | "dorian sharp 4" => Ok(ModeKind::DorianSharp4),
-            "phrygian dominant" | "spanish phrygian" | "phrygian major" => Ok(ModeKind::PhrygianDominant),
-            "lydian ♯2" | "lydian sharp 2" => Ok(ModeKind::LydianSharp2),
-            "ultralocrian" | "ultra locrian" => Ok(ModeKind::Ultralocrian),
+            "locrian natural 6" | "locrian nat6" | "locrian ♮6" => Ok(Mode::LocrianNatural6),
+            "ionian augmented" | "ionian ♯5" | "major ♯5" | "augmented major" => Ok(Mode::IonianAugmented),
+            "dorian ♯4" | "dorian sharp 4" => Ok(Mode::DorianSharp4),
+            "phrygian dominant" | "spanish phrygian" | "phrygian major" => Ok(Mode::PhrygianDominant),
+            "lydian ♯2" | "lydian sharp 2" => Ok(Mode::LydianSharp2),
+            "ultralocrian" | "ultra locrian" => Ok(Mode::Ultralocrian),
             // Melodic minor modes
-            "dorian ♭2" | "dorian flat 2" | "phrygian ♮6" => Ok(ModeKind::DorianFlat2),
-            "lydian augmented" | "lydian ♯5" | "lydian sharp 5" => Ok(ModeKind::LydianAugmented),
-            "lydian dominant" | "lydian ♭7" | "mixolydian ♯4" | "acoustic scale" => Ok(ModeKind::LydianDominant),
-            "mixolydian ♭6" | "mixolydian flat 6" | "aeolian dominant" => Ok(ModeKind::MixolydianFlat6),
-            "locrian ♮2" | "locrian natural 2" | "locrian ♯2" | "half-diminished ♮2" => Ok(ModeKind::LocrianNatural2),
-            "altered" | "super locrian" | "altered scale" => Ok(ModeKind::Altered),
+            "dorian ♭2" | "dorian flat 2" | "phrygian ♮6" => Ok(Mode::DorianFlat2),
+            "lydian augmented" | "lydian ♯5" | "lydian sharp 5" => Ok(Mode::LydianAugmented),
+            "lydian dominant" | "lydian ♭7" | "mixolydian ♯4" | "acoustic scale" => Ok(Mode::LydianDominant),
+            "mixolydian ♭6" | "mixolydian flat 6" | "aeolian dominant" => Ok(Mode::MixolydianFlat6),
+            "locrian ♮2" | "locrian natural 2" | "locrian ♯2" | "half-diminished ♮2" => Ok(Mode::LocrianNatural2),
+            "altered" | "super locrian" | "altered scale" => Ok(Mode::Altered),
             _ => Err(anyhow::Error::msg(format!("Unknown mode: {}", input))),
         }
     }
 }
 
-impl Mode {
-    /// Creates a new mode with a root note and kind.
-    pub fn new(root: Note, kind: ModeKind) -> Self {
-        Self { root, mode: kind }
+impl ModeWithRoot {
+    /// Creates a new mode with a root note.
+    pub fn new(root: Note, mode: Mode) -> Self {
+        Self { root, mode }
     }
 
     /// Returns the root note of the mode.
@@ -369,8 +369,8 @@ impl Mode {
         self.root
     }
 
-    /// Returns the mode kind.
-    pub fn kind(&self) -> ModeKind {
+    /// Returns the mode.
+    pub fn mode(&self) -> Mode {
         self.mode
     }
 
@@ -380,20 +380,20 @@ impl Mode {
     }
 }
 
-impl HasName for Mode {
+impl HasName for ModeWithRoot {
     fn name(&self) -> String {
         format!("{} {}", self.root.static_name(), self.mode.static_name())
     }
 }
 
-impl Display for Mode {
+impl Display for ModeWithRoot {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let scale = self.scale().iter().map(HasStaticName::static_name).collect::<Vec<_>>().join(", ");
         write!(f, "{}\n   {}\n   {}", self.name(), self.mode.description(), scale)
     }
 }
 
-impl Parsable for Mode {
+impl Parsable for ModeWithRoot {
     fn parse(input: &str) -> Res<Self>
     where
         Self: Sized,
@@ -413,43 +413,43 @@ impl Parsable for Mode {
 
         let mode_str = components.next().unwrap();
         assert_eq!(Rule::mode_name, mode_str.as_rule());
-        let mode = ModeKind::parse(mode_str.as_str())?;
+        let mode = Mode::parse(mode_str.as_str())?;
 
-        Ok(Mode::new(root, mode))
+        Ok(ModeWithRoot::new(root, mode))
     }
 }
 
 // ToChord and ToMode implementations
 
-impl ToChord for Mode {
+impl ToChord for ModeWithRoot {
     fn to_chord(&self) -> Chord {
         let chord = Chord::new(self.root);
         
         match self.mode {
             // Major scale modes
-            ModeKind::Ionian => chord, // Just major
-            ModeKind::Dorian => chord.minor().seven(),
-            ModeKind::Phrygian => chord.minor().seven().flat9().flat13(),
-            ModeKind::Lydian => chord.major7().sharp11(),
-            ModeKind::Mixolydian => chord.seven(),
-            ModeKind::Aeolian => chord.minor().seven().flat13(),
-            ModeKind::Locrian => chord.minor().seven().flat5(),
+            Mode::Ionian => chord, // Just major
+            Mode::Dorian => chord.minor().seven(),
+            Mode::Phrygian => chord.minor().seven().flat9().flat13(),
+            Mode::Lydian => chord.major7().sharp11(),
+            Mode::Mixolydian => chord.seven(),
+            Mode::Aeolian => chord.minor().seven().flat13(),
+            Mode::Locrian => chord.minor().seven().flat5(),
             
             // Harmonic minor modes
-            ModeKind::LocrianNatural6 => chord.minor().seven().flat5().add13(),
-            ModeKind::IonianAugmented => chord.major7().augmented(),
-            ModeKind::DorianSharp4 => chord.minor().seven().sharp11(),
-            ModeKind::PhrygianDominant => chord.seven().flat9(),
-            ModeKind::LydianSharp2 => chord.major7().sharp11(),
-            ModeKind::Ultralocrian => chord.diminished().seven(),
+            Mode::LocrianNatural6 => chord.minor().seven().flat5().add13(),
+            Mode::IonianAugmented => chord.major7().augmented(),
+            Mode::DorianSharp4 => chord.minor().seven().sharp11(),
+            Mode::PhrygianDominant => chord.seven().flat9(),
+            Mode::LydianSharp2 => chord.major7().sharp11(),
+            Mode::Ultralocrian => chord.diminished().seven(),
             
             // Melodic minor modes
-            ModeKind::DorianFlat2 => chord.minor().seven().flat9(),
-            ModeKind::LydianAugmented => chord.major7().augmented().sharp11(),
-            ModeKind::LydianDominant => chord.seven().sharp11(),
-            ModeKind::MixolydianFlat6 => chord.seven().flat13(),
-            ModeKind::LocrianNatural2 => chord.minor().seven().flat5(),
-            ModeKind::Altered => chord.seven().flat9().sharp9(), // 7alt chord
+            Mode::DorianFlat2 => chord.minor().seven().flat9(),
+            Mode::LydianAugmented => chord.major7().augmented().sharp11(),
+            Mode::LydianDominant => chord.seven().sharp11(),
+            Mode::MixolydianFlat6 => chord.seven().flat13(),
+            Mode::LocrianNatural2 => chord.minor().seven().flat5(),
+            Mode::Altered => chord.seven().flat9().sharp9(), // 7alt chord
         }
     }
 }
@@ -465,67 +465,67 @@ mod tests {
 
     #[test]
     fn test_mode_names() {
-        assert_eq!(ModeKind::Ionian.static_name(), "Ionian");
-        assert_eq!(ModeKind::Dorian.static_name(), "Dorian");
-        assert_eq!(ModeKind::Phrygian.static_name(), "Phrygian");
-        assert_eq!(ModeKind::Lydian.static_name(), "Lydian");
-        assert_eq!(ModeKind::Mixolydian.static_name(), "Mixolydian");
-        assert_eq!(ModeKind::Aeolian.static_name(), "Aeolian");
-        assert_eq!(ModeKind::Locrian.static_name(), "Locrian");
+        assert_eq!(Mode::Ionian.static_name(), "Ionian");
+        assert_eq!(Mode::Dorian.static_name(), "Dorian");
+        assert_eq!(Mode::Phrygian.static_name(), "Phrygian");
+        assert_eq!(Mode::Lydian.static_name(), "Lydian");
+        assert_eq!(Mode::Mixolydian.static_name(), "Mixolydian");
+        assert_eq!(Mode::Aeolian.static_name(), "Aeolian");
+        assert_eq!(Mode::Locrian.static_name(), "Locrian");
     }
 
     #[test]
     fn test_mode_scales() {
         // Ionian (C major)
-        assert_eq!(Mode::new(C, ModeKind::Ionian).scale(), vec![C, D, E, F, G, A, B]);
+        assert_eq!(ModeWithRoot::new(C, Mode::Ionian).scale(), vec![C, D, E, F, G, A, B]);
         
         // Dorian (C Dorian)
-        assert_eq!(Mode::new(C, ModeKind::Dorian).scale(), vec![C, D, EFlat, F, G, A, BFlat]);
+        assert_eq!(ModeWithRoot::new(C, Mode::Dorian).scale(), vec![C, D, EFlat, F, G, A, BFlat]);
         
         // Phrygian (E Phrygian = notes of C major starting on E)
-        assert_eq!(Mode::new(E, ModeKind::Phrygian).scale(), vec![E, F, G, A, B, CFive, DFive]);
+        assert_eq!(ModeWithRoot::new(E, Mode::Phrygian).scale(), vec![E, F, G, A, B, CFive, DFive]);
         
         // Lydian (F Lydian = notes of C major starting on F)
-        assert_eq!(Mode::new(F, ModeKind::Lydian).scale(), vec![F, G, A, B, CFive, DFive, EFive]);
+        assert_eq!(ModeWithRoot::new(F, Mode::Lydian).scale(), vec![F, G, A, B, CFive, DFive, EFive]);
         
         // Mixolydian (G Mixolydian = notes of C major starting on G)
-        assert_eq!(Mode::new(G, ModeKind::Mixolydian).scale(), vec![G, A, B, CFive, DFive, EFive, FFive]);
+        assert_eq!(ModeWithRoot::new(G, Mode::Mixolydian).scale(), vec![G, A, B, CFive, DFive, EFive, FFive]);
         
         // Aeolian (A Aeolian = A natural minor)
-        assert_eq!(Mode::new(A, ModeKind::Aeolian).scale(), vec![A, B, CFive, DFive, EFive, FFive, GFive]);
+        assert_eq!(ModeWithRoot::new(A, Mode::Aeolian).scale(), vec![A, B, CFive, DFive, EFive, FFive, GFive]);
         
         // Locrian (B Locrian = notes of C major starting on B)
-        assert_eq!(Mode::new(B, ModeKind::Locrian).scale(), vec![B, CFive, DFive, EFive, FFive, GFive, AFive]);
+        assert_eq!(ModeWithRoot::new(B, Mode::Locrian).scale(), vec![B, CFive, DFive, EFive, FFive, GFive, AFive]);
     }
 
     #[test]
     fn test_mode_parse() {
-        assert_eq!(ModeKind::parse("Ionian").unwrap(), ModeKind::Ionian);
-        assert_eq!(ModeKind::parse("ionian").unwrap(), ModeKind::Ionian);
-        assert_eq!(ModeKind::parse("Dorian").unwrap(), ModeKind::Dorian);
-        assert_eq!(ModeKind::parse("dorian").unwrap(), ModeKind::Dorian);
-        assert_eq!(ModeKind::parse("Phrygian").unwrap(), ModeKind::Phrygian);
-        assert_eq!(ModeKind::parse("Lydian").unwrap(), ModeKind::Lydian);
-        assert_eq!(ModeKind::parse("Mixolydian").unwrap(), ModeKind::Mixolydian);
-        assert_eq!(ModeKind::parse("Aeolian").unwrap(), ModeKind::Aeolian);
-        assert_eq!(ModeKind::parse("Locrian").unwrap(), ModeKind::Locrian);
+        assert_eq!(Mode::parse("Ionian").unwrap(), Mode::Ionian);
+        assert_eq!(Mode::parse("ionian").unwrap(), Mode::Ionian);
+        assert_eq!(Mode::parse("Dorian").unwrap(), Mode::Dorian);
+        assert_eq!(Mode::parse("dorian").unwrap(), Mode::Dorian);
+        assert_eq!(Mode::parse("Phrygian").unwrap(), Mode::Phrygian);
+        assert_eq!(Mode::parse("Lydian").unwrap(), Mode::Lydian);
+        assert_eq!(Mode::parse("Mixolydian").unwrap(), Mode::Mixolydian);
+        assert_eq!(Mode::parse("Aeolian").unwrap(), Mode::Aeolian);
+        assert_eq!(Mode::parse("Locrian").unwrap(), Mode::Locrian);
     }
 
     #[test]
     fn test_mode_with_root_parse() {
-        let mode = Mode::parse("C Dorian").unwrap();
+        let mode = ModeWithRoot::parse("C Dorian").unwrap();
         assert_eq!(mode.root(), C);
-        assert_eq!(mode.kind(), ModeKind::Dorian);
+        assert_eq!(mode.mode(), Mode::Dorian);
         assert_eq!(mode.scale(), vec![C, D, EFlat, F, G, A, BFlat]);
 
-        let mode = Mode::parse("D Phrygian").unwrap();
+        let mode = ModeWithRoot::parse("D Phrygian").unwrap();
         assert_eq!(mode.root(), D);
-        assert_eq!(mode.kind(), ModeKind::Phrygian);
+        assert_eq!(mode.mode(), Mode::Phrygian);
     }
 
     #[test]
     fn test_mode_display() {
-        let mode = Mode::new(C, ModeKind::Dorian);
+        let mode = ModeWithRoot::new(C, Mode::Dorian);
         let display = format!("{}", mode);
         assert!(display.contains("C Dorian"));
         assert!(display.contains("C, D, E♭, F, G, A, B♭"));
@@ -535,13 +535,13 @@ mod tests {
     fn test_harmonic_minor_modes() {
         // Phrygian Dominant (E Phrygian Dominant from A harmonic minor)
         assert_eq!(
-            Mode::new(E, ModeKind::PhrygianDominant).scale(),
+            ModeWithRoot::new(E, Mode::PhrygianDominant).scale(),
             vec![E, F, GSharp, A, B, CFive, DFive]
         );
         
         // Lydian Sharp 2
         assert_eq!(
-            Mode::new(F, ModeKind::LydianSharp2).scale(),
+            ModeWithRoot::new(F, Mode::LydianSharp2).scale(),
             vec![F, GSharp, A, B, CFive, DFive, EFive]
         );
     }
@@ -550,19 +550,19 @@ mod tests {
     fn test_melodic_minor_modes() {
         // Dorian Flat 2 (B Dorian ♭2 from A melodic minor)
         assert_eq!(
-            Mode::new(B, ModeKind::DorianFlat2).scale(),
+            ModeWithRoot::new(B, Mode::DorianFlat2).scale(),
             vec![B, CFive, DFive, EFive, FSharpFive, GSharpFive, AFive]
         );
         
         // Lydian Dominant
         assert_eq!(
-            Mode::new(D, ModeKind::LydianDominant).scale(),
+            ModeWithRoot::new(D, Mode::LydianDominant).scale(),
             vec![D, E, FSharp, GSharp, A, B, CFive]
         );
         
         // Altered mode - using enharmonically correct notes
         // G# Altered scale intervals produce: G# A A## (B enharmonic) C (as octave 5) D E F#
-        let altered_scale = Mode::new(GSharp, ModeKind::Altered).scale();
+        let altered_scale = ModeWithRoot::new(GSharp, Mode::Altered).scale();
         assert_eq!(altered_scale.len(), 7);
         assert_eq!(altered_scale[0], GSharp); // Root
         assert_eq!(altered_scale[1], A); // ♭2
@@ -572,28 +572,28 @@ mod tests {
 
     #[test]
     fn test_case_insensitive_parsing() {
-        assert_eq!(ModeKind::parse("IONIAN").unwrap(), ModeKind::Ionian);
-        assert_eq!(ModeKind::parse("DoRiAn").unwrap(), ModeKind::Dorian);
-        assert_eq!(ModeKind::parse("mixolydian").unwrap(), ModeKind::Mixolydian);
-        assert_eq!(ModeKind::parse("ALTERED").unwrap(), ModeKind::Altered);
-        assert_eq!(ModeKind::parse("lydian dominant").unwrap(), ModeKind::LydianDominant);
+        assert_eq!(Mode::parse("IONIAN").unwrap(), Mode::Ionian);
+        assert_eq!(Mode::parse("DoRiAn").unwrap(), Mode::Dorian);
+        assert_eq!(Mode::parse("mixolydian").unwrap(), Mode::Mixolydian);
+        assert_eq!(Mode::parse("ALTERED").unwrap(), Mode::Altered);
+        assert_eq!(Mode::parse("lydian dominant").unwrap(), Mode::LydianDominant);
     }
 
     #[test]
     fn test_mode_to_chord() {
         // Dorian -> Dm7
-        let dorian = Mode::new(D, ModeKind::Dorian);
+        let dorian = ModeWithRoot::new(D, Mode::Dorian);
         let chord = dorian.to_chord();
         assert_eq!(chord.name(), "Dm7");
         
         // Lydian -> maj7#11
-        let lydian = Mode::new(F, ModeKind::Lydian);
+        let lydian = ModeWithRoot::new(F, Mode::Lydian);
         let chord = lydian.to_chord();
         assert!(chord.name().contains("maj7"));
         assert!(chord.name().contains("♯11"));
         
         // Mixolydian -> 7
-        let mixolydian = Mode::new(G, ModeKind::Mixolydian);
+        let mixolydian = ModeWithRoot::new(G, Mode::Mixolydian);
         let chord = mixolydian.to_chord();
         assert_eq!(chord.name(), "G7");
     }
@@ -604,18 +604,18 @@ mod tests {
         let chord = Chord::parse("Dm7").unwrap();
         let mode = chord.to_mode();
         assert!(mode.is_some());
-        assert_eq!(mode.unwrap().kind(), ModeKind::Dorian);
+        assert_eq!(mode.unwrap().mode(), Mode::Dorian);
         
         // G7 -> Mixolydian
         let chord = Chord::parse("G7").unwrap();
         let mode = chord.to_mode();
         assert!(mode.is_some());
-        assert_eq!(mode.unwrap().kind(), ModeKind::Mixolydian);
+        assert_eq!(mode.unwrap().mode(), Mode::Mixolydian);
         
         // Cmaj7 -> Ionian
         let chord = Chord::parse("Cmaj7").unwrap();
         let mode = chord.to_mode();
         assert!(mode.is_some());
-        assert_eq!(mode.unwrap().kind(), ModeKind::Ionian);
+        assert_eq!(mode.unwrap().mode(), Mode::Ionian);
     }
 }

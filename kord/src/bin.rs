@@ -7,7 +7,7 @@ use clap::{ArgAction, Parser, Subcommand};
 use klib::core::{
     base::{Parsable, Res, Void},
     chord::{Chord, Chordable},
-    mode::ModeWithRoot,
+    mode::Mode,
     note::Note,
     octave::Octave,
 };
@@ -455,7 +455,7 @@ fn start(args: Args) -> Void {
             }
         }
         Some(Command::Mode { symbol }) => {
-            let mode = ModeWithRoot::parse(&symbol)?;
+            let mode = Mode::parse(&symbol)?;
 
             describe_mode(&mode);
         }
@@ -837,7 +837,7 @@ fn describe(chord: &Chord) {
     println!("{chord}");
 }
 
-fn describe_mode(mode: &ModeWithRoot) {
+fn describe_mode(mode: &Mode) {
     println!("{mode}");
 }
 
