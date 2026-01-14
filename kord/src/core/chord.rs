@@ -1427,7 +1427,7 @@ mod tests {
 
         assert_eq!(
             format!("{}", Chord::new(C).minor().seven().flat_five()),
-            "Cm7(♭5)\n   half diminished, locrian, minor seven flat five, seventh mode of major scale, major scale starting one half step up\n   C, D♭, E♭, F, G♭, A♭, B♭\n   C, E♭, G♭, B♭"
+            "Cm7(♭5)\n   half diminished, locrian mode, minor seven flat five, seventh mode of major scale, major scale starting one half step up\n   C, D♭, E♭, F, G♭, A♭, B♭\n   C, E♭, G♭, B♭"
         );
     }
 
