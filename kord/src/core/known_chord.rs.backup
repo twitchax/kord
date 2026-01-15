@@ -111,27 +111,6 @@ impl ScaleCandidate {
     }
 }
 
-/// Represents the kind of interval collection (mode or scale)
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum IntervalCollectionKind {
-    /// A mode
-    Mode(ModeKind),
-    /// A scale
-    Scale(ScaleKind),
-}
-
-/// Represents a scale or mode candidate in static storage format
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct IntervalCandidate {
-    /// The kind of interval collection
-    pub kind: IntervalCollectionKind,
-    /// Ranking (1 = most relevant)
-    pub rank: u8,
-    /// Reason why this fits the chord
-    pub reason: &'static str,
-}
-
 // Enum.
 
 /// An enum representing a known chord.
@@ -176,299 +155,6 @@ pub enum KnownChord {
     /// A sharp 11 chord.
     Sharp11,
 }
-
-// Static interval candidates for each KnownChord variant
-
-static MAJOR_CANDIDATES: &[IntervalCandidate] = &[
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Ionian),
-        rank: 1,
-        reason: "Primary major scale - natural fit for major triad",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Scale(ScaleKind::MajorPentatonic),
-        rank: 2,
-        reason: "Five-note major sound - safe, consonant choice",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Lydian),
-        rank: 3,
-        reason: "Bright alternative with ♯4 for added color",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Mixolydian),
-        rank: 4,
-        reason: "Major with ♭7 - common in blues and rock",
-    },
-];
-
-static MINOR_CANDIDATES: &[IntervalCandidate] = &[
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Aeolian),
-        rank: 1,
-        reason: "Natural minor - primary choice for minor triads",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Scale(ScaleKind::MinorPentatonic),
-        rank: 2,
-        reason: "Five-note minor sound - blues and rock standard",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Scale(ScaleKind::Blues),
-        rank: 3,
-        reason: "Minor pentatonic with ♯4 - essential blues scale",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Dorian),
-        rank: 4,
-        reason: "Minor with ♮6 - jazzy, brighter minor sound",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Phrygian),
-        rank: 5,
-        reason: "Minor with ♭2 - exotic, Spanish flavor",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Scale(ScaleKind::HarmonicMinor),
-        rank: 6,
-        reason: "Classical minor with ♮7 for strong resolution",
-    },
-];
-
-static MAJOR7_CANDIDATES: &[IntervalCandidate] = &[
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Ionian),
-        rank: 1,
-        reason: "Natural major 7th from major scale",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Lydian),
-        rank: 2,
-        reason: "Bright maj7 sound with ♯4 for modern jazz",
-    },
-];
-
-static DOMINANT_CANDIDATES: &[IntervalCandidate] = &[
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Mixolydian),
-        rank: 1,
-        reason: "Primary dominant scale - major with ♭7",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Scale(ScaleKind::Blues),
-        rank: 2,
-        reason: "Essential blues sound over dominant chords",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::LydianDominant),
-        rank: 3,
-        reason: "Dominant with ♯11 for sophisticated color",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::MixolydianFlat6),
-        rank: 4,
-        reason: "Dominant with ♭13 for darker, minor-leaning sound",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Scale(ScaleKind::WholeTone),
-        rank: 5,
-        reason: "Symmetrical scale for augmented dominant color",
-    },
-];
-
-static MINOR_MAJOR7_CANDIDATES: &[IntervalCandidate] = &[
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Scale(ScaleKind::MelodicMinor),
-        rank: 1,
-        reason: "Source scale for minor-major 7 sound",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Scale(ScaleKind::HarmonicMinor),
-        rank: 2,
-        reason: "Alternative with ♮7 and ♭6",
-    },
-];
-
-static MINOR_DOMINANT_CANDIDATES: &[IntervalCandidate] = &[
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Dorian),
-        rank: 1,
-        reason: "Classic minor 7 scale - minor with ♮6",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Scale(ScaleKind::MinorPentatonic),
-        rank: 2,
-        reason: "Simple, effective minor 7 choice",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Scale(ScaleKind::Blues),
-        rank: 3,
-        reason: "Blues flavor over minor 7 chords",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Aeolian),
-        rank: 4,
-        reason: "Natural minor alternative",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Phrygian),
-        rank: 5,
-        reason: "Minor 7 with ♭2 for modal flavor",
-    },
-];
-
-static DOMINANT_SHARP11_CANDIDATES: &[IntervalCandidate] = &[
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::LydianDominant),
-        rank: 1,
-        reason: "Defining scale for dominant ♯11 sound",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Mixolydian),
-        rank: 2,
-        reason: "Basic dominant scale alternative",
-    },
-];
-
-static AUGMENTED_CANDIDATES: &[IntervalCandidate] = &[
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::IonianSharp5),
-        rank: 1,
-        reason: "Ionian with ♯5 - major scale with raised fifth",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Scale(ScaleKind::WholeTone),
-        rank: 2,
-        reason: "Symmetrical scale built from augmented triads",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::LydianAugmented),
-        rank: 3,
-        reason: "Major with ♯4 and ♯5",
-    },
-];
-
-static AUGMENTED_MAJOR7_CANDIDATES: &[IntervalCandidate] = &[
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::LydianAugmented),
-        rank: 1,
-        reason: "3rd mode of melodic minor - major 7 with ♯5",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::IonianSharp5),
-        rank: 2,
-        reason: "Major with ♯5 from harmonic minor",
-    },
-];
-
-static AUGMENTED_DOMINANT_CANDIDATES: &[IntervalCandidate] = &[
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Scale(ScaleKind::WholeTone),
-        rank: 1,
-        reason: "Primary scale for augmented dominant chords",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::LydianDominant),
-        rank: 2,
-        reason: "Can be used with ♯5 alterations",
-    },
-];
-
-static HALF_DIMINISHED_CANDIDATES: &[IntervalCandidate] = &[
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Locrian),
-        rank: 1,
-        reason: "Primary half-diminished scale - 7th mode of major",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::LocrianNatural2),
-        rank: 2,
-        reason: "Half-diminished with ♮2 - smoother melodic motion",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::LocrianNatural6),
-        rank: 3,
-        reason: "Half-diminished with ♮6 from harmonic minor",
-    },
-];
-
-static DIMINISHED_CANDIDATES: &[IntervalCandidate] = &[
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedWholeHalf),
-        rank: 1,
-        reason: "Symmetrical scale for fully diminished 7th chords",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedHalfWhole),
-        rank: 2,
-        reason: "Alternative diminished scale pattern",
-    },
-];
-
-static DOMINANT_FLAT9_CANDIDATES: &[IntervalCandidate] = &[
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedHalfWhole),
-        rank: 1,
-        reason: "Primary scale for dominant ♭9 - half-whole pattern",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::PhrygianDominant),
-        rank: 2,
-        reason: "Spanish sound with ♭9 and major 3rd",
-    },
-];
-
-static DOMINANT_SHARP9_CANDIDATES: &[IntervalCandidate] = &[
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Altered),
-        rank: 1,
-        reason: "Altered dominant scale - all alterations available",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::DorianFlat2),
-        rank: 2,
-        reason: "Minor with ♭2 providing ♯9 color",
-    },
-];
-
-static MINOR_DOMINANT_FLAT13_CANDIDATES: &[IntervalCandidate] = &[
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Aeolian),
-        rank: 1,
-        reason: "Natural minor with ♭6/♭13",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Phrygian),
-        rank: 2,
-        reason: "Minor with ♭2 and ♭6",
-    },
-];
-
-static MINOR_DOMINANT_FLAT9_FLAT13_CANDIDATES: &[IntervalCandidate] = &[
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Phrygian),
-        rank: 1,
-        reason: "Minor with ♭2 (♭9) and ♭6 (♭13)",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::DorianFlat2),
-        rank: 2,
-        reason: "Minor with ♭2 and ♮6 for contrast",
-    },
-];
-
-static SHARP11_CANDIDATES: &[IntervalCandidate] = &[
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::Lydian),
-        rank: 1,
-        reason: "Major with ♯11 for bright, modern sound",
-    },
-    IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::LydianDominant),
-        rank: 2,
-        reason: "Dominant with ♯11",
-    },
-];
 
 // Impls.
 
@@ -728,49 +414,280 @@ impl HasName for KnownChord {
     }
 }
 
-impl KnownChord {
-    /// Returns the static interval candidates for this chord
-    pub fn scale_interval_candidates(&self) -> &'static [IntervalCandidate] {
-        match self {
-            KnownChord::Unknown => &[],
-            KnownChord::Major => MAJOR_CANDIDATES,
-            KnownChord::Minor => MINOR_CANDIDATES,
-            KnownChord::Major7 => MAJOR7_CANDIDATES,
-            KnownChord::Dominant(_) => DOMINANT_CANDIDATES,
-            KnownChord::MinorMajor7 => MINOR_MAJOR7_CANDIDATES,
-            KnownChord::MinorDominant(_) => MINOR_DOMINANT_CANDIDATES,
-            KnownChord::DominantSharp11(_) => DOMINANT_SHARP11_CANDIDATES,
-            KnownChord::Augmented => AUGMENTED_CANDIDATES,
-            KnownChord::AugmentedMajor7 => AUGMENTED_MAJOR7_CANDIDATES,
-            KnownChord::AugmentedDominant(_) => AUGMENTED_DOMINANT_CANDIDATES,
-            KnownChord::HalfDiminished(_) => HALF_DIMINISHED_CANDIDATES,
-            KnownChord::Diminished => DIMINISHED_CANDIDATES,
-            KnownChord::DominantFlat9(_) => DOMINANT_FLAT9_CANDIDATES,
-            KnownChord::DominantSharp9(_) => DOMINANT_SHARP9_CANDIDATES,
-            KnownChord::MinorDominantFlat13(_) => MINOR_DOMINANT_FLAT13_CANDIDATES,
-            KnownChord::MinorDominantFlat9Flat13(_) => MINOR_DOMINANT_FLAT9_FLAT13_CANDIDATES,
-            KnownChord::Sharp11 => SHARP11_CANDIDATES,
-        }
-    }
-}
-
 impl HasScaleCandidates for KnownChord {
     fn scale_candidates(&self) -> Vec<ScaleCandidate> {
-        self.scale_interval_candidates()
-            .iter()
-            .map(|candidate| match candidate.kind {
-                IntervalCollectionKind::Mode(kind) => ScaleCandidate::Mode {
-                    kind,
-                    rank: candidate.rank,
-                    reason: candidate.reason,
+        match self {
+            KnownChord::Unknown => vec![],
+            KnownChord::Major => vec![
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Ionian,
+                    rank: 1,
+                    reason: "Primary major scale - natural fit for major triad",
                 },
-                IntervalCollectionKind::Scale(kind) => ScaleCandidate::Scale {
-                    kind,
-                    rank: candidate.rank,
-                    reason: candidate.reason,
+                ScaleCandidate::Scale {
+                    kind: ScaleKind::MajorPentatonic,
+                    rank: 2,
+                    reason: "Five-note major sound - safe, consonant choice",
                 },
-            })
-            .collect()
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Lydian,
+                    rank: 3,
+                    reason: "Bright alternative with ♯4 for added color",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Mixolydian,
+                    rank: 4,
+                    reason: "Major with ♭7 - common in blues and rock",
+                },
+            ],
+            KnownChord::Minor => vec![
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Aeolian,
+                    rank: 1,
+                    reason: "Natural minor - primary choice for minor triads",
+                },
+                ScaleCandidate::Scale {
+                    kind: ScaleKind::MinorPentatonic,
+                    rank: 2,
+                    reason: "Five-note minor sound - blues and rock standard",
+                },
+                ScaleCandidate::Scale {
+                    kind: ScaleKind::Blues,
+                    rank: 3,
+                    reason: "Minor pentatonic with ♯4 - essential blues scale",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Dorian,
+                    rank: 4,
+                    reason: "Minor with ♮6 - jazzy, brighter minor sound",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Phrygian,
+                    rank: 5,
+                    reason: "Minor with ♭2 - exotic, Spanish flavor",
+                },
+                ScaleCandidate::Scale {
+                    kind: ScaleKind::HarmonicMinor,
+                    rank: 6,
+                    reason: "Classical minor with ♮7 for strong resolution",
+                },
+            ],
+            KnownChord::Major7 => vec![
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Ionian,
+                    rank: 1,
+                    reason: "Natural major 7th from major scale",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Lydian,
+                    rank: 2,
+                    reason: "Bright maj7 sound with ♯4 for modern jazz",
+                },
+            ],
+            KnownChord::Dominant(_) => vec![
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Mixolydian,
+                    rank: 1,
+                    reason: "Primary dominant scale - major with ♭7",
+                },
+                ScaleCandidate::Scale {
+                    kind: ScaleKind::Blues,
+                    rank: 2,
+                    reason: "Essential blues sound over dominant chords",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::LydianDominant,
+                    rank: 3,
+                    reason: "Dominant with ♯11 for sophisticated color",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::MixolydianFlat6,
+                    rank: 4,
+                    reason: "Dominant with ♭13 for darker, minor-leaning sound",
+                },
+                ScaleCandidate::Scale {
+                    kind: ScaleKind::WholeTone,
+                    rank: 5,
+                    reason: "Symmetrical scale for augmented dominant color",
+                },
+            ],
+            KnownChord::MinorMajor7 => vec![
+                ScaleCandidate::Scale {
+                    kind: ScaleKind::MelodicMinor,
+                    rank: 1,
+                    reason: "Source scale for minor-major 7 sound",
+                },
+                ScaleCandidate::Scale {
+                    kind: ScaleKind::HarmonicMinor,
+                    rank: 2,
+                    reason: "Alternative with ♮7 and ♭6",
+                },
+            ],
+            KnownChord::MinorDominant(_) => vec![
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Dorian,
+                    rank: 1,
+                    reason: "Classic minor 7 scale - minor with ♮6",
+                },
+                ScaleCandidate::Scale {
+                    kind: ScaleKind::MinorPentatonic,
+                    rank: 2,
+                    reason: "Simple, effective minor 7 choice",
+                },
+                ScaleCandidate::Scale {
+                    kind: ScaleKind::Blues,
+                    rank: 3,
+                    reason: "Blues flavor over minor 7 chords",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Aeolian,
+                    rank: 4,
+                    reason: "Natural minor alternative",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Phrygian,
+                    rank: 5,
+                    reason: "Minor 7 with ♭2 for modal flavor",
+                },
+            ],
+            KnownChord::DominantSharp11(_) => vec![
+                ScaleCandidate::Mode {
+                    kind: ModeKind::LydianDominant,
+                    rank: 1,
+                    reason: "Defining scale for dominant ♯11 sound",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Mixolydian,
+                    rank: 2,
+                    reason: "Basic dominant scale alternative",
+                },
+            ],
+            KnownChord::Augmented => vec![
+                ScaleCandidate::Scale {
+                    kind: ScaleKind::WholeTone,
+                    rank: 1,
+                    reason: "Symmetrical scale built from augmented triads",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::LydianAugmented,
+                    rank: 2,
+                    reason: "Major with ♯4 and ♯5",
+                },
+            ],
+            KnownChord::AugmentedMajor7 => vec![
+                ScaleCandidate::Mode {
+                    kind: ModeKind::LydianAugmented,
+                    rank: 1,
+                    reason: "3rd mode of melodic minor - major 7 with ♯5",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::IonianSharp5,
+                    rank: 2,
+                    reason: "Major with ♯5 from harmonic minor",
+                },
+            ],
+            KnownChord::AugmentedDominant(_) => vec![
+                ScaleCandidate::Scale {
+                    kind: ScaleKind::WholeTone,
+                    rank: 1,
+                    reason: "Primary scale for augmented dominant chords",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::LydianDominant,
+                    rank: 2,
+                    reason: "Can be used with ♯5 alterations",
+                },
+            ],
+            KnownChord::HalfDiminished(_) => vec![
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Locrian,
+                    rank: 1,
+                    reason: "Primary half-diminished scale - 7th mode of major",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::LocrianNatural2,
+                    rank: 2,
+                    reason: "Half-diminished with ♮2 - smoother melodic motion",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::LocrianNatural6,
+                    rank: 3,
+                    reason: "Half-diminished with ♮6 from harmonic minor",
+                },
+            ],
+            KnownChord::Diminished => vec![
+                ScaleCandidate::Scale {
+                    kind: ScaleKind::DiminishedWholeHalf,
+                    rank: 1,
+                    reason: "Symmetrical scale for fully diminished 7th chords",
+                },
+                ScaleCandidate::Scale {
+                    kind: ScaleKind::DiminishedHalfWhole,
+                    rank: 2,
+                    reason: "Alternative diminished scale pattern",
+                },
+            ],
+            KnownChord::DominantFlat9(_) => vec![
+                ScaleCandidate::Scale {
+                    kind: ScaleKind::DiminishedHalfWhole,
+                    rank: 1,
+                    reason: "Primary scale for dominant ♭9 - half-whole pattern",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::PhrygianDominant,
+                    rank: 2,
+                    reason: "Spanish sound with ♭9 and major 3rd",
+                },
+            ],
+            KnownChord::DominantSharp9(_) => vec![
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Altered,
+                    rank: 1,
+                    reason: "Altered dominant scale - all alterations available",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::DorianFlat2,
+                    rank: 2,
+                    reason: "Minor with ♭2 providing ♯9 color",
+                },
+            ],
+            KnownChord::MinorDominantFlat13(_) => vec![
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Aeolian,
+                    rank: 1,
+                    reason: "Natural minor with ♭6/♭13",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Phrygian,
+                    rank: 2,
+                    reason: "Minor with ♭2 and ♭6",
+                },
+            ],
+            KnownChord::MinorDominantFlat9Flat13(_) => vec![
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Phrygian,
+                    rank: 1,
+                    reason: "Minor with ♭2 (♭9) and ♭6 (♭13)",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::DorianFlat2,
+                    rank: 2,
+                    reason: "Minor with ♭2 and ♮6 for contrast",
+                },
+            ],
+            KnownChord::Sharp11 => vec![
+                ScaleCandidate::Mode {
+                    kind: ModeKind::Lydian,
+                    rank: 1,
+                    reason: "Major with ♯11 for bright, modern sound",
+                },
+                ScaleCandidate::Mode {
+                    kind: ModeKind::LydianDominant,
+                    rank: 2,
+                    reason: "Dominant with ♯11",
+                },
+            ],
+        }
     }
 }
 
@@ -999,75 +916,6 @@ mod tests {
                 assert_eq!(*rank, 3);
             }
             _ => panic!("Third candidate for Minor dominant should be Blues scale"),
-        }
-    }
-    
-    #[test]
-    fn test_interval_candidates_kinds_and_order() {
-        // Test that all KnownChord variants return properly ordered interval candidates
-        let all_variants = vec![
-            KnownChord::Unknown,
-            KnownChord::Major,
-            KnownChord::Minor,
-            KnownChord::Major7,
-            KnownChord::Dominant(Degree::Seven),
-            KnownChord::MinorMajor7,
-            KnownChord::MinorDominant(Degree::Seven),
-            KnownChord::DominantSharp11(Degree::Seven),
-            KnownChord::Augmented,
-            KnownChord::AugmentedMajor7,
-            KnownChord::AugmentedDominant(Degree::Seven),
-            KnownChord::HalfDiminished(Degree::Seven),
-            KnownChord::Diminished,
-            KnownChord::DominantFlat9(Degree::Seven),
-            KnownChord::DominantSharp9(Degree::Seven),
-            KnownChord::MinorDominantFlat13(Degree::Seven),
-            KnownChord::MinorDominantFlat9Flat13(Degree::Seven),
-            KnownChord::Sharp11,
-        ];
-        
-        for known_chord in all_variants {
-            let candidates = known_chord.scale_interval_candidates();
-            
-            // Verify ranks are sequential starting at 1
-            for (i, candidate) in candidates.iter().enumerate() {
-                let expected_rank = (i + 1) as u8;
-                assert_eq!(
-                    candidate.rank, expected_rank,
-                    "{:?}: Expected rank {} at position {}, got {}",
-                    known_chord, expected_rank, i, candidate.rank
-                );
-                
-                // Verify reason is non-empty
-                assert!(
-                    !candidate.reason.is_empty(),
-                    "{:?}: Candidate at position {} has empty reason",
-                    known_chord, i
-                );
-                
-                // Verify kind matches what scale_candidates() returns
-                let scale_candidates = known_chord.scale_candidates();
-                if i < scale_candidates.len() {
-                    match (&candidate.kind, &scale_candidates[i]) {
-                        (IntervalCollectionKind::Mode(mk), ScaleCandidate::Mode { kind, .. }) => {
-                            assert_eq!(mk, kind, "{:?}: Mode kind mismatch at position {}", known_chord, i);
-                        }
-                        (IntervalCollectionKind::Scale(sk), ScaleCandidate::Scale { kind, .. }) => {
-                            assert_eq!(sk, kind, "{:?}: Scale kind mismatch at position {}", known_chord, i);
-                        }
-                        _ => panic!("{:?}: Kind type mismatch at position {}", known_chord, i),
-                    }
-                }
-            }
-            
-            // Verify scale_candidates() matches interval_candidates()
-            let scale_candidates = known_chord.scale_candidates();
-            assert_eq!(
-                candidates.len(),
-                scale_candidates.len(),
-                "{:?}: Mismatch in candidate count",
-                known_chord
-            );
         }
     }
 }

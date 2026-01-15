@@ -990,33 +990,9 @@ impl HasDescription for Chord {
     }
 }
 
-impl Chord {
-    /// Returns the static interval candidates for this chord
-    pub fn scale_interval_candidates(&self) -> &'static [crate::core::known_chord::IntervalCandidate] {
-        self.known_chord().scale_interval_candidates()
-    }
-}
-
 impl HasScaleCandidates for Chord {
     fn scale_candidates(&self) -> Vec<crate::core::known_chord::ScaleCandidate> {
-        self.scale_interval_candidates()
-            .iter()
-            .map(|candidate| {
-                use crate::core::known_chord::{IntervalCollectionKind, ScaleCandidate};
-                match candidate.kind {
-                    IntervalCollectionKind::Mode(kind) => ScaleCandidate::Mode {
-                        kind,
-                        rank: candidate.rank,
-                        reason: candidate.reason,
-                    },
-                    IntervalCollectionKind::Scale(kind) => ScaleCandidate::Scale {
-                        kind,
-                        rank: candidate.rank,
-                        reason: candidate.reason,
-                    },
-                }
-            })
-            .collect()
+        self.known_chord().scale_candidates()
     }
 }
 
@@ -1127,23 +1103,7 @@ impl HasRelativeChord for Chord {
 
 impl HasScale for Chord {
     fn scale(&self) -> Vec<Note> {
-        use crate::core::known_chord::IntervalCollectionKind;
-        
-        // Get the first (primary) interval candidate and root it at self.root()
-        let candidates = self.scale_interval_candidates();
-        if let Some(candidate) = candidates.first() {
-            match candidate.kind {
-                IntervalCollectionKind::Mode(kind) => {
-                    crate::core::mode::Mode::new(self.root, kind).notes()
-                }
-                IntervalCollectionKind::Scale(kind) => {
-                    crate::core::scale::Scale::new(self.root, kind).notes()
-                }
-            }
-        } else {
-            // Fallback to relative_scale if no candidates (shouldn't happen except for Unknown)
-            self.relative_scale().into_iter().map(|i| self.root + i).collect()
-        }
+        self.relative_scale().into_iter().map(|i| self.root + i).collect()
     }
 }
 
@@ -1534,7 +1494,7 @@ mod tests {
         assert_eq!(Chord::new(C).augmented().seven().scale(), vec![C, D, E, FSharp, GSharp, ASharp]);
         assert_eq!(Chord::new(C).seven().sharp_eleven().scale(), vec![C, D, E, FSharp, G, A, BFlat]);
         assert_eq!(Chord::new(C).seven().flat_nine().scale(), vec![C, DFlat, EFlat, E, FSharp, G, A, BFlat]);
-        assert_eq!(Chord::new(C).seven().sharp_nine().scale(), vec![C, DFlat, EFlat, FFlat, GFlat, ADoubleFlat, BFlat]);
+        assert_eq!(Chord::new(C).seven().sharp_nine().scale(), vec![C, DFlat, EFlat, FFlat, GFlat, AFlat, BFlat]);
 
         // Others.
 
