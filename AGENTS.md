@@ -171,15 +171,20 @@ cargo make test
 ```bash
 cargo clean -p kord-web && cargo check -p kord-web --features ssr,hydrate
 ```
- - If `cargo leptos` is missing, install it:
+ - If `cargo leptos` is missing, install it (prefer binstall for speed):
 ```bash
-cargo install cargo-leptos
+cargo binstall cargo-leptos
+# or: cargo install cargo-leptos
 ```
  - WASM/WASI tooling often needed for advanced flows:
 ```bash
-cargo install wkg        # for OCI publishing
-cargo install wasm-pack  # for npm/wasm builds
+cargo binstall wkg        # for OCI publishing
+cargo binstall wasm-pack  # for npm/wasm builds
 brew install wasmtime || sudo apt-get install wasmtime
+```
+ - For faster tool installation, use cargo-binstall:
+```bash
+curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
 ```
 
 ---

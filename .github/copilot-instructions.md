@@ -13,6 +13,7 @@
 - **Leptos SSR/hydrate**: Use browser dev tools to check hydration mismatches. Ensure client-only code is gated with `#[cfg(feature = "hydrate")]`.
 - **ML training**: Models saved in `kord/model/`. Training data expected in specific formats - check `KordItem` struct and `TrainConfig` paths.
 - **Feature compilation**: Complex feature dependencies - use `cargo check --features "..."` to verify specific combinations work.
+- **Tool installation**: Use `cargo-binstall` for faster installation of cargo tools (cargo-make, cargo-leptos, wasm-pack). Install via: `curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash`
 
 ## Where to Change Things (examples)
 - Extend chord grammar: edit `kord/chord.pest` and parser in `kord/src/core/parser.rs` (mirror existing rule patterns and tests).
