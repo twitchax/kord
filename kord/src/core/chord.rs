@@ -1001,7 +1001,7 @@ impl HasScaleCandidates for Chord {
     fn scale_candidates(&self) -> Vec<ScaleCandidate> {
         self.scale_interval_candidates()
             .iter()
-            .map(|candidate| candidate.to_scale_candidate())
+            .map(IntervalCandidate::to_scale_candidate)
             .collect()
     }
 }
