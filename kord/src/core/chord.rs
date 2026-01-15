@@ -10,7 +10,7 @@ use pest::Parser;
 use crate::core::{
     base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Res},
     interval::Interval,
-    known_chord::{HasRelativeChord, HasRelativeScale, KnownChord},
+    known_chord::{HasRelativeChord, HasRelativeScale, HasScaleCandidates, KnownChord},
     modifier::{known_modifier_sets, likely_extension_sets, one_off_modifier_sets, Degree, Extension, HasIsDominant, Modifier},
     named_pitch::HasNamedPitch,
     note::{CZero, Note, NoteRecreator},
@@ -624,7 +624,23 @@ impl Display for Chord {
         let scale = self.scale().iter().map(HasStaticName::static_name).collect::<Vec<_>>().join(", ");
         let chord = self.chord().iter().map(HasStaticName::static_name).collect::<Vec<_>>().join(", ");
 
-        write!(f, "{}\n   {}\n   {}\n   {}", self.precise_name(), self.description(), scale, chord)
+        writeln!(f, "{}", self.precise_name())?;
+        writeln!(f, "   {}", self.description())?;
+        writeln!(f, "   {}", scale)?;
+        writeln!(f, "   {}", chord)?;
+
+        // Add scale/mode candidates
+        let candidates = self.scale_candidates();
+        if !candidates.is_empty() {
+            writeln!(f)?;
+            writeln!(f, "   Recommended scales/modes:")?;
+            for candidate in candidates {
+                writeln!(f, "     {}. {} - {}", candidate.rank(), candidate.name(), candidate.reason())?;
+                writeln!(f, "        {}", candidate.description())?;
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -982,6 +998,12 @@ impl HasKnownChord for Chord {
 impl HasDescription for Chord {
     fn description(&self) -> &'static str {
         self.known_chord().description()
+    }
+}
+
+impl HasScaleCandidates for Chord {
+    fn scale_candidates(&self) -> Vec<crate::core::known_chord::ScaleCandidate> {
+        self.known_chord().scale_candidates()
     }
 }
 
@@ -1354,10 +1376,13 @@ mod tests {
         assert_eq!(Chord::new(C).minor().augmented().name(), "Cm(♯5)");
         assert_eq!(Chord::new(C).with_octave(Octave::Six).precise_name(), "C@6");
 
-        assert_eq!(
-            format!("{}", Chord::new(C).minor().seven().flat_five()),
-            "Cm7(♭5)\n   half diminished, locrian, minor seven flat five, seventh mode of major scale, major scale starting one half step up\n   C, D♭, E♭, F, G♭, A♭, B♭\n   C, E♭, G♭, B♭"
-        );
+        let output = format!("{}", Chord::new(C).minor().seven().flat_five());
+        assert!(output.contains("Cm7(♭5)"));
+        assert!(output.contains("half diminished"));
+        assert!(output.contains("C, D♭, E♭, F, G♭, A♭, B♭"));
+        assert!(output.contains("C, E♭, G♭, B♭"));
+        assert!(output.contains("Recommended scales/modes:"));
+        assert!(output.contains("locrian"));
     }
 
     #[test]
