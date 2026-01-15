@@ -627,20 +627,7 @@ impl Display for Chord {
         writeln!(f, "{}", self.precise_name())?;
         writeln!(f, "   {}", self.description())?;
         writeln!(f, "   {}", scale)?;
-        writeln!(f, "   {}", chord)?;
-
-        // Add scale/mode candidates
-        let candidates = self.scale_candidates();
-        if !candidates.is_empty() {
-            writeln!(f)?;
-            writeln!(f, "   Recommended scales/modes:")?;
-            for candidate in candidates {
-                let notes = candidate.notes(self.root());
-                let notes_str = notes.iter().map(HasStaticName::static_name).collect::<Vec<_>>().join(", ");
-                writeln!(f, "     {}. {} - {} ({})", candidate.rank(), candidate.name(), candidate.reason(), notes_str)?;
-                writeln!(f, "        {}", candidate.description())?;
-            }
-        }
+        write!(f, "   {}", chord)?;
 
         Ok(())
     }
@@ -1363,6 +1350,45 @@ impl Default for Chord {
     }
 }
 
+impl Chord {
+    /// Formats the chord with full scale/mode candidate recommendations.
+    ///
+    /// This returns a verbose string representation that includes:
+    /// - Chord name, description, scale notes, and chord tones
+    /// - Complete list of recommended scales/modes with rankings, reasons, notes, and descriptions
+    ///
+    /// Use this when you want comprehensive improvisation guidance.
+    /// For minimal output, use `Display` instead (via `to_string()` or `format!("{}", chord)`).
+    pub fn format_with_scale_candidates(&self) -> String {
+        use std::fmt::Write;
+        
+        let mut result = String::new();
+        
+        let scale = self.scale().iter().map(HasStaticName::static_name).collect::<Vec<_>>().join(", ");
+        let chord = self.chord().iter().map(HasStaticName::static_name).collect::<Vec<_>>().join(", ");
+
+        writeln!(&mut result, "{}", self.precise_name()).unwrap();
+        writeln!(&mut result, "   {}", self.description()).unwrap();
+        writeln!(&mut result, "   {}", scale).unwrap();
+        writeln!(&mut result, "   {}", chord).unwrap();
+
+        // Add scale/mode candidates
+        let candidates = self.scale_candidates();
+        if !candidates.is_empty() {
+            writeln!(&mut result).unwrap();
+            writeln!(&mut result, "   Recommended scales/modes:").unwrap();
+            for candidate in candidates {
+                let notes = candidate.notes(self.root());
+                let notes_str = notes.iter().map(HasStaticName::static_name).collect::<Vec<_>>().join(", ");
+                writeln!(&mut result, "     {}. {} - {} ({})", candidate.rank(), candidate.name(), candidate.reason(), notes_str).unwrap();
+                writeln!(&mut result, "        {}", candidate.description()).unwrap();
+            }
+        }
+
+        result
+    }
+}
+
 // Tests.
 
 #[cfg(test)]
@@ -1378,13 +1404,33 @@ mod tests {
         assert_eq!(Chord::new(C).minor().augmented().name(), "Cm(♯5)");
         assert_eq!(Chord::new(C).with_octave(Octave::Six).precise_name(), "C@6");
 
-        let output = format!("{}", Chord::new(C).minor().seven().flat_five());
-        assert!(output.contains("Cm7(♭5)"));
-        assert!(output.contains("half diminished"));
-        assert!(output.contains("C, D♭, E♭, F, G♭, A♭, B♭"));
-        assert!(output.contains("C, E♭, G♭, B♭"));
-        assert!(output.contains("Recommended scales/modes:"));
-        assert!(output.contains("locrian"));
+        // Test Display is minimal (no scale candidates)
+        let display_output = format!("{}", Chord::new(C).minor().seven().flat_five());
+        assert!(display_output.contains("Cm7(♭5)"));
+        assert!(display_output.contains("half diminished"));
+        assert!(display_output.contains("C, D♭, E♭, F, G♭, A♭, B♭"));
+        assert!(display_output.contains("C, E♭, G♭, B♭"));
+        assert!(!display_output.contains("Recommended scales/modes:"));
+
+        // Test format_with_scale_candidates includes recommendations
+        let verbose_output = Chord::new(C).minor().seven().flat_five().format_with_scale_candidates();
+        assert!(verbose_output.contains("Recommended scales/modes:"));
+        assert!(verbose_output.contains("locrian"));
+    }
+
+    #[test]
+    fn test_display_format() {
+        // Test that Display output is minimal and stable (no scale candidates)
+        let chord = Chord::new(C);
+        let output = format!("{}", chord);
+        let expected = "C\n   major\n   C, D, E, F, G, A, B\n   C, E, G";
+        assert_eq!(output, expected);
+
+        // Test that format_with_scale_candidates includes recommendations
+        let verbose_output = chord.format_with_scale_candidates();
+        assert!(verbose_output.contains("Recommended scales/modes:"));
+        assert!(verbose_output.contains("ionian"));
+        assert!(verbose_output.contains("major pentatonic"));
     }
 
     #[test]

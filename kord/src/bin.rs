@@ -819,7 +819,7 @@ fn start(args: Args) -> Void {
 }
 
 fn describe(chord: &Chord) {
-    println!("{chord}");
+    println!("{}", chord.format_with_scale_candidates());
 }
 
 fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
