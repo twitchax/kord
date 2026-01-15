@@ -635,7 +635,9 @@ impl Display for Chord {
             writeln!(f)?;
             writeln!(f, "   Recommended scales/modes:")?;
             for candidate in candidates {
-                writeln!(f, "     {}. {} - {}", candidate.rank(), candidate.name(), candidate.reason())?;
+                let notes = candidate.notes(self.root());
+                let notes_str = notes.iter().map(HasStaticName::static_name).collect::<Vec<_>>().join(", ");
+                writeln!(f, "     {}. {} - {} ({})", candidate.rank(), candidate.name(), candidate.reason(), notes_str)?;
                 writeln!(f, "        {}", candidate.description())?;
             }
         }

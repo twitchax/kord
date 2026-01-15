@@ -3,8 +3,11 @@
 use crate::core::{
     base::{HasDescription, HasName, HasStaticName},
     interval::Interval,
+    mode::Mode,
     mode_kind::ModeKind,
     modifier::Degree,
+    note::Note,
+    scale::Scale,
     scale_kind::ScaleKind,
 };
 
@@ -96,6 +99,14 @@ impl ScaleCandidate {
         match self {
             ScaleCandidate::Mode { kind, .. } => kind.description(),
             ScaleCandidate::Scale { kind, .. } => kind.description(),
+        }
+    }
+
+    /// Returns the notes of this candidate rooted at the given note
+    pub fn notes(&self, root: Note) -> Vec<Note> {
+        match self {
+            ScaleCandidate::Mode { kind, .. } => Mode::new(root, *kind).notes(),
+            ScaleCandidate::Scale { kind, .. } => Scale::new(root, *kind).notes(),
         }
     }
 }
