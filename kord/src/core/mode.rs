@@ -539,4 +539,52 @@ mod tests {
             mode.validate_spelling().unwrap_or_else(|e| panic!("Lydian spelling failed for {}: {}", root.static_name(), e));
         }
     }
+
+    // ========================================================================
+    // Golden Tests: Lock down enharmonic spelling and interval formulas
+    // ========================================================================
+    
+    #[test]
+    fn test_golden_mode_spelling() {
+        // E phrygian dominant: E F G# A B C D
+        let mode = Mode::new(E, ModeKind::PhrygianDominant);
+        assert_eq!(
+            mode.notes(),
+            vec![E, F, GSharp, A, B, CFive, DFive],
+            "E phrygian dominant spelling incorrect"
+        );
+        mode.validate_spelling().unwrap();
+        
+        // B locrian nat6: B C D E F G# A
+        let mode = Mode::new(B, ModeKind::LocrianNatural6);
+        assert_eq!(
+            mode.notes(),
+            vec![B, CFive, DFive, EFive, FFive, GSharpFive, AFive],
+            "B locrian nat6 spelling incorrect"
+        );
+        mode.validate_spelling().unwrap();
+        
+        // D lydian dominant (or "mixolydian #4" alias): D E F# G# A B C
+        let mode = Mode::new(D, ModeKind::LydianDominant);
+        assert_eq!(
+            mode.notes(),
+            vec![D, E, FSharp, GSharp, A, B, CFive],
+            "D lydian dominant spelling incorrect"
+        );
+        mode.validate_spelling().unwrap();
+        
+        // Verify canonical intervals for Lydian Dominant
+        assert_eq!(
+            mode.intervals(),
+            &[
+                Interval::PerfectUnison,
+                Interval::MajorSecond,
+                Interval::MajorThird,
+                Interval::AugmentedFourth, // #4
+                Interval::PerfectFifth,
+                Interval::MajorSixth,
+                Interval::MinorSeventh, // b7
+            ]
+        );
+    }
 }
