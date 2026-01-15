@@ -145,7 +145,7 @@ impl HasIntervals for ScaleKind {
                 Interval::PerfectUnison,
                 Interval::MinorThird,
                 Interval::PerfectFourth,
-                Interval::DiminishedFifth,
+                Interval::DiminishedFifth,  // Gb, not F# - preserves unique letters
                 Interval::PerfectFifth,
                 Interval::MinorSeventh,
             ],

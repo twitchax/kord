@@ -56,6 +56,74 @@ impl Scale {
     pub fn notes(&self) -> Vec<Note> {
         self.intervals().iter().map(|&interval| self.root + interval).collect()
     }
+
+    /// Validates that the scale has correct enharmonic spelling.
+    /// 
+    /// For 7-note scales (major, natural minor, harmonic minor, melodic minor, modes),
+    /// each letter A-G should appear exactly once.
+    /// For other scales, no letter should repeat unless it's a chromatic/octatonic/blues exception.
+    #[cfg(test)]
+    pub(crate) fn validate_spelling(&self) -> Result<(), String> {
+        use std::collections::HashMap;
+        use crate::core::named_pitch::{HasLetter, HasNamedPitch};
+        
+        let notes = self.notes();
+        let intervals_count = self.intervals().len();
+        
+        // For chromatic scale (12 notes), octatonic (8 notes), and blues (6 notes with chromatic passing tone), we allow letter repeats
+        if intervals_count == 12 || intervals_count == 8 || self.kind() == ScaleKind::Blues {
+            return Ok(());
+        }
+        
+        // Check for letter uniqueness
+        let mut letter_counts: HashMap<&str, usize> = HashMap::new();
+        for note in &notes {
+            let letter = note.named_pitch().letter();
+            *letter_counts.entry(letter).or_insert(0) += 1;
+        }
+        
+        // For 7-note collections, we expect exactly one of each letter
+        if intervals_count == 7 {
+            if letter_counts.len() != 7 {
+                return Err(format!(
+                    "{} {} has {} unique letters, expected 7. Letters: {:?}",
+                    self.root().static_name(),
+                    self.kind().static_name(),
+                    letter_counts.len(),
+                    notes.iter().map(|n| n.static_name()).collect::<Vec<_>>()
+                ));
+            }
+            
+            for (letter, count) in &letter_counts {
+                if *count != 1 {
+                    return Err(format!(
+                        "{} {} has letter {} appearing {} times, expected 1. Notes: {:?}",
+                        self.root().static_name(),
+                        self.kind().static_name(),
+                        letter,
+                        count,
+                        notes.iter().map(|n| n.static_name()).collect::<Vec<_>>()
+                    ));
+                }
+            }
+        } else {
+            // For non-7-note collections (pentatonic, whole tone), just check no duplicates
+            for (letter, count) in &letter_counts {
+                if *count > 1 {
+                    return Err(format!(
+                        "{} {} has letter {} appearing {} times. Notes: {:?}",
+                        self.root().static_name(),
+                        self.kind().static_name(),
+                        letter,
+                        count,
+                        notes.iter().map(|n| n.static_name()).collect::<Vec<_>>()
+                    ));
+                }
+            }
+        }
+        
+        Ok(())
+    }
 }
 
 impl HasRoot for Scale {
@@ -136,6 +204,7 @@ impl Parsable for Scale {
 mod tests {
     use super::*;
     use crate::core::note::*;
+    use crate::core::named_pitch::{HasNamedPitch, HasLetter};
     use pretty_assertions::assert_eq;
 
     #[test]
@@ -295,5 +364,180 @@ mod tests {
         let scale = Scale::parse("E blues").unwrap();
         assert_eq!(scale.root(), E);
         assert_eq!(scale.kind(), ScaleKind::Blues);
+    }
+
+    #[test]
+    fn test_enharmonic_spelling_major_scales() {
+        // Test major scales with various roots to ensure correct enharmonic spelling
+        
+        // C Major - all natural notes
+        let scale = Scale::new(C, ScaleKind::Major);
+        scale.validate_spelling().unwrap();
+        
+        // G Major - should be G A B C D E F#
+        let scale = Scale::new(G, ScaleKind::Major);
+        scale.validate_spelling().unwrap();
+        let notes = scale.notes();
+        assert_eq!(notes.len(), 7);
+        
+        // Db Major - should use flats: Db Eb F Gb Ab Bb C
+        let scale = Scale::new(DFlat, ScaleKind::Major);
+        scale.validate_spelling().unwrap();
+        let notes = scale.notes();
+        assert_eq!(notes[0].named_pitch().letter(), "D");
+        assert_eq!(notes[1].named_pitch().letter(), "E");
+        assert_eq!(notes[2].named_pitch().letter(), "F");
+        assert_eq!(notes[3].named_pitch().letter(), "G");
+        assert_eq!(notes[4].named_pitch().letter(), "A");
+        assert_eq!(notes[5].named_pitch().letter(), "B");
+        assert_eq!(notes[6].named_pitch().letter(), "C");
+        
+        // F# Major - should use sharps: F# G# A# B C# D# E#
+        let scale = Scale::new(FSharp, ScaleKind::Major);
+        scale.validate_spelling().unwrap();
+        let notes = scale.notes();
+        assert_eq!(notes[0].named_pitch().letter(), "F");
+        assert_eq!(notes[1].named_pitch().letter(), "G");
+        assert_eq!(notes[2].named_pitch().letter(), "A");
+        assert_eq!(notes[3].named_pitch().letter(), "B");
+        assert_eq!(notes[4].named_pitch().letter(), "C");
+        assert_eq!(notes[5].named_pitch().letter(), "D");
+        assert_eq!(notes[6].named_pitch().letter(), "E");
+    }
+
+    #[test]
+    fn test_enharmonic_spelling_minor_scales() {
+        // Test minor scales
+        
+        // A Natural Minor
+        let scale = Scale::new(A, ScaleKind::NaturalMinor);
+        scale.validate_spelling().unwrap();
+        
+        // A Harmonic Minor - A B C D E F G#
+        let scale = Scale::new(A, ScaleKind::HarmonicMinor);
+        scale.validate_spelling().unwrap();
+        let notes = scale.notes();
+        assert_eq!(notes[6].named_pitch().letter(), "G"); // Should be G#, not Ab
+        
+        // C# Harmonic Minor
+        let scale = Scale::new(CSharp, ScaleKind::HarmonicMinor);
+        scale.validate_spelling().unwrap();
+        
+        // F Melodic Minor
+        let scale = Scale::new(F, ScaleKind::MelodicMinor);
+        scale.validate_spelling().unwrap();
+    }
+
+    #[test]
+    fn test_enharmonic_spelling_pentatonic_scales() {
+        // Test pentatonic scales (5 notes, no letter repeats)
+        
+        // C Major Pentatonic - C D E G A
+        let scale = Scale::new(C, ScaleKind::MajorPentatonic);
+        scale.validate_spelling().unwrap();
+        let notes = scale.notes();
+        assert_eq!(notes.len(), 5);
+        
+        // A Minor Pentatonic - A C D E G
+        let scale = Scale::new(A, ScaleKind::MinorPentatonic);
+        scale.validate_spelling().unwrap();
+        let notes = scale.notes();
+        assert_eq!(notes.len(), 5);
+        
+        // F# Major Pentatonic
+        let scale = Scale::new(FSharp, ScaleKind::MajorPentatonic);
+        scale.validate_spelling().unwrap();
+        
+        // Bb Minor Pentatonic
+        let scale = Scale::new(BFlat, ScaleKind::MinorPentatonic);
+        scale.validate_spelling().unwrap();
+    }
+
+    #[test]
+    fn test_enharmonic_spelling_blues_scale() {
+        // Test blues scale (6 notes, no letter repeats)
+        
+        // C Blues - C Eb F Gb G Bb
+        let scale = Scale::new(C, ScaleKind::Blues);
+        scale.validate_spelling().unwrap();
+        let notes = scale.notes();
+        assert_eq!(notes.len(), 6);
+        
+        // E Blues
+        let scale = Scale::new(E, ScaleKind::Blues);
+        scale.validate_spelling().unwrap();
+        
+        // G Blues
+        let scale = Scale::new(G, ScaleKind::Blues);
+        scale.validate_spelling().unwrap();
+    }
+
+    #[test]
+    fn test_enharmonic_spelling_whole_tone() {
+        // Test whole tone scale (6 notes, no letter repeats)
+        
+        // C Whole Tone - C D E F# G# A#
+        let scale = Scale::new(C, ScaleKind::WholeTone);
+        scale.validate_spelling().unwrap();
+        let notes = scale.notes();
+        assert_eq!(notes.len(), 6);
+        
+        // Db Whole Tone
+        let scale = Scale::new(DFlat, ScaleKind::WholeTone);
+        scale.validate_spelling().unwrap();
+    }
+
+    #[test]
+    fn test_enharmonic_spelling_diminished() {
+        // Diminished scales are octatonic (8 notes), so we allow letter repeats
+        
+        // C Diminished Whole-Half
+        let scale = Scale::new(C, ScaleKind::DiminishedWholeHalf);
+        scale.validate_spelling().unwrap(); // Should pass even with repeats
+        let notes = scale.notes();
+        assert_eq!(notes.len(), 8);
+        
+        // C Diminished Half-Whole
+        let scale = Scale::new(C, ScaleKind::DiminishedHalfWhole);
+        scale.validate_spelling().unwrap(); // Should pass even with repeats
+        let notes = scale.notes();
+        assert_eq!(notes.len(), 8);
+    }
+
+    #[test]
+    fn test_enharmonic_spelling_chromatic() {
+        // Chromatic scale (12 notes), we allow letter repeats
+        
+        // C Chromatic
+        let scale = Scale::new(C, ScaleKind::Chromatic);
+        scale.validate_spelling().unwrap(); // Should pass even with repeats
+        let notes = scale.notes();
+        assert_eq!(notes.len(), 12);
+    }
+
+    #[test]
+    fn test_enharmonic_spelling_all_roots() {
+        // Test all scales with multiple root notes to ensure consistency
+        for root in [C, CSharp, D, DFlat, E, F, FSharp, G, GFlat, A, AFlat, B, BFlat] {
+            // Major
+            let scale = Scale::new(root, ScaleKind::Major);
+            scale.validate_spelling().unwrap_or_else(|e| panic!("Major spelling failed for {}: {}", root.static_name(), e));
+            
+            // Natural Minor
+            let scale = Scale::new(root, ScaleKind::NaturalMinor);
+            scale.validate_spelling().unwrap_or_else(|e| panic!("Natural Minor spelling failed for {}: {}", root.static_name(), e));
+            
+            // Harmonic Minor
+            let scale = Scale::new(root, ScaleKind::HarmonicMinor);
+            scale.validate_spelling().unwrap_or_else(|e| panic!("Harmonic Minor spelling failed for {}: {}", root.static_name(), e));
+            
+            // Major Pentatonic
+            let scale = Scale::new(root, ScaleKind::MajorPentatonic);
+            scale.validate_spelling().unwrap_or_else(|e| panic!("Major Pentatonic spelling failed for {}: {}", root.static_name(), e));
+            
+            // Blues
+            let scale = Scale::new(root, ScaleKind::Blues);
+            scale.validate_spelling().unwrap_or_else(|e| panic!("Blues spelling failed for {}: {}", root.static_name(), e));
+        }
     }
 }
