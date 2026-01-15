@@ -334,14 +334,14 @@ impl HasIntervals for ModeKind {
             ],
             // Altered (Super Locrian): H-W-H-W-W-W-W (All alterations)
             // Example: G♯ Altered = G♯ A B C D E F♯
-            // Intervals: m2, m3, dim4, dim5, dim6, m7
+            // Intervals: m2, m3, dim4, dim5, m6, m7
             ModeKind::Altered => &[
                 Interval::PerfectUnison,
                 Interval::MinorSecond,
                 Interval::MinorThird,           // Changed from AugmentedSecond
                 Interval::DiminishedFourth,     // Changed from MajorThird
                 Interval::DiminishedFifth,
-                Interval::DiminishedSixth,      // Changed from AugmentedFifth
+                Interval::MinorSixth,           // Changed from DiminishedSixth to avoid double flats
                 Interval::MinorSeventh,
             ],
         }

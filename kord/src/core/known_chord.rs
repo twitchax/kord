@@ -132,6 +132,24 @@ pub struct IntervalCandidate {
     pub reason: &'static str,
 }
 
+impl IntervalCandidate {
+    /// Converts this interval candidate to a rooted scale candidate
+    pub fn to_scale_candidate(&self) -> ScaleCandidate {
+        match self.kind {
+            IntervalCollectionKind::Mode(kind) => ScaleCandidate::Mode {
+                kind,
+                rank: self.rank,
+                reason: self.reason,
+            },
+            IntervalCollectionKind::Scale(kind) => ScaleCandidate::Scale {
+                kind,
+                rank: self.rank,
+                reason: self.reason,
+            },
+        }
+    }
+}
+
 // Enum.
 
 /// An enum representing a known chord.
@@ -758,18 +776,7 @@ impl HasScaleCandidates for KnownChord {
     fn scale_candidates(&self) -> Vec<ScaleCandidate> {
         self.scale_interval_candidates()
             .iter()
-            .map(|candidate| match candidate.kind {
-                IntervalCollectionKind::Mode(kind) => ScaleCandidate::Mode {
-                    kind,
-                    rank: candidate.rank,
-                    reason: candidate.reason,
-                },
-                IntervalCollectionKind::Scale(kind) => ScaleCandidate::Scale {
-                    kind,
-                    rank: candidate.rank,
-                    reason: candidate.reason,
-                },
-            })
+            .map(|candidate| candidate.to_scale_candidate())
             .collect()
     }
 }

@@ -10,7 +10,7 @@ use pest::Parser;
 use crate::core::{
     base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Res},
     interval::Interval,
-    known_chord::{HasRelativeChord, HasRelativeScale, HasScaleCandidates, KnownChord},
+    known_chord::{HasRelativeChord, HasRelativeScale, HasScaleCandidates, IntervalCandidate, IntervalCollectionKind, KnownChord, ScaleCandidate},
     modifier::{known_modifier_sets, likely_extension_sets, one_off_modifier_sets, Degree, Extension, HasIsDominant, Modifier},
     named_pitch::HasNamedPitch,
     note::{CZero, Note, NoteRecreator},
@@ -992,30 +992,16 @@ impl HasDescription for Chord {
 
 impl Chord {
     /// Returns the static interval candidates for this chord
-    pub fn scale_interval_candidates(&self) -> &'static [crate::core::known_chord::IntervalCandidate] {
+    pub fn scale_interval_candidates(&self) -> &'static [IntervalCandidate] {
         self.known_chord().scale_interval_candidates()
     }
 }
 
 impl HasScaleCandidates for Chord {
-    fn scale_candidates(&self) -> Vec<crate::core::known_chord::ScaleCandidate> {
+    fn scale_candidates(&self) -> Vec<ScaleCandidate> {
         self.scale_interval_candidates()
             .iter()
-            .map(|candidate| {
-                use crate::core::known_chord::{IntervalCollectionKind, ScaleCandidate};
-                match candidate.kind {
-                    IntervalCollectionKind::Mode(kind) => ScaleCandidate::Mode {
-                        kind,
-                        rank: candidate.rank,
-                        reason: candidate.reason,
-                    },
-                    IntervalCollectionKind::Scale(kind) => ScaleCandidate::Scale {
-                        kind,
-                        rank: candidate.rank,
-                        reason: candidate.reason,
-                    },
-                }
-            })
+            .map(|candidate| candidate.to_scale_candidate())
             .collect()
     }
 }
@@ -1127,8 +1113,6 @@ impl HasRelativeChord for Chord {
 
 impl HasScale for Chord {
     fn scale(&self) -> Vec<Note> {
-        use crate::core::known_chord::IntervalCollectionKind;
-        
         // Get the first (primary) interval candidate and root it at self.root()
         let candidates = self.scale_interval_candidates();
         if let Some(candidate) = candidates.first() {
@@ -1534,7 +1518,7 @@ mod tests {
         assert_eq!(Chord::new(C).augmented().seven().scale(), vec![C, D, E, FSharp, GSharp, ASharp]);
         assert_eq!(Chord::new(C).seven().sharp_eleven().scale(), vec![C, D, E, FSharp, G, A, BFlat]);
         assert_eq!(Chord::new(C).seven().flat_nine().scale(), vec![C, DFlat, EFlat, E, FSharp, G, A, BFlat]);
-        assert_eq!(Chord::new(C).seven().sharp_nine().scale(), vec![C, DFlat, EFlat, FFlat, GFlat, ADoubleFlat, BFlat]);
+        assert_eq!(Chord::new(C).seven().sharp_nine().scale(), vec![C, DFlat, EFlat, FFlat, GFlat, AFlat, BFlat]);
 
         // Others.
 
