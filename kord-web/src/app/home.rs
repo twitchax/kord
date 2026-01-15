@@ -92,35 +92,50 @@ pub fn HomePage() -> impl IntoView {
                         "Guess from notes"
                     </button>
                     <span class="kord-home__meta-sep">"•"</span>
-                    <a class="kord-home__meta-link" href="https://github.com/twitchax/kord" target="_blank" rel="noopener noreferrer">"View on GitHub"</a>
+                    <a
+                        class="kord-home__meta-link"
+                        href="https://github.com/twitchax/kord"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        "View on GitHub"
+                    </a>
                 </div>
             </div>
 
             <div class="kord-home__feature-grid">
                 <article class="kord-home__feature">
                     <h3 class="kord-home__feature-title">"Describe complex symbols"</h3>
-                    <p class="kord-home__feature-desc">"Instantly expand Cm7(#11)/G or altered dominants into precise spellings, suggested scales, and playback."</p>
+                    <p class="kord-home__feature-desc">
+                        "Instantly expand Cm7(#11)/G or altered dominants into precise spellings, suggested scales, and playback."
+                    </p>
                     <SecondaryButton class="kord-home__feature-action" on_click=describe_feature>
                         "Open Describe"
                     </SecondaryButton>
                 </article>
                 <article class="kord-home__feature">
                     <h3 class="kord-home__feature-title">"Guess chords from notes"</h3>
-                    <p class="kord-home__feature-desc">"Enter pitches or tap the built-in keyboard to surface voicings ranked by musical fit."</p>
+                    <p class="kord-home__feature-desc">
+                        "Enter pitches or tap the built-in keyboard to surface voicings ranked by musical fit."
+                    </p>
                     <SecondaryButton class="kord-home__feature-action" on_click=guess_feature>
                         "Try Guess"
                     </SecondaryButton>
                 </article>
                 <article class="kord-home__feature">
                     <h3 class="kord-home__feature-title">"Listen in real time"</h3>
-                    <p class="kord-home__feature-desc">"Record a quick snippet and let our ML model surface the chords behind the sound."</p>
+                    <p class="kord-home__feature-desc">
+                        "Record a quick snippet and let our ML model surface the chords behind the sound."
+                    </p>
                     <SecondaryButton class="kord-home__feature-action" on_click=listen_feature>
                         "Launch Listen"
                     </SecondaryButton>
                 </article>
                 <article class="kord-home__feature">
                     <h3 class="kord-home__feature-title">"Learn the internals"</h3>
-                    <p class="kord-home__feature-desc">"Dive into the documentation for CLI commands, WASM bindings, and theory notes that power the experience."</p>
+                    <p class="kord-home__feature-desc">
+                        "Dive into the documentation for CLI commands, WASM bindings, and theory notes that power the experience."
+                    </p>
                     <SecondaryButton class="kord-home__feature-action" on_click=docs_feature>
                         "Read Docs"
                     </SecondaryButton>

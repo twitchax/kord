@@ -22,7 +22,17 @@ pub fn NavLink(href: &'static str, #[prop(optional, into)] class: Option<String>
     let cls = class.map(|c| format!("{base} {c}")).unwrap_or_else(|| base.to_string());
     let navigate = use_navigate();
 
-    view! { <button type="button" class=cls on:click=move |_| { navigate(href, Default::default()); }>{children()}</button> }
+    view! {
+        <button
+            type="button"
+            class=cls
+            on:click=move |_| {
+                navigate(href, Default::default());
+            }
+        >
+            {children()}
+        </button>
+    }
 }
 
 // Typography.
@@ -30,7 +40,11 @@ pub fn NavLink(href: &'static str, #[prop(optional, into)] class: Option<String>
 /// Page title (H1) used on main/home
 #[component]
 pub fn PageTitle(children: Children) -> impl IntoView {
-    view! { <Text tag=TextTag::H1 class="kord-page-title">{children()}</Text> }
+    view! {
+        <Text tag=TextTag::H1 class="kord-page-title">
+            {children()}
+        </Text>
+    }
 }
 
 /// Section wrapper with H2
@@ -38,7 +52,9 @@ pub fn PageTitle(children: Children) -> impl IntoView {
 pub fn Section(#[prop(into)] title: String, children: Children) -> impl IntoView {
     view! {
         <div class="kord-section">
-            <Text tag=TextTag::H2 class="kord-section__title">{title}</Text>
+            <Text tag=TextTag::H2 class="kord-section__title">
+                {title}
+            </Text>
             {children()}
         </div>
     }
@@ -47,13 +63,21 @@ pub fn Section(#[prop(into)] title: String, children: Children) -> impl IntoView
 /// H3 subheading
 #[component]
 pub fn Subheading(#[prop(into)] text: String) -> impl IntoView {
-    view! { <Text tag=TextTag::H3 class="kord-subheading">{text}</Text> }
+    view! {
+        <Text tag=TextTag::H3 class="kord-subheading">
+            {text}
+        </Text>
+    }
 }
 
 /// H4 heading used in examples blocks
 #[component]
 pub fn TertiaryHeading(#[prop(into)] text: String) -> impl IntoView {
-    view! { <Text tag=TextTag::H4 class="kord-tertiary-heading">{text}</Text> }
+    view! {
+        <Text tag=TextTag::H4 class="kord-tertiary-heading">
+            {text}
+        </Text>
+    }
 }
 
 // Content blocks.
@@ -71,19 +95,18 @@ pub fn CodeBlock(#[prop(into)] code: String, #[prop(optional, into)] class: Opti
         let _ = highlight_code_block(&code_block);
     });
 
-    view! { <pre class=cls><code node_ref=code_block>{move || code.clone()}</code></pre> }
+    view! {
+        <pre class=cls>
+            <code node_ref=code_block>{move || code.clone()}</code>
+        </pre>
+    }
 }
 
 /// Card-styled external link
 #[component]
 pub fn CardLink(#[prop(into)] href: String, #[prop(into)] title: String, #[prop(into)] desc: String) -> impl IntoView {
     view! {
-        <a
-            href=href
-            target="_blank"
-            rel="noopener noreferrer"
-            class="kord-card-link"
-        >
+        <a href=href target="_blank" rel="noopener noreferrer" class="kord-card-link">
             <h3 class="kord-card-link__title">{title}</h3>
             <p class="kord-card-link__desc">{desc}</p>
         </a>
@@ -93,7 +116,11 @@ pub fn CardLink(#[prop(into)] href: String, #[prop(into)] title: String, #[prop(
 /// Highlighted output/callout
 #[component]
 pub fn Callout(children: Children) -> impl IntoView {
-    view! { <div class="kord-callout"><code class="kord-callout__code">{children()}</code></div> }
+    view! {
+        <div class="kord-callout">
+            <code class="kord-callout__code">{children()}</code>
+        </div>
+    }
 }
 
 /// Pale panel with title
@@ -101,7 +128,9 @@ pub fn Callout(children: Children) -> impl IntoView {
 pub fn Panel(#[prop(into)] title: String, children: Children) -> impl IntoView {
     view! {
         <div class="kord-panel">
-            <Text tag=TextTag::H2 class="kord-panel__title">{title}</Text>
+            <Text tag=TextTag::H2 class="kord-panel__title">
+                {title}
+            </Text>
             {children()}
         </div>
     }
@@ -121,8 +150,14 @@ pub fn ChordAnalysis(#[prop(optional)] chord: Option<Chord>) -> impl IntoView {
                 <Flex justify=FlexJustify::SpaceBetween align=FlexAlign::Start>
                     <div>
                         <div class="kord-chord-analysis__description">{description}</div>
-                        <div class="kord-chord-analysis__detail"><span class="kord-chord-analysis__label">Scale: </span>{scale}</div>
-                        <div class="kord-chord-analysis__detail"><span class="kord-chord-analysis__label">Chord: </span>{chord_tones}</div>
+                        <div class="kord-chord-analysis__detail">
+                            <span class="kord-chord-analysis__label">Scale:</span>
+                            {scale}
+                        </div>
+                        <div class="kord-chord-analysis__detail">
+                            <span class="kord-chord-analysis__label">Chord:</span>
+                            {chord_tones}
+                        </div>
                     </div>
                     <PrimaryButton on_click=move |_| play_chord(&c, 3.0)>"Play"</PrimaryButton>
                 </Flex>
@@ -130,11 +165,7 @@ pub fn ChordAnalysis(#[prop(optional)] chord: Option<Chord>) -> impl IntoView {
         }
     });
 
-    view! {
-        <div class="kord-chord-analysis">
-            {chord_section}
-        </div>
-    }
+    view! { <div class="kord-chord-analysis">{chord_section}</div> }
 }
 
 /// Note display component that shows a single note
@@ -159,7 +190,11 @@ where
     let base = "kord-button kord-button--primary";
     let cls = class.map(|c| format!("{base} {c}")).unwrap_or_else(|| base.to_string());
 
-    view! { <Button attr:id=id appearance=ButtonAppearance::Primary class=cls on_click=on_click.into()>{children()}</Button> }
+    view! {
+        <Button attr:id=id appearance=ButtonAppearance::Primary class=cls on_click=on_click.into()>
+            {children()}
+        </Button>
+    }
 }
 
 /// Secondary button
@@ -173,11 +208,9 @@ where
     let cls = class.map(|c| format!("{base} {c}")).unwrap_or_else(|| base.to_string());
 
     view! {
-        <Button
-            class=cls
-            appearance=ButtonAppearance::Secondary
-            on_click=on_click.into()
-        >{children()}</Button>
+        <Button class=cls appearance=ButtonAppearance::Secondary on_click=on_click.into()>
+            {children()}
+        </Button>
     }
 }
 
@@ -227,11 +260,9 @@ where
             <button
                 class=class
                 on:click=move |_| on_toggle(pitch)
-                title=move || format!(
-                    "{}: {:.3} (click to toggle)",
-                    pitch_names[pitch_idx],
-                    delta.get()
-                )
+                title=move || {
+                    format!("{}: {:.3} (click to toggle)", pitch_names[pitch_idx], delta.get())
+                }
             >
                 <div
                     class="kord-pitch-bar__fill"
@@ -239,7 +270,9 @@ where
                 />
             </button>
             <span class="kord-pitch-visualizer__label">{pitch_names[pitch_idx]}</span>
-            <span class="kord-pitch-visualizer__delta">{move || format!("{:.2}", delta.get())}</span>
+            <span class="kord-pitch-visualizer__delta">
+                {move || format!("{:.2}", delta.get())}
+            </span>
         </div>
     }
 }
@@ -253,11 +286,7 @@ where
 {
     view! {
         <div class="kord-pitch-visualizer">
-            <For
-                each=move || 0..12
-                key=|&i| i
-                let:pitch_idx
-            >
+            <For each=move || 0..12 key=|&i| i let:pitch_idx>
                 <PitchBarItem
                     pitch_idx=pitch_idx
                     pitch_deltas=pitch_deltas

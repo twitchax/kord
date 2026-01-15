@@ -116,12 +116,16 @@ Before running the release process, ensure you have:
 - ✅ **npm authentication**: `npm login` or `npm adduser`
 - ✅ **GitHub Container Registry authentication**: `docker login ghcr.io -u USERNAME`
 - ✅ **wasm32-wasip2 target**: `rustup target add wasm32-wasip2`
-- ✅ **Required tools**: 
+- ✅ **Required tools** (prefer cargo-binstall for speed):
   ```bash
-  cargo install cargo-release  # For version bumping
-  cargo install cargo-make     # For task orchestration
-  cargo install wkg            # For OCI publishing
-  cargo install wasm-pack      # For npm WASM builds
+  # Install cargo-binstall first for faster subsequent installations
+  curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+  
+  # Then install tools via binstall
+  cargo binstall --no-confirm cargo-release  # For version bumping
+  cargo binstall --no-confirm cargo-make     # For task orchestration
+  cargo binstall --no-confirm wkg            # For OCI publishing
+  cargo binstall --no-confirm wasm-pack      # For npm WASM builds
   ```
 
 ### Complete Release Process
