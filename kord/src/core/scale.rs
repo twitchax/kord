@@ -119,7 +119,7 @@ impl Parsable for Scale {
         let mut components = root.into_inner();
 
         let note = components.next().unwrap();
-        assert_eq!(Rule::note, note.as_rule());
+        assert_eq!(Rule::note_atomic, note.as_rule());
         let root_note = note_str_to_note(note.as_str().trim())?;
 
         let scale_name = components.next().unwrap();
@@ -269,5 +269,31 @@ mod tests {
         let scale = Scale::parse("Bb harmonic minor").unwrap();
         assert_eq!(scale.root(), BFlat);
         assert_eq!(scale.kind(), ScaleKind::HarmonicMinor);
+
+        // Test pentatonic scales
+        let scale = Scale::parse("C major pentatonic").unwrap();
+        assert_eq!(scale.root(), C);
+        assert_eq!(scale.kind(), ScaleKind::MajorPentatonic);
+
+        let scale = Scale::parse("C majorpentatonic").unwrap();
+        assert_eq!(scale.root(), C);
+        assert_eq!(scale.kind(), ScaleKind::MajorPentatonic);
+
+        let scale = Scale::parse("A minor pentatonic").unwrap();
+        assert_eq!(scale.root(), A);
+        assert_eq!(scale.kind(), ScaleKind::MinorPentatonic);
+
+        let scale = Scale::parse("A minorpentatonic").unwrap();
+        assert_eq!(scale.root(), A);
+        assert_eq!(scale.kind(), ScaleKind::MinorPentatonic);
+
+        // Test blues scale
+        let scale = Scale::parse("C blues").unwrap();
+        assert_eq!(scale.root(), C);
+        assert_eq!(scale.kind(), ScaleKind::Blues);
+
+        let scale = Scale::parse("E blues").unwrap();
+        assert_eq!(scale.root(), E);
+        assert_eq!(scale.kind(), ScaleKind::Blues);
     }
 }

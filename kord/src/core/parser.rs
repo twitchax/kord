@@ -140,6 +140,9 @@ pub fn scale_name_str_to_scale_kind(scale_str: &str) -> Res<ScaleKind> {
         "chromatic" => ScaleKind::Chromatic,
         "diminished(whole-half)" => ScaleKind::DiminishedWholeHalf,
         "diminished(half-whole)" => ScaleKind::DiminishedHalfWhole,
+        "majorpentatonic" => ScaleKind::MajorPentatonic,
+        "minorpentatonic" => ScaleKind::MinorPentatonic,
+        "blues" => ScaleKind::Blues,
         _ => return Err(crate::core::base::Err::msg("Unknown scale name")),
     };
 

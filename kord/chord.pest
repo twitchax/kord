@@ -4,6 +4,8 @@ accidental = { "#" | "♯" | "b" | "♭" }
 
 note = { letter ~ accidental? ~ accidental? }
 
+note_atomic = @{ letter ~ accidental? ~ accidental? }
+
 digit = { ASCII_DIGIT }
 
 note_with_octave = { note ~ digit? }
@@ -83,6 +85,9 @@ mode_name = @{
 
 // Scale names (case-insensitive)
 scale_name = @{
+    ^"major" ~ " "? ~ ^"pentatonic" |
+    ^"minor" ~ " "? ~ ^"pentatonic" |
+    ^"blues" |
     ^"major" |
     ^"natural" ~ " "? ~ ^"minor" |
     ^"harmonic" ~ " "? ~ ^"minor" |
@@ -96,14 +101,14 @@ scale_name = @{
 // Mode or Scale with root note
 mode = {
     SOI ~
-    note ~
+    note_atomic ~
     mode_name ~
     EOI
 }
 
 scale = {
     SOI ~
-    note ~
+    note_atomic ~
     scale_name ~
     EOI
 }

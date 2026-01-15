@@ -33,6 +33,12 @@ pub enum ScaleKind {
     DiminishedWholeHalf,
     /// A diminished (half-whole) scale.
     DiminishedHalfWhole,
+    /// A major pentatonic scale.
+    MajorPentatonic,
+    /// A minor pentatonic scale.
+    MinorPentatonic,
+    /// A blues scale.
+    Blues,
 }
 
 // Impls.
@@ -118,6 +124,31 @@ impl HasIntervals for ScaleKind {
                 Interval::MajorSixth,
                 Interval::MinorSeventh,
             ],
+            // Major Pentatonic: 1, 2, 3, 5, 6 (no 4th or 7th)
+            ScaleKind::MajorPentatonic => &[
+                Interval::PerfectUnison,
+                Interval::MajorSecond,
+                Interval::MajorThird,
+                Interval::PerfectFifth,
+                Interval::MajorSixth,
+            ],
+            // Minor Pentatonic: 1, ♭3, 4, 5, ♭7 (no 2nd or 6th)
+            ScaleKind::MinorPentatonic => &[
+                Interval::PerfectUnison,
+                Interval::MinorThird,
+                Interval::PerfectFourth,
+                Interval::PerfectFifth,
+                Interval::MinorSeventh,
+            ],
+            // Blues: 1, ♭3, 4, ♭5, 5, ♭7 (minor pentatonic + ♭5)
+            ScaleKind::Blues => &[
+                Interval::PerfectUnison,
+                Interval::MinorThird,
+                Interval::PerfectFourth,
+                Interval::DiminishedFifth,
+                Interval::PerfectFifth,
+                Interval::MinorSeventh,
+            ],
         }
     }
 }
@@ -133,6 +164,9 @@ impl HasDescription for ScaleKind {
             ScaleKind::Chromatic => "chromatic scale, all twelve semitones",
             ScaleKind::DiminishedWholeHalf => "diminished scale, whole-half pattern, fully diminished chord parent",
             ScaleKind::DiminishedHalfWhole => "diminished scale, half-whole pattern, dominant flat 9 parent",
+            ScaleKind::MajorPentatonic => "major pentatonic scale, five-note major scale without 4th and 7th",
+            ScaleKind::MinorPentatonic => "minor pentatonic scale, five-note minor scale without 2nd and 6th",
+            ScaleKind::Blues => "blues scale, minor pentatonic with added ♭5 (blue note)",
         }
     }
 }
@@ -148,6 +182,9 @@ impl HasStaticName for ScaleKind {
             ScaleKind::Chromatic => "chromatic",
             ScaleKind::DiminishedWholeHalf => "diminished (whole-half)",
             ScaleKind::DiminishedHalfWhole => "diminished (half-whole)",
+            ScaleKind::MajorPentatonic => "major pentatonic",
+            ScaleKind::MinorPentatonic => "minor pentatonic",
+            ScaleKind::Blues => "blues",
         }
     }
 }
@@ -209,6 +246,45 @@ mod tests {
         // Diminished scales: 8 notes
         assert_eq!(ScaleKind::DiminishedWholeHalf.intervals().len(), 8);
         assert_eq!(ScaleKind::DiminishedHalfWhole.intervals().len(), 8);
+
+        // Pentatonic scales: 5 notes
+        assert_eq!(ScaleKind::MajorPentatonic.intervals().len(), 5);
+        assert_eq!(
+            ScaleKind::MajorPentatonic.intervals(),
+            &[
+                Interval::PerfectUnison,
+                Interval::MajorSecond,
+                Interval::MajorThird,
+                Interval::PerfectFifth,
+                Interval::MajorSixth,
+            ]
+        );
+        
+        assert_eq!(ScaleKind::MinorPentatonic.intervals().len(), 5);
+        assert_eq!(
+            ScaleKind::MinorPentatonic.intervals(),
+            &[
+                Interval::PerfectUnison,
+                Interval::MinorThird,
+                Interval::PerfectFourth,
+                Interval::PerfectFifth,
+                Interval::MinorSeventh,
+            ]
+        );
+
+        // Blues scale: 6 notes (minor pentatonic + ♭5)
+        assert_eq!(ScaleKind::Blues.intervals().len(), 6);
+        assert_eq!(
+            ScaleKind::Blues.intervals(),
+            &[
+                Interval::PerfectUnison,
+                Interval::MinorThird,
+                Interval::PerfectFourth,
+                Interval::DiminishedFifth,
+                Interval::PerfectFifth,
+                Interval::MinorSeventh,
+            ]
+        );
     }
 
     #[test]
@@ -218,11 +294,17 @@ mod tests {
         assert_eq!(ScaleKind::HarmonicMinor.static_name(), "harmonic minor");
         assert_eq!(ScaleKind::MelodicMinor.static_name(), "melodic minor");
         assert_eq!(ScaleKind::WholeTone.static_name(), "whole tone");
+        assert_eq!(ScaleKind::MajorPentatonic.static_name(), "major pentatonic");
+        assert_eq!(ScaleKind::MinorPentatonic.static_name(), "minor pentatonic");
+        assert_eq!(ScaleKind::Blues.static_name(), "blues");
     }
 
     #[test]
     fn test_scale_descriptions() {
         assert_eq!(ScaleKind::Major.description(), "major scale, ionian mode parent");
         assert_eq!(ScaleKind::NaturalMinor.description(), "natural minor scale, aeolian mode parent");
+        assert_eq!(ScaleKind::MajorPentatonic.description(), "major pentatonic scale, five-note major scale without 4th and 7th");
+        assert_eq!(ScaleKind::MinorPentatonic.description(), "minor pentatonic scale, five-note minor scale without 2nd and 6th");
+        assert_eq!(ScaleKind::Blues.description(), "blues scale, minor pentatonic with added ♭5 (blue note)");
     }
 }

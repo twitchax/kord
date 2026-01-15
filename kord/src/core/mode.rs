@@ -120,7 +120,7 @@ impl Parsable for Mode {
         let mut components = root.into_inner();
 
         let note = components.next().unwrap();
-        assert_eq!(Rule::note, note.as_rule());
+        assert_eq!(Rule::note_atomic, note.as_rule());
         let root_note = note_str_to_note(note.as_str().trim())?;
 
         let mode_name = components.next().unwrap();
