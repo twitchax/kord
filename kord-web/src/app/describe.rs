@@ -54,7 +54,11 @@ pub fn DescribePage() -> impl IntoView {
         <PageTitle>"Describe a Chord"</PageTitle>
         <section class="kord-describe">
             <Flex vertical=true gap=FlexGap::Large>
-                <Flex vertical=true gap=FlexGap::Medium class="kord-content__section kord-describe__card">
+                <Flex
+                    vertical=true
+                    gap=FlexGap::Medium
+                    class="kord-content__section kord-describe__card"
+                >
                     <div class="kord-describe__hint">
                         <p>"Type any chord symbol to see its full breakdown."</p>
                         <p>"We support complex extensions like Cm7(#11)/G or Cø7."</p>
@@ -75,7 +79,14 @@ pub fn DescribePage() -> impl IntoView {
                     <h3 class="kord-describe__results-title">"Chord Breakdown"</h3>
                     <Show
                         when=move || chord_result.with(|result| result.is_some())
-                        fallback=move || view! { <p class="kord-describe__empty">"Enter a chord symbol to preview its structure."</p> }.into_view()
+                        fallback=move || {
+                            view! {
+                                <p class="kord-describe__empty">
+                                    "Enter a chord symbol to preview its structure."
+                                </p>
+                            }
+                                .into_view()
+                        }
                     >
                         {move || {
                             let chord = chord_result.get().expect("chord exists when show renders");

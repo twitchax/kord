@@ -14,7 +14,7 @@ async fn test_home_page_loads() {
     mount_to_body(|| {
         view! {
             <Router>
-                <HomePage/>
+                <HomePage />
             </Router>
         }
     });
