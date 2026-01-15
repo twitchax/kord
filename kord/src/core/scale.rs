@@ -62,6 +62,7 @@ impl Scale {
     /// For 7-note scales (major, natural minor, harmonic minor, melodic minor, modes),
     /// each letter A-G should appear exactly once.
     /// For other scales, no letter should repeat unless it's a chromatic/octatonic/blues exception.
+    /// Blues scale duplicates the 4th degree letter (e.g., F and F# in C blues).
     #[cfg(test)]
     pub(crate) fn validate_spelling(&self) -> Result<(), String> {
         use std::collections::HashMap;
@@ -70,7 +71,7 @@ impl Scale {
         let notes = self.notes();
         let intervals_count = self.intervals().len();
         
-        // For chromatic scale (12 notes), octatonic (8 notes), and blues (6 notes with chromatic passing tone), we allow letter repeats
+        // For chromatic scale (12 notes), octatonic (8 notes), and blues (6 notes with ♯4 duplicating 4th degree), we allow letter repeats
         if intervals_count == 12 || intervals_count == 8 || self.kind() == ScaleKind::Blues {
             return Ok(());
         }
@@ -455,9 +456,9 @@ mod tests {
 
     #[test]
     fn test_enharmonic_spelling_blues_scale() {
-        // Test blues scale (6 notes, no letter repeats)
+        // Test blues scale (6 notes, allows letter duplication on 4th degree)
         
-        // C Blues - C Eb F Gb G Bb
+        // C Blues - C Eb F F# G Bb (F and F# both present)
         let scale = Scale::new(C, ScaleKind::Blues);
         scale.validate_spelling().unwrap();
         let notes = scale.notes();

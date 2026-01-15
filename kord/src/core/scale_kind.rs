@@ -140,12 +140,12 @@ impl HasIntervals for ScaleKind {
                 Interval::PerfectFifth,
                 Interval::MinorSeventh,
             ],
-            // Blues: 1, ♭3, 4, ♭5, 5, ♭7 (minor pentatonic + ♭5)
+            // Blues: 1, ♭3, 4, ♯4, 5, ♭7 (minor pentatonic + ♯4)
             ScaleKind::Blues => &[
                 Interval::PerfectUnison,
                 Interval::MinorThird,
                 Interval::PerfectFourth,
-                Interval::DiminishedFifth,  // Gb, not F# - preserves unique letters
+                Interval::AugmentedFourth,  // #4 blue note - duplicates 4th degree letter
                 Interval::PerfectFifth,
                 Interval::MinorSeventh,
             ],
@@ -166,7 +166,7 @@ impl HasDescription for ScaleKind {
             ScaleKind::DiminishedHalfWhole => "diminished scale, half-whole pattern, dominant flat 9 parent",
             ScaleKind::MajorPentatonic => "major pentatonic scale, five-note major scale without 4th and 7th",
             ScaleKind::MinorPentatonic => "minor pentatonic scale, five-note minor scale without 2nd and 6th",
-            ScaleKind::Blues => "blues scale, minor pentatonic with added ♭5 (blue note)",
+            ScaleKind::Blues => "blues scale, minor pentatonic with added ♯4 (blue note)",
         }
     }
 }
@@ -272,7 +272,7 @@ mod tests {
             ]
         );
 
-        // Blues scale: 6 notes (minor pentatonic + ♭5)
+        // Blues scale: 6 notes (minor pentatonic + ♯4)
         assert_eq!(ScaleKind::Blues.intervals().len(), 6);
         assert_eq!(
             ScaleKind::Blues.intervals(),
@@ -280,7 +280,7 @@ mod tests {
                 Interval::PerfectUnison,
                 Interval::MinorThird,
                 Interval::PerfectFourth,
-                Interval::DiminishedFifth,
+                Interval::AugmentedFourth,
                 Interval::PerfectFifth,
                 Interval::MinorSeventh,
             ]
@@ -305,6 +305,6 @@ mod tests {
         assert_eq!(ScaleKind::NaturalMinor.description(), "natural minor scale, aeolian mode parent");
         assert_eq!(ScaleKind::MajorPentatonic.description(), "major pentatonic scale, five-note major scale without 4th and 7th");
         assert_eq!(ScaleKind::MinorPentatonic.description(), "minor pentatonic scale, five-note minor scale without 2nd and 6th");
-        assert_eq!(ScaleKind::Blues.description(), "blues scale, minor pentatonic with added ♭5 (blue note)");
+        assert_eq!(ScaleKind::Blues.description(), "blues scale, minor pentatonic with added ♯4 (blue note)");
     }
 }

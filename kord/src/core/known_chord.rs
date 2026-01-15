@@ -454,7 +454,7 @@ impl HasScaleCandidates for KnownChord {
                 ScaleCandidate::Scale {
                     kind: ScaleKind::Blues,
                     rank: 3,
-                    reason: "Minor pentatonic with ♭5 - essential blues scale",
+                    reason: "Minor pentatonic with ♯4 - essential blues scale",
                 },
                 ScaleCandidate::Mode {
                     kind: ModeKind::Dorian,
