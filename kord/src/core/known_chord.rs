@@ -443,9 +443,14 @@ static DOMINANT_SHARP9_CANDIDATES: &[IntervalCandidate] = &[
         reason: "Altered dominant scale - all alterations available",
     },
     IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::DorianFlat2),
+        kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedHalfWhole),
         rank: 2,
-        reason: "Minor with ♭2 providing ♯9 color",
+        reason: "Dominant tension palette including ♭9/♯9",
+    },
+    IntervalCandidate {
+        kind: IntervalCollectionKind::Scale(ScaleKind::Blues),
+        rank: 3,
+        reason: "Stylistic ♯9/blues phrasing",
     },
 ];
 
@@ -469,9 +474,9 @@ static MINOR_DOMINANT_FLAT9_FLAT13_CANDIDATES: &[IntervalCandidate] = &[
         reason: "Minor with ♭2 (♭9) and ♭6 (♭13)",
     },
     IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::DorianFlat2),
+        kind: IntervalCollectionKind::Scale(ScaleKind::Blues),
         rank: 2,
-        reason: "Minor with ♭2 and ♮6 for contrast",
+        reason: "Stylistic choice with simpler vocabulary",
     },
 ];
 
@@ -482,9 +487,14 @@ static SHARP11_CANDIDATES: &[IntervalCandidate] = &[
         reason: "Major with ♯11 for bright, modern sound",
     },
     IntervalCandidate {
-        kind: IntervalCollectionKind::Mode(ModeKind::LydianDominant),
+        kind: IntervalCollectionKind::Mode(ModeKind::Ionian),
         rank: 2,
-        reason: "Dominant with ♯11",
+        reason: "Fallback when de-emphasizing ♯11",
+    },
+    IntervalCandidate {
+        kind: IntervalCollectionKind::Scale(ScaleKind::MajorPentatonic),
+        rank: 3,
+        reason: "Safe melodic choice",
     },
 ];
 
