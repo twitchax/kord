@@ -251,6 +251,11 @@ static MINOR_CANDIDATES: &[IntervalCandidate] = &[
         rank: 6,
         reason: "Classical minor with ♮7 for strong resolution",
     },
+    IntervalCandidate {
+        kind: IntervalCollectionKind::Scale(ScaleKind::MelodicMinor),
+        rank: 7,
+        reason: "Modern minor color with ♮6 and ♮7",
+    },
 ];
 
 static MAJOR7_CANDIDATES: &[IntervalCandidate] = &[
@@ -263,6 +268,11 @@ static MAJOR7_CANDIDATES: &[IntervalCandidate] = &[
         kind: IntervalCollectionKind::Mode(ModeKind::Lydian),
         rank: 2,
         reason: "Bright maj7 sound with ♯4 for modern jazz",
+    },
+    IntervalCandidate {
+        kind: IntervalCollectionKind::Scale(ScaleKind::MajorPentatonic),
+        rank: 3,
+        reason: "Safe melodic vocabulary - avoids avoid-notes",
     },
 ];
 
@@ -291,6 +301,16 @@ static DOMINANT_CANDIDATES: &[IntervalCandidate] = &[
         kind: IntervalCollectionKind::Scale(ScaleKind::WholeTone),
         rank: 5,
         reason: "Symmetrical scale for augmented dominant color",
+    },
+    IntervalCandidate {
+        kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedHalfWhole),
+        rank: 6,
+        reason: "Advanced dominant tension palette",
+    },
+    IntervalCandidate {
+        kind: IntervalCollectionKind::Mode(ModeKind::Altered),
+        rank: 7,
+        reason: "V7alt tool - use when resolving strongly",
     },
 ];
 
@@ -345,6 +365,11 @@ static DOMINANT_SHARP11_CANDIDATES: &[IntervalCandidate] = &[
         kind: IntervalCollectionKind::Mode(ModeKind::Mixolydian),
         rank: 2,
         reason: "Basic dominant scale alternative",
+    },
+    IntervalCandidate {
+        kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedHalfWhole),
+        rank: 3,
+        reason: "More tension options on top of ♯11",
     },
 ];
 
