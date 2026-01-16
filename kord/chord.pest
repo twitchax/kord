@@ -44,36 +44,30 @@ hat = { "^" }
 
 bang = { "!" }
 
-// Mode names (case-insensitive would be nice but pest needs explicit)
+// Mode names - match base modes plus common compound forms
+// Most alias resolution is done in Rust normalization
 mode_name = @{
-    // Match longest patterns first to avoid conflicts
-    ^"locrian" ~ " "+ ~ (^"natural" | ^"nat" | "♮") ~ " "* ~ "6" |
-    ^"locrian" ~ " "+ ~ (^"natural" | ^"nat" | "♮") ~ " "* ~ "2" |
-    ^"locrian" ~ " "+ ~ (^"sharp" | "#" | "♯") ~ " "* ~ "2" |
-    ^"ionian" ~ " "+ ~ (^"sharp" | "#" | "♯") ~ " "* ~ "5" |
-    ^"ionian" ~ " "+ ~ ^"augmented" |
-    ^"dorian" ~ " "+ ~ (^"sharp" | "#" | "♯") ~ " "* ~ "4" |
-    ^"dorian" ~ " "+ ~ (^"flat" | "b" | "♭") ~ " "* ~ "2" |
+    // Special compound mode names (match these first before base names)
     ^"phrygian" ~ " "+ ~ ^"dominant" |
-    ^"phrygian" ~ " "+ ~ (^"natural" | ^"nat" | "♮") ~ " "* ~ "6" |
-    ^"phrygian" ~ " "+ ~ ^"major" |
-    ^"lydian" ~ " "+ ~ (^"sharp" | "#" | "♯") ~ " "* ~ "2" |
-    ^"lydian" ~ " "+ ~ (^"sharp" | "#" | "♯") ~ " "* ~ "5" |
-    ^"lydian" ~ " "+ ~ ^"augmented" |
-    ^"lydian" ~ " "+ ~ ^"dominant" |
-    ^"lydian" ~ " "+ ~ (^"flat" | "b" | "♭") ~ " "* ~ "7" |
-    ^"mixolydian" ~ " "+ ~ (^"sharp" | "#" | "♯") ~ " "* ~ "4" |
-    ^"mixolydian" ~ " "+ ~ (^"flat" | "b" | "♭") ~ " "* ~ "6" |
-    ^"major" ~ " "+ ~ (^"sharp" | "#" | "♯") ~ " "* ~ "5" |
-    ^"augmented" ~ " "+ ~ ^"major" |
     ^"spanish" ~ " "+ ~ ^"phrygian" |
-    ^"ultra" ~ " "+ ~ ^"locrian" |
+    ^"lydian" ~ " "+ ~ ^"dominant" |
     ^"aeolian" ~ " "+ ~ ^"dominant" |
-    ^"half" ~ "-"? ~ ^"diminished" ~ (" "+ ~ (^"natural" | ^"nat" | "♮") ~ " "* ~ "2")? |
     ^"super" ~ " "+ ~ ^"locrian" |
+    ^"ultra" ~ " "+ ~ ^"locrian" |
+    ^"ultralocrian" |
+    ^"half" ~ "-"? ~ ^"diminished" |
+    ^"augmented" ~ " "+ ~ ^"major" |
     ^"acoustic" ~ (" "+ ~ ^"scale")? |
     ^"altered" ~ (" "+ ~ ^"scale")? |
-    ^"ultralocrian" |
+    // Base modes with degree modifiers (let Rust normalize symbols)
+    ^"locrian" ~ " "+ ~ (^"natural" | ^"nat" | "♮" | ^"sharp" | "#" | "♯") ~ " "* ~ ASCII_DIGIT |
+    ^"ionian" ~ " "+ ~ (^"augmented" | ^"sharp" | "#" | "♯") ~ " "* ~ ASCII_DIGIT? |
+    ^"dorian" ~ " "+ ~ (^"sharp" | "#" | "♯" | ^"flat" | "b" | "♭") ~ " "* ~ ASCII_DIGIT |
+    ^"phrygian" ~ " "+ ~ (^"natural" | ^"nat" | "♮" | ^"major") ~ (" "* ~ ASCII_DIGIT)? |
+    ^"lydian" ~ " "+ ~ (^"sharp" | "#" | "♯" | ^"flat" | "b" | "♭" | ^"augmented") ~ " "* ~ ASCII_DIGIT? |
+    ^"mixolydian" ~ " "+ ~ (^"sharp" | "#" | "♯" | ^"flat" | "b" | "♭") ~ " "* ~ ASCII_DIGIT |
+    ^"major" ~ " "+ ~ (^"sharp" | "#" | "♯") ~ " "* ~ ASCII_DIGIT |
+    // Base mode names (unmodified)
     ^"ionian" |
     ^"dorian" |
     ^"phrygian" |
@@ -83,19 +77,19 @@ mode_name = @{
     ^"locrian"
 }
 
-// Scale names (case-insensitive)
+// Scale names - simplified, Rust handles most normalization
 scale_name = @{
     ^"major" ~ " "? ~ ^"pentatonic" |
     ^"minor" ~ " "? ~ ^"pentatonic" |
-    ^"blues" |
-    ^"major" |
     ^"natural" ~ " "? ~ ^"minor" |
     ^"harmonic" ~ " "? ~ ^"minor" |
     ^"melodic" ~ " "? ~ ^"minor" |
     ^"whole" ~ " "? ~ ^"tone" |
-    ^"chromatic" |
     ^"diminished" ~ " "? ~ "(" ~ ^"whole" ~ "-" ~ ^"half" ~ ")" |
-    ^"diminished" ~ " "? ~ "(" ~ ^"half" ~ "-" ~ ^"whole" ~ ")"
+    ^"diminished" ~ " "? ~ "(" ~ ^"half" ~ "-" ~ ^"whole" ~ ")" |
+    ^"chromatic" |
+    ^"blues" |
+    ^"major"
 }
 
 // Mode or Scale with root note
