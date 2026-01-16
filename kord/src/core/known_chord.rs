@@ -201,22 +201,22 @@ static MAJOR_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Ionian),
         rank: 1,
-        reason: "Default diatonic major; functional harmony; avoid dwelling on 4",
+        reason: "Default diatonic major scale for functional harmony in tonal contexts; works over I, IV, V progressions; avoid dwelling on the 4th scale degree as it can clash with the major 3rd in the triad",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::MajorPentatonic),
         rank: 2,
-        reason: "Safe major melody; avoids 4 & 7; great for pop/rock hooks",
+        reason: "Safe major melody that avoids the 4th and 7th scale degrees completely; eliminates avoid-note concerns; perfect for pop, rock, and country hooks where you want guaranteed consonance",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Lydian),
         rank: 3,
-        reason: "Bright ♯11 sheen; common modern/jazz color; lean into ♯4",
+        reason: "Bright major sound with ♯11 sheen; 4th mode of major scale; common in modern jazz and film scoring; lean into the ♯4/♯11 as the characteristic color tone that distinguishes it from Ionian",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Mixolydian),
         rank: 4,
-        reason: "Adds ♭7 over major triad; blues/rock vibe; stylistic choice",
+        reason: "Adds ♭7 over a major triad for blues, rock, and modal flavor; creates a dominant-like quality without needing to resolve; stylistic choice for a looser, groovier feel",
     },
 ];
 
@@ -224,37 +224,37 @@ static MINOR_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Aeolian),
         rank: 1,
-        reason: "Default natural minor; functional harmony; classic sad tonality",
+        reason: "Default natural minor scale for functional harmony; 6th mode of major scale; provides the classic melancholic, sad tonality; contains ♭3, ♭6, and ♭7 for full minor character",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::MinorPentatonic),
         rank: 2,
-        reason: "Safe minor melody; avoids ♭2 & ♭6; blues/rock go-to",
+        reason: "Safe minor melody that avoids the ♭2 and ♭6 scale degrees; the go-to scale for blues, rock, and pentatonic-based improvisation; simple and effective with no avoid-note concerns",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::Blues),
         rank: 3,
-        reason: "Blues vocabulary; ♯4 blue note; phrasing-driven choice",
+        reason: "Essential blues vocabulary built on minor pentatonic with added ♯4 blue note; phrasing-driven rather than theoretical; creates that characteristic blues 'bend' and expressive quality",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Dorian),
         rank: 4,
-        reason: "Minor with ♮6; jazzy lift; brighter than Aeolian",
+        reason: "Minor mode with a raised 6th (♮6) that provides a jazzy lift; 2nd mode of major scale; brighter and less sad than Aeolian; common choice for jazz and funk minor sounds",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Phrygian),
         rank: 5,
-        reason: "Minor with ♭2; exotic/Spanish flavor; dark and modal",
+        reason: "Minor mode with a lowered 2nd (♭2) that creates an exotic, Spanish, or Flamenco flavor; 3rd mode of major scale; dark and modal with a distinctly non-functional character",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::HarmonicMinor),
         rank: 6,
-        reason: "Classical minor; ♮7 for V-i resolution; ♭6 tension",
+        reason: "Classical minor scale with raised 7th (♮7) for strong V-i resolution; the ♭6 creates tension and augmented-second interval; essential for traditional minor key harmony",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::MelodicMinor),
         rank: 7,
-        reason: "Modern jazz minor; ♮6 & ♮7; smooth ascending motion",
+        reason: "Modern jazz minor with both ♮6 and ♮7 for smooth ascending melodic motion; eliminates the augmented second of harmonic minor; bright and sophisticated minor color",
     },
 ];
 
@@ -262,17 +262,17 @@ static MAJOR7_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Ionian),
         rank: 1,
-        reason: "Default maj7 scale; functional; watch out for 4 over maj7",
+        reason: "Default major 7 scale from functional harmony; Ionian mode provides the natural maj7 chord tones; watch out for the 4th scale degree which can clash as an avoid-note over the maj7 chord",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Lydian),
         rank: 2,
-        reason: "Bright ♯11 sheen; modern jazz sound; ♯4 is the color tone",
+        reason: "Bright major 7 sound with ♯11 sheen; the modern jazz choice for maj7 chords; the ♯4/♯11 is the color tone that makes this sparkle; eliminates the avoid-note issue of the natural 4th",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::MajorPentatonic),
         rank: 3,
-        reason: "Safe maj7 melody; avoids 4 & 7; consonant hooks",
+        reason: "Safe major 7 melody that completely avoids both the 4th and 7th scale degrees; provides consonant, hook-friendly melodic material with zero avoid-note concerns",
     },
 ];
 
@@ -280,37 +280,37 @@ static DOMINANT_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Mixolydian),
         rank: 1,
-        reason: "Default dominant scale; major with ♭7; functional V chord",
+        reason: "Default dominant 7 scale; 5th mode of major scale; provides the major 3rd with ♭7 for functional V chord resolution; the bread-and-butter choice for tonal dominant chords in ii-V-I progressions",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::Blues),
         rank: 2,
-        reason: "Blues vocabulary over V7; ♯4 blue note; phrasing-driven",
+        reason: "Blues vocabulary over dominant 7 chords; includes the ♯4 blue note for characteristic blues phrasing; phrasing-driven rather than theoretical; perfect for blues turnarounds and rock contexts",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::LydianDominant),
         rank: 3,
-        reason: "Dominant with ♯11; sophisticated jazz color; modern V sound",
+        reason: "Dominant scale with ♯11 color from melodic minor's 4th mode; sophisticated modern jazz sound; use when you want a bright, upper-structure tension on your V chord; the ♯4/♯11 is the defining characteristic",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::MixolydianFlat6),
         rank: 4,
-        reason: "Dominant with ♭13; darker tension; minor-leaning V",
+        reason: "Dominant scale with ♭13 (♭6) for darker tension; 5th mode of melodic minor; creates a minor-leaning dominant sound; useful when the V chord needs to lean toward a minor resolution",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::WholeTone),
         rank: 5,
-        reason: "Symmetrical; implies ♯5 color; dreamy/ambiguous sound",
+        reason: "Symmetrical whole tone scale that naturally implies ♯5 augmented color; creates a dreamy, floating, harmonically ambiguous sound; every note is a whole step apart; use for suspended, unresolved dominant colors",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedHalfWhole),
         rank: 6,
-        reason: "Dominant tension palette; supports ♭9/♯9/♯11/13; use when V feels 'hot'",
+        reason: "Advanced dominant tension palette using symmetrical half-whole diminished scale; supports ♭9, ♯9, ♯11, and 13 simultaneously; use when the V chord feels 'hot' and needs maximum upper-structure tension",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Altered),
         rank: 7,
-        reason: "V7alt tool; maximum altered pull; strongest when resolving",
+        reason: "The ultimate altered dominant tool (7th mode of melodic minor); provides maximum tension with ♭9, ♯9, ♯11, and ♭13 all available; strongest when resolving to a minor i chord or in modern jazz contexts where you need maximum harmonic pull",
     },
 ];
 
@@ -318,12 +318,12 @@ static MINOR_MAJOR7_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::MelodicMinor),
         rank: 1,
-        reason: "Source scale for mMaj7; ♮6 & ♮7; ascending classical line",
+        reason: "Primary source scale for minor-major 7 chords; melodic minor provides the ♮6 and ♮7 needed for this chord quality; creates smooth ascending melodic lines in classical and jazz contexts",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::HarmonicMinor),
         rank: 2,
-        reason: "Alternative mMaj7 source; ♮7 & ♭6; more exotic flavor",
+        reason: "Alternative source for mMaj7 with a more exotic flavor; harmonic minor provides the ♮7 but retains the ♭6 creating characteristic tension and the augmented second interval between ♭6 and ♮7",
     },
 ];
 
@@ -331,27 +331,27 @@ static MINOR_DOMINANT_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Dorian),
         rank: 1,
-        reason: "Default m7 scale; ♮6 lifts it; classic jazz ii chord sound",
+        reason: "Default minor 7 scale with raised 6th (♮6) that lifts and brightens the sound; 2nd mode of major scale; the classic jazz ii chord sound in ii-V-I progressions; more optimistic than Aeolian",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::MinorPentatonic),
         rank: 2,
-        reason: "Safe m7 melody; avoids ♭2 & ♭6; simple & effective",
+        reason: "Safe minor 7 melody that avoids the ♭2 and ♭6 scale degrees for guaranteed consonance; simple and effective choice; the go-to for straightforward, bluesy minor 7 improvisation",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::Blues),
         rank: 3,
-        reason: "Blues vocabulary over m7; ♯4 blue note; stylistic phrasing",
+        reason: "Blues vocabulary over minor 7 chords with the characteristic ♯4 blue note; stylistic phrasing choice for blues, rock, and R&B contexts; phrasing-driven rather than purely harmonic",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Aeolian),
         rank: 4,
-        reason: "Natural minor over m7; ♭6 for darker color; functional",
+        reason: "Natural minor over m7 chords; includes the ♭6 for darker, more melancholic color compared to Dorian; functional and traditional; creates a more classically minor feel",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Phrygian),
         rank: 5,
-        reason: "Modal m7; ♭2 for exotic flavor; Spanish/Flamenco vibe",
+        reason: "Modal minor 7 with lowered 2nd (♭2) for exotic, Spanish, or Flamenco flavor; 3rd mode of major scale; creates a distinctly modal, non-functional character; dark and mysterious",
     },
 ];
 
@@ -359,17 +359,17 @@ static DOMINANT_SHARP11_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::LydianDominant),
         rank: 1,
-        reason: "Defining scale for V7♯11; ♯4 is the color; sophisticated jazz V",
+        reason: "The defining scale for V7♯11 chords; 4th mode of melodic minor; the ♯4/♯11 is the color tone that makes this chord quality work; sophisticated modern jazz sound for dominant chords with upper-structure tension",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Mixolydian),
         rank: 2,
-        reason: "Basic dominant fallback; de-emphasizes ♯11; functional V",
+        reason: "Basic dominant fallback that de-emphasizes the ♯11 extension; provides functional V7 sound when you want to downplay the ♯11 or need a simpler, more traditional dominant approach",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedHalfWhole),
         rank: 3,
-        reason: "More tension on V7♯11; adds ♭9/♯9/13 options; hot dominant",
+        reason: "Adds even more tension options on top of the V7♯11; provides ♭9, ♯9, ♯11, and 13 simultaneously; use for a hot, dense dominant sound with maximum upper-structure complexity",
     },
 ];
 
@@ -377,17 +377,17 @@ static AUGMENTED_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::IonianSharp5),
         rank: 1,
-        reason: "Major scale with ♯5; from harmonic minor; functional aug sound",
+        reason: "Major scale with raised 5th (♯5); 3rd mode of harmonic minor; provides a functional augmented triad sound while maintaining major scale characteristics; the classic augmented triad source",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::WholeTone),
         rank: 2,
-        reason: "Symmetrical aug scale; dreamy/ambiguous; all aug triads",
+        reason: "Symmetrical whole tone scale where every augmented triad shares the same notes; creates a dreamy, floating, harmonically ambiguous quality; all notes are whole steps apart; perfect for suspended augmented sounds",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::LydianAugmented),
         rank: 3,
-        reason: "Major with ♯4 & ♯5; from melodic minor; bright aug color",
+        reason: "Major scale with both ♯4 and ♯5; 3rd mode of melodic minor; provides a bright, exotic augmented color with Lydian characteristics; sophisticated choice for modern jazz augmented triads",
     },
 ];
 
@@ -395,12 +395,12 @@ static AUGMENTED_MAJOR7_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::LydianAugmented),
         rank: 1,
-        reason: "3rd mode melodic minor; maj7 with ♯4 & ♯5; bright & exotic",
+        reason: "3rd mode of melodic minor; provides major 7 with both ♯4/♯11 and ♯5; bright, exotic, and sophisticated augmented major 7 sound; the modern jazz choice for this chord quality",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::IonianSharp5),
         rank: 2,
-        reason: "Maj7 with ♯5 from harmonic minor; functional aug maj7",
+        reason: "Major 7 with raised 5th from harmonic minor; more functional and traditional approach to augmented major 7; retains natural 4th unlike Lydian Augmented",
     },
 ];
 
@@ -408,12 +408,12 @@ static AUGMENTED_DOMINANT_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::WholeTone),
         rank: 1,
-        reason: "Primary V+7 scale; symmetrical; implies ♯5; dreamy dominant",
+        reason: "Primary scale for augmented dominant 7 (V+7) chords; symmetrical whole tone scale naturally implies the ♯5 augmented quality; creates dreamy, floating dominant color; perfect for unresolved, suspended V chords",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::LydianDominant),
         rank: 2,
-        reason: "V7 with ♯11; can bend to ♯5; flexible modern dominant",
+        reason: "Dominant 7 with ♯11 that can accommodate or bend toward ♯5; flexible modern dominant sound; use when you want dominant 7 character with the option to lean into augmented implications",
     },
 ];
 
@@ -421,17 +421,17 @@ static HALF_DIMINISHED_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Locrian),
         rank: 1,
-        reason: "Default m7♭5 scale; 7th mode of major; functional ii°7",
+        reason: "Default half-diminished (m7♭5) scale; 7th mode of major scale; provides the functional ii°7 sound in minor key ii°-V-i progressions; classic diminished 5th with minor 7th",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::LocrianNatural2),
         rank: 2,
-        reason: "m7♭5 with ♮2; smoother melody; from melodic minor",
+        reason: "Half-diminished with raised 2nd (♮2) for smoother melodic motion; 6th mode of melodic minor; eliminates the difficult ♭2 interval; modern jazz choice for m7♭5 chords",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::LocrianNatural6),
         rank: 3,
-        reason: "m7♭5 with ♮6/♮13; from harmonic minor; brighter color",
+        reason: "Half-diminished with raised 6th (♮6 or ♮13) for a brighter color; 2nd mode of harmonic minor; provides major 6th/13th extension while maintaining the ♭5; exotic flavor",
     },
 ];
 
@@ -439,12 +439,12 @@ static DIMINISHED_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedWholeHalf),
         rank: 1,
-        reason: "Symmetrical dim7 scale; W-H pattern; primary dim7 choice",
+        reason: "Symmetrical diminished 7 scale with whole-half step pattern; primary choice for fully diminished 7 chords; every diminished 7 chord shares three others a minor third apart in this scale",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedHalfWhole),
         rank: 2,
-        reason: "Alternative dim scale; H-W pattern; passing chord use",
+        reason: "Alternative diminished scale with half-whole step pattern; more commonly used for dominant 7 chords but can work as a passing chord option for dim7; provides different color than W-H pattern",
     },
 ];
 
@@ -452,12 +452,12 @@ static DOMINANT_FLAT9_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedHalfWhole),
         rank: 1,
-        reason: "Primary V7♭9 scale; H-W pattern; supports ♭9/♯9/♯11/13",
+        reason: "Primary scale for V7♭9 chords using symmetrical half-whole diminished pattern; provides ♭9, ♯9, ♯11, and 13 simultaneously; rich dominant tension palette for modern jazz and classical harmony",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::PhrygianDominant),
         rank: 2,
-        reason: "Spanish V7♭9; major 3rd with ♭2/♭9; exotic dominant",
+        reason: "Spanish or Phrygian dominant with major 3rd and lowered 2nd (♭9); 5th mode of harmonic minor; creates exotic, Spanish, or Middle Eastern dominant flavor; strong V chord in minor keys",
     },
 ];
 
@@ -465,17 +465,17 @@ static DOMINANT_SHARP9_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Altered),
         rank: 1,
-        reason: "V7alt scale; all alterations (♭9/♯9/♯11/♭13); strongest resolution pull",
+        reason: "The altered dominant scale (7th mode of melodic minor); provides all alterations including ♭9, ♯9, ♯11, and ♭13; maximum tension with strongest resolution pull; the ultimate V7♯9 choice for modern jazz and chromatic harmony",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedHalfWhole),
         rank: 2,
-        reason: "Dominant tension palette; ♭9/♯9/♯11/13 available; hot V sound",
+        reason: "Symmetrical half-whole diminished providing ♭9, ♯9, ♯11, and 13; comprehensive dominant tension palette; hot V7 sound with dense upper-structure options; works when you need maximum harmonic complexity",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::Blues),
         rank: 3,
-        reason: "Blues vocabulary with ♯9; ♯4 blue note; stylistic phrasing",
+        reason: "Blues vocabulary that naturally includes the ♯9 sound through the ♯4 blue note; phrasing-driven stylistic choice rather than theoretical; perfect for blues and rock contexts where ♯9 is part of the blues language",
     },
 ];
 
@@ -483,12 +483,12 @@ static MINOR_DOMINANT_FLAT13_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Aeolian),
         rank: 1,
-        reason: "Natural minor over m7; ♭6/♭13 present; functional sound",
+        reason: "Natural minor scale over minor 7 chords; provides the ♭6/♭13 extension naturally; functional sound for minor dominant chords where you need the flat 13 characteristic clearly present",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Phrygian),
         rank: 2,
-        reason: "Modal m7; ♭2 & ♭6/♭13; exotic darker minor",
+        reason: "Modal minor 7 with both ♭2 and ♭6/♭13; 3rd mode of major scale; creates an exotic, darker minor dominant with Spanish or modal flavor; both characteristic tensions present",
     },
 ];
 
@@ -496,12 +496,12 @@ static MINOR_DOMINANT_FLAT9_FLAT13_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Phrygian),
         rank: 1,
-        reason: "Minor with ♭2/♭9 & ♭6/♭13; exotic modal; Spanish flavor",
+        reason: "Phrygian mode provides both characteristic tensions: ♭2/♭9 and ♭6/♭13; 3rd mode of major scale; creates exotic, modal, Spanish or Flamenco flavor; dark and mysterious minor dominant sound",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::Blues),
         rank: 2,
-        reason: "Blues vocabulary; simpler phrasing; stylistic choice",
+        reason: "Blues scale offers simpler, more phrasing-driven vocabulary; stylistic choice rather than literal interval match; use when you want blues vocabulary over this complex minor dominant chord symbol",
     },
 ];
 
@@ -509,17 +509,17 @@ static SHARP11_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Lydian),
         rank: 1,
-        reason: "Maj7 with ♯11; bright modern sound; ♯4 is the color tone",
+        reason: "Major 7 with ♯11 extension; 4th mode of major scale; the bright, modern sound where ♯4/♯11 is the defining color tone; sophisticated jazz and film score choice; eliminates the avoid-note issue of natural 4th",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Ionian),
         rank: 2,
-        reason: "Maj7 fallback; de-emphasizes ♯11; functional harmony",
+        reason: "Major 7 fallback that de-emphasizes the ♯11 extension; returns to functional harmony; use when you want to downplay the ♯11 color or need a simpler, more traditional major 7 approach",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::MajorPentatonic),
         rank: 3,
-        reason: "Safe maj7 melody; avoids 4 & 7; consonant hooks",
+        reason: "Safe major 7 melody that avoids both the 4th and 7th scale degrees; provides consonant melodic material with zero avoid-note concerns; perfect for hooks and melodic lines over maj7♯11 chords",
     },
 ];
 
