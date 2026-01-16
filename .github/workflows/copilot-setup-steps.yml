@@ -2,48 +2,45 @@ name: "Copilot Setup Steps"
 
 # Optional but recommended: lets you validate it via PRs, and manually from Actions tab.
 on:
-    workflow_dispatch:
-    push:
-        paths:
-            - .github/workflows/copilot-setup-steps.yml
-    pull_request:
-        paths:
-            - .github/workflows/copilot-setup-steps.yml
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
 
 jobs:
-    # Copilot requires this exact job name.
-    copilot-setup-steps:
-        runs-on: ubuntu-latest
-        permissions:
-            contents: read
+  # Copilot requires this exact job name.
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
 
-            - name: Install system dependencies
-              run: |
-                  sudo apt-get update
-                  sudo apt-get install -y libasound2-dev
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev
 
-            - name: Install Rust toolchain
-              uses: dtolnay/rust-toolchain@nightly
-              with:
-                  toolchain: nightly-2025-12-22
-                  components: rustfmt, clippy
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly-2025-12-22
+          components: rustfmt, clippy
 
-            # rust-cache should run AFTER toolchain selection (it keys off rustc version).
-            - name: Rust cache
-              uses: Swatinem/rust-cache@v2
+      # rust-cache should run AFTER toolchain selection (it keys off rustc version).
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
 
-            # Installs using cargo-binstall under the hood.
-            - name: Install cargo tools (prebuilt)
-              uses: brndnmtthws/rust-action-cargo-binstall@v1
-              with:
-                  packages: cargo-make cargo-leptos wasm-pack wkg cargo-nextest cargo-llvm-cov leptosfmt
+      # Installs using cargo-binstall under the hood.
+      - name: Install cargo tools (prebuilt)
+        uses: brndnmtthws/rust-action-cargo-binstall@v1
+        with:
+          packages: cargo-make cargo-leptos wasm-pack wkg cargo-nextest cargo-llvm-cov leptosfmt
 
-            - name: Prefetch deps
-              run: cargo fetch
-
-            - name: Smoke build (core)
-              run: cargo make build
+      - name: Prefetch deps
+        run: cargo fetch
