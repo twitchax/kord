@@ -6,14 +6,19 @@ use js_sys::{Array, Object, Reflect};
 use wasm_bindgen::{convert::RefFromWasmAbi, prelude::*};
 
 use crate::core::{
-    base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, PlaybackHandle, Res},
+    base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Res},
     chord::{Chord, Chordable, HasChord, HasExtensions, HasInversion, HasIsCrunchy, HasModifiers, HasRoot, HasScale, HasSlash},
     interval::Interval,
+    mode::Mode,
     named_pitch::HasNamedPitch,
     note::{HasPrimaryHarmonicSeries, Note},
     octave::{HasOctave, Octave},
     pitch::HasFrequency,
+    scale::Scale,
 };
+
+#[cfg(feature = "audio")]
+use crate::core::base::PlaybackHandle;
 
 // Use `wee_alloc` as the global allocator.
 #[global_allocator]
@@ -136,6 +141,166 @@ impl KordNote {
     /// Returns the clone of the [`Note`].
     #[wasm_bindgen]
     pub fn copy(&self) -> KordNote {
+        self.clone()
+    }
+}
+
+// [`Mode`] ABI.
+
+/// The [`Mode`] wrapper.
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
+pub struct KordMode {
+    inner: Mode,
+}
+
+impl From<Mode> for KordMode {
+    fn from(mode: Mode) -> Self {
+        KordMode { inner: mode }
+    }
+}
+
+impl From<KordMode> for Mode {
+    fn from(kord_mode: KordMode) -> Self {
+        kord_mode.inner
+    }
+}
+
+/// The [`Mode`] impl.
+#[wasm_bindgen]
+impl KordMode {
+    /// Creates a new [`Mode`] by parsing a string (e.g., "C dorian", "D lydian dominant").
+    #[wasm_bindgen]
+    pub fn parse(name: String) -> JsRes<KordMode> {
+        Ok(Self { inner: Mode::parse(&name).to_js_error()? })
+    }
+
+    /// Returns the [`Mode`]'s friendly name.
+    #[wasm_bindgen]
+    pub fn name(&self) -> String {
+        self.inner.name()
+    }
+
+    /// Returns the [`Mode`]'s precise name.
+    #[wasm_bindgen(js_name = preciseName)]
+    pub fn precise_name(&self) -> String {
+        self.inner.precise_name()
+    }
+
+    /// Returns the [`Mode`] as a string (same as `precise_name`).
+    #[allow(clippy::inherent_to_string)]
+    #[wasm_bindgen(js_name = toString)]
+    pub fn to_string(&self) -> String {
+        self.inner.precise_name()
+    }
+
+    /// Returns the [`Mode`]'s description.
+    #[wasm_bindgen]
+    pub fn description(&self) -> String {
+        self.inner.description().to_string()
+    }
+
+    /// Returns the [`Mode`]'s root note.
+    #[wasm_bindgen]
+    pub fn root(&self) -> String {
+        self.inner.root().name()
+    }
+
+    /// Returns the [`Mode`]'s notes.
+    #[wasm_bindgen]
+    pub fn notes(&self) -> Array {
+        self.inner.notes().into_iter().map(KordNote::from).into_js_array()
+    }
+
+    /// Returns the [`Mode`]'s notes as a string.
+    #[wasm_bindgen(js_name = notesString)]
+    pub fn notes_string(&self) -> String {
+        self.inner.notes().iter().map(|n| n.name()).collect::<Vec<_>>().join(" ")
+    }
+
+    /// Returns the clone of the [`Mode`].
+    #[wasm_bindgen]
+    pub fn copy(&self) -> KordMode {
+        self.clone()
+    }
+}
+
+// [`Scale`] ABI.
+
+/// The [`Scale`] wrapper.
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
+pub struct KordScale {
+    inner: Scale,
+}
+
+impl From<Scale> for KordScale {
+    fn from(scale: Scale) -> Self {
+        KordScale { inner: scale }
+    }
+}
+
+impl From<KordScale> for Scale {
+    fn from(kord_scale: KordScale) -> Self {
+        kord_scale.inner
+    }
+}
+
+/// The [`Scale`] impl.
+#[wasm_bindgen]
+impl KordScale {
+    /// Creates a new [`Scale`] by parsing a string (e.g., "C major", "A harmonic minor", "E blues").
+    #[wasm_bindgen]
+    pub fn parse(name: String) -> JsRes<KordScale> {
+        Ok(Self { inner: Scale::parse(&name).to_js_error()? })
+    }
+
+    /// Returns the [`Scale`]'s friendly name.
+    #[wasm_bindgen]
+    pub fn name(&self) -> String {
+        self.inner.name()
+    }
+
+    /// Returns the [`Scale`]'s precise name.
+    #[wasm_bindgen(js_name = preciseName)]
+    pub fn precise_name(&self) -> String {
+        self.inner.precise_name()
+    }
+
+    /// Returns the [`Scale`] as a string (same as `precise_name`).
+    #[allow(clippy::inherent_to_string)]
+    #[wasm_bindgen(js_name = toString)]
+    pub fn to_string(&self) -> String {
+        self.inner.precise_name()
+    }
+
+    /// Returns the [`Scale`]'s description.
+    #[wasm_bindgen]
+    pub fn description(&self) -> String {
+        self.inner.description().to_string()
+    }
+
+    /// Returns the [`Scale`]'s root note.
+    #[wasm_bindgen]
+    pub fn root(&self) -> String {
+        self.inner.root().name()
+    }
+
+    /// Returns the [`Scale`]'s notes.
+    #[wasm_bindgen]
+    pub fn notes(&self) -> Array {
+        self.inner.notes().into_iter().map(KordNote::from).into_js_array()
+    }
+
+    /// Returns the [`Scale`]'s notes as a string.
+    #[wasm_bindgen(js_name = notesString)]
+    pub fn notes_string(&self) -> String {
+        self.inner.notes().iter().map(|n| n.name()).collect::<Vec<_>>().join(" ")
+    }
+
+    /// Returns the clone of the [`Scale`].
+    #[wasm_bindgen]
+    pub fn copy(&self) -> KordScale {
         self.clone()
     }
 }
@@ -350,6 +515,7 @@ impl KordChord {
 /// A handle to a [`Chord`] playback.
 ///
 /// Should be dropped to stop the playback, or after playback is finished.
+#[cfg(feature = "audio")]
 #[wasm_bindgen]
 pub struct KordPlaybackHandle {
     _inner: PlaybackHandle,
@@ -1456,5 +1622,304 @@ mod tests {
         // Both should be independently usable
         let _original_notes = original.chord();
         let _minor_notes = minor.chord();
+    }
+
+    // KordMode tests
+
+    #[wasm_bindgen_test]
+    fn test_mode_parse_simple() {
+        let mode = KordMode::parse("C dorian".to_string());
+        assert!(mode.is_ok(), "Should parse simple mode");
+
+        let mode = mode.unwrap();
+        assert_eq!(mode.root(), "C4", "Root should be C4");
+        assert!(mode.name().contains("dorian"), "Name should contain dorian");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_mode_parse_invalid() {
+        let mode = KordMode::parse("Invalid mode".to_string());
+        assert!(mode.is_err(), "Should fail to parse invalid mode");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_mode_parse_lydian_dominant() {
+        let mode = KordMode::parse("D lydian dominant".to_string()).unwrap();
+        assert_eq!(mode.root(), "D4");
+        assert!(mode.name().contains("lydian"), "Should contain lydian");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_mode_parse_with_sharps_flats() {
+        let mode = KordMode::parse("F# phrygian".to_string()).unwrap();
+        assert_eq!(mode.root(), "F♯4");
+
+        let mode = KordMode::parse("Bb locrian".to_string()).unwrap();
+        assert_eq!(mode.root(), "B♭4");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_mode_parse_altered() {
+        let mode = KordMode::parse("G altered".to_string()).unwrap();
+        assert_eq!(mode.root(), "G4");
+        assert!(mode.description().len() > 0, "Should have description");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_mode_notes() {
+        let mode = KordMode::parse("C ionian".to_string()).unwrap();
+        let notes = mode.notes();
+        assert_eq!(notes.length(), 7, "Ionian mode should have 7 notes");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_mode_notes_string() {
+        let mode = KordMode::parse("C dorian".to_string()).unwrap();
+        let notes_str = mode.notes_string();
+        assert!(notes_str.contains("C"), "Notes string should contain root");
+        assert!(notes_str.len() > 0, "Notes string should not be empty");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_mode_precise_name() {
+        let mode = KordMode::parse("C mixolydian".to_string()).unwrap();
+        let precise = mode.precise_name();
+        assert!(precise.len() > 0, "Should have precise name");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_mode_to_string() {
+        let mode = KordMode::parse("D phrygian".to_string()).unwrap();
+        let string = mode.to_string();
+        assert!(string.len() > 0, "toString should return non-empty string");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_mode_copy() {
+        let mode = KordMode::parse("E locrian".to_string()).unwrap();
+        let copy = mode.copy();
+        assert_eq!(copy.root(), mode.root());
+        assert_eq!(copy.name(), mode.name());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_mode_harmonic_minor_modes() {
+        // Test some harmonic minor modes
+        let locrian_nat6 = KordMode::parse("B locrian nat6".to_string());
+        assert!(locrian_nat6.is_ok(), "Should parse locrian nat6");
+
+        let phrygian_dominant = KordMode::parse("E phrygian dominant".to_string());
+        assert!(phrygian_dominant.is_ok(), "Should parse phrygian dominant");
+
+        let ionian_aug = KordMode::parse("C ionian augmented".to_string());
+        assert!(ionian_aug.is_ok(), "Should parse ionian augmented");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_mode_melodic_minor_modes() {
+        // Test some melodic minor modes
+        let dorian_flat2 = KordMode::parse("B dorian b2".to_string());
+        assert!(dorian_flat2.is_ok(), "Should parse dorian flat 2");
+
+        let lydian_aug = KordMode::parse("C lydian augmented".to_string());
+        assert!(lydian_aug.is_ok(), "Should parse lydian augmented");
+
+        let mixolydian_flat6 = KordMode::parse("G mixolydian b6".to_string());
+        assert!(mixolydian_flat6.is_ok(), "Should parse mixolydian flat 6");
+    }
+
+    // KordScale tests
+
+    #[wasm_bindgen_test]
+    fn test_scale_parse_major() {
+        let scale = KordScale::parse("C major".to_string());
+        assert!(scale.is_ok(), "Should parse major scale");
+
+        let scale = scale.unwrap();
+        assert_eq!(scale.root(), "C4");
+        assert!(scale.name().contains("major"), "Name should contain major");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_parse_minor() {
+        let scale = KordScale::parse("A natural minor".to_string()).unwrap();
+        assert_eq!(scale.root(), "A4");
+        assert!(scale.name().contains("minor"));
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_parse_harmonic_minor() {
+        let scale = KordScale::parse("D harmonic minor".to_string()).unwrap();
+        assert_eq!(scale.root(), "D4");
+        assert!(scale.description().contains("harmonic"), "Should mention harmonic");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_parse_melodic_minor() {
+        let scale = KordScale::parse("G melodic minor".to_string()).unwrap();
+        assert_eq!(scale.root(), "G4");
+        assert!(scale.description().contains("melodic"), "Should mention melodic");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_parse_pentatonic() {
+        let major_pent = KordScale::parse("C major pentatonic".to_string()).unwrap();
+        let notes = major_pent.notes();
+        assert_eq!(notes.length(), 5, "Major pentatonic should have 5 notes");
+
+        let minor_pent = KordScale::parse("A minor pentatonic".to_string()).unwrap();
+        let notes = minor_pent.notes();
+        assert_eq!(notes.length(), 5, "Minor pentatonic should have 5 notes");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_parse_blues() {
+        let blues = KordScale::parse("E blues".to_string()).unwrap();
+        assert_eq!(blues.root(), "E4");
+        let notes = blues.notes();
+        assert_eq!(notes.length(), 6, "Blues scale should have 6 notes");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_parse_whole_tone() {
+        let whole_tone = KordScale::parse("C whole tone".to_string()).unwrap();
+        assert_eq!(whole_tone.root(), "C4");
+        let notes = whole_tone.notes();
+        assert_eq!(notes.length(), 6, "Whole tone should have 6 notes");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_parse_diminished() {
+        let dim_hw = KordScale::parse("C diminished half-whole".to_string()).unwrap();
+        let notes = dim_hw.notes();
+        assert_eq!(notes.length(), 8, "Diminished scale should have 8 notes");
+
+        let dim_wh = KordScale::parse("C diminished whole-half".to_string()).unwrap();
+        let notes = dim_wh.notes();
+        assert_eq!(notes.length(), 8, "Diminished scale should have 8 notes");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_parse_chromatic() {
+        let chromatic = KordScale::parse("C chromatic".to_string()).unwrap();
+        assert_eq!(chromatic.root(), "C4");
+        let notes = chromatic.notes();
+        assert_eq!(notes.length(), 12, "Chromatic scale should have 12 notes");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_parse_invalid() {
+        let scale = KordScale::parse("Invalid scale".to_string());
+        assert!(scale.is_err(), "Should fail to parse invalid scale");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_parse_with_sharps_flats() {
+        let scale = KordScale::parse("F# major".to_string()).unwrap();
+        assert_eq!(scale.root(), "F♯4");
+
+        let scale = KordScale::parse("Bb major".to_string()).unwrap();
+        assert_eq!(scale.root(), "B♭4");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_notes() {
+        let scale = KordScale::parse("C major".to_string()).unwrap();
+        let notes = scale.notes();
+        assert_eq!(notes.length(), 7, "Major scale should have 7 notes");
+
+        // Verify all elements are accessible
+        for i in 0..notes.length() {
+            let note = notes.get(i);
+            assert!(!note.is_undefined(), "Note {} should exist", i);
+        }
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_notes_string() {
+        let scale = KordScale::parse("G major".to_string()).unwrap();
+        let notes_str = scale.notes_string();
+        assert!(notes_str.contains("G"), "Notes string should contain root");
+        assert!(notes_str.len() > 0, "Notes string should not be empty");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_precise_name() {
+        let scale = KordScale::parse("D major".to_string()).unwrap();
+        let precise = scale.precise_name();
+        assert!(precise.len() > 0, "Should have precise name");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_description() {
+        let scale = KordScale::parse("A harmonic minor".to_string()).unwrap();
+        let description = scale.description();
+        assert!(description.len() > 0, "Should have description");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_to_string() {
+        let scale = KordScale::parse("E melodic minor".to_string()).unwrap();
+        let string = scale.to_string();
+        assert!(string.len() > 0, "toString should return non-empty string");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_copy() {
+        let scale = KordScale::parse("B major".to_string()).unwrap();
+        let copy = scale.copy();
+        assert_eq!(copy.root(), scale.root());
+        assert_eq!(copy.name(), scale.name());
+    }
+
+    // Integration tests for Mode and Scale with Chord
+
+    #[wasm_bindgen_test]
+    fn test_chord_scale_candidates_with_modes() {
+        // Test that chord scale candidates work
+        let chord = KordChord::parse("Cmaj7".to_string()).unwrap();
+        let scale_notes = chord.scale();
+        assert!(scale_notes.length() >= 7, "Should have scale notes");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_mode_scale_enharmonic_spelling() {
+        // Test that enharmonic spelling is correct for modes and scales
+        let mode = KordMode::parse("C# ionian".to_string()).unwrap();
+        let notes_str = mode.notes_string();
+        // C# major should have all sharps (C# D# E# F# G# A# B#)
+        assert!(notes_str.contains("C♯"), "Should contain C sharp");
+        assert!(notes_str.contains("E♯"), "Should contain E sharp (not F)");
+
+        let scale = KordScale::parse("Db major".to_string()).unwrap();
+        let notes_str = scale.notes_string();
+        // Db major should have flats (Db Eb F Gb Ab Bb C)
+        assert!(notes_str.contains("D♭"), "Should contain D flat");
+        assert!(notes_str.contains("E♭"), "Should contain E flat");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_mode_scale_unicode_symbols() {
+        // Test that unicode symbols are handled correctly
+        let mode = KordMode::parse("F♯ lydian".to_string());
+        assert!(mode.is_ok(), "Should parse mode with unicode sharp");
+
+        let mode = KordMode::parse("B♭ dorian".to_string());
+        assert!(mode.is_ok(), "Should parse mode with unicode flat");
+
+        let scale = KordScale::parse("G♯ harmonic minor".to_string());
+        assert!(scale.is_ok(), "Should parse scale with unicode sharp");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_mode_scale_abi_object_independence() {
+        // Test that mode and scale objects are independent
+        let mode1 = KordMode::parse("C dorian".to_string()).unwrap();
+        let mode2 = KordMode::parse("D dorian".to_string()).unwrap();
+        assert_ne!(mode1.root(), mode2.root(), "Different modes should have different roots");
+
+        let scale1 = KordScale::parse("C major".to_string()).unwrap();
+        let scale2 = KordScale::parse("G major".to_string()).unwrap();
+        assert_ne!(scale1.root(), scale2.root(), "Different scales should have different roots");
     }
 }
