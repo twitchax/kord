@@ -9,6 +9,7 @@ use crate::core::{
     base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Res},
     chord::{Chord, Chordable, HasChord, HasExtensions, HasInversion, HasIsCrunchy, HasModifiers, HasRoot, HasScale, HasSlash},
     interval::Interval,
+    known_chord::{HasScaleCandidates, ScaleCandidate},
     mode::Mode,
     named_pitch::HasNamedPitch,
     note::{HasPrimaryHarmonicSeries, Note},
@@ -305,6 +306,82 @@ impl KordScale {
     }
 }
 
+// [`ScaleCandidate`] ABI.
+
+/// The [`ScaleCandidate`] wrapper for WASM.
+/// Represents a recommended scale or mode for a chord.
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
+pub struct KordScaleCandidate {
+    inner: ScaleCandidate,
+    root: Note,
+}
+
+impl KordScaleCandidate {
+    /// Creates a new [`KordScaleCandidate`] from a [`ScaleCandidate`] and root note.
+    fn new(candidate: ScaleCandidate, root: Note) -> Self {
+        KordScaleCandidate { inner: candidate, root }
+    }
+}
+
+/// The [`ScaleCandidate`] impl.
+#[wasm_bindgen]
+impl KordScaleCandidate {
+    /// Returns the candidate's rank (1 = most relevant).
+    #[wasm_bindgen]
+    pub fn rank(&self) -> u8 {
+        self.inner.rank()
+    }
+
+    /// Returns the reason why this scale/mode fits the chord.
+    #[wasm_bindgen]
+    pub fn reason(&self) -> String {
+        self.inner.reason().to_string()
+    }
+
+    /// Returns the name of the scale or mode.
+    #[wasm_bindgen]
+    pub fn name(&self) -> String {
+        self.inner.name()
+    }
+
+    /// Returns the description of the scale or mode.
+    #[wasm_bindgen]
+    pub fn description(&self) -> String {
+        self.inner.description().to_string()
+    }
+
+    /// Returns the notes of this scale/mode rooted at the chord's root.
+    #[wasm_bindgen]
+    pub fn notes(&self) -> Array {
+        self.inner.notes(self.root).into_iter().map(KordNote::from).into_js_array()
+    }
+
+    /// Returns the notes as a space-separated string.
+    #[wasm_bindgen(js_name = notesString)]
+    pub fn notes_string(&self) -> String {
+        self.inner.notes(self.root).iter().map(|n| n.name()).collect::<Vec<_>>().join(" ")
+    }
+
+    /// Returns whether this is a mode candidate (vs. scale candidate).
+    #[wasm_bindgen(js_name = isMode)]
+    pub fn is_mode(&self) -> bool {
+        matches!(self.inner, ScaleCandidate::Mode { .. })
+    }
+
+    /// Returns whether this is a scale candidate (vs. mode candidate).
+    #[wasm_bindgen(js_name = isScale)]
+    pub fn is_scale(&self) -> bool {
+        matches!(self.inner, ScaleCandidate::Scale { .. })
+    }
+
+    /// Returns the clone of the [`KordScaleCandidate`].
+    #[wasm_bindgen]
+    pub fn copy(&self) -> KordScaleCandidate {
+        self.clone()
+    }
+}
+
 // [`Chord`] ABI.
 
 /// The [`Chord`] wrapper.
@@ -437,6 +514,18 @@ impl KordChord {
     #[wasm_bindgen(js_name = scaleString)]
     pub fn scale_string(&self) -> String {
         self.inner.scale().iter().map(|n| n.name()).collect::<Vec<_>>().join(" ")
+    }
+
+    /// Returns the recommended scale/mode candidates for this chord.
+    /// The candidates are ranked by relevance (rank 1 = most relevant).
+    #[wasm_bindgen(js_name = scaleCandidates)]
+    pub fn scale_candidates(&self) -> Array {
+        let root = self.inner.root();
+        self.inner
+            .scale_candidates()
+            .into_iter()
+            .map(|candidate| KordScaleCandidate::new(candidate, root))
+            .into_js_array()
     }
 
     /// Returns the [`Chord`]'s modifiers.
@@ -1921,5 +2010,236 @@ mod tests {
         let scale1 = KordScale::parse("C major".to_string()).unwrap();
         let scale2 = KordScale::parse("G major".to_string()).unwrap();
         assert_ne!(scale1.root(), scale2.root(), "Different scales should have different roots");
+    }
+
+    // ScaleCandidate WASM tests
+
+    #[wasm_bindgen_test]
+    fn test_scale_candidates_basic() {
+        // Test basic scale_candidates functionality
+        let chord = KordChord::parse("C".to_string()).unwrap();
+        let candidates = chord.scale_candidates();
+        
+        assert!(candidates.length() > 0, "Should have scale candidates");
+        
+        // First candidate should be rank 1
+        let first = candidates.get(0);
+        let first_candidate: KordScaleCandidate = first.dyn_into().unwrap();
+        assert_eq!(first_candidate.rank(), 1, "First candidate should be rank 1");
+        assert!(!first_candidate.name().is_empty(), "Candidate should have a name");
+        assert!(!first_candidate.reason().is_empty(), "Candidate should have a reason");
+        assert!(!first_candidate.description().is_empty(), "Candidate should have a description");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_candidates_notes() {
+        // Test that candidates return correct notes
+        let chord = KordChord::parse("C".to_string()).unwrap();
+        let candidates = chord.scale_candidates();
+        
+        let first = candidates.get(0);
+        let first_candidate: KordScaleCandidate = first.dyn_into().unwrap();
+        let notes = first_candidate.notes();
+        
+        assert!(notes.length() >= 5, "Scale should have at least 5 notes");
+        
+        let notes_string = first_candidate.notes_string();
+        assert!(notes_string.contains("C"), "Notes should include root note C");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_candidates_major_chord() {
+        // Test scale candidates for C major triad
+        let chord = KordChord::parse("C".to_string()).unwrap();
+        let candidates = chord.scale_candidates();
+        
+        assert!(candidates.length() >= 3, "C major should have at least 3 candidates");
+        
+        // First candidate should be Ionian (rank 1)
+        let first = candidates.get(0);
+        let first_candidate: KordScaleCandidate = first.dyn_into().unwrap();
+        assert_eq!(first_candidate.rank(), 1);
+        assert!(first_candidate.is_mode(), "First candidate for major should be a mode");
+        assert!(first_candidate.name().to_lowercase().contains("ionian") || 
+                first_candidate.name().to_lowercase().contains("major"), 
+                "First candidate should be ionian/major");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_candidates_dominant_chord() {
+        // Test scale candidates for G7
+        let chord = KordChord::parse("G7".to_string()).unwrap();
+        let candidates = chord.scale_candidates();
+        
+        assert!(candidates.length() >= 5, "G7 should have multiple candidates");
+        
+        // First candidate should be Mixolydian (rank 1)
+        let first = candidates.get(0);
+        let first_candidate: KordScaleCandidate = first.dyn_into().unwrap();
+        assert_eq!(first_candidate.rank(), 1);
+        assert!(first_candidate.is_mode(), "First candidate should be a mode");
+        assert!(first_candidate.name().to_lowercase().contains("mixolydian"), 
+                "First candidate should be mixolydian");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_candidates_minor_chord() {
+        // Test scale candidates for Cm
+        let chord = KordChord::parse("Cm".to_string()).unwrap();
+        let candidates = chord.scale_candidates();
+        
+        assert!(candidates.length() >= 5, "Cm should have multiple candidates");
+        
+        // Check that we have both mode and scale candidates
+        let mut has_mode = false;
+        let mut has_scale = false;
+        
+        for i in 0..candidates.length() {
+            let candidate_val = candidates.get(i);
+            let candidate: KordScaleCandidate = candidate_val.dyn_into().unwrap();
+            
+            if candidate.is_mode() {
+                has_mode = true;
+            }
+            if candidate.is_scale() {
+                has_scale = true;
+            }
+        }
+        
+        assert!(has_mode, "Minor chord should have mode candidates");
+        assert!(has_scale, "Minor chord should have scale candidates");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_candidates_altered_dominant() {
+        // Test scale candidates for C7#9 (should recommend Altered)
+        let chord = KordChord::parse("C7#9".to_string()).unwrap();
+        let candidates = chord.scale_candidates();
+        
+        assert!(candidates.length() >= 1, "C7#9 should have candidates");
+        
+        // First candidate should be Altered mode
+        let first = candidates.get(0);
+        let first_candidate: KordScaleCandidate = first.dyn_into().unwrap();
+        assert_eq!(first_candidate.rank(), 1);
+        assert!(first_candidate.name().to_lowercase().contains("altered"), 
+                "First candidate for 7#9 should be altered mode");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_candidates_half_diminished() {
+        // Test scale candidates for Cm7b5 (half diminished)
+        let chord = KordChord::parse("Cm7b5".to_string()).unwrap();
+        let candidates = chord.scale_candidates();
+        
+        assert!(candidates.length() >= 1, "Cm7b5 should have candidates");
+        
+        // First candidate should be Locrian
+        let first = candidates.get(0);
+        let first_candidate: KordScaleCandidate = first.dyn_into().unwrap();
+        assert_eq!(first_candidate.rank(), 1);
+        assert!(first_candidate.name().to_lowercase().contains("locrian"), 
+                "First candidate for m7b5 should be locrian");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_candidates_ranking_order() {
+        // Test that candidates are returned in rank order
+        let chord = KordChord::parse("C".to_string()).unwrap();
+        let candidates = chord.scale_candidates();
+        
+        let mut prev_rank = 0u8;
+        for i in 0..candidates.length() {
+            let candidate_val = candidates.get(i);
+            let candidate: KordScaleCandidate = candidate_val.dyn_into().unwrap();
+            let rank = candidate.rank();
+            
+            assert!(rank >= prev_rank, "Ranks should be in ascending order");
+            prev_rank = rank;
+        }
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_candidates_copy() {
+        // Test that scale candidates can be copied
+        let chord = KordChord::parse("C".to_string()).unwrap();
+        let candidates = chord.scale_candidates();
+        
+        let first = candidates.get(0);
+        let first_candidate: KordScaleCandidate = first.dyn_into().unwrap();
+        let copy = first_candidate.copy();
+        
+        assert_eq!(first_candidate.rank(), copy.rank(), "Copy should have same rank");
+        assert_eq!(first_candidate.name(), copy.name(), "Copy should have same name");
+        assert_eq!(first_candidate.reason(), copy.reason(), "Copy should have same reason");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_candidates_with_different_roots() {
+        // Test that candidates work with different chord roots
+        let c_chord = KordChord::parse("C".to_string()).unwrap();
+        let g_chord = KordChord::parse("G".to_string()).unwrap();
+        
+        let c_candidates = c_chord.scale_candidates();
+        let g_candidates = g_chord.scale_candidates();
+        
+        assert!(c_candidates.length() > 0, "C should have candidates");
+        assert!(g_candidates.length() > 0, "G should have candidates");
+        
+        // Get first candidate notes for each
+        let c_first: KordScaleCandidate = c_candidates.get(0).dyn_into().unwrap();
+        let g_first: KordScaleCandidate = g_candidates.get(0).dyn_into().unwrap();
+        
+        let c_notes = c_first.notes_string();
+        let g_notes = g_first.notes_string();
+        
+        assert!(c_notes.starts_with("C"), "C chord candidate should start with C");
+        assert!(g_notes.starts_with("G"), "G chord candidate should start with G");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_candidates_pentatonic_in_recommendations() {
+        // Test that pentatonic scales appear in recommendations
+        let chord = KordChord::parse("C".to_string()).unwrap();
+        let candidates = chord.scale_candidates();
+        
+        let mut has_pentatonic = false;
+        for i in 0..candidates.length() {
+            let candidate_val = candidates.get(i);
+            let candidate: KordScaleCandidate = candidate_val.dyn_into().unwrap();
+            
+            if candidate.name().to_lowercase().contains("pentatonic") {
+                has_pentatonic = true;
+                assert!(candidate.is_scale(), "Pentatonic should be a scale, not a mode");
+                let notes = candidate.notes();
+                assert_eq!(notes.length(), 5, "Pentatonic should have 5 notes");
+                break;
+            }
+        }
+        
+        assert!(has_pentatonic, "Major chord should have pentatonic in recommendations");
+    }
+
+    #[wasm_bindgen_test]
+    fn test_scale_candidates_blues_in_recommendations() {
+        // Test that blues scale appears in recommendations
+        let chord = KordChord::parse("G7".to_string()).unwrap();
+        let candidates = chord.scale_candidates();
+        
+        let mut has_blues = false;
+        for i in 0..candidates.length() {
+            let candidate_val = candidates.get(i);
+            let candidate: KordScaleCandidate = candidate_val.dyn_into().unwrap();
+            
+            if candidate.name().to_lowercase().contains("blues") {
+                has_blues = true;
+                assert!(candidate.is_scale(), "Blues should be a scale, not a mode");
+                let notes = candidate.notes();
+                assert_eq!(notes.length(), 6, "Blues scale should have 6 notes");
+                break;
+            }
+        }
+        
+        assert!(has_blues, "Dominant chord should have blues in recommendations");
     }
 }
