@@ -201,22 +201,22 @@ static MAJOR_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Ionian),
         rank: 1,
-        reason: "Primary major scale - natural fit for major triad",
+        reason: "Default diatonic major; functional harmony; avoid dwelling on 4",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::MajorPentatonic),
         rank: 2,
-        reason: "Five-note major sound - safe, consonant choice",
+        reason: "Safe major melody; avoids 4 & 7; great for pop/rock hooks",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Lydian),
         rank: 3,
-        reason: "Bright alternative with ♯4 for added color",
+        reason: "Bright ♯11 sheen; common modern/jazz color; lean into ♯4",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Mixolydian),
         rank: 4,
-        reason: "Major with ♭7 - common in blues and rock",
+        reason: "Adds ♭7 over major triad; blues/rock vibe; stylistic choice",
     },
 ];
 
@@ -224,37 +224,37 @@ static MINOR_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Aeolian),
         rank: 1,
-        reason: "Natural minor - primary choice for minor triads",
+        reason: "Default natural minor; functional harmony; classic sad tonality",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::MinorPentatonic),
         rank: 2,
-        reason: "Five-note minor sound - blues and rock standard",
+        reason: "Safe minor melody; avoids ♭2 & ♭6; blues/rock go-to",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::Blues),
         rank: 3,
-        reason: "Minor pentatonic with ♯4 - essential blues scale",
+        reason: "Blues vocabulary; ♯4 blue note; phrasing-driven choice",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Dorian),
         rank: 4,
-        reason: "Minor with ♮6 - jazzy, brighter minor sound",
+        reason: "Minor with ♮6; jazzy lift; brighter than Aeolian",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Phrygian),
         rank: 5,
-        reason: "Minor with ♭2 - exotic, Spanish flavor",
+        reason: "Minor with ♭2; exotic/Spanish flavor; dark and modal",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::HarmonicMinor),
         rank: 6,
-        reason: "Classical minor with ♮7 for strong resolution",
+        reason: "Classical minor; ♮7 for V-i resolution; ♭6 tension",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::MelodicMinor),
         rank: 7,
-        reason: "Modern minor color with ♮6 and ♮7",
+        reason: "Modern jazz minor; ♮6 & ♮7; smooth ascending motion",
     },
 ];
 
@@ -262,17 +262,17 @@ static MAJOR7_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Ionian),
         rank: 1,
-        reason: "Natural major 7th from major scale",
+        reason: "Default maj7 scale; functional; watch out for 4 over maj7",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Lydian),
         rank: 2,
-        reason: "Bright maj7 sound with ♯4 for modern jazz",
+        reason: "Bright ♯11 sheen; modern jazz sound; ♯4 is the color tone",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::MajorPentatonic),
         rank: 3,
-        reason: "Safe melodic vocabulary - avoids avoid-notes",
+        reason: "Safe maj7 melody; avoids 4 & 7; consonant hooks",
     },
 ];
 
@@ -280,37 +280,37 @@ static DOMINANT_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Mixolydian),
         rank: 1,
-        reason: "Primary dominant scale - major with ♭7",
+        reason: "Default dominant scale; major with ♭7; functional V chord",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::Blues),
         rank: 2,
-        reason: "Essential blues sound over dominant chords",
+        reason: "Blues vocabulary over V7; ♯4 blue note; phrasing-driven",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::LydianDominant),
         rank: 3,
-        reason: "Dominant with ♯11 for sophisticated color",
+        reason: "Dominant with ♯11; sophisticated jazz color; modern V sound",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::MixolydianFlat6),
         rank: 4,
-        reason: "Dominant with ♭13 for darker, minor-leaning sound",
+        reason: "Dominant with ♭13; darker tension; minor-leaning V",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::WholeTone),
         rank: 5,
-        reason: "Symmetrical scale for augmented dominant color",
+        reason: "Symmetrical; implies ♯5 color; dreamy/ambiguous sound",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedHalfWhole),
         rank: 6,
-        reason: "Advanced dominant tension palette",
+        reason: "Dominant tension palette; supports ♭9/♯9/♯11/13; use when V feels 'hot'",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Altered),
         rank: 7,
-        reason: "V7alt tool - use when resolving strongly",
+        reason: "V7alt tool; maximum altered pull; strongest when resolving",
     },
 ];
 
@@ -318,12 +318,12 @@ static MINOR_MAJOR7_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::MelodicMinor),
         rank: 1,
-        reason: "Source scale for minor-major 7 sound",
+        reason: "Source scale for mMaj7; ♮6 & ♮7; ascending classical line",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::HarmonicMinor),
         rank: 2,
-        reason: "Alternative with ♮7 and ♭6",
+        reason: "Alternative mMaj7 source; ♮7 & ♭6; more exotic flavor",
     },
 ];
 
@@ -331,27 +331,27 @@ static MINOR_DOMINANT_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Dorian),
         rank: 1,
-        reason: "Classic minor 7 scale - minor with ♮6",
+        reason: "Default m7 scale; ♮6 lifts it; classic jazz ii chord sound",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::MinorPentatonic),
         rank: 2,
-        reason: "Simple, effective minor 7 choice",
+        reason: "Safe m7 melody; avoids ♭2 & ♭6; simple & effective",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::Blues),
         rank: 3,
-        reason: "Blues flavor over minor 7 chords",
+        reason: "Blues vocabulary over m7; ♯4 blue note; stylistic phrasing",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Aeolian),
         rank: 4,
-        reason: "Natural minor alternative",
+        reason: "Natural minor over m7; ♭6 for darker color; functional",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Phrygian),
         rank: 5,
-        reason: "Minor 7 with ♭2 for modal flavor",
+        reason: "Modal m7; ♭2 for exotic flavor; Spanish/Flamenco vibe",
     },
 ];
 
@@ -359,17 +359,17 @@ static DOMINANT_SHARP11_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::LydianDominant),
         rank: 1,
-        reason: "Defining scale for dominant ♯11 sound",
+        reason: "Defining scale for V7♯11; ♯4 is the color; sophisticated jazz V",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Mixolydian),
         rank: 2,
-        reason: "Basic dominant scale alternative",
+        reason: "Basic dominant fallback; de-emphasizes ♯11; functional V",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedHalfWhole),
         rank: 3,
-        reason: "More tension options on top of ♯11",
+        reason: "More tension on V7♯11; adds ♭9/♯9/13 options; hot dominant",
     },
 ];
 
@@ -377,17 +377,17 @@ static AUGMENTED_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::IonianSharp5),
         rank: 1,
-        reason: "Ionian with ♯5 - major scale with raised fifth",
+        reason: "Major scale with ♯5; from harmonic minor; functional aug sound",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::WholeTone),
         rank: 2,
-        reason: "Symmetrical scale built from augmented triads",
+        reason: "Symmetrical aug scale; dreamy/ambiguous; all aug triads",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::LydianAugmented),
         rank: 3,
-        reason: "Major with ♯4 and ♯5",
+        reason: "Major with ♯4 & ♯5; from melodic minor; bright aug color",
     },
 ];
 
@@ -395,12 +395,12 @@ static AUGMENTED_MAJOR7_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::LydianAugmented),
         rank: 1,
-        reason: "3rd mode of melodic minor - major 7 with ♯5",
+        reason: "3rd mode melodic minor; maj7 with ♯4 & ♯5; bright & exotic",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::IonianSharp5),
         rank: 2,
-        reason: "Major with ♯5 from harmonic minor",
+        reason: "Maj7 with ♯5 from harmonic minor; functional aug maj7",
     },
 ];
 
@@ -408,12 +408,12 @@ static AUGMENTED_DOMINANT_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::WholeTone),
         rank: 1,
-        reason: "Primary scale for augmented dominant chords",
+        reason: "Primary V+7 scale; symmetrical; implies ♯5; dreamy dominant",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::LydianDominant),
         rank: 2,
-        reason: "Can be used with ♯5 alterations",
+        reason: "V7 with ♯11; can bend to ♯5; flexible modern dominant",
     },
 ];
 
@@ -421,17 +421,17 @@ static HALF_DIMINISHED_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Locrian),
         rank: 1,
-        reason: "Primary half-diminished scale - 7th mode of major",
+        reason: "Default m7♭5 scale; 7th mode of major; functional ii°7",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::LocrianNatural2),
         rank: 2,
-        reason: "Half-diminished with ♮2 - smoother melodic motion",
+        reason: "m7♭5 with ♮2; smoother melody; from melodic minor",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::LocrianNatural6),
         rank: 3,
-        reason: "Half-diminished with ♮6 from harmonic minor",
+        reason: "m7♭5 with ♮6/♮13; from harmonic minor; brighter color",
     },
 ];
 
@@ -439,12 +439,12 @@ static DIMINISHED_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedWholeHalf),
         rank: 1,
-        reason: "Symmetrical scale for fully diminished 7th chords",
+        reason: "Symmetrical dim7 scale; W-H pattern; primary dim7 choice",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedHalfWhole),
         rank: 2,
-        reason: "Alternative diminished scale pattern",
+        reason: "Alternative dim scale; H-W pattern; passing chord use",
     },
 ];
 
@@ -452,12 +452,12 @@ static DOMINANT_FLAT9_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedHalfWhole),
         rank: 1,
-        reason: "Primary scale for dominant ♭9 - half-whole pattern",
+        reason: "Primary V7♭9 scale; H-W pattern; supports ♭9/♯9/♯11/13",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::PhrygianDominant),
         rank: 2,
-        reason: "Spanish sound with ♭9 and major 3rd",
+        reason: "Spanish V7♭9; major 3rd with ♭2/♭9; exotic dominant",
     },
 ];
 
@@ -465,17 +465,17 @@ static DOMINANT_SHARP9_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Altered),
         rank: 1,
-        reason: "Altered dominant scale - all alterations available",
+        reason: "V7alt scale; all alterations (♭9/♯9/♯11/♭13); strongest resolution pull",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::DiminishedHalfWhole),
         rank: 2,
-        reason: "Dominant tension palette including ♭9/♯9",
+        reason: "Dominant tension palette; ♭9/♯9/♯11/13 available; hot V sound",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::Blues),
         rank: 3,
-        reason: "Stylistic ♯9/blues phrasing",
+        reason: "Blues vocabulary with ♯9; ♯4 blue note; stylistic phrasing",
     },
 ];
 
@@ -483,12 +483,12 @@ static MINOR_DOMINANT_FLAT13_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Aeolian),
         rank: 1,
-        reason: "Natural minor with ♭6/♭13",
+        reason: "Natural minor over m7; ♭6/♭13 present; functional sound",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Phrygian),
         rank: 2,
-        reason: "Minor with ♭2 and ♭6",
+        reason: "Modal m7; ♭2 & ♭6/♭13; exotic darker minor",
     },
 ];
 
@@ -496,12 +496,12 @@ static MINOR_DOMINANT_FLAT9_FLAT13_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Phrygian),
         rank: 1,
-        reason: "Minor with ♭2 (♭9) and ♭6 (♭13)",
+        reason: "Minor with ♭2/♭9 & ♭6/♭13; exotic modal; Spanish flavor",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::Blues),
         rank: 2,
-        reason: "Stylistic choice with simpler vocabulary",
+        reason: "Blues vocabulary; simpler phrasing; stylistic choice",
     },
 ];
 
@@ -509,17 +509,17 @@ static SHARP11_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Lydian),
         rank: 1,
-        reason: "Major with ♯11 for bright, modern sound",
+        reason: "Maj7 with ♯11; bright modern sound; ♯4 is the color tone",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Ionian),
         rank: 2,
-        reason: "Fallback when de-emphasizing ♯11",
+        reason: "Maj7 fallback; de-emphasizes ♯11; functional harmony",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Scale(ScaleKind::MajorPentatonic),
         rank: 3,
-        reason: "Safe melodic choice",
+        reason: "Safe maj7 melody; avoids 4 & 7; consonant hooks",
     },
 ];
 
