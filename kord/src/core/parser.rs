@@ -107,7 +107,7 @@ pub fn mode_name_str_to_mode_kind(mode_str: &str) -> Res<ModeKind> {
         
         // Harmonic minor modes
         "locriannatural6" | "locriannat6" => ModeKind::LocrianNatural6,
-        "ioniansharp5" | "ionianaugmented" | "majorsharp5" | "augmentedmajor" => ModeKind::IonianSharp5,
+        "ioniansharp5" | "ionianaugmented" | "majorsharp5" => ModeKind::IonianSharp5,
         "doriansharp4" => ModeKind::DorianSharp4,
         "phrygiandominant" | "spanishphrygian" | "phrygianmajor" => ModeKind::PhrygianDominant,
         "lydiansharp2" => ModeKind::LydianSharp2,
@@ -118,7 +118,7 @@ pub fn mode_name_str_to_mode_kind(mode_str: &str) -> Res<ModeKind> {
         "lydianaugmented" | "lydiansharp5" => ModeKind::LydianAugmented,
         "lydiandominant" | "lydianflat7" | "mixolydiansharp4" | "acoustic" | "acousticscale" => ModeKind::LydianDominant,
         "mixolydianflat6" | "aeoliandominant" => ModeKind::MixolydianFlat6,
-        "locriannatural2" | "locriannat2" | "locriansharp2" | "half-diminished" | "half-diminishednatural2" | "half-diminishednat2" => ModeKind::LocrianNatural2,
+        "locriannatural2" | "locriannat2" | "locriansharp2" => ModeKind::LocrianNatural2,
         "altered" | "alteredscale" | "superlocrian" => ModeKind::Altered,
         
         _ => return Err(crate::core::base::Err::msg("Unknown mode name")),
