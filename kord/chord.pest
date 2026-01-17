@@ -55,8 +55,6 @@ mode_name = @{
     ^"super" ~ " "+ ~ ^"locrian" |
     ^"ultra" ~ " "+ ~ ^"locrian" |
     ^"ultralocrian" |
-    ^"half" ~ "-"? ~ ^"diminished" |
-    ^"augmented" ~ " "+ ~ ^"major" |
     ^"acoustic" ~ (" "+ ~ ^"scale")? |
     ^"altered" ~ (" "+ ~ ^"scale")? |
     // Base modes with degree modifiers (let Rust normalize symbols)
