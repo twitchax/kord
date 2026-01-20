@@ -542,13 +542,8 @@ mod tests {
         }
     }
 
-    // ========================================================================
-    // Golden Tests: Lock down enharmonic spelling correctness
-    // ========================================================================
-    
     #[test]
-    fn test_golden_heptatonic_spelling() {
-        // Db major scale: Db Eb F Gb Ab Bb C
+    fn test_heptatonic_spelling() {
         let scale = Scale::new(DFlat, ScaleKind::Major);
         assert_eq!(
             scale.notes(),
@@ -557,7 +552,6 @@ mod tests {
         );
         scale.validate_spelling().unwrap();
         
-        // C# major scale (stress test for strict spelling): C# D# E# F# G# A# B#
         let scale = Scale::new(CSharp, ScaleKind::Major);
         assert_eq!(
             scale.notes(),
@@ -568,11 +562,7 @@ mod tests {
     }
     
     #[test]
-    fn test_golden_hexatonic_spelling_whole_tone() {
-        // Whole tone is canonically: [P1, M2, M3, A4, A5, A6] (1,2,3,#4,#5,#6)
-        // DO NOT respell for prettiness - use augmented intervals
-        
-        // Verify the canonical interval formula
+    fn test_whole_tone_spelling() {
         let scale = Scale::new(A, ScaleKind::WholeTone);
         assert_eq!(
             scale.intervals(),
@@ -587,12 +577,10 @@ mod tests {
             "Whole tone scale intervals should use augmented intervals, not respelled for prettiness"
         );
         
-        // From A: A B C# D# E# F## (using augmented intervals correctly)
         let notes = scale.notes();
         assert_eq!(notes.len(), 6, "Whole tone scale should have 6 notes");
         scale.validate_spelling().unwrap();
         
-        // F# whole tone should use double and triple sharps as needed
         let scale = Scale::new(FSharp, ScaleKind::WholeTone);
         let notes = scale.notes();
         assert_eq!(notes.len(), 6, "F# whole tone scale should have 6 notes");
@@ -600,57 +588,44 @@ mod tests {
     }
     
     #[test]
-    fn test_golden_octatonic_spelling() {
-        // Octatonic (exception: duplicates allowed, but spellings must follow interval diatonic numbers)
-        
-        // A diminished half-whole: [P1, m2, m3, M3, A4, P5, M6, m7]
-        // From A: A Bb C Db Eb E F G
+    fn test_octatonic_spelling() {
         let scale = Scale::new(A, ScaleKind::DiminishedHalfWhole);
         let notes = scale.notes();
-        // Verify the intervals
         assert_eq!(
             scale.intervals(),
             &[
-                Interval::PerfectUnison,     // A
-                Interval::MinorSecond,       // Bb
-                Interval::MinorThird,        // C
-                Interval::MajorThird,        // Db (C#)
-                Interval::AugmentedFourth,   // Eb (D#)
-                Interval::PerfectFifth,      // E
-                Interval::MajorSixth,        // F# (F if wrong)
-                Interval::MinorSeventh,      // G
+                Interval::PerfectUnison,
+                Interval::MinorSecond,
+                Interval::MinorThird,
+                Interval::MajorThird,
+                Interval::AugmentedFourth,
+                Interval::PerfectFifth,
+                Interval::MajorSixth,
+                Interval::MinorSeventh,
             ]
         );
-        // Based on actual intervals, the notes should be:
         assert_eq!(notes.len(), 8, "Diminished half-whole should have 8 notes");
         
-        // A diminished whole-half: [P1, M2, m3, P4, d5, m6, d7, M7]
-        // From A: A B C D Eb F Gb G#
         let scale = Scale::new(A, ScaleKind::DiminishedWholeHalf);
         let notes = scale.notes();
-        // Verify the intervals
         assert_eq!(
             scale.intervals(),
             &[
-                Interval::PerfectUnison,      // A
-                Interval::MajorSecond,        // B
-                Interval::MinorThird,         // C
-                Interval::PerfectFourth,      // D
-                Interval::DiminishedFifth,    // Eb
-                Interval::MinorSixth,         // F
-                Interval::DiminishedSeventh,  // Gb
-                Interval::MajorSeventh,       // G#
+                Interval::PerfectUnison,
+                Interval::MajorSecond,
+                Interval::MinorThird,
+                Interval::PerfectFourth,
+                Interval::DiminishedFifth,
+                Interval::MinorSixth,
+                Interval::DiminishedSeventh,
+                Interval::MajorSeventh,
             ]
         );
-        // Based on actual intervals:
         assert_eq!(notes.len(), 8, "Diminished whole-half should have 8 notes");
     }
     
     #[test]
-    fn test_golden_pentatonic_blues_spelling() {
-        // Pentatonic/blues (no repeats for pentatonic; prefer #4 spelling for the blue note in blues)
-        
-        // Db major pentatonic: Db Eb F Ab Bb
+    fn test_pentatonic_blues_spelling() {
         let scale = Scale::new(DFlat, ScaleKind::MajorPentatonic);
         assert_eq!(
             scale.notes(),
@@ -659,7 +634,6 @@ mod tests {
         );
         scale.validate_spelling().unwrap();
         
-        // A minor pentatonic: A C D E G
         let scale = Scale::new(A, ScaleKind::MinorPentatonic);
         assert_eq!(
             scale.notes(),
@@ -668,8 +642,6 @@ mod tests {
         );
         scale.validate_spelling().unwrap();
         
-        // F# blues (blue note as #4, not b5): F# A B B# C# E
-        // Intervals: [P1, m3, P4, A4, P5, m7]
         let scale = Scale::new(FSharp, ScaleKind::Blues);
         let notes = scale.notes();
         assert_eq!(
@@ -677,14 +649,13 @@ mod tests {
             vec![FSharp, A, B, BSharp, CSharpFive, EFive],
             "F# blues scale spelling incorrect - should use B# (augmented 4th), not C (diminished 5th)"
         );
-        // Verify intervals include AugmentedFourth
         assert_eq!(
             scale.intervals(),
             &[
                 Interval::PerfectUnison,
                 Interval::MinorThird,
                 Interval::PerfectFourth,
-                Interval::AugmentedFourth, // blue note as #4
+                Interval::AugmentedFourth,
                 Interval::PerfectFifth,
                 Interval::MinorSeventh,
             ]

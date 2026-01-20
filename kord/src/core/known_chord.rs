@@ -824,137 +824,114 @@ mod tests {
     use crate::core::modifier::Degree;
     use pretty_assertions::assert_eq;
 
-    // ========================================================================
-    // Golden Tests: Chord-to-Candidate Mappings
-    // ========================================================================
-    
-    /// Test chord-to-candidate mappings without asserting formatted strings.
-    /// Test data/structures (kinds + order) only.
-    
     #[test]
-    fn test_golden_dominant_chord_candidates() {
-        // G7 -> primary ModeKind::Mixolydian
+    fn test_dominant_chord_candidates() {
         let candidates = KnownChord::Dominant(Degree::Seven).scale_candidates();
         assert!(!candidates.is_empty(), "G7 should have scale candidates");
         
-        // First candidate should be Mixolydian
         match &candidates[0] {
             ScaleCandidate::Mode { kind, rank, .. } => {
-                assert_eq!(*kind, ModeKind::Mixolydian, "Primary scale for G7 should be Mixolydian");
-                assert_eq!(*rank, 1, "Mixolydian should be rank 1 for G7");
+                assert_eq!(*kind, ModeKind::Mixolydian);
+                assert_eq!(*rank, 1);
             }
             _ => panic!("First candidate for G7 should be a Mode"),
         }
         
-        // Second candidate should be Blues scale
         match &candidates[1] {
             ScaleCandidate::Scale { kind, rank, .. } => {
-                assert_eq!(*kind, ScaleKind::Blues, "Second scale for G7 should be Blues");
-                assert_eq!(*rank, 2, "Blues should be rank 2 for G7");
+                assert_eq!(*kind, ScaleKind::Blues);
+                assert_eq!(*rank, 2);
             }
             _ => panic!("Second candidate for G7 should be a Scale"),
         }
         
-        // Third candidate should be Lydian Dominant
         match &candidates[2] {
             ScaleCandidate::Mode { kind, rank, .. } => {
-                assert_eq!(*kind, ModeKind::LydianDominant, "Third scale for G7 should be Lydian Dominant");
-                assert_eq!(*rank, 3, "Lydian Dominant should be rank 3 for G7");
+                assert_eq!(*kind, ModeKind::LydianDominant);
+                assert_eq!(*rank, 3);
             }
             _ => panic!("Third candidate for G7 should be a Mode"),
         }
     }
     
     #[test]
-    fn test_golden_dominant_sharp11_candidates() {
-        // G7#11 -> primary ModeKind::LydianDominant
+    fn test_dominant_sharp11_candidates() {
         let candidates = KnownChord::DominantSharp11(Degree::Seven).scale_candidates();
         assert!(!candidates.is_empty(), "G7#11 should have scale candidates");
         
-        // First candidate should be Lydian Dominant
         match &candidates[0] {
             ScaleCandidate::Mode { kind, rank, .. } => {
-                assert_eq!(*kind, ModeKind::LydianDominant, "Primary scale for G7#11 should be Lydian Dominant");
-                assert_eq!(*rank, 1, "Lydian Dominant should be rank 1 for G7#11");
+                assert_eq!(*kind, ModeKind::LydianDominant);
+                assert_eq!(*rank, 1);
             }
             _ => panic!("First candidate for G7#11 should be a Mode"),
         }
     }
     
     #[test]
-    fn test_golden_dominant_flat9_candidates() {
-        // G7b9 -> primary (whichever default is chosen: DiminishedHalfWhole or PhrygianDominant)
+    fn test_dominant_flat9_candidates() {
         let candidates = KnownChord::DominantFlat9(Degree::Seven).scale_candidates();
         assert!(!candidates.is_empty(), "G7b9 should have scale candidates");
         
-        // First candidate should be either Diminished Half-Whole scale or Phrygian Dominant mode
         match &candidates[0] {
             ScaleCandidate::Scale { kind, rank, .. } => {
-                assert_eq!(*kind, ScaleKind::DiminishedHalfWhole, "Primary scale for G7b9 should be Diminished Half-Whole");
-                assert_eq!(*rank, 1, "Diminished Half-Whole should be rank 1 for G7b9");
+                assert_eq!(*kind, ScaleKind::DiminishedHalfWhole);
+                assert_eq!(*rank, 1);
             }
             ScaleCandidate::Mode { kind, rank, .. } => {
-                assert_eq!(*kind, ModeKind::PhrygianDominant, "Primary mode for G7b9 should be Phrygian Dominant");
-                assert_eq!(*rank, 1, "Phrygian Dominant should be rank 1 for G7b9");
+                assert_eq!(*kind, ModeKind::PhrygianDominant);
+                assert_eq!(*rank, 1);
             }
         }
     }
     
     #[test]
-    fn test_golden_dominant_sharp9_candidates() {
-        // G7#9 -> primary ModeKind::Altered
+    fn test_dominant_sharp9_candidates() {
         let candidates = KnownChord::DominantSharp9(Degree::Seven).scale_candidates();
         assert!(!candidates.is_empty(), "G7#9 should have scale candidates");
         
-        // First candidate should be Altered
         match &candidates[0] {
             ScaleCandidate::Mode { kind, rank, .. } => {
-                assert_eq!(*kind, ModeKind::Altered, "Primary scale for G7#9 should be Altered");
-                assert_eq!(*rank, 1, "Altered should be rank 1 for G7#9");
+                assert_eq!(*kind, ModeKind::Altered);
+                assert_eq!(*rank, 1);
             }
             _ => panic!("First candidate for G7#9 should be a Mode"),
         }
     }
     
     #[test]
-    fn test_golden_half_diminished_candidates() {
-        // Cm7b5 -> primary ModeKind::Locrian
+    fn test_half_diminished_candidates() {
         let candidates = KnownChord::HalfDiminished(Degree::Seven).scale_candidates();
         assert!(!candidates.is_empty(), "Cm7b5 should have scale candidates");
         
-        // First candidate should be Locrian
         match &candidates[0] {
             ScaleCandidate::Mode { kind, rank, .. } => {
-                assert_eq!(*kind, ModeKind::Locrian, "Primary scale for Cm7b5 should be Locrian");
-                assert_eq!(*rank, 1, "Locrian should be rank 1 for Cm7b5");
+                assert_eq!(*kind, ModeKind::Locrian);
+                assert_eq!(*rank, 1);
             }
             _ => panic!("First candidate for Cm7b5 should be a Mode"),
         }
     }
     
     #[test]
-    fn test_golden_augmented_dominant_candidates() {
-        // Augmented-dominant form -> primary ScaleKind::WholeTone
+    fn test_augmented_dominant_candidates() {
         let candidates = KnownChord::AugmentedDominant(Degree::Seven).scale_candidates();
         assert!(!candidates.is_empty(), "Augmented dominant should have scale candidates");
         
-        // First candidate should be Whole Tone
         match &candidates[0] {
             ScaleCandidate::Scale { kind, rank, .. } => {
-                assert_eq!(*kind, ScaleKind::WholeTone, "Primary scale for augmented dominant should be Whole Tone");
-                assert_eq!(*rank, 1, "Whole Tone should be rank 1 for augmented dominant");
+                assert_eq!(*kind, ScaleKind::WholeTone);
+                assert_eq!(*rank, 1);
             }
             _ => panic!("First candidate for augmented dominant should be a Scale"),
         }
     }
     
     #[test]
-    fn test_golden_major_chord_candidates() {
-        // C major -> Ionian (rank 1), MajorPentatonic (rank 2), Lydian (rank 3)
+    fn test_major_chord_candidates() {
         let candidates = KnownChord::Major.scale_candidates();
         assert!(candidates.len() >= 3, "Major chord should have at least 3 candidates");
         
-        // Check first three candidates
         match &candidates[0] {
             ScaleCandidate::Mode { kind, rank, .. } => {
                 assert_eq!(*kind, ModeKind::Ionian);
@@ -981,12 +958,10 @@ mod tests {
     }
     
     #[test]
-    fn test_golden_minor_chord_candidates() {
-        // C minor -> Aeolian (rank 1), MinorPentatonic (rank 2), Blues (rank 3)
+    fn test_minor_chord_candidates() {
         let candidates = KnownChord::Minor.scale_candidates();
         assert!(candidates.len() >= 3, "Minor chord should have at least 3 candidates");
         
-        // Check first three candidates
         match &candidates[0] {
             ScaleCandidate::Mode { kind, rank, .. } => {
                 assert_eq!(*kind, ModeKind::Aeolian);
@@ -1013,12 +988,10 @@ mod tests {
     }
     
     #[test]
-    fn test_golden_minor_dominant_candidates() {
-        // Dm7 -> Dorian (rank 1), MinorPentatonic (rank 2), Blues (rank 3)
+    fn test_minor_dominant_candidates() {
         let candidates = KnownChord::MinorDominant(Degree::Seven).scale_candidates();
         assert!(candidates.len() >= 3, "Minor dominant should have at least 3 candidates");
         
-        // Check first three candidates
         match &candidates[0] {
             ScaleCandidate::Mode { kind, rank, .. } => {
                 assert_eq!(*kind, ModeKind::Dorian);
