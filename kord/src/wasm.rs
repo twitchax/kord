@@ -2024,7 +2024,7 @@ mod tests {
         
         // First candidate should be rank 1
         let first = candidates.get(0);
-        let first_candidate: KordScaleCandidate = first.dyn_into().unwrap();
+        let first_candidate: KordScaleCandidate = first.unchecked_into().unwrap();
         assert_eq!(first_candidate.rank(), 1, "First candidate should be rank 1");
         assert!(!first_candidate.name().is_empty(), "Candidate should have a name");
         assert!(!first_candidate.reason().is_empty(), "Candidate should have a reason");
@@ -2038,7 +2038,7 @@ mod tests {
         let candidates = chord.scale_candidates();
         
         let first = candidates.get(0);
-        let first_candidate: KordScaleCandidate = first.dyn_into().unwrap();
+        let first_candidate: KordScaleCandidate = first.unchecked_into().unwrap();
         let notes = first_candidate.notes();
         
         assert!(notes.length() >= 5, "Scale should have at least 5 notes");
@@ -2057,7 +2057,7 @@ mod tests {
         
         // First candidate should be Ionian (rank 1)
         let first = candidates.get(0);
-        let first_candidate: KordScaleCandidate = first.dyn_into().unwrap();
+        let first_candidate: KordScaleCandidate = first.unchecked_into().unwrap();
         assert_eq!(first_candidate.rank(), 1);
         assert!(first_candidate.is_mode(), "First candidate for major should be a mode");
         assert!(first_candidate.name().to_lowercase().contains("ionian") || 
@@ -2075,7 +2075,7 @@ mod tests {
         
         // First candidate should be Mixolydian (rank 1)
         let first = candidates.get(0);
-        let first_candidate: KordScaleCandidate = first.dyn_into().unwrap();
+        let first_candidate: KordScaleCandidate = first.unchecked_into().unwrap();
         assert_eq!(first_candidate.rank(), 1);
         assert!(first_candidate.is_mode(), "First candidate should be a mode");
         assert!(first_candidate.name().to_lowercase().contains("mixolydian"), 
@@ -2096,7 +2096,7 @@ mod tests {
         
         for i in 0..candidates.length() {
             let candidate_val = candidates.get(i);
-            let candidate: KordScaleCandidate = candidate_val.dyn_into().unwrap();
+            let candidate: KordScaleCandidate = candidate_val.unchecked_into().unwrap();
             
             if candidate.is_mode() {
                 has_mode = true;
@@ -2120,7 +2120,7 @@ mod tests {
         
         // First candidate should be Altered mode
         let first = candidates.get(0);
-        let first_candidate: KordScaleCandidate = first.dyn_into().unwrap();
+        let first_candidate: KordScaleCandidate = first.unchecked_into().unwrap();
         assert_eq!(first_candidate.rank(), 1);
         assert!(first_candidate.name().to_lowercase().contains("altered"), 
                 "First candidate for 7#9 should be altered mode");
@@ -2136,7 +2136,7 @@ mod tests {
         
         // First candidate should be Locrian
         let first = candidates.get(0);
-        let first_candidate: KordScaleCandidate = first.dyn_into().unwrap();
+        let first_candidate: KordScaleCandidate = first.unchecked_into().unwrap();
         assert_eq!(first_candidate.rank(), 1);
         assert!(first_candidate.name().to_lowercase().contains("locrian"), 
                 "First candidate for m7b5 should be locrian");
@@ -2151,7 +2151,7 @@ mod tests {
         let mut prev_rank = 0u8;
         for i in 0..candidates.length() {
             let candidate_val = candidates.get(i);
-            let candidate: KordScaleCandidate = candidate_val.dyn_into().unwrap();
+            let candidate: KordScaleCandidate = candidate_val.unchecked_into().unwrap();
             let rank = candidate.rank();
             
             assert!(rank >= prev_rank, "Ranks should be in ascending order");
@@ -2166,7 +2166,7 @@ mod tests {
         let candidates = chord.scale_candidates();
         
         let first = candidates.get(0);
-        let first_candidate: KordScaleCandidate = first.dyn_into().unwrap();
+        let first_candidate: KordScaleCandidate = first.unchecked_into().unwrap();
         let copy = first_candidate.copy();
         
         assert_eq!(first_candidate.rank(), copy.rank(), "Copy should have same rank");
@@ -2187,8 +2187,8 @@ mod tests {
         assert!(g_candidates.length() > 0, "G should have candidates");
         
         // Get first candidate notes for each
-        let c_first: KordScaleCandidate = c_candidates.get(0).dyn_into().unwrap();
-        let g_first: KordScaleCandidate = g_candidates.get(0).dyn_into().unwrap();
+        let c_first: KordScaleCandidate = c_candidates.get(0).unchecked_into().unwrap();
+        let g_first: KordScaleCandidate = g_candidates.get(0).unchecked_into().unwrap();
         
         let c_notes = c_first.notes_string();
         let g_notes = g_first.notes_string();
@@ -2206,7 +2206,7 @@ mod tests {
         let mut has_pentatonic = false;
         for i in 0..candidates.length() {
             let candidate_val = candidates.get(i);
-            let candidate: KordScaleCandidate = candidate_val.dyn_into().unwrap();
+            let candidate: KordScaleCandidate = candidate_val.unchecked_into().unwrap();
             
             if candidate.name().to_lowercase().contains("pentatonic") {
                 has_pentatonic = true;
@@ -2229,7 +2229,7 @@ mod tests {
         let mut has_blues = false;
         for i in 0..candidates.length() {
             let candidate_val = candidates.get(i);
-            let candidate: KordScaleCandidate = candidate_val.dyn_into().unwrap();
+            let candidate: KordScaleCandidate = candidate_val.unchecked_into().unwrap();
             
             if candidate.name().to_lowercase().contains("blues") {
                 has_blues = true;
