@@ -678,6 +678,7 @@ where
 }
 
 /// Helpers trait for converting an [`Array`] to a [`Vec`].
+#[allow(dead_code)]
 trait ClonedIntoVec {
     /// Converts the [`Array`] to a [`Vec<T>`].
     fn cloned_into_vec<T>(self) -> JsRes<Vec<T>>
@@ -805,30 +806,6 @@ impl RefFromJsValue for KordChord {
         // We have confirmed that the JsValue is, indeed, an Object, and that
         // it is of the proper type.
         let value = unsafe { KordChord::ref_from_abi(ptr) };
-
-        Ok(value)
-    }
-}
-
-impl RefFromJsValue for KordScaleCandidate {
-    fn ref_from_js_value(abi: &JsValue) -> JsRes<<KordScaleCandidate as RefFromWasmAbi>::Anchor>
-    where
-        Self: Sized + RefFromWasmAbi,
-    {
-        let ptr_value = Reflect::get(abi, &JsValue::from_str("ptr"))?;
-        let ptr = extract_ptr_from_js_value(&ptr_value)?;
-
-        let object = abi.dyn_ref::<Object>().ok_or("Value is not an object.")?;
-        if object.constructor().name() != "KordScaleCandidate" {
-            return Err("Invalid object type.".into());
-        }
-
-        // SAFETY: We have done as much as we can to ensure that this is as safe as it can
-        // be, considering the inherent unsafety of working with an ABI.
-        //
-        // We have confirmed that the JsValue is, indeed, an Object, and that
-        // it is of the proper type.
-        let value = unsafe { KordScaleCandidate::ref_from_abi(ptr) };
 
         Ok(value)
     }
@@ -2048,7 +2025,7 @@ mod tests {
         
         // First candidate should be rank 1
         let first = candidates.get(0);
-        let first_candidate = KordScaleCandidate::ref_from_js_value(&first).unwrap().clone();
+        let first_candidate = first.unchecked_into();
         assert_eq!(first_candidate.rank(), 1, "First candidate should be rank 1");
         assert!(!first_candidate.name().is_empty(), "Candidate should have a name");
         assert!(!first_candidate.reason().is_empty(), "Candidate should have a reason");
@@ -2062,7 +2039,7 @@ mod tests {
         let candidates = chord.scale_candidates();
         
         let first = candidates.get(0);
-        let first_candidate = KordScaleCandidate::ref_from_js_value(&first).unwrap().clone();
+        let first_candidate = first.unchecked_into();
         let notes = first_candidate.notes();
         
         assert!(notes.length() >= 5, "Scale should have at least 5 notes");
@@ -2081,7 +2058,7 @@ mod tests {
         
         // First candidate should be Ionian (rank 1)
         let first = candidates.get(0);
-        let first_candidate = KordScaleCandidate::ref_from_js_value(&first).unwrap().clone();
+        let first_candidate = first.unchecked_into();
         assert_eq!(first_candidate.rank(), 1);
         assert!(first_candidate.is_mode(), "First candidate for major should be a mode");
         assert!(first_candidate.name().to_lowercase().contains("ionian") || 
@@ -2099,7 +2076,7 @@ mod tests {
         
         // First candidate should be Mixolydian (rank 1)
         let first = candidates.get(0);
-        let first_candidate = KordScaleCandidate::ref_from_js_value(&first).unwrap().clone();
+        let first_candidate = first.unchecked_into();
         assert_eq!(first_candidate.rank(), 1);
         assert!(first_candidate.is_mode(), "First candidate should be a mode");
         assert!(first_candidate.name().to_lowercase().contains("mixolydian"), 
@@ -2120,7 +2097,7 @@ mod tests {
         
         for i in 0..candidates.length() {
             let candidate_val = candidates.get(i);
-            let candidate = KordScaleCandidate::ref_from_js_value(&candidate_val).unwrap().clone();
+            let candidate = candidate_val.unchecked_into();
             
             if candidate.is_mode() {
                 has_mode = true;
@@ -2144,7 +2121,7 @@ mod tests {
         
         // First candidate should be Altered mode
         let first = candidates.get(0);
-        let first_candidate = KordScaleCandidate::ref_from_js_value(&first).unwrap().clone();
+        let first_candidate = first.unchecked_into();
         assert_eq!(first_candidate.rank(), 1);
         assert!(first_candidate.name().to_lowercase().contains("altered"), 
                 "First candidate for 7#9 should be altered mode");
@@ -2160,7 +2137,7 @@ mod tests {
         
         // First candidate should be Locrian
         let first = candidates.get(0);
-        let first_candidate = KordScaleCandidate::ref_from_js_value(&first).unwrap().clone();
+        let first_candidate = first.unchecked_into();
         assert_eq!(first_candidate.rank(), 1);
         assert!(first_candidate.name().to_lowercase().contains("locrian"), 
                 "First candidate for m7b5 should be locrian");
@@ -2175,7 +2152,7 @@ mod tests {
         let mut prev_rank = 0u8;
         for i in 0..candidates.length() {
             let candidate_val = candidates.get(i);
-            let candidate = KordScaleCandidate::ref_from_js_value(&candidate_val).unwrap().clone();
+            let candidate = candidate_val.unchecked_into();
             let rank = candidate.rank();
             
             assert!(rank >= prev_rank, "Ranks should be in ascending order");
@@ -2190,7 +2167,7 @@ mod tests {
         let candidates = chord.scale_candidates();
         
         let first = candidates.get(0);
-        let first_candidate = KordScaleCandidate::ref_from_js_value(&first).unwrap().clone();
+        let first_candidate = first.unchecked_into();
         let copy = first_candidate.copy();
         
         assert_eq!(first_candidate.rank(), copy.rank(), "Copy should have same rank");
@@ -2211,8 +2188,8 @@ mod tests {
         assert!(g_candidates.length() > 0, "G should have candidates");
         
         // Get first candidate notes for each
-        let c_first = KordScaleCandidate::ref_from_js_value(&c_candidates.get(0)).unwrap().clone();
-        let g_first = KordScaleCandidate::ref_from_js_value(&g_candidates.get(0)).unwrap().clone();
+        let c_first = c_candidates.get(0).unchecked_into();
+        let g_first = g_candidates.get(0).unchecked_into();
         
         let c_notes = c_first.notes_string();
         let g_notes = g_first.notes_string();
@@ -2230,7 +2207,7 @@ mod tests {
         let mut has_pentatonic = false;
         for i in 0..candidates.length() {
             let candidate_val = candidates.get(i);
-            let candidate = KordScaleCandidate::ref_from_js_value(&candidate_val).unwrap().clone();
+            let candidate = candidate_val.unchecked_into();
             
             if candidate.name().to_lowercase().contains("pentatonic") {
                 has_pentatonic = true;
@@ -2253,7 +2230,7 @@ mod tests {
         let mut has_blues = false;
         for i in 0..candidates.length() {
             let candidate_val = candidates.get(i);
-            let candidate = KordScaleCandidate::ref_from_js_value(&candidate_val).unwrap().clone();
+            let candidate = candidate_val.unchecked_into();
             
             if candidate.name().to_lowercase().contains("blues") {
                 has_blues = true;
