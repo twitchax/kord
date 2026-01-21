@@ -145,7 +145,7 @@ impl HasIntervals for ScaleKind {
                 Interval::PerfectUnison,
                 Interval::MinorThird,
                 Interval::PerfectFourth,
-                Interval::AugmentedFourth,  // #4 blue note - duplicates 4th degree letter
+                Interval::AugmentedFourth,  // #4 blue note – chromatic passing tone between the 4th and 5th
                 Interval::PerfectFifth,
                 Interval::MinorSeventh,
             ],
