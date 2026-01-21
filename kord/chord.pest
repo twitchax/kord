@@ -83,8 +83,8 @@ scale_name = @{
     ^"harmonic" ~ " "? ~ ^"minor" |
     ^"melodic" ~ " "? ~ ^"minor" |
     ^"whole" ~ " "? ~ ^"tone" |
-    ^"diminished" ~ " "? ~ "(" ~ ^"whole" ~ "-" ~ ^"half" ~ ")" |
-    ^"diminished" ~ " "? ~ "(" ~ ^"half" ~ "-" ~ ^"whole" ~ ")" |
+    ^"diminished" ~ " "+ ~ ^"whole" ~ "-"? ~ ^"half" |
+    ^"diminished" ~ " "+ ~ ^"half" ~ "-"? ~ ^"whole" |
     ^"chromatic" |
     ^"blues" |
     ^"major"
