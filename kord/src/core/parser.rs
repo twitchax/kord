@@ -130,7 +130,7 @@ pub fn mode_name_str_to_mode_kind(mode_str: &str) -> Res<ModeKind> {
 /// Parses a scale name string into a [`ScaleKind`].
 #[coverage(off)]
 pub fn scale_name_str_to_scale_kind(scale_str: &str) -> Res<ScaleKind> {
-    let normalized = scale_str.to_lowercase().replace(" ", "");
+    let normalized = scale_str.to_lowercase().replace(" ", "").replace("-", "");
     let scale = match normalized.as_str() {
         "major" => ScaleKind::Major,
         "naturalminor" => ScaleKind::NaturalMinor,
@@ -138,8 +138,8 @@ pub fn scale_name_str_to_scale_kind(scale_str: &str) -> Res<ScaleKind> {
         "melodicminor" => ScaleKind::MelodicMinor,
         "wholetone" => ScaleKind::WholeTone,
         "chromatic" => ScaleKind::Chromatic,
-        "diminished(whole-half)" => ScaleKind::DiminishedWholeHalf,
-        "diminished(half-whole)" => ScaleKind::DiminishedHalfWhole,
+        "diminishedwholehalf" => ScaleKind::DiminishedWholeHalf,
+        "diminishedhalfwhole" => ScaleKind::DiminishedHalfWhole,
         "majorpentatonic" => ScaleKind::MajorPentatonic,
         "minorpentatonic" => ScaleKind::MinorPentatonic,
         "blues" => ScaleKind::Blues,
