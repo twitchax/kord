@@ -4,7 +4,7 @@ use std::path::Path;
 
 use burn::{
     tensor::backend::{AutodiffBackend, Backend},
-    train::{MultiLabelClassificationOutput, TrainOutput, TrainStep, ValidStep},
+    train::{InferenceStep, MultiLabelClassificationOutput, TrainOutput, TrainStep},
 };
 use rand::Rng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
@@ -23,14 +23,20 @@ use super::data::KordBatch;
 
 // Classification adapters.
 
-impl<B: AutodiffBackend> TrainStep<KordBatch<B>, MultiLabelClassificationOutput<B>> for KordModel<B> {
+impl<B: AutodiffBackend> TrainStep for KordModel<B> {
+    type Input = KordBatch<B>;
+    type Output = MultiLabelClassificationOutput<B>;
+
     fn step(&self, item: KordBatch<B>) -> TrainOutput<MultiLabelClassificationOutput<B>> {
         let item = self.forward_classification(item);
         TrainOutput::new(self, item.loss.backward(), item)
     }
 }
 
-impl<B: Backend> ValidStep<KordBatch<B>, MultiLabelClassificationOutput<B>> for KordModel<B> {
+impl<B: Backend> InferenceStep for KordModel<B> {
+    type Input = KordBatch<B>;
+    type Output = MultiLabelClassificationOutput<B>;
+
     fn step(&self, item: KordBatch<B>) -> MultiLabelClassificationOutput<B> {
         self.forward_classification(item)
     }

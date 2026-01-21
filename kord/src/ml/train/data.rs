@@ -195,17 +195,8 @@ impl Dataset<KordItem> for KordDataset {
 // Batcher.
 
 /// A batcher for kord samples.
-#[derive(Clone, Debug)]
-pub struct KordBatcher<B: Backend> {
-    device: B::Device,
-}
-
-impl<B: Backend> KordBatcher<B> {
-    /// Create a new kord batcher.
-    pub fn new(device: B::Device) -> Self {
-        Self { device }
-    }
-}
+#[derive(Debug)]
+pub struct KordBatcher;
 
 /// A batch of kord samples (samples and targets).
 #[derive(Clone, Debug)]
@@ -216,14 +207,14 @@ pub struct KordBatch<B: Backend> {
     pub targets: Tensor<B, 2, Int>,
 }
 
-impl<B: Backend> Batcher<B, KordItem, KordBatch<B>> for KordBatcher<B> {
-    fn batch(&self, items: Vec<KordItem>, _device: &B::Device) -> KordBatch<B> {
-        let samples = items.iter().map(|i| kord_item_to_sample_tensor(&self.device, i)).collect();
+impl<B: Backend> Batcher<B, KordItem, KordBatch<B>> for KordBatcher {
+    fn batch(&self, items: Vec<KordItem>, device: &B::Device) -> KordBatch<B> {
+        let samples = items.iter().map(|i| kord_item_to_sample_tensor(device, i)).collect();
 
-        let targets = items.iter().map(|i| kord_item_to_target_tensor(&self.device, i)).collect();
+        let targets = items.iter().map(|i| kord_item_to_target_tensor(device, i)).collect();
 
-        let frequency_spaces = Tensor::cat(samples, 0).to_device(&self.device).detach();
-        let targets = Tensor::cat(targets, 0).int().to_device(&self.device); // No need to detach targets because `int()` essentially creates a new tensor.
+        let frequency_spaces = Tensor::cat(samples, 0).to_device(device).detach();
+        let targets = Tensor::cat(targets, 0).int().to_device(device); // No need to detach targets because `int()` essentially creates a new tensor.
 
         KordBatch { samples: frequency_spaces, targets }
     }

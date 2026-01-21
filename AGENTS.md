@@ -25,7 +25,7 @@ Data/model artifacts used by analysis/ML are in `kord/model/`, `kord/noise/`, an
 Core (library + CLI):
 ```bash
 cargo build -p kord
-cargo make test
+cargo make test # in remote agents, sometimes `cargo-make` is required.
 ```
 Web (SSR + hydrate):
 ```bash

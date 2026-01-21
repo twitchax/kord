@@ -4,6 +4,7 @@
 WASM_TEST_BROWSER = { value = "firefox", condition = { env_not_set = [
     "WASM_TEST_BROWSER",
 ] } }
+EPOCHS = { value = "64", condition = { env_not_set = ["EPOCHS"] } }
 
 [tasks.install-cargo-binstall]
 # In CI, this is installed by the cargo-bins/cargo-binstall@main action
@@ -125,6 +126,42 @@ args = ["nextest", "run", "--lib"]
 [tasks.test-all]
 workspace = false
 dependencies = ["test", "test-web-server", "test-web-client", "test-wasm"]
+
+# ML Training tasks
+
+[tasks.train-model]
+cwd = "kord"
+workspace = false
+command = "cargo"
+args = [
+    "run",
+    "--bin",
+    "kord",
+    "--no-default-features",
+    "--features",
+    "cli ml_train ml_tch ml_train_precision_fp32 ml_store_precision_half ml_loader_mel ml_target_folded",
+    "--release",
+    "--",
+    "-q",
+    "ml",
+    "train",
+    "--backend",
+    "tch",
+    "--training-sources",
+    "samples/captured",
+    "--training-sources",
+    "samples/slakh",
+    "--training-sources",
+    "sim",
+    "--noise-asset-root",
+    "samples/noise",
+    "--destination",
+    "model",
+    "--model-epochs",
+    "${EPOCHS}",
+]
+
+# Coverage tasks
 
 [tasks.codecov]
 cwd = "."

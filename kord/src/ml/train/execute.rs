@@ -12,7 +12,7 @@ use burn::{
     tensor::backend::{AutodiffBackend, Backend},
     train::{
         metric::{HammingScore, LossMetric},
-        LearnerBuilder, LearningStrategy,
+        Learner, SupervisedTraining,
     },
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -75,47 +75,40 @@ where
 
     // Define the data loaders.
 
-    let batcher_train = KordBatcher::<B>::new(device.clone());
-    let batcher_valid = KordBatcher::<B::InnerBackend>::new(device.clone());
+    let batcher_train = KordBatcher;
+    let batcher_valid = KordBatcher;
 
-    let dataloader_train = DataLoaderBuilder::new(batcher_train)
+    let dataloader_train = DataLoaderBuilder::<B, _, _>::new(batcher_train)
         .batch_size(config.model_batch_size)
         .shuffle(config.model_seed)
         .num_workers(config.model_workers)
         .build(train_dataset.clone());
 
-    let dataloader_valid = DataLoaderBuilder::new(batcher_valid)
+    let dataloader_valid = DataLoaderBuilder::<B::InnerBackend, _, _>::new(batcher_valid)
         .batch_size(config.model_batch_size)
         .num_workers(config.model_workers)
         .build(valid_dataset.clone());
 
     // Define the model.
 
-    let optimizer = adam_config.init();
     let model = KordModel::new(&device, config.mha_heads, config.dropout, config.trunk_hidden_size);
 
-    let mut learner_builder = LearnerBuilder::new(&config.log)
-        //.with_file_checkpointer::<f32>(2)
-        .learning_strategy(LearningStrategy::SingleDevice(device.clone()))
-        .num_epochs(config.model_epochs)
-        .summary();
+    let mut training = SupervisedTraining::new(&config.log, dataloader_train, dataloader_valid).num_epochs(config.model_epochs).summary();
 
     if !config.no_plots {
-        learner_builder = learner_builder
-            .metric_train_numeric(HammingScore::new())
-            .metric_valid_numeric(HammingScore::new())
-            .metric_train_numeric(LossMetric::new())
-            .metric_valid_numeric(LossMetric::new());
+        training = training.metrics((HammingScore::new(), LossMetric::new()));
     }
 
     let lr_scheduler = CosineAnnealingLrSchedulerConfig::new(config.adam_learning_rate, config.model_epochs)
         .init()
         .map_err(|e| anyhow::Error::msg(format!("Failed to initialize learning rate scheduler: {}", e)))?;
-    let learner = learner_builder.build(model, optimizer, lr_scheduler);
 
     // Train the model.
 
-    let model_trained = learner.fit(dataloader_train, dataloader_valid).model;
+    let model_trained = training.launch(Learner::new(model, adam_config.init(), lr_scheduler)).model;
+
+    // Move model to device to ensure all weights are on the correct device after training.
+    let model_trained = model_trained.to_device(&device);
 
     // Compute overall accuracy and collect thresholds.
 

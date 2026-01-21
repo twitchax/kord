@@ -48,6 +48,7 @@ Kord is a Rust workspace with a music theory/ML core and a Leptos web app. This 
 
 ## Build & Run
 - Core/CLI dev: `cargo build` | tests: `cargo make test`. On Linux, install `libasound2-dev` for audio.
+- In remote agents, sometimes `cargo-make` is required.
 - Web dev (SSR + hydrate):
 	- `cd kord-web`
 	- Dev: `cargo leptos watch`
