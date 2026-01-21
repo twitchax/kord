@@ -123,6 +123,7 @@ where
     let chords = if pitches.is_empty() {
         vec![]
     } else {
+        #[allow(unused_variables)]
         Chord::try_from_pitches(&pitches).unwrap_or_else(|e| {
             #[cfg(feature = "cli")]
             eprintln!("Could not determine chords from pitches: {}", e);
