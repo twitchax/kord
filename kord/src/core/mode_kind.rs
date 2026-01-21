@@ -334,14 +334,27 @@ impl HasIntervals for ModeKind {
             ],
             // Altered (Super Locrian): H-W-H-W-W-W-W (All alterations)
             // Example: G♯ Altered = G♯ A B C D E F♯
-            // Intervals: m2, m3, dim4, dim5, m6, m7
+            //
+            // Theoretical interval spelling from the melodic minor parent would be:
+            //   1, m2, A2, M3, dim5, dim6, m7
+            //
+            // However, we intentionally use enharmonic equivalents here:
+            //   A2  → m3  (AugmentedSecond  → MinorThird)
+            //   M3  → dim4 (MajorThird      → DiminishedFourth)
+            //   dim6 → m6  (DiminishedSixth → MinorSixth)
+            //
+            // This keeps the internal interval representation free of double accidentals
+            // and avoids reusing the same letter name multiple times when combined with
+            // validate_spelling(), which checks for unique letter names. In other words,
+            // these spellings are chosen for practical spelling/validation reasons while
+            // remaining pitch‑equivalent to the theoretical Altered mode.
             ModeKind::Altered => &[
                 Interval::PerfectUnison,
                 Interval::MinorSecond,
-                Interval::MinorThird,           // Changed from AugmentedSecond
-                Interval::DiminishedFourth,     // Changed from MajorThird
+                Interval::MinorThird,
+                Interval::DiminishedFourth,
                 Interval::DiminishedFifth,
-                Interval::MinorSixth,           // Changed from DiminishedSixth to avoid double flats
+                Interval::MinorSixth,
                 Interval::MinorSeventh,
             ],
         }
