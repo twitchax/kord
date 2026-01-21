@@ -58,11 +58,13 @@ impl Scale {
     }
 
     /// Validates that the scale has correct enharmonic spelling.
-    /// 
+    ///
     /// For 7-note scales (major, natural minor, harmonic minor, melodic minor, modes),
     /// each letter A-G should appear exactly once.
     /// For other scales, no letter should repeat unless it's a chromatic/octatonic/blues exception.
     /// Blues scale duplicates the 4th degree letter (e.g., F and F# in C blues).
+    ///
+    /// This is a test-only helper and is only compiled when running tests.
     #[cfg(test)]
     pub(crate) fn validate_spelling(&self) -> Result<(), String> {
         use std::collections::HashMap;
