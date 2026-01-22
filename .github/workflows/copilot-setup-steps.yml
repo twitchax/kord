@@ -32,15 +32,16 @@ jobs:
           toolchain: nightly-2025-12-22
           components: rustfmt, clippy
 
+      - uses: cargo-bins/cargo-binstall@main
+
       # rust-cache should run AFTER toolchain selection (it keys off rustc version).
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
-
-      # Installs using cargo-binstall under the hood.
-      - name: Install cargo tools (prebuilt)
-        uses: brndnmtthws/rust-action-cargo-binstall@v1
         with:
-          packages: cargo-make cargo-leptos wasm-pack wkg cargo-nextest cargo-llvm-cov leptosfmt
+          cache-all-crates: "true"
+
+      - name: Install cargo tools
+        run: cargo binstall cargo-make cargo-leptos wasm-pack wkg cargo-nextest cargo-llvm-cov leptosfmt --no-confirm
 
       - name: Prefetch deps
         run: cargo fetch
