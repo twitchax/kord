@@ -12,6 +12,12 @@ use crate::core::octave::{HasOctave, Octave};
 
 // Traits.
 
+/// A trait for types that have a list of intervals.
+pub trait HasIntervals {
+    /// Returns the intervals of the type.
+    fn intervals(&self) -> &'static [Interval];
+}
+
 /// A trait for types that have an enharmonic distance.
 pub trait HasEnharmonicDistance {
     /// Returns the enharmonic distance of the type (most likely an interval).

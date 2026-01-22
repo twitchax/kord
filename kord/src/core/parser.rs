@@ -4,8 +4,10 @@ use pest_derive::Parser;
 
 use crate::core::{
     base::Res,
+    mode_kind::ModeKind,
     note::{self, Note},
     octave::Octave,
+    scale_kind::ScaleKind,
 };
 
 /// A parser for chord symbols.
@@ -80,4 +82,69 @@ pub fn octave_str_to_octave(note_str: &str) -> Res<Octave> {
     };
 
     Ok(octave)
+}
+
+/// Parses a mode name string into a [`ModeKind`].
+#[coverage(off)]
+pub fn mode_name_str_to_mode_kind(mode_str: &str) -> Res<ModeKind> {
+    let normalized = mode_str.to_lowercase()
+        .replace("♮", "natural")
+        .replace("♯", "sharp")
+        .replace("#", "sharp")
+        .replace("♭", "flat")
+        .replace("b", "flat")
+        .replace(" ", "");
+    
+    let mode = match normalized.as_str() {
+        // Major scale modes
+        "ionian" => ModeKind::Ionian,
+        "dorian" => ModeKind::Dorian,
+        "phrygian" => ModeKind::Phrygian,
+        "lydian" => ModeKind::Lydian,
+        "mixolydian" => ModeKind::Mixolydian,
+        "aeolian" => ModeKind::Aeolian,
+        "locrian" => ModeKind::Locrian,
+        
+        // Harmonic minor modes
+        "locriannatural6" | "locriannat6" => ModeKind::LocrianNatural6,
+        "ioniansharp5" | "ionianaugmented" | "majorsharp5" => ModeKind::IonianSharp5,
+        "doriansharp4" => ModeKind::DorianSharp4,
+        "phrygiandominant" | "spanishphrygian" | "phrygianmajor" => ModeKind::PhrygianDominant,
+        "lydiansharp2" => ModeKind::LydianSharp2,
+        "ultralocrian" => ModeKind::Ultralocrian,
+        
+        // Melodic minor modes
+        "dorianflat2" | "phrygiannatural6" | "phrygiannat6" => ModeKind::DorianFlat2,
+        "lydianaugmented" | "lydiansharp5" => ModeKind::LydianAugmented,
+        "lydiandominant" | "lydianflat7" | "mixolydiansharp4" | "acoustic" | "acousticscale" => ModeKind::LydianDominant,
+        "mixolydianflat6" | "aeoliandominant" => ModeKind::MixolydianFlat6,
+        "locriannatural2" | "locriannat2" | "locriansharp2" => ModeKind::LocrianNatural2,
+        "altered" | "alteredscale" | "superlocrian" => ModeKind::Altered,
+        
+        _ => return Err(crate::core::base::Err::msg("Unknown mode name")),
+    };
+
+    Ok(mode)
+}
+
+/// Parses a scale name string into a [`ScaleKind`].
+#[coverage(off)]
+pub fn scale_name_str_to_scale_kind(scale_str: &str) -> Res<ScaleKind> {
+    let normalized = scale_str.to_lowercase().replace(" ", "").replace("-", "");
+    let scale = match normalized.as_str() {
+        "major" => ScaleKind::Major,
+        "naturalminor" => ScaleKind::NaturalMinor,
+        "harmonicminor" => ScaleKind::HarmonicMinor,
+        "melodicminor" => ScaleKind::MelodicMinor,
+        "wholetone" => ScaleKind::WholeTone,
+        "chromatic" => ScaleKind::Chromatic,
+        "diminishedwholehalf" => ScaleKind::DiminishedWholeHalf,
+        "diminishedhalfwhole" => ScaleKind::DiminishedHalfWhole,
+        "majorpentatonic" => ScaleKind::MajorPentatonic,
+        "minorpentatonic" => ScaleKind::MinorPentatonic,
+        "blues" => ScaleKind::Blues,
+        _ => return Err(crate::core::base::Err::msg("Unknown scale name")),
+    };
+
+    Ok(scale)
 }
