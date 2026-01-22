@@ -10,7 +10,7 @@ use pest::Parser;
 use crate::core::{
     base::{HasDescription, HasName, HasPreciseName, HasStaticName, Parsable, Res},
     interval::Interval,
-    known_chord::{HasRelativeChord, HasRelativeScale, KnownChord},
+    known_chord::{HasRelativeChord, HasRelativeScale, HasScaleCandidates, IntervalCandidate, IntervalCollectionKind, KnownChord, ScaleCandidate},
     modifier::{known_modifier_sets, likely_extension_sets, one_off_modifier_sets, Degree, Extension, HasIsDominant, Modifier},
     named_pitch::HasNamedPitch,
     note::{CZero, Note, NoteRecreator},
@@ -624,7 +624,12 @@ impl Display for Chord {
         let scale = self.scale().iter().map(HasStaticName::static_name).collect::<Vec<_>>().join(", ");
         let chord = self.chord().iter().map(HasStaticName::static_name).collect::<Vec<_>>().join(", ");
 
-        write!(f, "{}\n   {}\n   {}\n   {}", self.precise_name(), self.description(), scale, chord)
+        writeln!(f, "{}", self.precise_name())?;
+        writeln!(f, "   {}", self.description())?;
+        writeln!(f, "   {}", scale)?;
+        write!(f, "   {}", chord)?;
+
+        Ok(())
     }
 }
 
@@ -985,6 +990,22 @@ impl HasDescription for Chord {
     }
 }
 
+impl Chord {
+    /// Returns the static interval candidates for this chord
+    pub fn scale_interval_candidates(&self) -> &'static [IntervalCandidate] {
+        self.known_chord().scale_interval_candidates()
+    }
+}
+
+impl HasScaleCandidates for Chord {
+    fn scale_candidates(&self) -> Vec<ScaleCandidate> {
+        self.scale_interval_candidates()
+            .iter()
+            .map(IntervalCandidate::to_scale_candidate)
+            .collect()
+    }
+}
+
 impl HasRelativeScale for Chord {
     fn relative_scale(&self) -> Vec<Interval> {
         self.known_chord().relative_scale()
@@ -1092,7 +1113,21 @@ impl HasRelativeChord for Chord {
 
 impl HasScale for Chord {
     fn scale(&self) -> Vec<Note> {
-        self.relative_scale().into_iter().map(|i| self.root + i).collect()
+        // Get the first (primary) interval candidate and root it at self.root()
+        let candidates = self.scale_interval_candidates();
+        if let Some(candidate) = candidates.first() {
+            match candidate.kind {
+                IntervalCollectionKind::Mode(kind) => {
+                    crate::core::mode::Mode::new(self.root, kind).notes()
+                }
+                IntervalCollectionKind::Scale(kind) => {
+                    crate::core::scale::Scale::new(self.root, kind).notes()
+                }
+            }
+        } else {
+            // Fallback to relative_scale if no candidates (shouldn't happen except for Unknown)
+            self.relative_scale().into_iter().map(|i| self.root + i).collect()
+        }
     }
 }
 
@@ -1339,6 +1374,45 @@ impl Default for Chord {
     }
 }
 
+impl Chord {
+    /// Formats the chord with full scale/mode candidate recommendations.
+    ///
+    /// This returns a verbose string representation that includes:
+    /// - Chord name, description, scale notes, and chord tones
+    /// - Complete list of recommended scales/modes with rankings, reasons, notes, and descriptions
+    ///
+    /// Use this when you want comprehensive improvisation guidance.
+    /// For minimal output, use `Display` instead (via `to_string()` or `format!("{}", chord)`).
+    pub fn format_with_scale_candidates(&self) -> String {
+        use std::fmt::Write;
+        
+        let mut result = String::new();
+        
+        let scale = self.scale().iter().map(HasStaticName::static_name).collect::<Vec<_>>().join(", ");
+        let chord = self.chord().iter().map(HasStaticName::static_name).collect::<Vec<_>>().join(", ");
+
+        writeln!(&mut result, "{}", self.precise_name()).unwrap();
+        writeln!(&mut result, "   {}", self.description()).unwrap();
+        writeln!(&mut result, "   {}", scale).unwrap();
+        writeln!(&mut result, "   {}", chord).unwrap();
+
+        // Add scale/mode candidates
+        let candidates = self.scale_candidates();
+        if !candidates.is_empty() {
+            writeln!(&mut result).unwrap();
+            writeln!(&mut result, "   Recommended scales/modes:").unwrap();
+            for candidate in candidates {
+                let notes = candidate.notes(self.root());
+                let notes_str = notes.iter().map(HasStaticName::static_name).collect::<Vec<_>>().join(", ");
+                writeln!(&mut result, "     {}. {} - {} ({})", candidate.rank(), candidate.name(), candidate.reason(), notes_str).unwrap();
+                writeln!(&mut result, "        {}", candidate.description()).unwrap();
+            }
+        }
+
+        result
+    }
+}
+
 // Tests.
 
 #[cfg(test)]
@@ -1354,10 +1428,33 @@ mod tests {
         assert_eq!(Chord::new(C).minor().augmented().name(), "Cm(♯5)");
         assert_eq!(Chord::new(C).with_octave(Octave::Six).precise_name(), "C@6");
 
-        assert_eq!(
-            format!("{}", Chord::new(C).minor().seven().flat_five()),
-            "Cm7(♭5)\n   half diminished, locrian, minor seven flat five, seventh mode of major scale, major scale starting one half step up\n   C, D♭, E♭, F, G♭, A♭, B♭\n   C, E♭, G♭, B♭"
-        );
+        // Test Display is minimal (no scale candidates)
+        let display_output = format!("{}", Chord::new(C).minor().seven().flat_five());
+        assert!(display_output.contains("Cm7(♭5)"));
+        assert!(display_output.contains("half diminished"));
+        assert!(display_output.contains("C, D♭, E♭, F, G♭, A♭, B♭"));
+        assert!(display_output.contains("C, E♭, G♭, B♭"));
+        assert!(!display_output.contains("Recommended scales/modes:"));
+
+        // Test format_with_scale_candidates includes recommendations
+        let verbose_output = Chord::new(C).minor().seven().flat_five().format_with_scale_candidates();
+        assert!(verbose_output.contains("Recommended scales/modes:"));
+        assert!(verbose_output.contains("locrian"));
+    }
+
+    #[test]
+    fn test_display_format() {
+        // Test that Display output is minimal and stable (no scale candidates)
+        let chord = Chord::new(C);
+        let output = format!("{}", chord);
+        let expected = "C\n   major\n   C, D, E, F, G, A, B\n   C, E, G";
+        assert_eq!(output, expected);
+
+        // Test that format_with_scale_candidates includes recommendations
+        let verbose_output = chord.format_with_scale_candidates();
+        assert!(verbose_output.contains("Recommended scales/modes:"));
+        assert!(verbose_output.contains("ionian"));
+        assert!(verbose_output.contains("major pentatonic"));
     }
 
     #[test]

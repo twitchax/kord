@@ -4,6 +4,8 @@ accidental = { "#" | "♯" | "b" | "♭" }
 
 note = { letter ~ accidental? ~ accidental? }
 
+note_atomic = @{ letter ~ accidental? ~ accidental? }
+
 digit = { ASCII_DIGIT }
 
 note_with_octave = { note ~ digit? }
@@ -41,6 +43,67 @@ at = { "@" }
 hat = { "^" }
 
 bang = { "!" }
+
+// Mode names - match base modes plus common compound forms
+// Most alias resolution is done in Rust normalization
+mode_name = @{
+    // Special compound mode names (match these first before base names)
+    ^"phrygian" ~ " "+ ~ ^"dominant" |
+    ^"spanish" ~ " "+ ~ ^"phrygian" |
+    ^"lydian" ~ " "+ ~ ^"dominant" |
+    ^"aeolian" ~ " "+ ~ ^"dominant" |
+    ^"super" ~ " "+ ~ ^"locrian" |
+    ^"ultra" ~ " "+ ~ ^"locrian" |
+    ^"ultralocrian" |
+    ^"acoustic" ~ (" "+ ~ ^"scale")? |
+    ^"altered" ~ (" "+ ~ ^"scale")? |
+    // Base modes with degree modifiers (let Rust normalize symbols)
+    ^"locrian" ~ " "+ ~ (^"natural" | ^"nat" | "♮" | ^"sharp" | "#" | "♯") ~ " "* ~ ASCII_DIGIT |
+    ^"ionian" ~ " "+ ~ (^"augmented" | ^"sharp" | "#" | "♯") ~ " "* ~ ASCII_DIGIT? |
+    ^"dorian" ~ " "+ ~ (^"sharp" | "#" | "♯" | ^"flat" | "b" | "♭") ~ " "* ~ ASCII_DIGIT |
+    ^"phrygian" ~ " "+ ~ (^"natural" | ^"nat" | "♮" | ^"major") ~ (" "* ~ ASCII_DIGIT)? |
+    ^"lydian" ~ " "+ ~ (^"sharp" | "#" | "♯" | ^"flat" | "b" | "♭" | ^"augmented") ~ " "* ~ ASCII_DIGIT? |
+    ^"mixolydian" ~ " "+ ~ (^"sharp" | "#" | "♯" | ^"flat" | "b" | "♭") ~ " "* ~ ASCII_DIGIT |
+    ^"major" ~ " "+ ~ (^"sharp" | "#" | "♯") ~ " "* ~ ASCII_DIGIT |
+    // Base mode names (unmodified)
+    ^"ionian" |
+    ^"dorian" |
+    ^"phrygian" |
+    ^"lydian" |
+    ^"mixolydian" |
+    ^"aeolian" |
+    ^"locrian"
+}
+
+// Scale names - simplified, Rust handles most normalization
+scale_name = @{
+    ^"major" ~ " "? ~ ^"pentatonic" |
+    ^"minor" ~ " "? ~ ^"pentatonic" |
+    ^"natural" ~ " "? ~ ^"minor" |
+    ^"harmonic" ~ " "? ~ ^"minor" |
+    ^"melodic" ~ " "? ~ ^"minor" |
+    ^"whole" ~ " "? ~ ^"tone" |
+    ^"diminished" ~ " "+ ~ ^"whole" ~ "-"? ~ ^"half" |
+    ^"diminished" ~ " "+ ~ ^"half" ~ "-"? ~ ^"whole" |
+    ^"chromatic" |
+    ^"blues" |
+    ^"major"
+}
+
+// Mode or Scale with root note
+mode = {
+    SOI ~
+    note_atomic ~
+    mode_name ~
+    EOI
+}
+
+scale = {
+    SOI ~
+    note_atomic ~
+    scale_name ~
+    EOI
+}
 
 WHITESPACE = _{ " " }
 

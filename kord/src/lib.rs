@@ -37,6 +37,25 @@
 //!     vec![C, E, GSharp, B]
 //! );
 //! ```
+//!
+//! # Scales and Modes
+//!
+//! ```
+//! use klib::core::base::HasName;
+//! use klib::core::note::*;
+//! use klib::core::mode::*;
+//! use klib::core::mode_kind::*;
+//! use klib::core::scale::*;
+//! use klib::core::scale_kind::*;
+//!
+//! // Create a D Dorian mode
+//! let mode = Mode::new(D, ModeKind::Dorian);
+//! assert_eq!(mode.name(), "D dorian");
+//!
+//! // Create an A harmonic minor scale
+//! let scale = Scale::new(A, ScaleKind::HarmonicMinor);
+//! assert_eq!(scale.name(), "A harmonic minor");
+//! ```
 
 #![warn(rustdoc::broken_intra_doc_links, rust_2018_idioms, clippy::all, missing_docs)]
 #![allow(incomplete_features)]
