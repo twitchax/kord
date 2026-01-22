@@ -195,6 +195,25 @@ impl HasName for ScaleKind {
     }
 }
 
+impl ScaleKind {
+    /// Returns the ASCII name of the scale (using 'b', '#', 'nat' instead of Unicode symbols).
+    pub fn ascii_name(&self) -> &'static str {
+        match self {
+            ScaleKind::Major => "major",
+            ScaleKind::NaturalMinor => "natural minor",
+            ScaleKind::HarmonicMinor => "harmonic minor",
+            ScaleKind::MelodicMinor => "melodic minor",
+            ScaleKind::WholeTone => "whole tone",
+            ScaleKind::Chromatic => "chromatic",
+            ScaleKind::DiminishedWholeHalf => "diminished whole-half",
+            ScaleKind::DiminishedHalfWhole => "diminished half-whole",
+            ScaleKind::MajorPentatonic => "major pentatonic",
+            ScaleKind::MinorPentatonic => "minor pentatonic",
+            ScaleKind::Blues => "blues",
+        }
+    }
+}
+
 // Tests.
 
 #[cfg(test)]

@@ -56,73 +56,6 @@ impl Mode {
     pub fn notes(&self) -> Vec<Note> {
         self.intervals().iter().map(|&interval| self.root + interval).collect()
     }
-
-    /// Validates that the mode has correct enharmonic spelling.
-    /// 
-    /// For 7-note modes (most modes), each letter A-G should appear exactly once.
-    /// For other modes, no letter should repeat unless it's a chromatic/octatonic exception.
-    #[cfg(test)]
-    pub(crate) fn validate_spelling(&self) -> Result<(), String> {
-        use std::collections::HashMap;
-        use crate::core::named_pitch::{HasLetter, HasNamedPitch};
-        
-        let notes = self.notes();
-        let intervals_count = self.intervals().len();
-        
-        // For chromatic scale (12 notes), we allow letter repeats
-        if intervals_count == 12 {
-            return Ok(());
-        }
-        
-        // Check for letter uniqueness
-        let mut letter_counts: HashMap<&str, usize> = HashMap::new();
-        for note in &notes {
-            let letter = note.named_pitch().letter();
-            *letter_counts.entry(letter).or_insert(0) += 1;
-        }
-        
-        // For 7-note collections, we expect exactly one of each letter
-        if intervals_count == 7 {
-            if letter_counts.len() != 7 {
-                return Err(format!(
-                    "{} {} has {} unique letters, expected 7. Letters: {:?}",
-                    self.root().static_name(),
-                    self.kind().static_name(),
-                    letter_counts.len(),
-                    notes.iter().map(|n| n.static_name()).collect::<Vec<_>>()
-                ));
-            }
-            
-            for (letter, count) in &letter_counts {
-                if *count != 1 {
-                    return Err(format!(
-                        "{} {} has letter {} appearing {} times, expected 1. Notes: {:?}",
-                        self.root().static_name(),
-                        self.kind().static_name(),
-                        letter,
-                        count,
-                        notes.iter().map(|n| n.static_name()).collect::<Vec<_>>()
-                    ));
-                }
-            }
-        } else {
-            // For non-7-note collections (pentatonic, etc.), just check no duplicates
-            for (letter, count) in &letter_counts {
-                if *count > 1 {
-                    return Err(format!(
-                        "{} {} has letter {} appearing {} times. Notes: {:?}",
-                        self.root().static_name(),
-                        self.kind().static_name(),
-                        letter,
-                        count,
-                        notes.iter().map(|n| n.static_name()).collect::<Vec<_>>()
-                    ));
-                }
-            }
-        }
-        
-        Ok(())
-    }
 }
 
 impl HasRoot for Mode {
@@ -206,6 +139,74 @@ mod tests {
     use crate::core::note::*;
     use crate::core::named_pitch::{HasNamedPitch, HasLetter};
     use pretty_assertions::assert_eq;
+
+    impl Mode {
+        /// Validates that the mode has correct enharmonic spelling.
+        /// 
+        /// For 7-note modes (most modes), each letter A-G should appear exactly once.
+        /// For other modes, no letter should repeat unless it's a chromatic/octatonic exception.
+        pub(crate) fn validate_spelling(&self) -> Result<(), String> {
+            use std::collections::HashMap;
+            use crate::core::named_pitch::{HasLetter, HasNamedPitch};
+            
+            let notes = self.notes();
+            let intervals_count = self.intervals().len();
+            
+            // For chromatic scale (12 notes), we allow letter repeats
+            if intervals_count == 12 {
+                return Ok(());
+            }
+            
+            // Check for letter uniqueness
+            let mut letter_counts: HashMap<&str, usize> = HashMap::new();
+            for note in &notes {
+                let letter = note.named_pitch().letter();
+                *letter_counts.entry(letter).or_insert(0) += 1;
+            }
+            
+            // For 7-note collections, we expect exactly one of each letter
+            if intervals_count == 7 {
+                if letter_counts.len() != 7 {
+                    return Err(format!(
+                        "{} {} has {} unique letters, expected 7. Letters: {:?}",
+                        self.root().static_name(),
+                        self.kind().static_name(),
+                        letter_counts.len(),
+                        notes.iter().map(|n| n.static_name()).collect::<Vec<_>>()
+                    ));
+                }
+                
+                for (letter, count) in &letter_counts {
+                    if *count != 1 {
+                        return Err(format!(
+                            "{} {} has letter {} appearing {} times, expected 1. Notes: {:?}",
+                            self.root().static_name(),
+                            self.kind().static_name(),
+                            letter,
+                            count,
+                            notes.iter().map(|n| n.static_name()).collect::<Vec<_>>()
+                        ));
+                    }
+                }
+            } else {
+                // For non-7-note collections (pentatonic, etc.), just check no duplicates
+                for (letter, count) in &letter_counts {
+                    if *count > 1 {
+                        return Err(format!(
+                            "{} {} has letter {} appearing {} times. Notes: {:?}",
+                            self.root().static_name(),
+                            self.kind().static_name(),
+                            letter,
+                            count,
+                            notes.iter().map(|n| n.static_name()).collect::<Vec<_>>()
+                        ));
+                    }
+                }
+            }
+            
+            Ok(())
+        }
+    }
 
     #[test]
     fn test_mode_creation() {

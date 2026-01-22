@@ -429,6 +429,38 @@ impl HasName for ModeKind {
     }
 }
 
+impl ModeKind {
+    /// Returns the ASCII name of the mode (using 'b', '#', 'nat' instead of Unicode symbols).
+    pub fn ascii_name(&self) -> &'static str {
+        match self {
+            // Major scale modes
+            ModeKind::Ionian => "ionian",
+            ModeKind::Dorian => "dorian",
+            ModeKind::Phrygian => "phrygian",
+            ModeKind::Lydian => "lydian",
+            ModeKind::Mixolydian => "mixolydian",
+            ModeKind::Aeolian => "aeolian",
+            ModeKind::Locrian => "locrian",
+            
+            // Harmonic minor modes
+            ModeKind::LocrianNatural6 => "locrian nat6",
+            ModeKind::IonianSharp5 => "ionian #5",
+            ModeKind::DorianSharp4 => "dorian #4",
+            ModeKind::PhrygianDominant => "phrygian dominant",
+            ModeKind::LydianSharp2 => "lydian #2",
+            ModeKind::Ultralocrian => "ultralocrian",
+            
+            // Melodic minor modes
+            ModeKind::DorianFlat2 => "dorian b2",
+            ModeKind::LydianAugmented => "lydian augmented",
+            ModeKind::LydianDominant => "lydian dominant",
+            ModeKind::MixolydianFlat6 => "mixolydian b6",
+            ModeKind::LocrianNatural2 => "locrian nat2",
+            ModeKind::Altered => "altered",
+        }
+    }
+}
+
 // Tests.
 
 #[cfg(test)]
