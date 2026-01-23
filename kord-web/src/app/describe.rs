@@ -61,6 +61,10 @@ pub fn DescribePage() -> impl IntoView {
         })
     });
 
+    // Derived visibility signals for Show components.
+    let has_kind_indicator = Signal::derive(move || kind_indicator.get().is_some());
+    let has_notation_result = Signal::derive(move || notation_result.with(|r| r.is_some()));
+
     view! {
         <PageTitle>"Describe"</PageTitle>
         <section class="kord-describe">
@@ -89,14 +93,14 @@ pub fn DescribePage() -> impl IntoView {
                 <div class="kord-content__section kord-describe__results">
                     <Flex justify=thaw::FlexJustify::SpaceBetween align=thaw::FlexAlign::Center>
                         <h3 class="kord-describe__results-title">"Breakdown"</h3>
-                        <Show when=move || kind_indicator.get().is_some()>
+                        <Show when=has_kind_indicator>
                             <span class="kord-describe__kind-badge">
                                 {move || kind_indicator.get().unwrap_or("")}
                             </span>
                         </Show>
                     </Flex>
                     <Show
-                        when=move || notation_result.with(|result| result.is_some())
+                        when=has_notation_result
                         fallback=move || {
                             view! {
                                 <p class="kord-describe__empty">

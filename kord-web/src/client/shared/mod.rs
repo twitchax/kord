@@ -372,24 +372,19 @@ where
         cls
     });
 
+    // Derived display signals.
+
+    let title_text = Signal::derive(move || format!("{}: {:.3} (click to toggle)", pitch_names[pitch_idx], delta.get()));
+    let bar_height_style = Signal::derive(move || format!("{}%", bar_height.get()));
+    let delta_text = Signal::derive(move || format!("{:.2}", delta.get()));
+
     view! {
         <div class="kord-pitch-visualizer__item">
-            <button
-                class=class
-                on:click=move |_| on_toggle(pitch)
-                title=move || {
-                    format!("{}: {:.3} (click to toggle)", pitch_names[pitch_idx], delta.get())
-                }
-            >
-                <div
-                    class="kord-pitch-bar__fill"
-                    style:height=move || format!("{}%", bar_height.get())
-                />
+            <button class=class on:click=move |_| on_toggle(pitch) title=title_text>
+                <div class="kord-pitch-bar__fill" style:height=bar_height_style />
             </button>
             <span class="kord-pitch-visualizer__label">{pitch_names[pitch_idx]}</span>
-            <span class="kord-pitch-visualizer__delta">
-                {move || format!("{:.2}", delta.get())}
-            </span>
+            <span class="kord-pitch-visualizer__delta">{delta_text}</span>
         </div>
     }
 }

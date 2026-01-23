@@ -30,6 +30,18 @@ pub fn ListenPage() -> impl IntoView {
     let start_time = RwSignal::new(None::<f64>);
     let progress_percent = RwSignal::new(0.0);
 
+    // Derived visibility signals for Show components.
+
+    let has_detected_pitches = Signal::derive(move || !detected_pitches.with(|p| p.is_empty()));
+    let has_notes = Signal::derive(move || !notes.with(|n| n.is_empty()));
+    let has_chords = Signal::derive(move || !chords.with(|c| c.is_empty()));
+
+    // Derived UI state signals.
+
+    let button_appearance = Signal::derive(move || if recording.get() { ButtonAppearance::Subtle } else { ButtonAppearance::Primary });
+    let button_text = Signal::derive(move || if recording.get() { "Recording..." } else { "Start Listening" });
+    let status_text = Signal::derive(move || if recording.get() { "Listening..." } else { "Idle" });
+
     // Effect that updates the progress percentage.
 
     Effect::watch(
@@ -159,16 +171,10 @@ pub fn ListenPage() -> impl IntoView {
                     <Button
                         class="kord-listen__start"
                         disabled=recording
-                        appearance=Signal::derive(move || {
-                            if recording.get() {
-                                ButtonAppearance::Subtle
-                            } else {
-                                ButtonAppearance::Primary
-                            }
-                        })
+                        appearance=button_appearance
                         on_click=start
                     >
-                        {move || if recording.get() { "Recording..." } else { "Start Listening" }}
+                        {button_text}
                     </Button>
                     {move || error.get().map(|e| view! { <p class="kord-error">{e}</p> })}
                 </Flex>
@@ -179,16 +185,14 @@ pub fn ListenPage() -> impl IntoView {
                     class="kord-listen__progress"
                 >
                     <ProgressCircle value=progress_percent />
-                    <span class="kord-listen__status">
-                        {move || if recording.get() { "Listening..." } else { "Idle" }}
-                    </span>
+                    <span class="kord-listen__status">{status_text}</span>
                 </Flex>
             </Flex>
 
             <div class="kord-content__section kord-listen__results">
                 <h3 class="kord-listen__results-title">"Pitch Detection"</h3>
                 <Show
-                    when=move || detected_pitches.with(|p| !p.is_empty())
+                    when=has_detected_pitches
                     fallback=move || {
                         view! {
                             <p class="kord-listen__empty">
@@ -211,7 +215,7 @@ pub fn ListenPage() -> impl IntoView {
                 <h3 class="kord-listen__results-title">"Detected Notes"</h3>
                 <div class="kord-listen__notes">
                     <Show
-                        when=move || !notes.with(|detected| detected.is_empty())
+                        when=has_notes
                         fallback=move || {
                             view! {
                                 <p class="kord-listen__empty">
@@ -236,7 +240,7 @@ pub fn ListenPage() -> impl IntoView {
                 <h3 class="kord-listen__results-title">"Detected Chords"</h3>
                 <div class="kord-listen__chords">
                     <Show
-                        when=move || !chords.with(|detected| detected.is_empty())
+                        when=has_chords
                         fallback=move || {
                             view! {
                                 <p class="kord-listen__empty">

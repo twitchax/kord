@@ -21,6 +21,9 @@ pub fn GuessPage() -> impl IntoView {
     let chords = RwSignal::new(Vec::<Chord>::new());
     let note_count = Signal::derive(move || tokens_from_input(&notes_input.get()).len());
 
+    // Derived visibility signal for Show component.
+    let has_chords = Signal::derive(move || !chords.with(|c| c.is_empty()));
+
     // Debounced processing
     let mut debounced_parse = {
         leptos::prelude::debounce(Duration::from_millis(DEBOUNCE_MS), move |raw: String| {
@@ -139,7 +142,7 @@ pub fn GuessPage() -> impl IntoView {
                 <div class="kord-content__section kord-guess__results">
                     <h3 class="kord-guess__results-title">"Candidate Chords"</h3>
                     <Show
-                        when=move || !chords.with(|candidates| candidates.is_empty())
+                        when=has_chords
                         fallback=move || {
                             let message = match note_count.get() {
                                 0 => "Enter some notes or tap the keyboard to begin.",
