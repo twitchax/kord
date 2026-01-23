@@ -8,9 +8,7 @@ pub fn DocsPage() -> impl IntoView {
         <div class="kord-docs">
             <header class="kord-docs__header">
                 <PageTitle attr:style="text-align: center;">"Kord Documentation"</PageTitle>
-                <Text tag=TextTag::P>
-                    "A powerful music theory library and CLI tool for Rust and JavaScript with ML-powered inference capabilities."
-                </Text>
+                <Text tag=TextTag::P>"A powerful music theory library and CLI tool for Rust and JavaScript with ML-powered inference capabilities."</Text>
             </header>
 
             <Section title="Overview">
@@ -43,10 +41,7 @@ pub fn DocsPage() -> impl IntoView {
 
                 <div class="kord-docs__install-section">
                     <TertiaryHeading text="WebAssembly (OCI)" />
-                    <CodeBlock
-                        class="lang-bash"
-                        code="$ wasmtime run ghcr.io/twitchax/kord:latest describe Am7"
-                    />
+                    <CodeBlock class="lang-bash" code="$ wasmtime run ghcr.io/twitchax/kord:latest describe Am7" />
                     <p class="kord-docs__install-text">"Or with wkg:"</p>
                     <CodeBlock class="lang-bash" code="$ wkg get github:twitchax/kord" />
                 </div>
@@ -60,13 +55,7 @@ pub fn DocsPage() -> impl IntoView {
                         <li>"Linux (x86_64)"</li>
                     </ul>
                     <p class="kord-docs__install-text">
-                        "Download from the "
-                        <a
-                            href="https://github.com/twitchax/kord/releases/latest"
-                            class="kord-docs__link"
-                            target="_blank"
-                            rel="noreferrer"
-                        >
+                        "Download from the " <a href="https://github.com/twitchax/kord/releases/latest" class="kord-docs__link" target="_blank" rel="noreferrer">
                             "latest release"
                         </a> " page."
                     </p>
@@ -99,29 +88,19 @@ pub fn DocsPage() -> impl IntoView {
                     <div class="kord-docs__spacer">
                         <TertiaryHeading text="Describe a Chord" />
                         <CodeBlock class="kord-docs__code-example" code="$ kord describe Cmaj7" />
-                        <Callout>
-                            "Cmaj7" <br /> "   major 7, ionian, first mode of major scale" <br />
-                            "   C, D, E, F, G, A, B" <br /> "   C, E, G, B"
-                        </Callout>
+                        <Callout>"Cmaj7" <br /> "   major 7, ionian, first mode of major scale" <br /> "   C, D, E, F, G, A, B" <br /> "   C, E, G, B"</Callout>
                     </div>
 
                     <div class="kord-docs__spacer">
                         <TertiaryHeading text="Guess Chord from Notes" />
                         <CodeBlock class="kord-docs__code-example" code="$ kord guess C F# D# A" />
-                        <Callout>
-                            "Cdim" <br /> "   fully diminished, diminished seventh" <br />
-                            "   C, D, E♭, F, G♭, A♭, B𝄫, B" <br />
-                            "   C, E♭, G♭, B𝄫"
-                        </Callout>
+                        <Callout>"Cdim" <br /> "   fully diminished, diminished seventh" <br /> "   C, D, E♭, F, G♭, A♭, B𝄫, B" <br /> "   C, E♭, G♭, B𝄫"</Callout>
                     </div>
 
                     <div class="kord-docs__spacer">
                         <TertiaryHeading text="Audio Analysis" />
                         <CodeBlock class="kord-docs__code-example" code="$ kord analyze mic" />
-                        <Callout>
-                            "Notes: C3 E3 G3" <br /> "C@3" <br /> "   major" <br />
-                            "   C, D, E, F, G, A, B" <br /> "   C, E, G"
-                        </Callout>
+                        <Callout>"Notes: C3 E3 G3" <br /> "C@3" <br /> "   major" <br /> "   C, D, E, F, G, A, B" <br /> "   C, E, G"</Callout>
                     </div>
                 </div>
             </Section>
@@ -235,9 +214,7 @@ pub fn DocsPage() -> impl IntoView {
             </Section>
 
             <Section title="Feature Flags">
-                <p class="kord-docs__spacer">
-                    "Kord supports various feature flags for different use cases and deployment targets:"
-                </p>
+                <p class="kord-docs__spacer">"Kord supports various feature flags for different use cases and deployment targets:"</p>
 
                 <div class="kord-docs__grid kord-docs__grid--two kord-docs__grid--gap-4">
                     <Panel title="Core Features">
@@ -299,41 +276,20 @@ pub fn DocsPage() -> impl IntoView {
             <Section title="API Reference">
                 <div class="kord-docs__grid kord-docs__grid--two kord-docs__grid--gap-6">
                     <Flex vertical=true gap=FlexGap::Medium>
-                        <CardLink
-                            href="https://docs.rs/kord/latest/klib/"
-                            title="Rust Documentation"
-                            desc="Complete API reference for the Rust library"
-                        />
-                        <CardLink
-                            href="https://www.npmjs.com/package/kordweb"
-                            title="NPM Package"
-                            desc="JavaScript/TypeScript package information"
-                        />
+                        <CardLink href="https://docs.rs/kord/latest/klib/" title="Rust Documentation" desc="Complete API reference for the Rust library" />
+                        <CardLink href="https://www.npmjs.com/package/kordweb" title="NPM Package" desc="JavaScript/TypeScript package information" />
                     </Flex>
 
                     <Flex vertical=true gap=FlexGap::Medium>
-                        <CardLink
-                            href="https://github.com/twitchax/kord"
-                            title="Source Code"
-                            desc="View the source code on GitHub"
-                        />
-                        <CardLink
-                            href="https://github.com/twitchax/kord/releases"
-                            title="Releases"
-                            desc="Download pre-built binaries"
-                        />
+                        <CardLink href="https://github.com/twitchax/kord" title="Source Code" desc="View the source code on GitHub" />
+                        <CardLink href="https://github.com/twitchax/kord/releases" title="Releases" desc="Download pre-built binaries" />
                     </Flex>
                 </div>
             </Section>
 
             <footer>
                 <p>
-                    "Built with ♪ by the Kord team. Licensed under "
-                    <a
-                        href="https://github.com/twitchax/kord/blob/main/LICENSE"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
+                    "Built with ♪ by the Kord team. Licensed under " <a href="https://github.com/twitchax/kord/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">
                         "MIT"
                     </a> "."
                 </p>

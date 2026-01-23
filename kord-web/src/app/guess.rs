@@ -108,34 +108,21 @@ pub fn GuessPage() -> impl IntoView {
         <PageTitle>"Guess Chords from Notes"</PageTitle>
         <section class="kord-guess">
             <Flex vertical=true gap=FlexGap::Large>
-                <Flex
-                    vertical=true
-                    gap=FlexGap::Medium
-                    class="kord-content__section kord-guess__form"
-                >
+                <Flex vertical=true gap=FlexGap::Medium class="kord-content__section kord-guess__form">
                     <div class="kord-guess__hint">
-                        <p>
-                            "Describe a voicing with text or click the keyboard—notes are kept unique automatically."
-                        </p>
+                        <p>"Describe a voicing with text or click the keyboard—notes are kept unique automatically."</p>
                         <p>"Separate notes with spaces, commas, or tap them in any order."</p>
                     </div>
                     <div class="kord-guess__field">
                         <Field label="Notes">
-                            <Input
-                                id="guess-notes"
-                                placeholder="e.g. C E G Bb"
-                                value=notes_input
-                                rules=rules
-                            />
+                            <Input id="guess-notes" placeholder="e.g. C E G Bb" value=notes_input rules=rules />
                         </Field>
                     </div>
                 </Flex>
 
                 <div class="kord-content__section kord-guess__stage">
                     <h3 class="kord-guess__stage-title">"Play the Notes"</h3>
-                    <p class="kord-guess__stage-subtitle">
-                        "Use the piano to lock in the pitches you hear."
-                    </p>
+                    <p class="kord-guess__stage-subtitle">"Use the piano to lock in the pitches you hear."</p>
                     <Piano on_key_press=on_piano_key_press />
                 </div>
 
@@ -147,19 +134,13 @@ pub fn GuessPage() -> impl IntoView {
                             let message = match note_count.get() {
                                 0 => "Enter some notes or tap the keyboard to begin.",
                                 1 => "Add at least one more note to unlock chord suggestions.",
-                                _ => {
-                                    "No matches yet—try tweaking the voicing or adding more notes."
-                                }
+                                _ => "No matches yet—try tweaking the voicing or adding more notes.",
                             };
                             view! { <p class="kord-guess__empty">{message}</p> }.into_view()
                         }
                     >
                         {move || {
-                            let rendered = chords
-                                .get()
-                                .into_iter()
-                                .map(|c| view! { <ChordAnalysis chord=c /> })
-                                .collect_view();
+                            let rendered = chords.get().into_iter().map(|c| view! { <ChordAnalysis chord=c /> }).collect_view();
                             view! { <div class="kord-guess__chords">{rendered}</div> }.into_view()
                         }}
                     </Show>

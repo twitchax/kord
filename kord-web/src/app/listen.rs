@@ -167,30 +167,18 @@ pub fn ListenPage() -> impl IntoView {
         <section class="kord-listen">
             <Flex gap=FlexGap::Large class="kord-content__section kord-listen__controls">
                 <Flex vertical=true gap=FlexGap::Medium class="kord-listen__form">
-                    <p class="kord-listen__hint">
-                        "Capture a quick snippet to identify the chords in your surroundings."
-                    </p>
+                    <p class="kord-listen__hint">"Capture a quick snippet to identify the chords in your surroundings."</p>
                     <Field label="Recording length">
                         <Input input_type=InputType::Number value=seconds_text>
                             <InputSuffix slot>"seconds"</InputSuffix>
                         </Input>
                     </Field>
-                    <Button
-                        class="kord-listen__start"
-                        disabled=recording
-                        appearance=button_appearance
-                        on_click=start
-                    >
+                    <Button class="kord-listen__start" disabled=recording appearance=button_appearance on_click=start>
                         {button_text}
                     </Button>
                     {move || error.get().map(|e| view! { <p class="kord-error">{e}</p> })}
                 </Flex>
-                <Flex
-                    vertical=true
-                    justify=FlexJustify::Center
-                    gap=FlexGap::Small
-                    class="kord-listen__progress"
-                >
+                <Flex vertical=true justify=FlexJustify::Center gap=FlexGap::Small class="kord-listen__progress">
                     <ProgressCircle value=progress_percent />
                     <span class="kord-listen__status">{status_text}</span>
                 </Flex>
@@ -198,39 +186,14 @@ pub fn ListenPage() -> impl IntoView {
 
             <div class="kord-content__section kord-listen__results">
                 <h3 class="kord-listen__results-title">"Pitch Detection"</h3>
-                <Show
-                    when=has_detected_pitches
-                    fallback=move || {
-                        view! {
-                            <p class="kord-listen__empty">
-                                "Pitch data will appear here after recording."
-                            </p>
-                        }
-                            .into_view()
-                    }
-                >
-                    <PitchVisualizer
-                        pitch_deltas=pitch_deltas.read_only()
-                        detected_pitches=detected_pitches.read_only()
-                        active_pitches=active_pitches.read_only()
-                        on_toggle=toggle_pitch
-                    />
+                <Show when=has_detected_pitches fallback=move || { view! { <p class="kord-listen__empty">"Pitch data will appear here after recording."</p> }.into_view() }>
+                    <PitchVisualizer pitch_deltas=pitch_deltas.read_only() detected_pitches=detected_pitches.read_only() active_pitches=active_pitches.read_only() on_toggle=toggle_pitch />
                 </Show>
             </div>
 
             <div class="kord-content__section kord-listen__results">
                 <h3 class="kord-listen__results-title">"Frequency Space"</h3>
-                <Show
-                    when=has_frequency_data
-                    fallback=move || {
-                        view! {
-                            <p class="kord-listen__empty">
-                                "Frequency spectrum will appear here after recording."
-                            </p>
-                        }
-                            .into_view()
-                    }
-                >
+                <Show when=has_frequency_data fallback=move || { view! { <p class="kord-listen__empty">"Frequency spectrum will appear here after recording."</p> }.into_view() }>
                     <FrequencyDiagram frequency_data=frequency_data.read_only() />
                 </Show>
             </div>
@@ -238,23 +201,9 @@ pub fn ListenPage() -> impl IntoView {
             <div class="kord-content__section kord-listen__results">
                 <h3 class="kord-listen__results-title">"Detected Notes"</h3>
                 <div class="kord-listen__notes">
-                    <Show
-                        when=has_notes
-                        fallback=move || {
-                            view! {
-                                <p class="kord-listen__empty">
-                                    "Press start to analyze live audio."
-                                </p>
-                            }
-                                .into_view()
-                        }
-                    >
+                    <Show when=has_notes fallback=move || { view! { <p class="kord-listen__empty">"Press start to analyze live audio."</p> }.into_view() }>
                         <Flex gap=FlexGap::Small class="kord-notes-list">
-                            <For
-                                each=move || notes.get()
-                                key=|note: &Note| note.name()
-                                children=move |note: Note| view! { <NoteDisplay note=note /> }
-                            />
+                            <For each=move || notes.get() key=|note: &Note| note.name() children=move |note: Note| view! { <NoteDisplay note=note /> } />
                         </Flex>
                     </Show>
                 </div>
@@ -263,22 +212,8 @@ pub fn ListenPage() -> impl IntoView {
             <div class="kord-content__section kord-listen__results">
                 <h3 class="kord-listen__results-title">"Detected Chords"</h3>
                 <div class="kord-listen__chords">
-                    <Show
-                        when=has_chords
-                        fallback=move || {
-                            view! {
-                                <p class="kord-listen__empty">
-                                    "Notes will be analyzed into chords above."
-                                </p>
-                            }
-                                .into_view()
-                        }
-                    >
-                        <For
-                            each=move || chords.get()
-                            key=|chord: &Chord| chord.to_string()
-                            children=move |chord: Chord| view! { <ChordAnalysis chord=chord /> }
-                        />
+                    <Show when=has_chords fallback=move || { view! { <p class="kord-listen__empty">"Notes will be analyzed into chords above."</p> }.into_view() }>
+                        <For each=move || chords.get() key=|chord: &Chord| chord.to_string() children=move |chord: Chord| view! { <ChordAnalysis chord=chord /> } />
                     </Show>
                 </div>
             </div>

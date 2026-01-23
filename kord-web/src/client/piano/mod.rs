@@ -73,15 +73,7 @@ pub fn Piano(#[prop(optional, into)] on_key_press: Option<ArcOneCallback<Note>>)
                     let note_ascii = note.name_ascii();
                     Signal::derive(move || pressed_notes.get().contains(&note_ascii))
                 };
-                view! {
-                    <WhiteKey
-                        note
-                        index=col
-                        on_key_press=on_press
-                        midi_player=midi_player.clone()
-                        is_active=is_active
-                    />
-                }
+                view! { <WhiteKey note index=col on_key_press=on_press midi_player=midi_player.clone() is_active=is_active /> }
             }
         })
         .collect_view();
@@ -98,15 +90,7 @@ pub fn Piano(#[prop(optional, into)] on_key_press: Option<ArcOneCallback<Note>>)
                     let note_ascii = note.name_ascii();
                     Signal::derive(move || pressed_notes.get().contains(&note_ascii))
                 };
-                view! {
-                    <BlackKey
-                        note
-                        left_percent=left
-                        on_press=on_press
-                        midi_player=midi_player.clone()
-                        is_active=is_active
-                    />
-                }
+                view! { <BlackKey note left_percent=left on_press=on_press midi_player=midi_player.clone() is_active=is_active /> }
             }
         })
         .collect_view();
@@ -154,16 +138,7 @@ pub(crate) fn setup_note_highlight(pressed_notes: &RwSignal<HashSet<String>>, no
 pub fn WhiteKey(note: Note, index: usize, #[prop(into)] on_key_press: ArcOneCallback<Note>, midi_player: Rc<MidiPlayer>, #[prop(into)] is_active: Signal<bool>) -> impl IntoView {
     // grid-column is 1-based and spans 1 col
     let style = format!("grid-column: {index} / span 1");
-    view! {
-        <Key
-            note
-            class="kord-piano__key--white"
-            on_key_press=on_key_press
-            midi_player=midi_player.clone()
-            attr:style=style
-            is_active=is_active
-        />
-    }
+    view! { <Key note class="kord-piano__key--white" on_key_press=on_key_press midi_player=midi_player.clone() attr:style=style is_active=is_active /> }
 }
 
 /// Black key wrapper.
@@ -174,16 +149,7 @@ pub fn WhiteKey(note: Note, index: usize, #[prop(into)] on_key_press: ArcOneCall
 pub fn BlackKey(note: Note, left_percent: f32, #[prop(into)] on_press: ArcOneCallback<Note>, midi_player: Rc<MidiPlayer>, #[prop(into)] is_active: Signal<bool>) -> impl IntoView {
     // place relative to the white grid using left percentage
     let style = format!("left: {left_percent:.6}%");
-    view! {
-        <Key
-            note
-            class="kord-piano__key--black"
-            on_key_press=on_press
-            midi_player=midi_player.clone()
-            attr:style=style
-            is_active=is_active
-        />
-    }
+    view! { <Key note class="kord-piano__key--black" on_key_press=on_press midi_player=midi_player.clone() attr:style=style is_active=is_active /> }
 }
 
 /// Low-level piano key component.
@@ -235,17 +201,7 @@ pub fn Key(
         }
     };
 
-    view! {
-        <div
-            class=cls
-            class=("kord-piano__key--active", is_active)
-            title=title_note
-            on:pointerdown=start
-            on:pointerup=stop.clone()
-            on:pointerleave=stop.clone()
-            on:pointercancel=stop
-        ></div>
-    }
+    view! { <div class=cls class=("kord-piano__key--active", is_active) title=title_note on:pointerdown=start on:pointerup=stop.clone() on:pointerleave=stop.clone() on:pointercancel=stop></div> }
 }
 
 // Static Helpers

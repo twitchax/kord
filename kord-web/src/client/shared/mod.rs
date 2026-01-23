@@ -164,9 +164,7 @@ pub fn ChordAnalysis(#[prop(optional)] chord: Option<Chord>) -> impl IntoView {
         } else {
             Some(view! {
                 <div class="kord-chord-analysis__candidates">
-                    <h4 class="kord-chord-analysis__candidates-title">
-                        "Recommended Scales/Modes"
-                    </h4>
+                    <h4 class="kord-chord-analysis__candidates-title">"Recommended Scales/Modes"</h4>
                     <ul class="kord-chord-analysis__candidates-list">
                         {candidates
                             .into_iter()
@@ -174,33 +172,20 @@ pub fn ChordAnalysis(#[prop(optional)] chord: Option<Chord>) -> impl IntoView {
                                 let rank = candidate.rank();
                                 let name = candidate.name();
                                 let reason = candidate.reason();
-                                let notes = candidate
-                                    .notes(root)
-                                    .into_iter()
-                                    .map(|n| n.static_name())
-                                    .collect::<Vec<_>>()
-                                    .join(", ");
+                                let notes = candidate.notes(root).into_iter().map(|n| n.static_name()).collect::<Vec<_>>().join(", ");
                                 let desc = candidate.description();
 
                                 view! {
                                     <li class="kord-chord-analysis__candidate">
                                         <div class="kord-chord-analysis__candidate-header">
-                                            <span class="kord-chord-analysis__candidate-rank">
-                                                {rank}
-                                            </span>
-                                            <span class="kord-chord-analysis__candidate-name">
-                                                {name}
-                                            </span>
+                                            <span class="kord-chord-analysis__candidate-rank">{rank}</span>
+                                            <span class="kord-chord-analysis__candidate-name">{name}</span>
                                         </div>
-                                        <div class="kord-chord-analysis__candidate-reason">
-                                            {reason}
-                                        </div>
+                                        <div class="kord-chord-analysis__candidate-reason">{reason}</div>
                                         <div class="kord-chord-analysis__candidate-notes">
                                             <code>{notes}</code>
                                         </div>
-                                        <div class="kord-chord-analysis__candidate-desc">
-                                            {desc}
-                                        </div>
+                                        <div class="kord-chord-analysis__candidate-desc">{desc}</div>
                                     </li>
                                 }
                             })
@@ -406,13 +391,7 @@ where
     view! {
         <div class="kord-pitch-visualizer">
             <For each=move || 0..12 key=|&i| i let:pitch_idx>
-                <PitchBarItem
-                    pitch_idx=pitch_idx
-                    pitch_deltas=pitch_deltas
-                    detected_pitches=detected_pitches
-                    active_pitches=active_pitches
-                    on_toggle=on_toggle
-                />
+                <PitchBarItem pitch_idx=pitch_idx pitch_deltas=pitch_deltas detected_pitches=detected_pitches active_pitches=active_pitches on_toggle=on_toggle />
             </For>
         </div>
     }
@@ -535,7 +514,9 @@ pub fn FrequencyDiagram(
                             let (label, _, position) = marker;
                             let left_pct = format!("{}%", position);
                             view! {
-                                <span class="kord-frequency-diagram__label" style:left=left_pct>{label}</span>
+                                <span class="kord-frequency-diagram__label" style:left=left_pct>
+                                    {label}
+                                </span>
                             }
                         }
                     </For>
@@ -576,7 +557,9 @@ pub fn FrequencyDiagram(
                             let left_pct = format!("{}%", position);
                             let freq_label = format!("{:.0}", freq);
                             view! {
-                                <span class="kord-frequency-diagram__label" style:left=left_pct>{freq_label}</span>
+                                <span class="kord-frequency-diagram__label" style:left=left_pct>
+                                    {freq_label}
+                                </span>
                             }
                         }
                     </For>

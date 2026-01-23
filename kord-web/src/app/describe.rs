@@ -69,23 +69,14 @@ pub fn DescribePage() -> impl IntoView {
         <PageTitle>"Describe"</PageTitle>
         <section class="kord-describe">
             <Flex vertical=true gap=FlexGap::Large>
-                <Flex
-                    vertical=true
-                    gap=FlexGap::Medium
-                    class="kord-content__section kord-describe__card"
-                >
+                <Flex vertical=true gap=FlexGap::Medium class="kord-content__section kord-describe__card">
                     <div class="kord-describe__hint">
                         <p>"Type any chord, scale, or mode to see its full breakdown."</p>
                         <p>"Examples: Cm7, D dorian, A harmonic minor, C major pentatonic"</p>
                     </div>
                     <div class="kord-describe__field">
                         <Field label="Chord / Scale / Mode">
-                            <Input
-                                id="describe-notation"
-                                placeholder="e.g. Cm7, D dorian, A harmonic minor"
-                                value=notation_input
-                                rules=rules
-                            />
+                            <Input id="describe-notation" placeholder="e.g. Cm7, D dorian, A harmonic minor" value=notation_input rules=rules />
                         </Field>
                     </div>
                 </Flex>
@@ -94,26 +85,12 @@ pub fn DescribePage() -> impl IntoView {
                     <Flex justify=thaw::FlexJustify::SpaceBetween align=thaw::FlexAlign::Center>
                         <h3 class="kord-describe__results-title">"Breakdown"</h3>
                         <Show when=has_kind_indicator>
-                            <span class="kord-describe__kind-badge">
-                                {move || kind_indicator.get().unwrap_or("")}
-                            </span>
+                            <span class="kord-describe__kind-badge">{move || kind_indicator.get().unwrap_or("")}</span>
                         </Show>
                     </Flex>
-                    <Show
-                        when=has_notation_result
-                        fallback=move || {
-                            view! {
-                                <p class="kord-describe__empty">
-                                    "Enter a chord, scale, or mode to preview its structure."
-                                </p>
-                            }
-                                .into_view()
-                        }
-                    >
+                    <Show when=has_notation_result fallback=move || { view! { <p class="kord-describe__empty">"Enter a chord, scale, or mode to preview its structure."</p> }.into_view() }>
                         {move || {
-                            let notation = notation_result
-                                .get()
-                                .expect("notation exists when show renders");
+                            let notation = notation_result.get().expect("notation exists when show renders");
                             view! { <NotationAnalysis notation=notation /> }
                         }}
                     </Show>
