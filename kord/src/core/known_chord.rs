@@ -187,8 +187,8 @@ pub enum KnownChord {
     DominantFlat9(Degree),
     /// A dominant sharp 9 chord.
     DominantSharp9(Degree),
-    /// A dominant flat 9 sharp 5 chord.
-    DominantFlat9Sharp5(Degree),
+    /// An augmented dominant flat 9 chord.
+    AugmentedDominantFlat9(Degree),
     /// A minor dominant flat 13 chord.
     MinorDominantFlat13(Degree),
     /// A minor dominant flat 9 flat 13 chord.
@@ -217,7 +217,7 @@ impl HasDescription for KnownChord {
             KnownChord::Diminished => "diminished",
             KnownChord::DominantFlat9(_) => "dominant flat 9",
             KnownChord::DominantSharp9(_) => "dominant sharp 9",
-            KnownChord::DominantFlat9Sharp5(_) => "dominant flat 9 sharp 5",
+            KnownChord::AugmentedDominantFlat9(_) => "augmented dominant flat 9",
             KnownChord::MinorDominantFlat13(_) => "minor dominant flat 13",
             KnownChord::MinorDominantFlat9Flat13(_) => "minor dominant flat 9 flat 13",
             KnownChord::Sharp11 => "sharp 11",
@@ -356,7 +356,7 @@ impl HasRelativeScale for KnownChord {
                 Interval::MinorSixth,
                 Interval::MinorSeventh,
             ],
-            KnownChord::DominantFlat9Sharp5(_) => vec![
+            KnownChord::AugmentedDominantFlat9(_) => vec![
                 Interval::PerfectUnison,
                 Interval::MinorSecond,
                 Interval::MinorThird,
@@ -420,7 +420,7 @@ impl HasRelativeChord for KnownChord {
             KnownChord::Diminished => vec![Interval::PerfectUnison, Interval::MinorThird, Interval::DiminishedFifth, Interval::DiminishedSeventh],
             KnownChord::DominantFlat9(_) => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth, Interval::MinorSeventh, Interval::MinorNinth],
             KnownChord::DominantSharp9(_) => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth, Interval::MinorSeventh, Interval::AugmentedNinth],
-            KnownChord::DominantFlat9Sharp5(_) => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::AugmentedFifth, Interval::MinorSeventh, Interval::MinorNinth],
+            KnownChord::AugmentedDominantFlat9(_) => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::AugmentedFifth, Interval::MinorSeventh, Interval::MinorNinth],
             KnownChord::MinorDominantFlat13(_) => vec![Interval::PerfectUnison, Interval::MinorThird, Interval::PerfectFifth, Interval::MinorSeventh, Interval::MinorThirteenth],
             KnownChord::MinorDominantFlat9Flat13(_) => vec![
                 Interval::PerfectUnison,
@@ -459,7 +459,7 @@ impl HasName for KnownChord {
             KnownChord::Diminished => "dim".to_owned(),
             KnownChord::DominantFlat9(d) => format!("{}(♭9)", d.static_name()),
             KnownChord::DominantSharp9(d) => format!("{}(♯9)", d.static_name()),
-            KnownChord::DominantFlat9Sharp5(d) => format!("{}(♭9)(♯5)", d.static_name()),
+            KnownChord::AugmentedDominantFlat9(d) => format!("+{}(♭9)", d.static_name()),
             KnownChord::MinorDominantFlat13(d) => format!("m{}(♭13)", d.static_name()),
             KnownChord::MinorDominantFlat9Flat13(d) => format!("{}(♭9)(♭13)", d.static_name()),
             KnownChord::Sharp11 => "(♯11)".to_owned(),
@@ -486,7 +486,7 @@ impl KnownChord {
             KnownChord::Diminished => DIMINISHED_CANDIDATES,
             KnownChord::DominantFlat9(_) => DOMINANT_FLAT9_CANDIDATES,
             KnownChord::DominantSharp9(_) => DOMINANT_SHARP9_CANDIDATES,
-            KnownChord::DominantFlat9Sharp5(_) => DOMINANT_FLAT9_SHARP5_CANDIDATES,
+            KnownChord::AugmentedDominantFlat9(_) => AUGMENTED_DOMINANT_FLAT9_CANDIDATES,
             KnownChord::MinorDominantFlat13(_) => MINOR_DOMINANT_FLAT13_CANDIDATES,
             KnownChord::MinorDominantFlat9Flat13(_) => MINOR_DOMINANT_FLAT9_FLAT13_CANDIDATES,
             KnownChord::Sharp11 => SHARP11_CANDIDATES,
@@ -787,7 +787,7 @@ static DOMINANT_SHARP9_CANDIDATES: &[IntervalCandidate] = &[
     },
 ];
 
-static DOMINANT_FLAT9_SHARP5_CANDIDATES: &[IntervalCandidate] = &[
+static AUGMENTED_DOMINANT_FLAT9_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Altered),
         rank: 1,
@@ -933,8 +933,8 @@ mod tests {
     }
     
     #[test]
-    fn test_dominant_flat9_sharp5_candidates() {
-        let candidates = KnownChord::DominantFlat9Sharp5(Degree::Seven).scale_candidates();
+    fn test_augmented_dominant_flat9_candidates() {
+        let candidates = KnownChord::AugmentedDominantFlat9(Degree::Seven).scale_candidates();
         assert!(!candidates.is_empty(), "G7(b9)(#5) should have scale candidates");
         
         match &candidates[0] {
@@ -1091,7 +1091,7 @@ mod tests {
             KnownChord::Diminished,
             KnownChord::DominantFlat9(Degree::Seven),
             KnownChord::DominantSharp9(Degree::Seven),
-            KnownChord::DominantFlat9Sharp5(Degree::Seven),
+            KnownChord::AugmentedDominantFlat9(Degree::Seven),
             KnownChord::MinorDominantFlat13(Degree::Seven),
             KnownChord::MinorDominantFlat9Flat13(Degree::Seven),
             KnownChord::Sharp11,
