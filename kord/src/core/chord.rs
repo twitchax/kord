@@ -520,7 +520,7 @@ impl HasName for Chord {
             name.push_str("(♭5)");
         }
 
-        if self.modifiers.contains(&Modifier::Augmented5) && !known_name.contains('+') {
+        if self.modifiers.contains(&Modifier::Augmented5) && !known_name.contains('+') && !known_name.contains("(♯5)") {
             name.push_str("(♯5)");
         }
 
@@ -948,6 +948,10 @@ impl HasKnownChord for Chord {
                 }
 
                 if contains_dominant {
+                    if modifiers.contains(&Modifier::Flat9) {
+                        return KnownChord::AugmentedDominantFlat9(degree);
+                    }
+                    
                     return KnownChord::AugmentedDominant(degree);
                 }
 
@@ -1491,6 +1495,7 @@ mod tests {
         assert_eq!(Chord::new(C).seven().sharp11().known_chord(), KnownChord::DominantSharp11(Degree::Seven));
         assert_eq!(Chord::new(C).seven().flat9().known_chord(), KnownChord::DominantFlat9(Degree::Seven));
         assert_eq!(Chord::new(C).seven().sharp9().known_chord(), KnownChord::DominantSharp9(Degree::Seven));
+        assert_eq!(Chord::new(C).seven().flat9().augmented().known_chord(), KnownChord::AugmentedDominantFlat9(Degree::Seven));
 
         assert_eq!(Chord::new(C).sus2().known_chord(), KnownChord::Major);
         assert_eq!(Chord::new(C).sus4().known_chord(), KnownChord::Major);
