@@ -362,7 +362,7 @@ impl HasRelativeScale for KnownChord {
                 Interval::MinorThird,
                 Interval::MajorThird,
                 Interval::AugmentedFourth,
-                Interval::MinorSixth,
+                Interval::AugmentedFifth,
                 Interval::MinorSeventh,
             ],
             KnownChord::MinorDominantFlat13(_) => vec![
