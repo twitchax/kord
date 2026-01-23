@@ -78,7 +78,7 @@ A tool to easily explore music theory principles.
 Usage: kord.exe [COMMAND]
 
 Commands:
-  describe  Describes a chord
+  describe  Describes a chord, scale, or mode
   play      Describes and plays a chord
   loop      Loops on a set of chord changes, while simultaneously outputting the descriptions
   guess     Attempt to guess the chord from a set of notes (ordered by simplicity)
@@ -102,6 +102,57 @@ Cmaj7
    major 7, ionian, first mode of major scale
    C, D, E, F, G, A, B
    C, E, G, B
+```
+
+### Describe A Scale
+
+The `describe` command automatically detects scales:
+
+```bash
+$ kord describe "C major pentatonic"
+
+C major pentatonic
+   a five-note scale with no half steps
+   C, D, E, G, A
+```
+
+```bash
+$ kord describe "A harmonic minor"
+
+A harmonic minor
+   minor scale with raised 7th
+   A, B, C, D, E, F, G♯
+```
+
+### Describe A Mode
+
+Modes are also auto-detected:
+
+```bash
+$ kord describe "D dorian"
+
+D dorian
+   dorian mode, second mode of major scale
+   D, E, F, G, A, B, C
+```
+
+```bash
+$ kord describe "F lydian"
+
+F lydian
+   lydian mode, fourth mode of major scale
+   F, G, A, B, C, D, E
+```
+
+You can also force interpretation with `--type`:
+
+```bash
+$ kord describe -t chord "C"
+
+C
+   major
+   C, D, E, F, G, A, B
+   C, E, G
 ```
 
 ### Play A Chord
@@ -217,6 +268,21 @@ use klib::core::chord::*;
 
 // From a note, create a chord, and look at the chord tones.
 assert_eq!(C.into_chord().augmented().major7().chord(), vec![C, E, GSharp, B]);
+```
+
+```rust
+use klib::core::base::Parsable;
+use klib::core::notation::Notation;
+
+// Parse any notation type (chord, scale, or mode) automatically.
+let scale = Notation::parse("C major pentatonic").unwrap();
+assert!(scale.is_scale());
+
+let mode = Notation::parse("D dorian").unwrap();
+assert!(mode.is_mode());
+
+let chord = Notation::parse("Cmaj7").unwrap();
+assert!(chord.is_chord());
 ```
 
 ## JS Usage

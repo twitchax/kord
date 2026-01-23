@@ -125,27 +125,15 @@ impl HasIntervals for ScaleKind {
                 Interval::MinorSeventh,
             ],
             // Major Pentatonic: 1, 2, 3, 5, 6 (no 4th or 7th)
-            ScaleKind::MajorPentatonic => &[
-                Interval::PerfectUnison,
-                Interval::MajorSecond,
-                Interval::MajorThird,
-                Interval::PerfectFifth,
-                Interval::MajorSixth,
-            ],
+            ScaleKind::MajorPentatonic => &[Interval::PerfectUnison, Interval::MajorSecond, Interval::MajorThird, Interval::PerfectFifth, Interval::MajorSixth],
             // Minor Pentatonic: 1, ♭3, 4, 5, ♭7 (no 2nd or 6th)
-            ScaleKind::MinorPentatonic => &[
-                Interval::PerfectUnison,
-                Interval::MinorThird,
-                Interval::PerfectFourth,
-                Interval::PerfectFifth,
-                Interval::MinorSeventh,
-            ],
+            ScaleKind::MinorPentatonic => &[Interval::PerfectUnison, Interval::MinorThird, Interval::PerfectFourth, Interval::PerfectFifth, Interval::MinorSeventh],
             // Blues: 1, ♭3, 4, ♯4, 5, ♭7 (minor pentatonic + ♯4)
             ScaleKind::Blues => &[
                 Interval::PerfectUnison,
                 Interval::MinorThird,
                 Interval::PerfectFourth,
-                Interval::AugmentedFourth,  // #4 blue note – chromatic passing tone between the 4th and 5th
+                Interval::AugmentedFourth, // #4 blue note – chromatic passing tone between the 4th and 5th
                 Interval::PerfectFifth,
                 Interval::MinorSeventh,
             ],
@@ -270,25 +258,13 @@ mod tests {
         assert_eq!(ScaleKind::MajorPentatonic.intervals().len(), 5);
         assert_eq!(
             ScaleKind::MajorPentatonic.intervals(),
-            &[
-                Interval::PerfectUnison,
-                Interval::MajorSecond,
-                Interval::MajorThird,
-                Interval::PerfectFifth,
-                Interval::MajorSixth,
-            ]
+            &[Interval::PerfectUnison, Interval::MajorSecond, Interval::MajorThird, Interval::PerfectFifth, Interval::MajorSixth,]
         );
-        
+
         assert_eq!(ScaleKind::MinorPentatonic.intervals().len(), 5);
         assert_eq!(
             ScaleKind::MinorPentatonic.intervals(),
-            &[
-                Interval::PerfectUnison,
-                Interval::MinorThird,
-                Interval::PerfectFourth,
-                Interval::PerfectFifth,
-                Interval::MinorSeventh,
-            ]
+            &[Interval::PerfectUnison, Interval::MinorThird, Interval::PerfectFourth, Interval::PerfectFifth, Interval::MinorSeventh,]
         );
 
         // Blues scale: 6 notes (minor pentatonic + ♯4)

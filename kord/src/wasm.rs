@@ -253,7 +253,9 @@ impl KordScale {
     /// Creates a new [`Scale`] by parsing a string (e.g., "C major", "A harmonic minor", "E blues").
     #[wasm_bindgen]
     pub fn parse(name: String) -> JsRes<KordScale> {
-        Ok(Self { inner: Scale::parse(&name).to_js_error()? })
+        Ok(Self {
+            inner: Scale::parse(&name).to_js_error()?,
+        })
     }
 
     /// Returns the [`Scale`]'s friendly name.
@@ -521,11 +523,7 @@ impl KordChord {
     #[wasm_bindgen(js_name = scaleCandidates)]
     pub fn scale_candidates(&self) -> Array {
         let root = self.inner.root();
-        self.inner
-            .scale_candidates()
-            .into_iter()
-            .map(|candidate| KordScaleCandidate::new(candidate, root))
-            .into_js_array()
+        self.inner.scale_candidates().into_iter().map(|candidate| KordScaleCandidate::new(candidate, root)).into_js_array()
     }
 
     /// Returns the [`Chord`]'s modifiers.
@@ -2082,10 +2080,10 @@ mod tests {
     fn test_scale_candidates_rooting() {
         let c_chord = KordChord::parse("C".to_string()).unwrap();
         let g_chord = KordChord::parse("G".to_string()).unwrap();
-        
+
         let c_candidates = c_chord.scale_candidates();
         let g_candidates = g_chord.scale_candidates();
-        
+
         assert!(c_candidates.length() > 0, "C should have candidates");
         assert!(g_candidates.length() > 0, "G should have candidates");
     }

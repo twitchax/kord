@@ -1,9 +1,13 @@
 // Shared UI components for Kord Web
 use klib::core::{
-    base::{HasDescription, HasName, HasPreciseName},
-    chord::{Chord, HasChord, HasScale},
+    base::{HasDescription, HasName, HasPreciseName, HasStaticName},
+    chord::{Chord, HasChord, HasRoot, HasScale},
+    known_chord::HasScaleCandidates,
+    mode::Mode,
+    notation::Notation,
     note::Note,
     pitch::Pitch,
+    scale::Scale,
 };
 use leptos::ev::MouseEvent;
 use leptos::prelude::*;
@@ -145,6 +149,60 @@ pub fn ChordAnalysis(#[prop(optional)] chord: Option<Chord>) -> impl IntoView {
         let scale = c.scale().into_iter().map(|n| view! { <code style="margin-right: 3px;">{n.name()}</code> }).collect::<Vec<_>>();
         let chord_tones = c.chord().into_iter().map(|n| view! { <code style="margin-right: 3px;">{n.name()}</code> }).collect::<Vec<_>>();
 
+        // Get scale/mode candidates for this chord.
+        let candidates = c.scale_candidates();
+        let root = c.root();
+        let candidates_view = if candidates.is_empty() {
+            None
+        } else {
+            Some(view! {
+                <div class="kord-chord-analysis__candidates">
+                    <h4 class="kord-chord-analysis__candidates-title">
+                        "Recommended Scales/Modes"
+                    </h4>
+                    <ul class="kord-chord-analysis__candidates-list">
+                        {candidates
+                            .into_iter()
+                            .map(|candidate| {
+                                let rank = candidate.rank();
+                                let name = candidate.name();
+                                let reason = candidate.reason();
+                                let notes = candidate
+                                    .notes(root)
+                                    .into_iter()
+                                    .map(|n| n.static_name())
+                                    .collect::<Vec<_>>()
+                                    .join(", ");
+                                let desc = candidate.description();
+
+                                view! {
+                                    <li class="kord-chord-analysis__candidate">
+                                        <div class="kord-chord-analysis__candidate-header">
+                                            <span class="kord-chord-analysis__candidate-rank">
+                                                {rank}
+                                            </span>
+                                            <span class="kord-chord-analysis__candidate-name">
+                                                {name}
+                                            </span>
+                                        </div>
+                                        <div class="kord-chord-analysis__candidate-reason">
+                                            {reason}
+                                        </div>
+                                        <div class="kord-chord-analysis__candidate-notes">
+                                            <code>{notes}</code>
+                                        </div>
+                                        <div class="kord-chord-analysis__candidate-desc">
+                                            {desc}
+                                        </div>
+                                    </li>
+                                }
+                            })
+                            .collect::<Vec<_>>()}
+                    </ul>
+                </div>
+            })
+        };
+
         view! {
             <Panel title=precise>
                 <Flex justify=FlexJustify::SpaceBetween align=FlexAlign::Start>
@@ -161,11 +219,70 @@ pub fn ChordAnalysis(#[prop(optional)] chord: Option<Chord>) -> impl IntoView {
                     </div>
                     <PrimaryButton on_click=move |_| play_chord(&c, 3.0)>"Play"</PrimaryButton>
                 </Flex>
+                {candidates_view}
             </Panel>
         }
     });
 
     view! { <div class="kord-chord-analysis">{chord_section}</div> }
+}
+
+/// Scale analysis component that shows scale details.
+#[component]
+pub fn ScaleAnalysis(#[prop(optional)] scale: Option<Scale>) -> impl IntoView {
+    let scale_section = scale.map(|s| {
+        let name = s.name();
+        let description = s.description().to_string();
+        let notes = s.notes().into_iter().map(|n| view! { <code style="margin-right: 3px;">{n.name()}</code> }).collect::<Vec<_>>();
+
+        view! {
+            <Panel title=name>
+                <div>
+                    <div class="kord-chord-analysis__description">{description}</div>
+                    <div class="kord-chord-analysis__detail">
+                        <span class="kord-chord-analysis__label">Notes:</span>
+                        {notes}
+                    </div>
+                </div>
+            </Panel>
+        }
+    });
+
+    view! { <div class="kord-scale-analysis">{scale_section}</div> }
+}
+
+/// Mode analysis component that shows mode details.
+#[component]
+pub fn ModeAnalysis(#[prop(optional)] mode: Option<Mode>) -> impl IntoView {
+    let mode_section = mode.map(|m| {
+        let name = m.name();
+        let description = m.description().to_string();
+        let notes = m.notes().into_iter().map(|n| view! { <code style="margin-right: 3px;">{n.name()}</code> }).collect::<Vec<_>>();
+
+        view! {
+            <Panel title=name>
+                <div>
+                    <div class="kord-chord-analysis__description">{description}</div>
+                    <div class="kord-chord-analysis__detail">
+                        <span class="kord-chord-analysis__label">Notes:</span>
+                        {notes}
+                    </div>
+                </div>
+            </Panel>
+        }
+    });
+
+    view! { <div class="kord-mode-analysis">{mode_section}</div> }
+}
+
+/// Unified notation analysis component that renders Chord, Scale, or Mode.
+#[component]
+pub fn NotationAnalysis(notation: Notation) -> impl IntoView {
+    match notation {
+        Notation::Chord(chord) => view! { <ChordAnalysis chord=chord /> }.into_any(),
+        Notation::Scale(scale) => view! { <ScaleAnalysis scale=scale /> }.into_any(),
+        Notation::Mode(mode) => view! { <ModeAnalysis mode=mode /> }.into_any(),
+    }
 }
 
 /// Note display component that shows a single note

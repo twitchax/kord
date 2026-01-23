@@ -997,12 +997,17 @@ impl Chord {
     }
 }
 
+use crate::core::interval::HasIntervals;
+
+impl HasIntervals for Chord {
+    fn intervals(&self) -> &'static [Interval] {
+        self.known_chord().intervals()
+    }
+}
+
 impl HasScaleCandidates for Chord {
     fn scale_candidates(&self) -> Vec<ScaleCandidate> {
-        self.scale_interval_candidates()
-            .iter()
-            .map(IntervalCandidate::to_scale_candidate)
-            .collect()
+        self.scale_interval_candidates().iter().map(IntervalCandidate::to_scale_candidate).collect()
     }
 }
 
@@ -1117,12 +1122,8 @@ impl HasScale for Chord {
         let candidates = self.scale_interval_candidates();
         if let Some(candidate) = candidates.first() {
             match candidate.kind {
-                IntervalCollectionKind::Mode(kind) => {
-                    crate::core::mode::Mode::new(self.root, kind).notes()
-                }
-                IntervalCollectionKind::Scale(kind) => {
-                    crate::core::scale::Scale::new(self.root, kind).notes()
-                }
+                IntervalCollectionKind::Mode(kind) => crate::core::mode::Mode::new(self.root, kind).notes(),
+                IntervalCollectionKind::Scale(kind) => crate::core::scale::Scale::new(self.root, kind).notes(),
             }
         } else {
             // Fallback to relative_scale if no candidates (shouldn't happen except for Unknown)
@@ -1385,9 +1386,9 @@ impl Chord {
     /// For minimal output, use `Display` instead (via `to_string()` or `format!("{}", chord)`).
     pub fn format_with_scale_candidates(&self) -> String {
         use std::fmt::Write;
-        
+
         let mut result = String::new();
-        
+
         let scale = self.scale().iter().map(HasStaticName::static_name).collect::<Vec<_>>().join(", ");
         let chord = self.chord().iter().map(HasStaticName::static_name).collect::<Vec<_>>().join(", ");
 

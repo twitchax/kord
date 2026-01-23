@@ -239,6 +239,7 @@ args = ["build", "--release", "--bin", "kord", "-p", "kord"]
 
 [tasks.build-npm]
 cwd = "kord"
+workspace = false
 dependencies = ["install-wasm-pack"]
 command = "wasm-pack"
 args = [
@@ -253,8 +254,16 @@ args = [
     "analyze audio ml_infer ml_store_precision_half ml_loader_mel ml_target_folded wasm",
 ]
 
+[tasks.dev-web]
+cwd = "kord-web"
+workspace = false
+dependencies = ["install-cargo-leptos"]
+command = "cargo"
+args = ["leptos", "watch"]
+
 [tasks.build-web]
 cwd = "kord-web"
+workspace = false
 dependencies = ["install-cargo-leptos"]
 command = "cargo"
 args = ["leptos", "build", "--release"]

@@ -386,45 +386,7 @@ impl HasRelativeScale for KnownChord {
 
 impl HasRelativeChord for KnownChord {
     fn relative_chord(&self) -> Vec<Interval> {
-        match self {
-            KnownChord::Unknown => panic!("KnownChord::Unknown should never be used in relative_chord()"),
-            KnownChord::Major => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth],
-            KnownChord::Minor => vec![Interval::PerfectUnison, Interval::MinorThird, Interval::PerfectFifth],
-            KnownChord::Major7 => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth, Interval::MajorSeventh],
-            KnownChord::Dominant(_) => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth, Interval::MinorSeventh],
-            KnownChord::MinorMajor7 => vec![Interval::PerfectUnison, Interval::MinorThird, Interval::PerfectFifth, Interval::MajorSeventh],
-            KnownChord::MinorDominant(_) => vec![Interval::PerfectUnison, Interval::MinorThird, Interval::PerfectFifth, Interval::MinorSeventh],
-            KnownChord::DominantSharp11(_) => vec![
-                Interval::PerfectUnison,
-                Interval::MajorThird,
-                Interval::PerfectFifth,
-                Interval::MinorSeventh,
-                Interval::AugmentedEleventh,
-            ],
-            KnownChord::Augmented => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::AugmentedFifth],
-            KnownChord::AugmentedMajor7 => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::AugmentedFifth, Interval::MajorSeventh],
-            KnownChord::AugmentedDominant(_) => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::AugmentedFifth, Interval::MinorSeventh],
-            KnownChord::HalfDiminished(_) => vec![Interval::PerfectUnison, Interval::MinorThird, Interval::DiminishedFifth, Interval::MinorSeventh],
-            KnownChord::Diminished => vec![Interval::PerfectUnison, Interval::MinorThird, Interval::DiminishedFifth, Interval::DiminishedSeventh],
-            KnownChord::DominantFlat9(_) => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth, Interval::MinorSeventh, Interval::MinorNinth],
-            KnownChord::DominantSharp9(_) => vec![Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth, Interval::MinorSeventh, Interval::AugmentedNinth],
-            KnownChord::MinorDominantFlat13(_) => vec![Interval::PerfectUnison, Interval::MinorThird, Interval::PerfectFifth, Interval::MinorSeventh, Interval::MinorThirteenth],
-            KnownChord::MinorDominantFlat9Flat13(_) => vec![
-                Interval::PerfectUnison,
-                Interval::MinorThird,
-                Interval::PerfectFifth,
-                Interval::MinorSeventh,
-                Interval::MinorNinth,
-                Interval::MinorThirteenth,
-            ],
-            KnownChord::Sharp11 => vec![
-                Interval::PerfectUnison,
-                Interval::MajorThird,
-                Interval::PerfectFifth,
-                Interval::MajorSeventh,
-                Interval::AugmentedEleventh,
-            ],
-        }
+        self.intervals().to_vec()
     }
 }
 
@@ -481,10 +443,75 @@ impl KnownChord {
 
 impl HasScaleCandidates for KnownChord {
     fn scale_candidates(&self) -> Vec<ScaleCandidate> {
-        self.scale_interval_candidates()
-            .iter()
-            .map(IntervalCandidate::to_scale_candidate)
-            .collect()
+        self.scale_interval_candidates().iter().map(IntervalCandidate::to_scale_candidate).collect()
+    }
+}
+
+// Traits.
+
+use crate::core::interval::HasIntervals;
+
+// Static chord intervals for each KnownChord variant (chord tones only)
+
+static MAJOR_INTERVALS: &[Interval] = &[Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth];
+static MINOR_INTERVALS: &[Interval] = &[Interval::PerfectUnison, Interval::MinorThird, Interval::PerfectFifth];
+static MAJOR7_INTERVALS: &[Interval] = &[Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth, Interval::MajorSeventh];
+static DOMINANT_INTERVALS: &[Interval] = &[Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth, Interval::MinorSeventh];
+static MINOR_MAJOR7_INTERVALS: &[Interval] = &[Interval::PerfectUnison, Interval::MinorThird, Interval::PerfectFifth, Interval::MajorSeventh];
+static MINOR_DOMINANT_INTERVALS: &[Interval] = &[Interval::PerfectUnison, Interval::MinorThird, Interval::PerfectFifth, Interval::MinorSeventh];
+static DOMINANT_SHARP11_INTERVALS: &[Interval] = &[
+    Interval::PerfectUnison,
+    Interval::MajorThird,
+    Interval::PerfectFifth,
+    Interval::MinorSeventh,
+    Interval::AugmentedEleventh,
+];
+static AUGMENTED_INTERVALS: &[Interval] = &[Interval::PerfectUnison, Interval::MajorThird, Interval::AugmentedFifth];
+static AUGMENTED_MAJOR7_INTERVALS: &[Interval] = &[Interval::PerfectUnison, Interval::MajorThird, Interval::AugmentedFifth, Interval::MajorSeventh];
+static AUGMENTED_DOMINANT_INTERVALS: &[Interval] = &[Interval::PerfectUnison, Interval::MajorThird, Interval::AugmentedFifth, Interval::MinorSeventh];
+static HALF_DIMINISHED_INTERVALS: &[Interval] = &[Interval::PerfectUnison, Interval::MinorThird, Interval::DiminishedFifth, Interval::MinorSeventh];
+static DIMINISHED_INTERVALS: &[Interval] = &[Interval::PerfectUnison, Interval::MinorThird, Interval::DiminishedFifth, Interval::DiminishedSeventh];
+static DOMINANT_FLAT9_INTERVALS: &[Interval] = &[Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth, Interval::MinorSeventh, Interval::MinorNinth];
+static DOMINANT_SHARP9_INTERVALS: &[Interval] = &[Interval::PerfectUnison, Interval::MajorThird, Interval::PerfectFifth, Interval::MinorSeventh, Interval::AugmentedNinth];
+static MINOR_DOMINANT_FLAT13_INTERVALS: &[Interval] = &[Interval::PerfectUnison, Interval::MinorThird, Interval::PerfectFifth, Interval::MinorSeventh, Interval::MinorThirteenth];
+static MINOR_DOMINANT_FLAT9_FLAT13_INTERVALS: &[Interval] = &[
+    Interval::PerfectUnison,
+    Interval::MinorThird,
+    Interval::PerfectFifth,
+    Interval::MinorSeventh,
+    Interval::MinorNinth,
+    Interval::MinorThirteenth,
+];
+static SHARP11_INTERVALS: &[Interval] = &[
+    Interval::PerfectUnison,
+    Interval::MajorThird,
+    Interval::PerfectFifth,
+    Interval::MajorSeventh,
+    Interval::AugmentedEleventh,
+];
+
+impl HasIntervals for KnownChord {
+    fn intervals(&self) -> &'static [Interval] {
+        match self {
+            KnownChord::Unknown => &[],
+            KnownChord::Major => MAJOR_INTERVALS,
+            KnownChord::Minor => MINOR_INTERVALS,
+            KnownChord::Major7 => MAJOR7_INTERVALS,
+            KnownChord::Dominant(_) => DOMINANT_INTERVALS,
+            KnownChord::MinorMajor7 => MINOR_MAJOR7_INTERVALS,
+            KnownChord::MinorDominant(_) => MINOR_DOMINANT_INTERVALS,
+            KnownChord::DominantSharp11(_) => DOMINANT_SHARP11_INTERVALS,
+            KnownChord::Augmented => AUGMENTED_INTERVALS,
+            KnownChord::AugmentedMajor7 => AUGMENTED_MAJOR7_INTERVALS,
+            KnownChord::AugmentedDominant(_) => AUGMENTED_DOMINANT_INTERVALS,
+            KnownChord::HalfDiminished(_) => HALF_DIMINISHED_INTERVALS,
+            KnownChord::Diminished => DIMINISHED_INTERVALS,
+            KnownChord::DominantFlat9(_) => DOMINANT_FLAT9_INTERVALS,
+            KnownChord::DominantSharp9(_) => DOMINANT_SHARP9_INTERVALS,
+            KnownChord::MinorDominantFlat13(_) => MINOR_DOMINANT_FLAT13_INTERVALS,
+            KnownChord::MinorDominantFlat9Flat13(_) => MINOR_DOMINANT_FLAT9_FLAT13_INTERVALS,
+            KnownChord::Sharp11 => SHARP11_INTERVALS,
+        }
     }
 }
 
@@ -776,7 +803,8 @@ static MINOR_DOMINANT_FLAT13_CANDIDATES: &[IntervalCandidate] = &[
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Aeolian),
         rank: 1,
-        reason: "Natural minor scale over minor 7 chords; provides the ♭6/♭13 extension naturally; functional sound for minor dominant chords where you need the flat 13 characteristic clearly present",
+        reason:
+            "Natural minor scale over minor 7 chords; provides the ♭6/♭13 extension naturally; functional sound for minor dominant chords where you need the flat 13 characteristic clearly present",
     },
     IntervalCandidate {
         kind: IntervalCollectionKind::Mode(ModeKind::Phrygian),
@@ -828,7 +856,7 @@ mod tests {
     fn test_dominant_chord_candidates() {
         let candidates = KnownChord::Dominant(Degree::Seven).scale_candidates();
         assert!(!candidates.is_empty(), "G7 should have scale candidates");
-        
+
         match &candidates[0] {
             ScaleCandidate::Mode { kind, rank, .. } => {
                 assert_eq!(*kind, ModeKind::Mixolydian);
@@ -836,7 +864,7 @@ mod tests {
             }
             _ => panic!("First candidate for G7 should be a Mode"),
         }
-        
+
         match &candidates[1] {
             ScaleCandidate::Scale { kind, rank, .. } => {
                 assert_eq!(*kind, ScaleKind::Blues);
@@ -844,7 +872,7 @@ mod tests {
             }
             _ => panic!("Second candidate for G7 should be a Scale"),
         }
-        
+
         match &candidates[2] {
             ScaleCandidate::Mode { kind, rank, .. } => {
                 assert_eq!(*kind, ModeKind::LydianDominant);
@@ -853,12 +881,12 @@ mod tests {
             _ => panic!("Third candidate for G7 should be a Mode"),
         }
     }
-    
+
     #[test]
     fn test_dominant_sharp11_candidates() {
         let candidates = KnownChord::DominantSharp11(Degree::Seven).scale_candidates();
         assert!(!candidates.is_empty(), "G7#11 should have scale candidates");
-        
+
         match &candidates[0] {
             ScaleCandidate::Mode { kind, rank, .. } => {
                 assert_eq!(*kind, ModeKind::LydianDominant);
@@ -867,12 +895,12 @@ mod tests {
             _ => panic!("First candidate for G7#11 should be a Mode"),
         }
     }
-    
+
     #[test]
     fn test_dominant_flat9_candidates() {
         let candidates = KnownChord::DominantFlat9(Degree::Seven).scale_candidates();
         assert!(!candidates.is_empty(), "G7b9 should have scale candidates");
-        
+
         match &candidates[0] {
             ScaleCandidate::Scale { kind, rank, .. } => {
                 assert_eq!(*kind, ScaleKind::DiminishedHalfWhole);
@@ -884,12 +912,12 @@ mod tests {
             }
         }
     }
-    
+
     #[test]
     fn test_dominant_sharp9_candidates() {
         let candidates = KnownChord::DominantSharp9(Degree::Seven).scale_candidates();
         assert!(!candidates.is_empty(), "G7#9 should have scale candidates");
-        
+
         match &candidates[0] {
             ScaleCandidate::Mode { kind, rank, .. } => {
                 assert_eq!(*kind, ModeKind::Altered);
@@ -898,12 +926,12 @@ mod tests {
             _ => panic!("First candidate for G7#9 should be a Mode"),
         }
     }
-    
+
     #[test]
     fn test_half_diminished_candidates() {
         let candidates = KnownChord::HalfDiminished(Degree::Seven).scale_candidates();
         assert!(!candidates.is_empty(), "Cm7b5 should have scale candidates");
-        
+
         match &candidates[0] {
             ScaleCandidate::Mode { kind, rank, .. } => {
                 assert_eq!(*kind, ModeKind::Locrian);
@@ -912,12 +940,12 @@ mod tests {
             _ => panic!("First candidate for Cm7b5 should be a Mode"),
         }
     }
-    
+
     #[test]
     fn test_augmented_dominant_candidates() {
         let candidates = KnownChord::AugmentedDominant(Degree::Seven).scale_candidates();
         assert!(!candidates.is_empty(), "Augmented dominant should have scale candidates");
-        
+
         match &candidates[0] {
             ScaleCandidate::Scale { kind, rank, .. } => {
                 assert_eq!(*kind, ScaleKind::WholeTone);
@@ -926,12 +954,12 @@ mod tests {
             _ => panic!("First candidate for augmented dominant should be a Scale"),
         }
     }
-    
+
     #[test]
     fn test_major_chord_candidates() {
         let candidates = KnownChord::Major.scale_candidates();
         assert!(candidates.len() >= 3, "Major chord should have at least 3 candidates");
-        
+
         match &candidates[0] {
             ScaleCandidate::Mode { kind, rank, .. } => {
                 assert_eq!(*kind, ModeKind::Ionian);
@@ -939,7 +967,7 @@ mod tests {
             }
             _ => panic!("First candidate for Major should be Ionian mode"),
         }
-        
+
         match &candidates[1] {
             ScaleCandidate::Scale { kind, rank, .. } => {
                 assert_eq!(*kind, ScaleKind::MajorPentatonic);
@@ -947,7 +975,7 @@ mod tests {
             }
             _ => panic!("Second candidate for Major should be MajorPentatonic scale"),
         }
-        
+
         match &candidates[2] {
             ScaleCandidate::Mode { kind, rank, .. } => {
                 assert_eq!(*kind, ModeKind::Lydian);
@@ -956,12 +984,12 @@ mod tests {
             _ => panic!("Third candidate for Major should be Lydian mode"),
         }
     }
-    
+
     #[test]
     fn test_minor_chord_candidates() {
         let candidates = KnownChord::Minor.scale_candidates();
         assert!(candidates.len() >= 3, "Minor chord should have at least 3 candidates");
-        
+
         match &candidates[0] {
             ScaleCandidate::Mode { kind, rank, .. } => {
                 assert_eq!(*kind, ModeKind::Aeolian);
@@ -969,7 +997,7 @@ mod tests {
             }
             _ => panic!("First candidate for Minor should be Aeolian mode"),
         }
-        
+
         match &candidates[1] {
             ScaleCandidate::Scale { kind, rank, .. } => {
                 assert_eq!(*kind, ScaleKind::MinorPentatonic);
@@ -977,7 +1005,7 @@ mod tests {
             }
             _ => panic!("Second candidate for Minor should be MinorPentatonic scale"),
         }
-        
+
         match &candidates[2] {
             ScaleCandidate::Scale { kind, rank, .. } => {
                 assert_eq!(*kind, ScaleKind::Blues);
@@ -986,12 +1014,12 @@ mod tests {
             _ => panic!("Third candidate for Minor should be Blues scale"),
         }
     }
-    
+
     #[test]
     fn test_minor_dominant_candidates() {
         let candidates = KnownChord::MinorDominant(Degree::Seven).scale_candidates();
         assert!(candidates.len() >= 3, "Minor dominant should have at least 3 candidates");
-        
+
         match &candidates[0] {
             ScaleCandidate::Mode { kind, rank, .. } => {
                 assert_eq!(*kind, ModeKind::Dorian);
@@ -999,7 +1027,7 @@ mod tests {
             }
             _ => panic!("First candidate for Minor dominant should be Dorian mode"),
         }
-        
+
         match &candidates[1] {
             ScaleCandidate::Scale { kind, rank, .. } => {
                 assert_eq!(*kind, ScaleKind::MinorPentatonic);
@@ -1007,7 +1035,7 @@ mod tests {
             }
             _ => panic!("Second candidate for Minor dominant should be MinorPentatonic scale"),
         }
-        
+
         match &candidates[2] {
             ScaleCandidate::Scale { kind, rank, .. } => {
                 assert_eq!(*kind, ScaleKind::Blues);
@@ -1016,7 +1044,7 @@ mod tests {
             _ => panic!("Third candidate for Minor dominant should be Blues scale"),
         }
     }
-    
+
     #[test]
     fn test_interval_candidates_kinds_and_order() {
         // Test that all KnownChord variants return properly ordered interval candidates
@@ -1040,10 +1068,10 @@ mod tests {
             KnownChord::MinorDominantFlat9Flat13(Degree::Seven),
             KnownChord::Sharp11,
         ];
-        
+
         for known_chord in all_variants {
             let candidates = known_chord.scale_interval_candidates();
-            
+
             // Verify ranks are sequential starting at 1
             for (i, candidate) in candidates.iter().enumerate() {
                 let expected_rank = (i + 1) as u8;
@@ -1052,14 +1080,10 @@ mod tests {
                     "{:?}: Expected rank {} at position {}, got {}",
                     known_chord, expected_rank, i, candidate.rank
                 );
-                
+
                 // Verify reason is non-empty
-                assert!(
-                    !candidate.reason.is_empty(),
-                    "{:?}: Candidate at position {} has empty reason",
-                    known_chord, i
-                );
-                
+                assert!(!candidate.reason.is_empty(), "{:?}: Candidate at position {} has empty reason", known_chord, i);
+
                 // Verify kind matches what scale_candidates() returns
                 let scale_candidates = known_chord.scale_candidates();
                 if i < scale_candidates.len() {
@@ -1074,15 +1098,10 @@ mod tests {
                     }
                 }
             }
-            
+
             // Verify scale_candidates() matches interval_candidates()
             let scale_candidates = known_chord.scale_candidates();
-            assert_eq!(
-                candidates.len(),
-                scale_candidates.len(),
-                "{:?}: Mismatch in candidate count",
-                known_chord
-            );
+            assert_eq!(candidates.len(), scale_candidates.len(), "{:?}: Mismatch in candidate count", known_chord);
         }
     }
 }

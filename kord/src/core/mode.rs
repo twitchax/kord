@@ -136,34 +136,34 @@ impl Parsable for Mode {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::named_pitch::{HasLetter, HasNamedPitch};
     use crate::core::note::*;
-    use crate::core::named_pitch::{HasNamedPitch, HasLetter};
     use pretty_assertions::assert_eq;
 
     impl Mode {
         /// Validates that the mode has correct enharmonic spelling.
-        /// 
+        ///
         /// For 7-note modes (most modes), each letter A-G should appear exactly once.
         /// For other modes, no letter should repeat unless it's a chromatic/octatonic exception.
         pub(crate) fn validate_spelling(&self) -> Result<(), String> {
-            use std::collections::HashMap;
             use crate::core::named_pitch::{HasLetter, HasNamedPitch};
-            
+            use std::collections::HashMap;
+
             let notes = self.notes();
             let intervals_count = self.intervals().len();
-            
+
             // For chromatic scale (12 notes), we allow letter repeats
             if intervals_count == 12 {
                 return Ok(());
             }
-            
+
             // Check for letter uniqueness
             let mut letter_counts: HashMap<&str, usize> = HashMap::new();
             for note in &notes {
                 let letter = note.named_pitch().letter();
                 *letter_counts.entry(letter).or_insert(0) += 1;
             }
-            
+
             // For 7-note collections, we expect exactly one of each letter
             if intervals_count == 7 {
                 if letter_counts.len() != 7 {
@@ -175,7 +175,7 @@ mod tests {
                         notes.iter().map(|n| n.static_name()).collect::<Vec<_>>()
                     ));
                 }
-                
+
                 for (letter, count) in &letter_counts {
                     if *count != 1 {
                         return Err(format!(
@@ -203,7 +203,7 @@ mod tests {
                     }
                 }
             }
-            
+
             Ok(())
         }
     }
@@ -382,19 +382,19 @@ mod tests {
         // Test harmonic minor modes
         let mode = Mode::parse("B locrian nat6").unwrap();
         assert_eq!(mode.kind(), ModeKind::LocrianNatural6);
-        
+
         let mode = Mode::parse("C ionian #5").unwrap();
         assert_eq!(mode.kind(), ModeKind::IonianSharp5);
-        
+
         let mode = Mode::parse("D dorian sharp 4").unwrap();
         assert_eq!(mode.kind(), ModeKind::DorianSharp4);
-        
+
         let mode = Mode::parse("E phrygian dominant").unwrap();
         assert_eq!(mode.kind(), ModeKind::PhrygianDominant);
-        
+
         let mode = Mode::parse("F lydian #2").unwrap();
         assert_eq!(mode.kind(), ModeKind::LydianSharp2);
-        
+
         let mode = Mode::parse("G# ultralocrian").unwrap();
         assert_eq!(mode.kind(), ModeKind::Ultralocrian);
     }
@@ -404,19 +404,19 @@ mod tests {
         // Test melodic minor modes
         let mode = Mode::parse("B dorian b2").unwrap();
         assert_eq!(mode.kind(), ModeKind::DorianFlat2);
-        
+
         let mode = Mode::parse("C lydian augmented").unwrap();
         assert_eq!(mode.kind(), ModeKind::LydianAugmented);
-        
+
         let mode = Mode::parse("D lydian dominant").unwrap();
         assert_eq!(mode.kind(), ModeKind::LydianDominant);
-        
+
         let mode = Mode::parse("E mixolydian b6").unwrap();
         assert_eq!(mode.kind(), ModeKind::MixolydianFlat6);
-        
+
         let mode = Mode::parse("F# locrian nat2").unwrap();
         assert_eq!(mode.kind(), ModeKind::LocrianNatural2);
-        
+
         let mode = Mode::parse("G# altered").unwrap();
         assert_eq!(mode.kind(), ModeKind::Altered);
     }
@@ -425,11 +425,11 @@ mod tests {
     fn test_enharmonic_spelling_diatonic_modes() {
         // Test all diatonic modes with various root notes to ensure correct enharmonic spelling
         // Each 7-note mode should use each letter A-G exactly once
-        
+
         // C Ionian - all natural notes
         let mode = Mode::new(C, ModeKind::Ionian);
         mode.validate_spelling().unwrap();
-        
+
         // F# Dorian - should use sharps, not flats
         let mode = Mode::new(FSharp, ModeKind::Dorian);
         mode.validate_spelling().unwrap();
@@ -442,7 +442,7 @@ mod tests {
         assert_eq!(notes[4].named_pitch().letter(), "C");
         assert_eq!(notes[5].named_pitch().letter(), "D");
         assert_eq!(notes[6].named_pitch().letter(), "E");
-        
+
         // Db Lydian - should use flats
         let mode = Mode::new(DFlat, ModeKind::Lydian);
         mode.validate_spelling().unwrap();
@@ -455,11 +455,11 @@ mod tests {
         assert_eq!(notes[4].named_pitch().letter(), "A");
         assert_eq!(notes[5].named_pitch().letter(), "B");
         assert_eq!(notes[6].named_pitch().letter(), "C");
-        
+
         // Bb Mixolydian
         let mode = Mode::new(BFlat, ModeKind::Mixolydian);
         mode.validate_spelling().unwrap();
-        
+
         // E Locrian
         let mode = Mode::new(E, ModeKind::Locrian);
         mode.validate_spelling().unwrap();
@@ -468,27 +468,27 @@ mod tests {
     #[test]
     fn test_enharmonic_spelling_harmonic_minor_modes() {
         // Test harmonic minor modes
-        
+
         // F# Locrian Natural 6 - should spell with F# G A B C# D E#
         let mode = Mode::new(FSharp, ModeKind::LocrianNatural6);
         mode.validate_spelling().unwrap();
-        
+
         // C Ionian #5
         let mode = Mode::new(C, ModeKind::IonianSharp5);
         mode.validate_spelling().unwrap();
-        
+
         // D Dorian #4
         let mode = Mode::new(D, ModeKind::DorianSharp4);
         mode.validate_spelling().unwrap();
-        
+
         // E Phrygian Dominant
         let mode = Mode::new(E, ModeKind::PhrygianDominant);
         mode.validate_spelling().unwrap();
-        
+
         // F Lydian #2
         let mode = Mode::new(F, ModeKind::LydianSharp2);
         mode.validate_spelling().unwrap();
-        
+
         // G# Ultralocrian
         let mode = Mode::new(GSharp, ModeKind::Ultralocrian);
         mode.validate_spelling().unwrap();
@@ -497,27 +497,27 @@ mod tests {
     #[test]
     fn test_enharmonic_spelling_melodic_minor_modes() {
         // Test melodic minor modes
-        
+
         // B Dorian b2
         let mode = Mode::new(B, ModeKind::DorianFlat2);
         mode.validate_spelling().unwrap();
-        
+
         // C Lydian Augmented
         let mode = Mode::new(C, ModeKind::LydianAugmented);
         mode.validate_spelling().unwrap();
-        
+
         // D Lydian Dominant
         let mode = Mode::new(D, ModeKind::LydianDominant);
         mode.validate_spelling().unwrap();
-        
+
         // E Mixolydian b6
         let mode = Mode::new(E, ModeKind::MixolydianFlat6);
         mode.validate_spelling().unwrap();
-        
+
         // F# Locrian natural 2
         let mode = Mode::new(FSharp, ModeKind::LocrianNatural2);
         mode.validate_spelling().unwrap();
-        
+
         // G# Altered
         let mode = Mode::new(GSharp, ModeKind::Altered);
         mode.validate_spelling().unwrap();
@@ -530,11 +530,11 @@ mod tests {
             // Ionian (Major)
             let mode = Mode::new(root, ModeKind::Ionian);
             mode.validate_spelling().unwrap_or_else(|e| panic!("Ionian spelling failed for {}: {}", root.static_name(), e));
-            
+
             // Dorian
             let mode = Mode::new(root, ModeKind::Dorian);
             mode.validate_spelling().unwrap_or_else(|e| panic!("Dorian spelling failed for {}: {}", root.static_name(), e));
-            
+
             // Lydian
             let mode = Mode::new(root, ModeKind::Lydian);
             mode.validate_spelling().unwrap_or_else(|e| panic!("Lydian spelling failed for {}: {}", root.static_name(), e));
@@ -544,29 +544,17 @@ mod tests {
     #[test]
     fn test_mode_spelling() {
         let mode = Mode::new(E, ModeKind::PhrygianDominant);
-        assert_eq!(
-            mode.notes(),
-            vec![E, F, GSharp, A, B, CFive, DFive],
-            "E phrygian dominant spelling incorrect"
-        );
+        assert_eq!(mode.notes(), vec![E, F, GSharp, A, B, CFive, DFive], "E phrygian dominant spelling incorrect");
         mode.validate_spelling().unwrap();
-        
+
         let mode = Mode::new(B, ModeKind::LocrianNatural6);
-        assert_eq!(
-            mode.notes(),
-            vec![B, CFive, DFive, EFive, FFive, GSharpFive, AFive],
-            "B locrian nat6 spelling incorrect"
-        );
+        assert_eq!(mode.notes(), vec![B, CFive, DFive, EFive, FFive, GSharpFive, AFive], "B locrian nat6 spelling incorrect");
         mode.validate_spelling().unwrap();
-        
+
         let mode = Mode::new(D, ModeKind::LydianDominant);
-        assert_eq!(
-            mode.notes(),
-            vec![D, E, FSharp, GSharp, A, B, CFive],
-            "D lydian dominant spelling incorrect"
-        );
+        assert_eq!(mode.notes(), vec![D, E, FSharp, GSharp, A, B, CFive], "D lydian dominant spelling incorrect");
         mode.validate_spelling().unwrap();
-        
+
         assert_eq!(
             mode.intervals(),
             &[

@@ -73,27 +73,11 @@ impl ModeKind {
     /// This is metadata - the intervals are NOT derived from the parent.
     pub fn parent_scale(&self) -> ScaleKind {
         match self {
-            ModeKind::Ionian
-            | ModeKind::Dorian
-            | ModeKind::Phrygian
-            | ModeKind::Lydian
-            | ModeKind::Mixolydian
-            | ModeKind::Aeolian
-            | ModeKind::Locrian => ScaleKind::Major,
-            
-            ModeKind::LocrianNatural6
-            | ModeKind::IonianSharp5
-            | ModeKind::DorianSharp4
-            | ModeKind::PhrygianDominant
-            | ModeKind::LydianSharp2
-            | ModeKind::Ultralocrian => ScaleKind::HarmonicMinor,
-            
-            ModeKind::DorianFlat2
-            | ModeKind::LydianAugmented
-            | ModeKind::LydianDominant
-            | ModeKind::MixolydianFlat6
-            | ModeKind::LocrianNatural2
-            | ModeKind::Altered => ScaleKind::MelodicMinor,
+            ModeKind::Ionian | ModeKind::Dorian | ModeKind::Phrygian | ModeKind::Lydian | ModeKind::Mixolydian | ModeKind::Aeolian | ModeKind::Locrian => ScaleKind::Major,
+
+            ModeKind::LocrianNatural6 | ModeKind::IonianSharp5 | ModeKind::DorianSharp4 | ModeKind::PhrygianDominant | ModeKind::LydianSharp2 | ModeKind::Ultralocrian => ScaleKind::HarmonicMinor,
+
+            ModeKind::DorianFlat2 | ModeKind::LydianAugmented | ModeKind::LydianDominant | ModeKind::MixolydianFlat6 | ModeKind::LocrianNatural2 | ModeKind::Altered => ScaleKind::MelodicMinor,
         }
     }
 
@@ -110,7 +94,7 @@ impl ModeKind {
             ModeKind::Mixolydian => 5,
             ModeKind::Aeolian => 6,
             ModeKind::Locrian => 7,
-            
+
             // Harmonic minor modes
             ModeKind::LocrianNatural6 => 2,
             ModeKind::IonianSharp5 => 3,
@@ -118,7 +102,7 @@ impl ModeKind {
             ModeKind::PhrygianDominant => 5,
             ModeKind::LydianSharp2 => 6,
             ModeKind::Ultralocrian => 7,
-            
+
             // Melodic minor modes
             ModeKind::DorianFlat2 => 2,
             ModeKind::LydianAugmented => 3,
@@ -134,7 +118,7 @@ impl HasIntervals for ModeKind {
     fn intervals(&self) -> &'static [Interval] {
         match self {
             // MAJOR SCALE MODES
-            
+
             // Ionian: W-W-H-W-W-W-H (same as major scale)
             ModeKind::Ionian => &[
                 Interval::PerfectUnison,
@@ -205,9 +189,9 @@ impl HasIntervals for ModeKind {
                 Interval::MinorSixth,
                 Interval::MinorSeventh,
             ],
-            
+
             // HARMONIC MINOR MODES
-            
+
             // Locrian ♮6: H-W-W-H-W+H-W (Locrian with natural 6th)
             // Example: B Locrian ♮6 = B C D E F G♯ A
             ModeKind::LocrianNatural6 => &[
@@ -274,9 +258,9 @@ impl HasIntervals for ModeKind {
                 Interval::MinorSixth,
                 Interval::DiminishedSeventh,
             ],
-            
+
             // MELODIC MINOR MODES
-            
+
             // Dorian ♭2 (Phrygian ♮6): H-W-W-W-W-W-H (Dorian with flat 2nd)
             // Example: B Dorian ♭2 = B C D E F♯ G♯ A
             ModeKind::DorianFlat2 => &[
@@ -372,7 +356,7 @@ impl HasDescription for ModeKind {
             ModeKind::Mixolydian => "mixolydian, 5th mode of major scale, major with lowered 7th",
             ModeKind::Aeolian => "aeolian, 6th mode of major scale, natural minor",
             ModeKind::Locrian => "locrian, 7th mode of major scale, diminished, half-diminished chord scale",
-            
+
             // Harmonic minor modes
             ModeKind::LocrianNatural6 => "locrian ♮6, 2nd mode of harmonic minor, m7♭5(♮13) color",
             ModeKind::IonianSharp5 => "ionian ♯5, 3rd mode of harmonic minor, augmented major",
@@ -380,7 +364,7 @@ impl HasDescription for ModeKind {
             ModeKind::PhrygianDominant => "phrygian dominant, 5th mode of harmonic minor, spanish phrygian",
             ModeKind::LydianSharp2 => "lydian ♯2, 6th mode of harmonic minor, bright + exotic",
             ModeKind::Ultralocrian => "ultralocrian, 7th mode of harmonic minor, very unstable/dark",
-            
+
             // Melodic minor modes
             ModeKind::DorianFlat2 => "dorian ♭2, 2nd mode of melodic minor, phrygian ♮6, minor with spicy ♭2",
             ModeKind::LydianAugmented => "lydian augmented, 3rd mode of melodic minor, lydian ♯5",
@@ -403,7 +387,7 @@ impl HasStaticName for ModeKind {
             ModeKind::Mixolydian => "mixolydian",
             ModeKind::Aeolian => "aeolian",
             ModeKind::Locrian => "locrian",
-            
+
             // Harmonic minor modes
             ModeKind::LocrianNatural6 => "locrian ♮6",
             ModeKind::IonianSharp5 => "ionian ♯5",
@@ -411,7 +395,7 @@ impl HasStaticName for ModeKind {
             ModeKind::PhrygianDominant => "phrygian dominant",
             ModeKind::LydianSharp2 => "lydian ♯2",
             ModeKind::Ultralocrian => "ultralocrian",
-            
+
             // Melodic minor modes
             ModeKind::DorianFlat2 => "dorian ♭2",
             ModeKind::LydianAugmented => "lydian augmented",
@@ -441,7 +425,7 @@ impl ModeKind {
             ModeKind::Mixolydian => "mixolydian",
             ModeKind::Aeolian => "aeolian",
             ModeKind::Locrian => "locrian",
-            
+
             // Harmonic minor modes
             ModeKind::LocrianNatural6 => "locrian nat6",
             ModeKind::IonianSharp5 => "ionian #5",
@@ -449,7 +433,7 @@ impl ModeKind {
             ModeKind::PhrygianDominant => "phrygian dominant",
             ModeKind::LydianSharp2 => "lydian #2",
             ModeKind::Ultralocrian => "ultralocrian",
-            
+
             // Melodic minor modes
             ModeKind::DorianFlat2 => "dorian b2",
             ModeKind::LydianAugmented => "lydian augmented",
@@ -502,7 +486,7 @@ mod tests {
                 Interval::MinorThird,
                 Interval::PerfectFourth,
                 Interval::PerfectFifth,
-                Interval::MajorSixth,      // Characteristic raised 6th
+                Interval::MajorSixth, // Characteristic raised 6th
                 Interval::MinorSeventh,
             ]
         );
@@ -512,7 +496,7 @@ mod tests {
             ModeKind::Phrygian.intervals(),
             &[
                 Interval::PerfectUnison,
-                Interval::MinorSecond,     // Characteristic lowered 2nd
+                Interval::MinorSecond, // Characteristic lowered 2nd
                 Interval::MinorThird,
                 Interval::PerfectFourth,
                 Interval::PerfectFifth,
@@ -528,7 +512,7 @@ mod tests {
                 Interval::PerfectUnison,
                 Interval::MajorSecond,
                 Interval::MajorThird,
-                Interval::AugmentedFourth,  // Characteristic raised 4th
+                Interval::AugmentedFourth, // Characteristic raised 4th
                 Interval::PerfectFifth,
                 Interval::MajorSixth,
                 Interval::MajorSeventh,

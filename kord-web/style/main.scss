@@ -850,6 +850,82 @@ footer {
 	font-weight: 500;
 }
 
+.kord-chord-analysis__candidates {
+	margin-top: 1.25rem;
+	padding-top: 1rem;
+	border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.kord-chord-analysis__candidates-title {
+	margin: 0 0 0.75rem;
+	font-size: 0.95rem;
+	font-weight: 600;
+	color: var(--sage-300);
+}
+
+.kord-chord-analysis__candidates-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.kord-chord-analysis__candidate {
+	padding: 0.75rem;
+	background: rgba(255, 255, 255, 0.03);
+	border-radius: 0.5rem;
+	border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.kord-chord-analysis__candidate-header {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 0.35rem;
+}
+
+.kord-chord-analysis__candidate-rank {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 50%;
+	background: var(--sage-700);
+	color: white;
+	font-size: 0.75rem;
+	font-weight: 600;
+	flex-shrink: 0;
+}
+
+.kord-chord-analysis__candidate-name {
+	font-weight: 600;
+	color: white;
+}
+
+.kord-chord-analysis__candidate-reason {
+	font-size: 0.8rem;
+	color: var(--sage-300);
+	line-height: 1.5;
+	margin-bottom: 0.35rem;
+}
+
+.kord-chord-analysis__candidate-notes {
+	margin-bottom: 0.25rem;
+
+	code {
+		font-size: 0.8rem;
+	}
+}
+
+.kord-chord-analysis__candidate-desc {
+	font-size: 0.75rem;
+	color: var(--sage-500);
+	font-style: italic;
+}
+
 // Docs-specific layout helpers (semantic)
 .kord-docs__grid {
 	display: grid;
@@ -1124,6 +1200,18 @@ footer {
 .kord-guess__empty {
 	margin: 0;
 	color: var(--sage-400);
+}
+
+.kord-describe__kind-badge {
+	display: inline-block;
+	padding: 0.25rem 0.75rem;
+	background: var(--sage-700);
+	color: white;
+	border-radius: 9999px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
 }
 
 .kord-guess__stage {

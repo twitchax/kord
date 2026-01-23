@@ -265,7 +265,8 @@ cargo check --bin kord --no-default-features \
 
 ## TODO
 
-- Evaluate increasing training epochs
-- Reduce model size (smaller MHA, fewer layers, dropout tuning)
-- Enable hyperparameter tuning with all backends (currently requires NdArray)
-- Add synthesizer to frontend for more pleasant audio feedback
+- Add APIs (and likely docs like `rtz`) that allow people to explore chords (may be useful for LLM). + utoipa
+- Add synthesizer to frontend for more pleasant audio feedback.
+- Add synthesizer to the website on the "play" buttons.
+- Add more visualizations to the web app (e.g., frequency spectrum on listen page?).
+- Add a button to allow for playing the scales in the describe page (so you can play the stacked chord, or any on of the suggested scales).

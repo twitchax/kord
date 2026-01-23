@@ -42,9 +42,9 @@
 //!
 //! ```
 //! use klib::core::base::HasName;
-//! use klib::core::note::*;
 //! use klib::core::mode::*;
 //! use klib::core::mode_kind::*;
+//! use klib::core::note::*;
 //! use klib::core::scale::*;
 //! use klib::core::scale_kind::*;
 //!
@@ -55,6 +55,23 @@
 //! // Create an A harmonic minor scale
 //! let scale = Scale::new(A, ScaleKind::HarmonicMinor);
 //! assert_eq!(scale.name(), "A harmonic minor");
+//! ```
+//!
+//! # Notation (Unified Parsing)
+//!
+//! ```
+//! use klib::core::base::Parsable;
+//! use klib::core::notation::Notation;
+//!
+//! // Automatically detects and parses scales, modes, or chords
+//! let scale = Notation::parse("C major pentatonic").unwrap();
+//! assert!(scale.is_scale());
+//!
+//! let mode = Notation::parse("D dorian").unwrap();
+//! assert!(mode.is_mode());
+//!
+//! let chord = Notation::parse("Cmaj7").unwrap();
+//! assert!(chord.is_chord());
 //! ```
 
 #![warn(rustdoc::broken_intra_doc_links, rust_2018_idioms, clippy::all, missing_docs)]

@@ -6,9 +6,9 @@ use std::path::PathBuf;
 use clap::{ArgAction, Parser, Subcommand};
 use klib::core::{
     base::{Parsable, Res, Void},
-    chord::{Chord, Chordable},
+    chord::Chord,
+    notation::Notation,
     note::Note,
-    octave::Octave,
 };
 use tracing_subscriber::{filter::LevelFilter, fmt::SubscriberBuilder};
 
@@ -29,9 +29,14 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Command {
-    /// Describes a chord.
+    /// Describes a chord, scale, or mode.
     ///
-    /// The `symbol` has some special syntax.  These are the parts:
+    /// The parser attempts to identify the input automatically in this order:
+    /// 1. Scale (e.g., "C major pentatonic", "A harmonic minor")
+    /// 2. Mode (e.g., "D dorian", "F lydian")
+    /// 3. Chord (e.g., "Cmaj7", "Em7b5")
+    ///
+    /// For chords, the `symbol` has some special syntax:
     ///
     /// * The root note (e.g., `C`, `D#`, `Eb`, `F##`, `Gbb`, `A♯`, `B♭`, etc.).
     ///
@@ -47,12 +52,12 @@ enum Command {
     ///
     /// * Zero or one "crunchy" modifiers, which moves "higher notes" into the same octave frame as the root (i.e., `!`).
     Describe {
-        /// Chord symbol to parse.
+        /// Symbol to parse (chord, scale, or mode).
         symbol: String,
 
-        /// Sets the octave of the primary note.
-        #[arg(short, long, default_value_t = 4i8)]
-        octave: i8,
+        /// Force interpretation as a specific type: "chord", "scale", or "mode".
+        #[arg(short = 't', long = "type")]
+        notation_type: Option<String>,
     },
 
     /// Describes and plays a chord.
@@ -423,10 +428,9 @@ fn init_tracing(verbose: bool, quiet: bool) {
 
 fn start(args: Args) -> Void {
     match args.command {
-        Some(Command::Describe { symbol, octave }) => {
-            let chord = Chord::parse(&symbol)?.with_octave(Octave::Zero + octave);
-
-            describe(&chord);
+        Some(Command::Describe { symbol, notation_type }) => {
+            let notation = Notation::parse_with_type(&symbol, notation_type.as_deref())?;
+            println!("{}", notation.format_verbose());
         }
         Some(Command::Play { symbol, delay, length, fade_in }) => {
             let chord = Chord::parse(&symbol)?;
@@ -441,7 +445,7 @@ fn start(args: Args) -> Void {
             let candidates = Chord::try_from_notes(&notes)?;
 
             for candidate in candidates {
-                describe(&candidate);
+                println!("{}", candidate.format_with_scale_candidates());
             }
         }
         Some(Command::Loop { chords, bpm }) => {
@@ -818,12 +822,8 @@ fn start(args: Args) -> Void {
     Ok(())
 }
 
-fn describe(chord: &Chord) {
-    println!("{}", chord.format_with_scale_candidates());
-}
-
 fn play(chord: &Chord, delay: f32, length: f32, fade_in: f32) -> Void {
-    describe(chord);
+    println!("{}", chord.format_with_scale_candidates());
 
     #[cfg(feature = "audio")]
     {
@@ -858,7 +858,7 @@ fn show_inference_result(result: &klib::ml::infer::InferenceResult) -> Res<()> {
     } else {
         println!("\nChord candidates:");
         for candidate in &result.chords {
-            describe(candidate);
+            println!("{}", candidate.format_with_scale_candidates());
         }
     }
 
@@ -874,7 +874,7 @@ fn show_notes_and_chords(notes: &[Note]) -> Res<()> {
         println!("No chord candidates found");
     } else {
         for candidate in candidates {
-            describe(&candidate);
+            println!("{}", candidate.format_with_scale_candidates());
         }
     }
     Ok(())
@@ -887,13 +887,53 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_describe() {
+    fn test_describe_chord() {
         start(Args {
             verbose: false,
             quiet: false,
             command: Some(Command::Describe {
                 symbol: "Cmaj7b9@3^2!".to_string(),
-                octave: 4,
+                notation_type: None,
+            }),
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn test_describe_scale() {
+        start(Args {
+            verbose: false,
+            quiet: false,
+            command: Some(Command::Describe {
+                symbol: "C major pentatonic".to_string(),
+                notation_type: None,
+            }),
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn test_describe_mode() {
+        start(Args {
+            verbose: false,
+            quiet: false,
+            command: Some(Command::Describe {
+                symbol: "D dorian".to_string(),
+                notation_type: None,
+            }),
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn test_describe_with_type_override() {
+        // Force "C major" to be interpreted as a chord, not a scale
+        start(Args {
+            verbose: false,
+            quiet: false,
+            command: Some(Command::Describe {
+                symbol: "C".to_string(),
+                notation_type: Some("chord".to_string()),
             }),
         })
         .unwrap();
