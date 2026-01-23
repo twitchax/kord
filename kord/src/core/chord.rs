@@ -951,7 +951,7 @@ impl HasKnownChord for Chord {
                     if modifiers.contains(&Modifier::Flat9) {
                         return KnownChord::AugmentedDominantFlat9(degree);
                     }
-                    
+
                     return KnownChord::AugmentedDominant(degree);
                 }
 

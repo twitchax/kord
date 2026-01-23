@@ -1190,11 +1190,12 @@ mod tests {
         let chord = KordChord::parse("Cm7b5".to_string()).unwrap();
 
         let modifiers = chord.modifiers();
-        assert!(modifiers.length() > 0, "Should have modifiers");
+        // Cm7b5 (half-diminished) has: minor, dominant 7, flat 5
+        assert!(modifiers.length() >= 3, "Cm7b5 should have at least 3 modifiers");
 
         let extensions = chord.extensions();
-        // May or may not have extensions depending on the chord
-        assert!(extensions.length() >= 0);
+        // Half-diminished chord has no extensions (only modifiers)
+        assert_eq!(extensions.length(), 0, "Cm7b5 should have no extensions");
     }
 
     #[wasm_bindgen_test]
@@ -1273,9 +1274,9 @@ mod tests {
     fn test_chord_builder_flat5() {
         let chord = KordChord::parse("C".to_string()).unwrap();
         let flat5 = chord.flat5();
-        // Verify it has the flat 5 modifier
-        let modifiers = flat5.modifiers();
-        assert!(modifiers.length() > 0);
+        // Verify display shows the flat 5
+        let display = flat5.display();
+        assert!(display.contains("♭5") || display.contains("b5"), "Flat5 chord should show ♭5 in display: {}", display);
     }
 
     #[wasm_bindgen_test]
@@ -1408,7 +1409,7 @@ mod tests {
         let chord = KordChord::parse("C".to_string()).unwrap();
         let sharp13 = chord.sharp13();
         let extensions = sharp13.extensions();
-        assert!(extensions.length() > 0, "Should have sharp13 extension");
+        assert_eq!(extensions.length(), 1, "Should have exactly 1 extension (sharp13)");
     }
 
     #[wasm_bindgen_test]
@@ -1428,8 +1429,8 @@ mod tests {
         let chord = KordChord::parse("C".to_string()).unwrap();
         let notes = chord.chord();
 
-        // Test that we can iterate the array
-        assert!(notes.length() > 0, "Should have notes in array");
+        // C major triad has exactly 3 notes
+        assert_eq!(notes.length(), 3, "C major should have 3 notes");
 
         // Test that we can get individual elements
         let first = notes.get(0);
@@ -1445,7 +1446,7 @@ mod tests {
         assert_eq!(note.name(), "C4");
 
         let chord = KordChord::parse("Cmaj7".to_string()).unwrap();
-        assert!(chord.display().len() > 0, "Display should return non-empty string");
+        assert!(chord.display().contains("maj7"), "Display should contain 'maj7'");
     }
 
     #[wasm_bindgen_test]
@@ -1537,7 +1538,7 @@ mod tests {
         // Test with a chord that has extensions
         let complex = KordChord::parse("Csus2".to_string()).unwrap();
         let complex_extensions = complex.extensions();
-        assert!(complex_extensions.length() > 0, "Sus2 chord should have extensions");
+        assert_eq!(complex_extensions.length(), 1, "Sus2 chord should have exactly 1 extension");
     }
 
     #[wasm_bindgen_test]
@@ -1546,7 +1547,8 @@ mod tests {
         let chord = KordChord::parse("Cmaj7#9b13".to_string()).unwrap();
         let notes = chord.chord();
 
-        assert!(notes.length() > 0, "Complex chord should have notes");
+        // Cmaj7#9b13 has: root, 3rd, 5th, 7th, #9, b13 = 6 notes
+        assert!(notes.length() >= 5, "Complex chord should have at least 5 notes, got {}", notes.length());
 
         // Verify we can access multiple elements
         for i in 0..notes.length() {
@@ -1691,8 +1693,8 @@ mod tests {
         let _root = chord.root();
         let _description = chord.description();
 
-        // Object should still be valid
-        assert!(chord.chord().length() > 0);
+        // Object should still be valid with expected note count
+        assert_eq!(chord.chord().length(), 3, "C major should still have 3 notes after reuse");
     }
 
     #[wasm_bindgen_test]
@@ -2017,14 +2019,16 @@ mod tests {
     fn test_scale_candidates_basic() {
         let chord = KordChord::parse("C".to_string()).unwrap();
         let candidates = chord.scale_candidates();
-        assert!(candidates.length() > 0, "Should have scale candidates");
+        // C major should have exactly 4 candidates: Ionian, Major Pentatonic, Lydian, Mixolydian
+        assert_eq!(candidates.length(), 4, "C major should have 4 scale candidates");
     }
 
     #[wasm_bindgen_test]
     fn test_scale_candidates_notes() {
         let chord = KordChord::parse("C".to_string()).unwrap();
         let candidates = chord.scale_candidates();
-        assert!(candidates.length() > 0, "Should have candidates");
+        // First candidate for C major should be Ionian with 7 notes
+        assert_eq!(candidates.length(), 4, "Should have 4 candidates");
     }
 
     #[wasm_bindgen_test]
@@ -2045,7 +2049,8 @@ mod tests {
     fn test_scale_candidates_minor_chord() {
         let chord = KordChord::parse("Cm".to_string()).unwrap();
         let candidates = chord.scale_candidates();
-        assert!(candidates.length() > 0, "Cm should have candidates");
+        // Minor chord has: Aeolian, Minor Pentatonic, Blues, Dorian, Phrygian, Harmonic Minor, Melodic Minor
+        assert_eq!(candidates.length(), 7, "Cm should have 7 candidates");
     }
 
     #[wasm_bindgen_test]
@@ -2066,14 +2071,17 @@ mod tests {
     fn test_scale_candidates_ranking_order() {
         let chord = KordChord::parse("C".to_string()).unwrap();
         let candidates = chord.scale_candidates();
-        assert!(candidates.length() >= 2, "Should have multiple candidates");
+        // Ionian (rank 1), Major Pentatonic (rank 2), Lydian (rank 3), Mixolydian (rank 4)
+        assert_eq!(candidates.length(), 4, "Should have 4 candidates in ranked order");
     }
 
     #[wasm_bindgen_test]
     fn test_scale_candidates_copy() {
         let chord = KordChord::parse("C".to_string()).unwrap();
-        let candidates = chord.scale_candidates();
-        assert!(candidates.length() > 0, "Should have candidates");
+        let candidates1 = chord.scale_candidates();
+        let candidates2 = chord.scale_candidates();
+        // Multiple calls should return same candidates
+        assert_eq!(candidates1.length(), candidates2.length(), "Repeated calls should return same count");
     }
 
     #[wasm_bindgen_test]
@@ -2084,21 +2092,24 @@ mod tests {
         let c_candidates = c_chord.scale_candidates();
         let g_candidates = g_chord.scale_candidates();
 
-        assert!(c_candidates.length() > 0, "C should have candidates");
-        assert!(g_candidates.length() > 0, "G should have candidates");
+        // Same chord type (major) should have same number of candidates regardless of root
+        assert_eq!(c_candidates.length(), g_candidates.length(), "C and G major should have same candidate count");
+        assert_eq!(c_candidates.length(), 4, "Major chords should have 4 candidates");
     }
 
     #[wasm_bindgen_test]
     fn test_scale_candidates_pentatonic_in_recommendations() {
         let chord = KordChord::parse("C".to_string()).unwrap();
         let candidates = chord.scale_candidates();
-        assert!(candidates.length() >= 2, "Should have multiple candidates including pentatonic");
+        // Major Pentatonic is rank 2 for major chords
+        assert_eq!(candidates.length(), 4, "C major should have 4 candidates including Major Pentatonic");
     }
 
     #[wasm_bindgen_test]
     fn test_scale_candidates_blues_in_recommendations() {
         let chord = KordChord::parse("G7".to_string()).unwrap();
         let candidates = chord.scale_candidates();
-        assert!(candidates.length() >= 2, "G7 should have multiple candidates including blues");
+        // Dominant 7 has: Mixolydian, Blues, Lydian Dominant, Mixolydian b6, Whole Tone, Dim HW, Altered
+        assert_eq!(candidates.length(), 7, "G7 should have 7 candidates including Blues");
     }
 }
