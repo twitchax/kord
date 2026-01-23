@@ -2,7 +2,7 @@
 
 use crate::core::{
     base::{HasDescription, HasName, HasStaticName},
-    interval::Interval,
+    interval::{HasIntervals, Interval},
     mode::Mode,
     mode_kind::ModeKind,
     modifier::Degree,
@@ -461,9 +461,31 @@ impl HasScaleCandidates for KnownChord {
     }
 }
 
-// Traits.
-
-use crate::core::interval::HasIntervals;
+impl HasIntervals for KnownChord {
+    fn intervals(&self) -> &'static [Interval] {
+        match self {
+            KnownChord::Unknown => &[],
+            KnownChord::Major => MAJOR_INTERVALS,
+            KnownChord::Minor => MINOR_INTERVALS,
+            KnownChord::Major7 => MAJOR7_INTERVALS,
+            KnownChord::Dominant(_) => DOMINANT_INTERVALS,
+            KnownChord::MinorMajor7 => MINOR_MAJOR7_INTERVALS,
+            KnownChord::MinorDominant(_) => MINOR_DOMINANT_INTERVALS,
+            KnownChord::DominantSharp11(_) => DOMINANT_SHARP11_INTERVALS,
+            KnownChord::Augmented => AUGMENTED_INTERVALS,
+            KnownChord::AugmentedMajor7 => AUGMENTED_MAJOR7_INTERVALS,
+            KnownChord::AugmentedDominant(_) => AUGMENTED_DOMINANT_INTERVALS,
+            KnownChord::AugmentedDominantFlat9(_) => AUGMENTED_DOMINANT_FLAT9_INTERVALS,
+            KnownChord::HalfDiminished(_) => HALF_DIMINISHED_INTERVALS,
+            KnownChord::Diminished => DIMINISHED_INTERVALS,
+            KnownChord::DominantFlat9(_) => DOMINANT_FLAT9_INTERVALS,
+            KnownChord::DominantSharp9(_) => DOMINANT_SHARP9_INTERVALS,
+            KnownChord::MinorDominantFlat13(_) => MINOR_DOMINANT_FLAT13_INTERVALS,
+            KnownChord::MinorDominantFlat9Flat13(_) => MINOR_DOMINANT_FLAT9_FLAT13_INTERVALS,
+            KnownChord::Sharp11 => SHARP11_INTERVALS,
+        }
+    }
+}
 
 // Static chord intervals for each KnownChord variant (chord tones only)
 
@@ -504,32 +526,6 @@ static SHARP11_INTERVALS: &[Interval] = &[
     Interval::MajorSeventh,
     Interval::AugmentedEleventh,
 ];
-
-impl HasIntervals for KnownChord {
-    fn intervals(&self) -> &'static [Interval] {
-        match self {
-            KnownChord::Unknown => &[],
-            KnownChord::Major => MAJOR_INTERVALS,
-            KnownChord::Minor => MINOR_INTERVALS,
-            KnownChord::Major7 => MAJOR7_INTERVALS,
-            KnownChord::Dominant(_) => DOMINANT_INTERVALS,
-            KnownChord::MinorMajor7 => MINOR_MAJOR7_INTERVALS,
-            KnownChord::MinorDominant(_) => MINOR_DOMINANT_INTERVALS,
-            KnownChord::DominantSharp11(_) => DOMINANT_SHARP11_INTERVALS,
-            KnownChord::Augmented => AUGMENTED_INTERVALS,
-            KnownChord::AugmentedMajor7 => AUGMENTED_MAJOR7_INTERVALS,
-            KnownChord::AugmentedDominant(_) => AUGMENTED_DOMINANT_INTERVALS,
-            KnownChord::AugmentedDominantFlat9(_) => AUGMENTED_DOMINANT_FLAT9_INTERVALS,
-            KnownChord::HalfDiminished(_) => HALF_DIMINISHED_INTERVALS,
-            KnownChord::Diminished => DIMINISHED_INTERVALS,
-            KnownChord::DominantFlat9(_) => DOMINANT_FLAT9_INTERVALS,
-            KnownChord::DominantSharp9(_) => DOMINANT_SHARP9_INTERVALS,
-            KnownChord::MinorDominantFlat13(_) => MINOR_DOMINANT_FLAT13_INTERVALS,
-            KnownChord::MinorDominantFlat9Flat13(_) => MINOR_DOMINANT_FLAT9_FLAT13_INTERVALS,
-            KnownChord::Sharp11 => SHARP11_INTERVALS,
-        }
-    }
-}
 
 // Static interval candidates for each KnownChord variant
 
