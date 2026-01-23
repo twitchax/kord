@@ -4,9 +4,11 @@ use klib::core::{
     chord::{Chord, HasChord, HasRoot, HasScale},
     known_chord::HasScaleCandidates,
     mode::Mode,
+    named_pitch::NamedPitch,
     notation::Notation,
     note::Note,
-    pitch::Pitch,
+    octave::Octave,
+    pitch::{HasFrequency, Pitch},
     scale::Scale,
 };
 use leptos::ev::MouseEvent;
@@ -16,6 +18,11 @@ use thaw::{Button, ButtonAppearance, Flex, FlexAlign, FlexJustify, Text, TextTag
 use thaw_utils::BoxOneCallback;
 
 use crate::client::{audio::play_chord, ffi::highlight_code_block};
+
+// Constants for frequency diagram.
+
+/// Maximum number of frequency bins to display (frequencies 0-4000 Hz with 1 Hz resolution).
+pub const FREQUENCY_DIAGRAM_MAX_BINS: usize = 4096;
 
 // Nav.
 
@@ -407,6 +414,174 @@ where
                     on_toggle=on_toggle
                 />
             </For>
+        </div>
+    }
+}
+
+// Frequency Diagram
+
+/// Octave marker data: (label, frequency in Hz).
+fn get_octave_markers() -> Vec<(&'static str, f32)> {
+    vec![
+        ("C1", Note::new(NamedPitch::C, Octave::One).frequency()),
+        ("C2", Note::new(NamedPitch::C, Octave::Two).frequency()),
+        ("C3", Note::new(NamedPitch::C, Octave::Three).frequency()),
+        ("C4", Note::new(NamedPitch::C, Octave::Four).frequency()),
+        ("C5", Note::new(NamedPitch::C, Octave::Five).frequency()),
+        ("C6", Note::new(NamedPitch::C, Octave::Six).frequency()),
+        ("C7", Note::new(NamedPitch::C, Octave::Seven).frequency()),
+        ("C8", Note::new(NamedPitch::C, Octave::Eight).frequency()),
+    ]
+}
+
+/// Convert a frequency to a logarithmic position (0.0 to 1.0) within the display range.
+fn freq_to_log_position(freq: f32, min_freq: f32, max_freq: f32) -> f32 {
+    if freq <= min_freq {
+        return 0.0;
+    }
+    if freq >= max_freq {
+        return 1.0;
+    }
+
+    let log_min = min_freq.ln();
+    let log_max = max_freq.ln();
+    let log_freq = freq.ln();
+
+    (log_freq - log_min) / (log_max - log_min)
+}
+
+/// Frequency diagram component displaying FFT frequency bins as vertical bars on a log scale.
+///
+/// Renders the frequency space data as a canvas-like visualization using pure CSS/HTML.
+/// Each bar represents a frequency bin's magnitude, normalized to the maximum value.
+/// Uses logarithmic frequency scaling and shows octave boundary markers.
+#[component]
+pub fn FrequencyDiagram(
+    /// The frequency space data as (frequency, magnitude) pairs.
+    frequency_data: ReadSignal<Vec<(f32, f32)>>,
+) -> impl IntoView {
+    // Frequency range for display (roughly C1 to C8).
+    let min_freq = 30.0f32;
+    let max_freq = 4200.0f32;
+
+    // Downsample the data using max-pooling into logarithmic bins.
+    let bars = Signal::derive(move || {
+        let data = frequency_data.get();
+
+        if data.is_empty() {
+            return vec![];
+        }
+
+        // Filter to frequency range of interest.
+        let filtered: Vec<_> = data.iter().filter(|(f, _)| *f >= min_freq && *f <= max_freq).copied().collect();
+
+        if filtered.is_empty() {
+            return vec![];
+        }
+
+        // Find the max magnitude for normalization.
+        let max_magnitude = filtered.iter().map(|(_, m)| *m).fold(0.0f32, f32::max);
+
+        if max_magnitude == 0.0 {
+            return vec![];
+        }
+
+        // Create logarithmic bins.
+        let num_bins = 200;
+        let mut bins: Vec<(f32, f32)> = Vec::with_capacity(num_bins);
+
+        for i in 0..num_bins {
+            let t0 = i as f32 / num_bins as f32;
+            let t1 = (i + 1) as f32 / num_bins as f32;
+
+            // Convert linear position to frequency using inverse log.
+            let log_min = min_freq.ln();
+            let log_max = max_freq.ln();
+            let f0 = (log_min + t0 * (log_max - log_min)).exp();
+            let f1 = (log_min + t1 * (log_max - log_min)).exp();
+
+            // Find max magnitude in this frequency range.
+            let (best_freq, best_mag) = filtered
+                .iter()
+                .filter(|(f, _)| *f >= f0 && *f < f1)
+                .fold((f0, 0.0f32), |(bf, bm), (f, m)| if *m > bm { (*f, *m) } else { (bf, bm) });
+
+            let normalized = (best_mag / max_magnitude * 100.0).clamp(0.0, 100.0);
+            bins.push((best_freq, normalized));
+        }
+
+        bins
+    });
+
+    // Compute octave marker positions with frequency values.
+    let octave_markers = Signal::derive(move || {
+        get_octave_markers()
+            .into_iter()
+            .filter(|(_, freq)| *freq >= min_freq && *freq <= max_freq)
+            .map(|(label, freq)| {
+                let position = freq_to_log_position(freq, min_freq, max_freq) * 100.0;
+                (label, freq, position)
+            })
+            .collect::<Vec<_>>()
+    });
+
+    view! {
+        <div class="kord-frequency-diagram">
+            <div class="kord-frequency-diagram__container">
+                // Octave labels at the top.
+                <div class="kord-frequency-diagram__labels kord-frequency-diagram__labels--top">
+                    <For each=move || octave_markers.get() key=|(label, _, _)| *label let:marker>
+                        {
+                            let (label, _, position) = marker;
+                            let left_pct = format!("{}%", position);
+                            view! {
+                                <span class="kord-frequency-diagram__label" style:left=left_pct>{label}</span>
+                            }
+                        }
+                    </For>
+                </div>
+
+                // Main bar area with marker lines.
+                <div class="kord-frequency-diagram__chart">
+                    <div class="kord-frequency-diagram__bars">
+                        <For each=move || bars.get().into_iter().enumerate() key=|(i, (_, h))| (*i, (*h * 100.0) as u32) let:entry>
+                            {
+                                let (_, (freq, height)) = entry;
+                                let style = format!("height: {}%;", height);
+                                let title = format!("{:.0} Hz", freq);
+                                view! { <div class="kord-frequency-diagram__bar" style=style title=title /> }
+                            }
+                        </For>
+                    </div>
+                    <div class="kord-frequency-diagram__markers">
+                        <For each=move || octave_markers.get() key=|(label, _, _)| *label let:marker>
+                            {
+                                let (_, _, position) = marker;
+                                let left_pct = format!("{}%", position);
+                                view! {
+                                    <div class="kord-frequency-diagram__marker" style:left=left_pct>
+                                        <div class="kord-frequency-diagram__marker-line" />
+                                    </div>
+                                }
+                            }
+                        </For>
+                    </div>
+                </div>
+
+                // Frequency labels at the bottom.
+                <div class="kord-frequency-diagram__labels kord-frequency-diagram__labels--bottom">
+                    <For each=move || octave_markers.get() key=|(label, _, _)| *label let:marker>
+                        {
+                            let (_, freq, position) = marker;
+                            let left_pct = format!("{}%", position);
+                            let freq_label = format!("{:.0}", freq);
+                            view! {
+                                <span class="kord-frequency-diagram__label" style:left=left_pct>{freq_label}</span>
+                            }
+                        }
+                    </For>
+                </div>
+            </div>
         </div>
     }
 }

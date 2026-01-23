@@ -1,7 +1,7 @@
 use crate::client::{
-    audio::{chords_from_pitches, infer_from_samples, le_bytes_to_f32_samples, pitches_to_notes},
+    audio::{chords_from_pitches, compute_frequency_space, infer_from_samples, le_bytes_to_f32_samples, pitches_to_notes},
     ffi::record_microphone,
-    shared::{ChordAnalysis, NoteDisplay, PageTitle, PitchVisualizer},
+    shared::{ChordAnalysis, FrequencyDiagram, NoteDisplay, PageTitle, PitchVisualizer, FREQUENCY_DIAGRAM_MAX_BINS},
 };
 use klib::core::{base::HasName, chord::Chord, note::Note, pitch::Pitch};
 use leptos::logging::{error, log};
@@ -25,6 +25,7 @@ pub fn ListenPage() -> impl IntoView {
     let active_pitches = RwSignal::new(Vec::<Pitch>::new());
     let notes = Signal::derive(move || pitches_to_notes(&active_pitches.get()));
     let chords = RwSignal::new(Vec::<Chord>::new());
+    let frequency_data = RwSignal::new(Vec::<(f32, f32)>::new());
 
     let timestamp = use_timestamp();
     let start_time = RwSignal::new(None::<f64>);
@@ -35,6 +36,7 @@ pub fn ListenPage() -> impl IntoView {
     let has_detected_pitches = Signal::derive(move || !detected_pitches.with(|p| p.is_empty()));
     let has_notes = Signal::derive(move || !notes.with(|n| n.is_empty()));
     let has_chords = Signal::derive(move || !chords.with(|c| c.is_empty()));
+    let has_frequency_data = Signal::derive(move || !frequency_data.with(|d| d.is_empty()));
 
     // Derived UI state signals.
 
@@ -140,6 +142,10 @@ pub fn ListenPage() -> impl IntoView {
                     detected_pitches.set(result.pitches.clone());
                     active_pitches.set(result.pitches);
                     chords.set(result.chords);
+
+                    // Compute frequency space for visualization.
+                    let freq_space = compute_frequency_space(&samples, secs as u8, FREQUENCY_DIAGRAM_MAX_BINS);
+                    frequency_data.set(freq_space);
                 }
                 Err(e) => {
                     log!("Inference failed: {e}");
@@ -148,6 +154,7 @@ pub fn ListenPage() -> impl IntoView {
                     detected_pitches.set(vec![]);
                     active_pitches.set(vec![]);
                     chords.set(vec![]);
+                    frequency_data.set(vec![]);
                 }
             }
 
@@ -208,6 +215,23 @@ pub fn ListenPage() -> impl IntoView {
                         active_pitches=active_pitches.read_only()
                         on_toggle=toggle_pitch
                     />
+                </Show>
+            </div>
+
+            <div class="kord-content__section kord-listen__results">
+                <h3 class="kord-listen__results-title">"Frequency Space"</h3>
+                <Show
+                    when=has_frequency_data
+                    fallback=move || {
+                        view! {
+                            <p class="kord-listen__empty">
+                                "Frequency spectrum will appear here after recording."
+                            </p>
+                        }
+                            .into_view()
+                    }
+                >
+                    <FrequencyDiagram frequency_data=frequency_data.read_only() />
                 </Show>
             </div>
 

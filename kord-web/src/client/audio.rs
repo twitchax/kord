@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use klib::analyze::base::{get_frequency_space, get_smoothed_frequency_space};
 use klib::core::{base::Playable, chord::Chord, note::Note};
 use leptos::prelude::set_timeout;
 
@@ -68,6 +69,19 @@ pub fn chords_from_pitches(pitches: &[klib::core::pitch::Pitch]) -> Result<Vec<C
 pub fn infer_chords_from_samples(samples: &[f32], secs: u8) -> Result<Vec<Chord>, AudioError> {
     let result = infer_from_samples(samples, secs)?;
     Ok(result.chords)
+}
+
+/// Compute the smoothed frequency space for visualization.
+///
+/// Returns a vector of (frequency, magnitude) pairs representing the FFT result
+/// normalized to 1 second of playback. The result is limited to the first `max_bins`
+/// entries for efficient rendering.
+pub fn compute_frequency_space(samples: &[f32], length_in_seconds: u8, max_bins: usize) -> Vec<(f32, f32)> {
+    let frequency_space = get_frequency_space(samples, length_in_seconds);
+    let smoothed = get_smoothed_frequency_space(&frequency_space, length_in_seconds);
+
+    // Take only up to max_bins for rendering efficiency
+    smoothed.into_iter().take(max_bins).collect()
 }
 
 /// Play a chord for the specified duration in seconds.
