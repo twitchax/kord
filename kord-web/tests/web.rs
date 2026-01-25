@@ -166,5 +166,5 @@ async fn test_listen_page_loads() {
     // Check that result sections render (even if empty initially)
     let results = document.query_selector_all(".kord-listen__results");
     assert!(results.is_ok(), "Results sections should be queryable");
-    assert_eq!(results.unwrap().length(), 3, "Should have 3 results sections (pitches, notes, chords)");
+    assert_eq!(results.unwrap().length(), 4, "Should have 4 results sections (pitches, frequency space, notes, chords)");
 }
