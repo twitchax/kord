@@ -16,8 +16,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
-      - run: cargo install cargo-nextest
-      - run: cargo install wasm-pack
+      - uses: cargo-bins/cargo-binstall@main
+      - run: cargo binstall -y cargo-nextest wasm-pack
       - run: cargo nextest run --features ml
       - run: cd kord-web && wasm-pack test --firefox --headless --features hydrate
 
@@ -35,8 +35,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
-      - run: cargo install cargo-llvm-cov
-      - run: cargo install cargo-nextest
+      - uses: cargo-bins/cargo-binstall@main
+      - run: cargo binstall -y cargo-llvm-cov cargo-nextest
       - run: cargo llvm-cov nextest --features ml --workspace --lcov --output-path coverage.lcov
       - uses: codecov/codecov-action@v5
         with:
