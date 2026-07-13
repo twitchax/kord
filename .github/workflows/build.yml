@@ -4,6 +4,10 @@ name: Build and Test
 
 env:
   RUST_TOOLCHAIN: nightly-2025-12-22
+  # Authenticate cargo-binstall's GitHub API calls so concurrent build jobs
+  # don't exhaust the unauthenticated rate limit (which intermittently left
+  # cargo-make uninstalled -> "no such command: make").
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   test:
