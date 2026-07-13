@@ -20,6 +20,9 @@ use crate::{
     },
 };
 
+#[cfg(feature = "ml_target_folded_bass")]
+use crate::ml::base::TARGET_FOLDED_BASS_NOTE_OFFSET;
+
 /// Result of ML inference containing all pitch classes and chord candidates.
 #[derive(Debug, Clone)]
 pub struct InferenceResult {
@@ -101,7 +104,7 @@ pub fn infer(audio_data: &[f32], length_in_seconds: u8) -> Res<InferenceResult> 
     #[cfg(feature = "ml_target_full")]
     compile_error!("Inference with ml_target_full is not supported; use ml_target_folded or ml_target_folded_bass.");
     #[cfg(feature = "ml_target_folded_bass")]
-    let note_offset = PITCH_CLASS_COUNT;
+    let note_offset = TARGET_FOLDED_BASS_NOTE_OFFSET;
     #[cfg(feature = "ml_target_folded")]
     let note_offset = 0;
 
