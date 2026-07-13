@@ -55,7 +55,7 @@ The project supports multiple training precision levels. **Choose exactly one:**
 | `ml_loader_note_binned_convolution` | Uses the existing note-binned harmonic convolution (128 bins) | 128                                      |
 | `ml_loader_mel`                     | Applies mel filter banks to the full spectrum (512 bands)     | 512                                      |
 | `ml_loader_frequency`               | Feeds the raw 8,192-bin frequency spectrum                    | 8192                                     |
-| `ml_loader_frequency_pooled`        | Averages the raw spectrum into 2,048 pooled bins (factor ×4)  | 2048                                     |
+| `ml_loader_frequency_pooled`        | Averages the raw spectrum into 512 pooled bins (factor ×16)   | 512                                      |
 
 **Optional add-on:**
 

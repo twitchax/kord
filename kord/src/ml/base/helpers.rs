@@ -9,10 +9,6 @@ use std::{
 };
 
 use anyhow::Context;
-use burn::{
-    module::Module,
-    tensor::{backend::Backend, Tensor},
-};
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 
 use crate::core::{
@@ -218,16 +214,6 @@ pub fn binary_to_u128(binary: &[f32]) -> u128 {
     num
 }
 
-/// Produces a u16 from a 12 element array of 0s and 1s.
-pub fn binary_to_u16(binary: &[f32]) -> u16 {
-    let mut num = 0u16;
-    for i in 0..12 {
-        num += (binary[i] as u16) << (12 - 1 - i);
-    }
-
-    num
-}
-
 /// Folds the 128-bit binary signature of the the notes into a 12-bit signature (which represent one octave)
 #[allow(dead_code)]
 pub fn fold_binary(binary: &[f32; NOTE_SIGNATURE_SIZE]) -> [f32; PITCH_CLASS_COUNT] {
@@ -247,13 +233,7 @@ pub fn fold_binary(binary: &[f32; NOTE_SIGNATURE_SIZE]) -> [f32; PITCH_CLASS_COU
 }
 
 /// Applies sigmoid activation to convert logits to probabilities in `[0, 1]`.
-#[cfg(feature = "ml_target_full")]
-pub fn logits_to_probabilities(logits: &[f32]) -> Vec<f32> {
-    logits.iter().map(|&logit| 1.0 / (1.0 + (-logit).exp())).collect()
-}
-
-/// Applies sigmoid activation to convert logits to probabilities in `[0, 1]`.
-#[cfg(feature = "ml_target_folded")]
+#[cfg(any(feature = "ml_target_full", feature = "ml_target_folded"))]
 pub fn logits_to_probabilities(logits: &[f32]) -> Vec<f32> {
     logits.iter().map(|&logit| 1.0 / (1.0 + (-logit).exp())).collect()
 }
@@ -280,24 +260,7 @@ pub fn logits_to_probabilities(logits: &[f32]) -> Vec<f32> {
 }
 
 /// Converts probabilities to binary predictions using per-class thresholds.
-#[cfg(feature = "ml_target_full")]
-pub fn logits_to_predictions(probabilities: &[f32], thresholds: &[f32]) -> Vec<f32> {
-    probabilities
-        .iter()
-        .enumerate()
-        .map(|(idx, probability)| {
-            let threshold = thresholds.get(idx).copied().unwrap_or(0.5);
-            if *probability > threshold {
-                1.0
-            } else {
-                0.0
-            }
-        })
-        .collect()
-}
-
-/// Converts probabilities to binary predictions using per-class thresholds.
-#[cfg(feature = "ml_target_folded")]
+#[cfg(any(feature = "ml_target_full", feature = "ml_target_folded"))]
 pub fn logits_to_predictions(probabilities: &[f32], thresholds: &[f32]) -> Vec<f32> {
     probabilities
         .iter()
@@ -337,29 +300,3 @@ pub fn logits_to_predictions(probabilities: &[f32], thresholds: &[f32]) -> Vec<f
     predictions
 }
 
-/// Applies sigmoid activation and 0.5 threshold to convert logits to binary predictions.
-pub fn logits_to_binary_predictions(logits: &[f32]) -> Vec<f32> {
-    logits_to_probabilities(logits).into_iter().map(|prob| if prob > 0.5 { 1.0 } else { 0.0 }).collect()
-}
-
-// Common tensor operations.
-
-/// Module which represents a Sigmoid operation of variable strength.
-#[derive(Module, Debug)]
-pub struct Sigmoid<B: Backend> {
-    scale: Tensor<B, 1>,
-}
-
-impl<B: Backend> Sigmoid<B> {
-    /// Create a new Sigmoid module with the given scale.
-    pub fn new(device: &B::Device, scale: f32) -> Self {
-        Self { scale: Tensor::ones([1], device) * scale }
-    }
-
-    /// Forward pass of the Sigmoid module.
-    pub fn forward<const D: usize>(&self, input: Tensor<B, D>) -> Tensor<B, D> {
-        let scaled = input.mul_scalar(self.scale.clone().into_scalar());
-        //let scaled = input;
-        scaled.clone().exp().div(scaled.exp().add_scalar(1.0))
-    }
-}

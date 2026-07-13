@@ -46,7 +46,7 @@ impl<B: Backend> InferenceStep for KordModel<B> {
 
 /// Create a simulated kord sample item from a noise basis and a semi-random collection of notes.
 pub fn get_simulated_kord_item(noise_asset_root: impl AsRef<Path>, notes: &[Note], peak_radius: f32, harmonic_decay: f32, frequency_wobble: f32) -> Res<KordItem> {
-    let noise_asset_root = noise_asset_root.as_ref().to_str().ok_or_else(|| anyhow::anyhow!("Invalid noise asset root path"))?;
+    let noise_asset_root = noise_asset_root.as_ref().to_str().ok_or_else(|| anyhow::anyhow!("noise asset root path is not valid UTF-8"))?;
     let wobble_divisor = 35.0;
 
     let mut result = match get_random_between(0.0, 4.0).round() as u32 {

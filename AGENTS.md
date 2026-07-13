@@ -9,10 +9,10 @@ This guide focuses on comprehensive build workflows, testing procedures, and det
 ## Workspace Overview
 - `kord/` (aka `klib`): Core music theory/audio/ML library and CLI. Pest grammar at `kord/chord.pest`; parser at `kord/src/core/parser.rs`.
 - `kord-web/`: Leptos 0.8 SSR app with client hydration (Axum SSR). Also builds to WASI/WASM for edge-like SSR.
-  - Loader/target features are forwarded explicitly: default `kord_loader_note_binned` enables `ml_loader_note_binned_convolution` + `ml_target_full` on `klib`. Disable defaults and opt into `kord_loader_frequency` when you need the folded-bass path (`ml_loader_frequency` + `ml_target_folded_bass`).
+  - Loader/target features are forwarded explicitly: default `kord_loader_mel` enables `ml_loader_mel` + `ml_target_folded` on `klib`. Disable defaults and opt into `kord_loader_frequency` when you need the raw-frequency path (`ml_loader_frequency` + `ml_target_folded`).
 
 Key feature flags (core crate):
-- Defaults: `default = ["cli", "analyze", "audio"]`
+- Defaults: `default = ["cli", "analyze", "audio", "ml_infer", "ml_loader_mel", "ml_target_folded", "ml_train_precision_fp32", "ml_store_precision_half"]`
 - `cli`: CLI binary features
 - `analyze = ["analyze_mic", "analyze_file"]`
 - `ml = ["ml_train", "ml_infer"]`, optional `ml_gpu`

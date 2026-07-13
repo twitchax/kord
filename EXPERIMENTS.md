@@ -15,7 +15,7 @@ For some reason, the output always says the number of epochs is `64`, but the ac
 Tracking the new mel 1D convolution architecture (Conv5→Conv5→GELU trunk) that keeps the folded-bass target. Build/train with:
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_tch ml_train_precision_fp32 ml_store_precision_full ml_loader_mel ml_target_folded_bass ml_model_mel_conv1d" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 16
+cargo run --bin kord --no-default-features --features "cli ml_train ml_tch ml_train_precision_fp32 ml_store_precision_full ml_loader_mel ml_target_folded_bass ml_model_mel_conv1d" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 16
 ```
 
 For inference, enable the same feature set (swap `ml_train`/`ml_tch` for `ml_infer` as needed) to keep weights/loader aligned.
@@ -31,7 +31,7 @@ GPU Utilization around 20%.
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 16
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 16
 ```
 
 ### Output
@@ -67,7 +67,7 @@ GPU Utilization around 60%.
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 16
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 16
 ```
 
 ### Output
@@ -103,7 +103,7 @@ GPU Utilization around 15%.
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_folded" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 16
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_folded" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 16
 ```
 
 ### Output
@@ -139,7 +139,7 @@ GPU Utilization around 60%.
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_folded" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 16
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_folded" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 16
 ```
 
 ### Output
@@ -175,7 +175,7 @@ These all have more metrics.
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 16
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 16
 ```
 
 ### Output
@@ -195,7 +195,7 @@ Sample-wise F1: 66.22%
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 16
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 16
 ```
 
 ### Output
@@ -219,7 +219,7 @@ These all have more PR-AUC metrics.
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -244,7 +244,7 @@ Added a bias to the final linear step.
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -269,7 +269,7 @@ Added threshold tuning for inference.
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -294,7 +294,7 @@ New baseline with thresholds.
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -324,7 +324,7 @@ Sample-wise F1: 28.10%
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -374,7 +374,7 @@ let [batch_size, input_size] = input.dims();
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -404,7 +404,7 @@ Sample-wise F1: 34.92%
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -448,7 +448,7 @@ logits
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -478,7 +478,7 @@ Sample-wise F1: 0.33%
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -530,7 +530,7 @@ self.output.forward(x)
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -560,7 +560,7 @@ Sample-wise F1: 60.93%
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -594,7 +594,7 @@ Oversampling the captured data by a factor of 16.
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -624,7 +624,7 @@ Sample-wise F1: 67.86%
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -658,7 +658,7 @@ Added better per-class logging to the output.
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -736,7 +736,7 @@ Captured class insights:
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -833,7 +833,7 @@ self.output.forward(pooled)
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -933,7 +933,7 @@ self.output.forward(pooled)
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -1040,7 +1040,7 @@ self.output.forward(pooled)
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -1153,7 +1153,7 @@ self.output.forward(pooled)
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -1273,7 +1273,7 @@ self.output.forward(pooled)
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -1394,7 +1394,7 @@ self.output.forward(pooled)
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_full" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -1476,7 +1476,7 @@ Trying a new target that is a 12-bin one-hot coupled with a 12-bin multi-hot.  F
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_folded_bass" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_folded_bass" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -1556,7 +1556,7 @@ Upgrade to burn 0.19 and CUDA 13.0,
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_folded_bass" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_folded_bass" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -1630,7 +1630,7 @@ Captured class insights:
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_folded_bass" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_note_binned_convolution ml_target_folded_bass" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output
@@ -1710,7 +1710,7 @@ No change: validating consistency after burn and CUDA upgrade.
 ### Command
 
 ```bash
-cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_folded_bass" --release -- -q ml train --backend ws://192.168.229.200:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
+cargo run --bin kord --no-default-features --features "cli ml_train ml_remote ml_loader_frequency_pooled ml_target_folded_bass" --release -- -q ml train --backend ws://<GPU_HOST>:3000 --training-sources kord/samples/captured/ --training-sources kord/samples/slakh --training-sources sim --model-epochs 4
 ```
 
 ### Output

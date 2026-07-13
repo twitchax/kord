@@ -150,7 +150,7 @@ where
         let state_path = format!("{}/state.json.bin", &config.destination);
         let thresholds_path = format!("{}/thresholds.json", &config.destination);
 
-        let _ = std::fs::create_dir_all(&config.destination);
+        std::fs::create_dir_all(&config.destination)?;
         let _ = std::fs::remove_file(&config_path);
         let _ = std::fs::remove_file(&state_path);
         let _ = std::fs::remove_file(&thresholds_path);
@@ -397,10 +397,18 @@ fn collect_prediction_stats<B: Backend>(model: &KordModel<B>, device: &B::Device
 
     for kord_item in items {
         let sample = kord_item_to_sample_tensor(device, kord_item).to_device(device).detach();
-        let target: Vec<f32> = kord_item_to_target_tensor::<B>(device, kord_item).into_data().convert::<f32>().to_vec().unwrap_or_default();
+        let target: Vec<f32> = kord_item_to_target_tensor::<B>(device, kord_item)
+            .into_data()
+            .convert::<f32>()
+            .to_vec()
+            .map_err(|e| anyhow::anyhow!("failed to convert target tensor to vec: {e:?}"))?;
 
         let logits = model.forward(sample).detach();
-        let logits_vec: Vec<f32> = logits.into_data().convert::<f32>().to_vec().unwrap_or_default();
+        let logits_vec: Vec<f32> = logits
+            .into_data()
+            .convert::<f32>()
+            .to_vec()
+            .map_err(|e| anyhow::anyhow!("failed to convert logits tensor to vec: {e:?}"))?;
         let probabilities = logits_to_probabilities(&logits_vec);
 
         pr_curves.update(&target, &probabilities);
@@ -659,14 +667,14 @@ pub fn hyper_parameter_tuning(source: String, destination: String, log: String, 
     let peak_radiuses = [2.0];
     let harmonic_decays = [0.1];
     let frequency_wobbles = [0.4];
-    let mha_heads = [16]; // Reduced to 4 heads for better per-head capacity
-    let dropouts = [0.3]; // Reduced dropout for better learning
+    let mha_heads = [16];
+    let dropouts = [0.3];
     let epochs = [64];
     let learning_rates = [1e-3];
     let weight_decays = [1e-4];
 
     let mut count = 1;
-    let total = peak_radiuses.len() * harmonic_decays.len() * frequency_wobbles.len() * mha_heads.len() * dropouts.len() * mha_heads.len() * epochs.len() * learning_rates.len() * weight_decays.len();
+    let total = peak_radiuses.len() * harmonic_decays.len() * frequency_wobbles.len() * mha_heads.len() * dropouts.len() * epochs.len() * learning_rates.len() * weight_decays.len();
 
     let mut max_accuracy = 0.0;
     let mut best_config = None;

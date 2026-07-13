@@ -44,8 +44,20 @@ impl<B: Backend> KordModel<B> {
     pub fn new(device: &B::Device, mha_heads: usize, dropout: f64, trunk_hidden_size: usize) -> Self {
         // Calculate chunk dimensions based on number of heads
         // Each head gets one chunk to attend to
+        assert!(
+            INPUT_SPACE_SIZE.is_multiple_of(mha_heads),
+            "INPUT_SPACE_SIZE ({}) must be divisible by mha_heads ({})",
+            INPUT_SPACE_SIZE,
+            mha_heads
+        );
         let num_chunks = mha_heads;
         let chunk_size = INPUT_SPACE_SIZE / mha_heads;
+        assert!(
+            chunk_size >= mha_heads && chunk_size.is_multiple_of(mha_heads),
+            "chunk_size ({}) must be >= mha_heads ({}) and divisible by it",
+            chunk_size,
+            mha_heads
+        );
 
         let mha = MultiHeadAttentionConfig::new(chunk_size, mha_heads).with_dropout(dropout).init::<B>(device);
         let norm1 = nn::LayerNormConfig::new(INPUT_SPACE_SIZE).init(device);
@@ -102,20 +114,7 @@ impl<B: Backend> KordModel<B> {
     }
 
     /// Applies the forward classification pass on the input tensor.
-    #[cfg(all(feature = "ml_train", feature = "ml_target_full"))]
-    pub fn forward_classification(&self, item: KordBatch<B>) -> MultiLabelClassificationOutput<B> {
-        use burn::nn::loss::BinaryCrossEntropyLossConfig;
-
-        let logits = self.forward(item.samples);
-        let targets = item.targets;
-
-        let loss = BinaryCrossEntropyLossConfig::new().with_logits(true).init(&logits.device()).forward(logits.clone(), targets.clone());
-
-        MultiLabelClassificationOutput { loss, output: logits, targets }
-    }
-
-    /// Applies the forward classification pass when only the folded target is enabled.
-    #[cfg(all(feature = "ml_train", feature = "ml_target_folded"))]
+    #[cfg(all(feature = "ml_train", any(feature = "ml_target_full", feature = "ml_target_folded")))]
     pub fn forward_classification(&self, item: KordBatch<B>) -> MultiLabelClassificationOutput<B> {
         use burn::nn::loss::BinaryCrossEntropyLossConfig;
 
@@ -150,7 +149,7 @@ impl<B: Backend> KordModel<B> {
 
         let note_targets = targets.clone().slice([0..batch, note_start..note_end]);
         let bass_targets_hot = targets.clone().slice([0..batch, bass_start..bass_end]);
-        let bass_targets = bass_targets_hot.argmax(1).squeeze();
+        let bass_targets = bass_targets_hot.argmax(1).squeeze_dim::<1>(1);
 
         let note_loss = bce_loss.forward(note_logits, note_targets);
         let categorical_loss = ce_loss.forward(bass_logits, bass_targets);

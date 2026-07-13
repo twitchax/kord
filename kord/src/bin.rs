@@ -708,7 +708,7 @@ fn start(args: Args) -> Void {
                     analyze::base::{compute_cqt, translate_frequency_space_to_peak_space},
                     helpers::plot_frequency_space,
                     ml::base::{
-                        helpers::{fold_binary, harmonic_convolution, load_kord_item, mel_filter_banks_from, note_binned_convolution},
+                        helpers::{harmonic_convolution, load_kord_item, mel_filter_banks_from, note_binned_convolution},
                         MEL_SPACE_SIZE,
                     },
                 };
@@ -741,7 +741,15 @@ fn start(args: Args) -> Void {
 
                 // Plot folded note-binned convolution space.
                 let folded_convolution_file_name = format!("{}_convolution_folded", name);
-                let folded_convolution_space = fold_binary(&convolution_space).into_iter().enumerate().map(|(k, v)| (k as f32, v)).collect::<Vec<_>>();
+                let folded_convolution_space = {
+                    let mut folded = [0.0f32; 12];
+                    for (i, &val) in convolution_space.iter().enumerate() {
+                        let bit_position = convolution_space.len() - 1 - i;
+                        let pitch_class = bit_position % 12;
+                        folded[pitch_class] += val;
+                    }
+                    folded
+                }.into_iter().enumerate().map(|(k, v)| (k as f32, v)).collect::<Vec<_>>();
                 plot_frequency_space(&folded_convolution_space, "KordItem Folded Note-Binned Convolution Space", &folded_convolution_file_name, 0.0, 12.0);
 
                 // Plot mel space.

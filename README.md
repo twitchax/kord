@@ -323,7 +323,7 @@ KordChord.parse('C').minor().seven().chord().map(n => n.name()); // [ 'C4', 'Eb4
 ## Feature Flags
 
 The library and binary both support various feature flags.  Of most important note are:
-* `default = ["cli", "analyze", "audio"]`
+* `default = ["cli", "analyze", "audio", "ml_infer", "ml_loader_mel", "ml_target_folded", "ml_train_precision_fp32", "ml_store_precision_half"]`
 * `cli`: enables the CLI features, and can be removed if only compiling the library.
 * `analyze = ["analyze_mic", "analyze_file"]`: enables the `analyze` subcommand, which allows for analyzing audio data (and the underlying library features).
   * `analyze_mic`: enables the `analyze mic` subcommand, which allows for analyzing audio from a microphone (and the underlying library features).
