@@ -24,7 +24,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
-      - run: cargo binstall cargo-make --no-confirm
+      - run: cargo binstall cargo-make --force --no-confirm
       - run: cargo make test-all
 
   codecov:
@@ -42,7 +42,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
-      - run: cargo binstall cargo-make --no-confirm
+      - run: cargo binstall cargo-make --force --no-confirm
       - run: cargo make codecov
       - uses: codecov/codecov-action@v5
         with:
@@ -68,7 +68,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y clang mold
-      - run: cargo binstall cargo-make --no-confirm
+      - run: cargo binstall cargo-make --force --no-confirm
       - run: cargo make build-linux
       - uses: actions/upload-artifact@v4
         with:
@@ -92,7 +92,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
-      - run: cargo binstall cargo-make --no-confirm
+      - run: cargo binstall cargo-make --force --no-confirm
       - run: cargo make build-windows
       - uses: actions/upload-artifact@v4
         with:
@@ -114,7 +114,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
-      - run: cargo binstall cargo-make --no-confirm
+      - run: cargo binstall cargo-make --force --no-confirm
       - run: cargo make build-macos
       - uses: actions/upload-artifact@v4
         with:
@@ -136,7 +136,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
-      - run: cargo binstall cargo-make --no-confirm
+      - run: cargo binstall cargo-make --force --no-confirm
       - run: cargo make build-oci
       - uses: actions/upload-artifact@v4
         with:
