@@ -10,7 +10,7 @@ homepage = "https://github.com/twitchax/kord"
 repository = "https://github.com/twitchax/kord"
 keywords = ["cli", "music", "theory", "jazz", "chords"]
 categories = ["command-line-utilities"]
-exclude = ["samples/**/*", "noise/**/*", "../kord-web/"]
+exclude = ["samples/**/*", "noise/**/*", "../kord-web/", "tests/*.wav", "tests/*.flac", "tests/*.mp3", "tests/*.mid", "tests/vec.bin"]
 
 [lib]
 name = "klib"
