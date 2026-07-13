@@ -113,7 +113,7 @@ ml_candle_metal = ["ml_candle", "burn/candle-metal"]
 ml_remote = ["burn/remote"]
 ml_server = ["burn/server"]
 
-ml_infer = ["ml_base", "burn", "burn/ndarray"]
+ml_infer = ["ml_base", "analyze_base", "burn", "burn/ndarray"]
 
 wasm = [
     "rodio/wasm-bindgen",
