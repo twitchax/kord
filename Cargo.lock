@@ -4097,7 +4097,7 @@ checksum = "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc"
 
 [[package]]
 name = "kord"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "anyhow",
  "bincode 2.0.1",
@@ -4137,7 +4137,7 @@ dependencies = [
 
 [[package]]
 name = "kord-web"
-version = "0.8.0"
+version = "0.8.1"
 dependencies = [
  "axum",
  "axum-insights",
