@@ -29,7 +29,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly-2025-12-22
+          toolchain: nightly-2026-07-14
           components: rustfmt, clippy
 
       - uses: cargo-bins/cargo-binstall@main

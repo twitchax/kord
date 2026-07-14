@@ -146,9 +146,9 @@ where
     }
 
     if save_model {
-        let config_path = format!("{}/model_config.json", &config.destination);
-        let state_path = format!("{}/state.json.bin", &config.destination);
-        let thresholds_path = format!("{}/thresholds.json", &config.destination);
+        let config_path = format!("{}/model_config.json", config.destination);
+        let state_path = format!("{}/state.json.bin", config.destination);
+        let thresholds_path = format!("{}/thresholds.json", config.destination);
 
         std::fs::create_dir_all(&config.destination)?;
         let _ = std::fs::remove_file(&config_path);
